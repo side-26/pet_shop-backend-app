@@ -1,7 +1,7 @@
-const express = require("express");
-const cookieParser = require("cookie-parser");
+const express = require('express');
+const cookieParser = require('cookie-parser');
 // config dotenv
-require("dotenv").config();
+require('dotenv').config();
 
 const server = express();
 
@@ -13,7 +13,7 @@ server.use(express.urlencoded({ extended: false }));
 server.use(cookieParser);
 
 // * end all middlewares
-const devPort = process.env.PORT;
-server.listen(devPort, () => {
-  console.log(`server is listening on port:${devPort}`);
+const DEV_PORT = process.env.PORT;
+server.listen(DEV_PORT, () => {
+  console.log(`server is listening on port:${DEV_PORT}`);
 });
