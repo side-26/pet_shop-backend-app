@@ -18,6 +18,7 @@ export default [
       ...js.configs.recommended.rules,
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
+      'linebreak-style': 0,
     },
   },
   {
