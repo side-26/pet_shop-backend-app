@@ -1,11 +1,10 @@
-// src/configs/database.js
-const mongoose = require('mongoose');
-
-async function connectDB(onSuccess) {
+import mongoose from 'mongoose';
+const { connect, connection } = mongoose;
+export default async function connectDB(onSuccess) {
   try {
     // حذف options خالی - در mongoose 6+ دیگر نیازی نیست
-    const res = await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/pet_shop_db'
+    const res = await connect(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/pet_shop_db',
     );
 
     console.log(`✅ MongoDB Connected: ${res.connection.host}`);
@@ -17,12 +16,10 @@ async function connectDB(onSuccess) {
 }
 
 // Handle connection events
-mongoose.connection.on('disconnected', () => {
+connection.on('disconnected', () => {
   console.warn('⚠️ MongoDB Disconnected');
 });
 
-mongoose.connection.on('error', (err) => {
+connection.on('error', (err) => {
   console.error('❌ MongoDB Error:', err);
 });
-
-module.exports = connectDB;

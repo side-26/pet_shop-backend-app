@@ -1,5 +1,7 @@
-const express = require('express');
-const { ROUTES } = require('../../configs/constants');
+import express from 'express';
+
+import { ROUTES } from '#configs/constants.js';
+
 const router = express.Router();
 const { users } = ROUTES;
 /**
@@ -48,4 +50,4 @@ router.get(users.getAll, (req, res) => {
 router.get(users.getUserById, (req, res) => {
   res.json({ id: req.params.id, name: 'Ali' });
 });
-module.exports = router;
+export default router;

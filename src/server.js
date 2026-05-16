@@ -1,28 +1,31 @@
-const express = require('express');
-// const cookieParser = require('cookie-parser');
+// import 'module-alias/register';
+import express from 'express';
+import dotenv from 'dotenv';
 
-const connectDB = require('./src/configs/db.config');
-const { swaggerUi, specs } = require('./src/configs/swagger.config');
-const userRoutes = require('./src/entities/users/users.route');
+import connectDB from '#configs/db.config.js';
+import { swaggerUi, specs } from '#configs/swagger.config.js';
+import userRoutes from '#entities/users/users.route.js';
+
 // config dotenv
-require('dotenv').config();
+dotenv.config();
 
 const server = express();
 
 // * all middlewares
 
-// express-bodyParser
+// express body parser
 server.use(express.urlencoded({ extended: false }));
-// server.use(cookieParser);
 
-// swagger-route
+// swagger route
 server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 server.use(userRoutes);
 
 // * end all middlewares
-// *DB connect
+// * DB connect
+
 const DEV_PORT = process.env.PORT || 3000;
+
 connectDB(() => {
   server.listen(DEV_PORT, () => {
     console.log(`🚀 Server running on port ${DEV_PORT}`);
