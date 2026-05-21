@@ -1,13 +1,12 @@
 import mongoose from 'mongoose';
 
-import { userZodSchema } from './users.schema';
+import { userZodSchema } from './users.schema.js';
 
 const userSchema = new mongoose.Schema(
   {
     firstName: { type: String },
     lastName: { type: String },
     phoneNumber: { type: String, required: true, unique: true },
-
     password: { type: String, required: true },
     logo: { type: String }, // stores file path/URL
     address: { type: String },
@@ -21,7 +20,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-userSchema.pre('save', function (next) {
+userSchema.pre('save', function () {
   const userData = this.toObject();
 
   // Mongoose defaults are already applied (orders, cart = [])
@@ -31,12 +30,11 @@ userSchema.pre('save', function (next) {
     const errorMessages = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join(', ');
-    return next(new Error(`Validation failed: ${errorMessages}`));
+    throw new Error(`Validation failed: ${errorMessages}`);
   }
-  next();
 });
 
-userSchema.pre('findOneAndUpdate', function (next) {
+userSchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
 
   if (update.$set) {
@@ -46,9 +44,8 @@ userSchema.pre('findOneAndUpdate', function (next) {
       const errorMessages = result.error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join(', ');
-      return next(new Error(`Update validation failed: ${errorMessages}`));
+      throw new Error(`Update validation failed: ${errorMessages}`);
     }
   }
-  next();
 });
 export const UserModel = mongoose.model('Users', userSchema);
