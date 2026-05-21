@@ -26,3 +26,18 @@ export const ROUTES = {
     deleteOrder: '/products/delete/:id',
   },
 };
+export const STATUES = {
+  GET: 200,
+  CREATED: 201,
+  NO_RESPONSE: 204,
+  REDIRECT: 301,
+  BAD_REQUEST: 400,
+  UN_AUTHORIZED: 401,
+  PAYMENT_ERROR: 402,
+  NO_ACCESS: 403,
+  NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+  BAD_FORM_VALIDATION: 422,
+  INTERNAL_SERVER: 500,
+  OTHER_PROBLEM: 503,
+};
