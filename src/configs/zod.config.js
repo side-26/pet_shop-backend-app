@@ -8,6 +8,13 @@ const fieldNamesMap = {
   password: 'رمز عبور',
   age: 'سن',
   city: 'شهر',
+  repeatPassword: 'تکرار کلمه عبور',
+  oldPassword: 'کلمه عبور قبلی',
+  userId: 'شناسه کاربر',
+  address: 'آدرس',
+  province: 'استان',
+  postalCode: 'کد پستی',
+
   // ... add all fields
 };
 

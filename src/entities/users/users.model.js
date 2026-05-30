@@ -4,28 +4,45 @@ import { userZodSchema } from './users.schema.js';
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: { type: String },
-    lastName: { type: String },
+    firstName: { type: String, default: '' },
+    lastName: { type: String, default: '' },
     phoneNumber: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    logo: { type: String }, // stores file path/URL
-    address: { type: String },
-    nationalCode: { type: String },
-    city: { type: String },
-    province: { type: String },
-    age: { type: Number }, // new – number field
+    isEnable: { type: Boolean, default: true },
+    avatar: { type: String, default: '' }, // stores file path/URL
+    address: { type: String, default: '' },
+    nationalCode: { type: String, default: '' },
+    city: { type: String, default: '' },
+    province: { type: String, default: '' },
+    postalCode: { type: String, default: '' },
+    age: { type: Number, default: null },
+    role: { type: String, default: 'customer' },
     orders: { type: [mongoose.Schema.Types.Mixed], default: [] },
     cart: { type: [mongoose.Schema.Types.Mixed], default: [] },
   },
-  { timestamps: true },
+  {
+    timestamps: true, // Apply to when using res.json() (calls .toJSON())
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    // Apply to when using .toObject() manually
+    toObject: {
+      transform: (doc, ret) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
 );
 
 userSchema.pre('save', function () {
-  const userData = this.toObject();
-
-  // Mongoose defaults are already applied (orders, cart = [])
+  const userData = this.toObject({ transform: false }); // ← include password
   const result = userZodSchema.safeParse(userData);
-
   if (!result.success) {
     const errorMessages = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)

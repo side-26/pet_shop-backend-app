@@ -3,9 +3,24 @@ export const ROUTES = {
     getAll: '/users/all',
     getAllPaginate: '/users/paginate',
     getUserById: '/users/:id',
+    getUserCart: '/users/cart/:id',
     createUser: '/users',
-    updateUser: '/users/edit/:id',
+    updateUserInfo: '/users/edit-info/:id',
+    updateUserLocationInfo: '/users/editLocationInfo/:id',
     deleteUser: '/users/delete/:id',
+    disableUser: '/users/disable/:id',
+    enableUser: '/users/enable/:id',
+    login: '/users/enable/:id',
+    // token base
+    getProfile: '/users/profile',
+    changePassword: '/users/changePassword',
+    userCart: '/users/profile/cart',
+  },
+  profile: {
+    login: '/profile/login',
+    updateProfile: '/profile/update',
+    changeProfilePassword: '/profile/changePassword',
+    getProfileIdentity: '/profile/identity',
   },
   orders: {
     getAll: '/orders/all',
@@ -27,7 +42,7 @@ export const ROUTES = {
   },
 };
 export const STATUES = {
-  GET: 200,
+  SUCCESS: 200,
   CREATED: 201,
   NO_RESPONSE: 204,
   REDIRECT: 301,
