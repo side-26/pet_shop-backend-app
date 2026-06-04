@@ -62,15 +62,20 @@ export const updateUserPersonalInfoController = async (req, res) => {
       res,
     );
 
-    const updatedUser = await updateUser(req, res, UserModel, formBody);
+    const updatedUser = await updateUser(
+      req.body.userId,
+      res,
+      UserModel,
+      formBody,
+    );
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `${getUserFullName(updatedUser)} با موفقیت ویرایش شد اطلاعات `,
+      message: `اطلاعات ${getUserFullName(updatedUser)} ویرایش شد`,
     });
   } catch (err) {
     setErrorResponse(res, STATUES.INTERNAL_SERVER, {
       message: 'خطای سمت سرور',
-      data: err,
+      data: JSON.stringify(err),
     });
   }
 };
@@ -83,15 +88,20 @@ export const updateUserLocationInfoController = async (req, res) => {
       res,
     );
 
-    const updatedUser = await updateUser(req, res, UserModel, formBody);
+    const updatedUser = await updateUser(
+      req.body.userId,
+      res,
+      UserModel,
+      formBody,
+    );
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `${getUserFullName(updatedUser)} مکانی با موفقیت ویرایش شد اطلاعات `,
+      message: `اطلاعات موقعیتی ${getUserFullName(updatedUser)} ویرایش شد`,
     });
   } catch (err) {
     setErrorResponse(res, STATUES.INTERNAL_SERVER, {
       message: 'خطای سمت سرور',
-      data: err,
+      data: JSON.stringify(err),
     });
   }
 };

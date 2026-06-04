@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import connectDB from '#configs/db.config.js';
 import { swaggerUi, specs } from '#configs/swagger.config.js';
 import userRoutes from '#entities/users/users.route.js';
+import { setAllStatics } from './utils';
 
 // config dotenv
 dotenv.config();
@@ -14,7 +15,11 @@ const server = express();
 // * all middlewares
 
 // express body parser
+server.use(express.json());
+
 server.use(express.urlencoded({ extended: false }));
+
+setAllStatics(server);
 
 // swagger route
 server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

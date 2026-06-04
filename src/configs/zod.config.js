@@ -5,7 +5,8 @@ const fieldNamesMap = {
   firstName: 'نام',
   lastName: 'نام خانوادگی',
   phoneNumber: 'شماره تلفن',
-  password: 'رمز عبور',
+  password: 'کلمه عبور',
+  email: 'ایمیل',
   age: 'سن',
   city: 'شهر',
   repeatPassword: 'تکرار کلمه عبور',
@@ -20,7 +21,7 @@ const fieldNamesMap = {
 
 const customErrorMap = (issue, ctx) => {
   const fieldName = fieldNamesMap[issue.path.join('.')] || 'این فیلد';
-
+  console.log(issue);
   switch (issue.code) {
     case 'invalid_type':
       if (issue.received === 'undefined') {
@@ -37,6 +38,13 @@ const customErrorMap = (issue, ctx) => {
       return {
         message: `${fieldName} باید حداکثر ${issue.maximum} کاراکتر باشد`,
       };
+    case 'invalid_string':
+      if (issue.validation === 'email') {
+        return { message: `${fieldName} معتبر نیست` };
+      }
+      break;
+    case 'invalid_format':
+      return { message: `فرمت ${fieldName} معتبر نیست` };
   }
 
   return { message: ctx.defaultError };

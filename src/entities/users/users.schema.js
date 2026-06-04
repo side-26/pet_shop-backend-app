@@ -1,6 +1,6 @@
 import { any, z } from 'zod';
 import '#configs/zod.config.js';
-const { string, number, array, object, email, boolean, url } = z;
+const { string, number, array, object, email, boolean, url, enum: zEnum } = z;
 
 export const userZodSchema = object({
   firstName: string().optional(),
@@ -35,9 +35,10 @@ export const userUpdatePersonalInfoSchema = z.object({
   firstName: string().min(2),
   lastName: string().min(2),
   email: email(),
-  nationalCode: string().min(10),
-  age: number().int().min(0),
+  nationalCode: string().length(10),
+  age: number().int().min(4),
   avatar: url().optional(),
+  role: zEnum(['customer', 'admin']).optional(),
 });
 
 export const userUpdateLocationInfoSchema = z.object({
@@ -45,7 +46,7 @@ export const userUpdateLocationInfoSchema = z.object({
   address: string().min(5),
   city: string().min(2),
   province: string().min(2),
-  postalCode: string().min(10).max(10),
+  postalCode: string(),
 });
 
 export const userSwaggerSchema = () => {};

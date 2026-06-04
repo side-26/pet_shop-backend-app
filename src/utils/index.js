@@ -1,3 +1,9 @@
+import { static as static_ } from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { STATUES } from '#configs/constants.js';
 
 export const doesBodyExist = (req, res, msg) => {
@@ -114,4 +120,8 @@ export const returnFormValidation = (validationSchema, body, res) => {
   const validatedData = result.data;
 
   return validatedData;
+};
+
+export const setAllStatics = (server) => {
+  server.use(static_(path.join(__dirname, 'public')));
 };

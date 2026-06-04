@@ -136,12 +136,16 @@ export const updateUser = async (userId, res, UserModel, updateRecord) => {
       message: 'ورودی معتبر نیست',
     });
 
-  const result = await UserModel.findByIdAndUpdate(userId, {
-    ...updateRecord,
-  });
+  const result = await UserModel.findByIdAndUpdate(
+    userId,
+    {
+      ...updateRecord,
+    },
+    { new: true },
+  );
 
   if (!result)
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
+    setErrorResponse(res, STATUES.NOT_FOUND, {
       message: 'کاربری یافت نشد',
     });
 
