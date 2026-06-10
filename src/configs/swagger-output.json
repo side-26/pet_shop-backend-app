@@ -14,9 +14,7 @@
   "paths": {
     "/users": {
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Create a new user",
         "description": "",
         "responses": {
@@ -55,9 +53,7 @@
     },
     "/users/editInfo": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Update personal info",
         "description": "",
         "responses": {
@@ -96,9 +92,7 @@
     },
     "/users/editLocationInfo": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Update location info",
         "description": "",
         "responses": {
@@ -137,9 +131,7 @@
     },
     "/users/changePassword": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Change user password",
         "description": "",
         "responses": {
@@ -178,9 +170,7 @@
     },
     "/users/disable/{id}": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Disable a user",
         "description": "",
         "parameters": [
@@ -209,9 +199,7 @@
     },
     "/users/enable/{id}": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Enable a user",
         "description": "",
         "parameters": [
@@ -240,9 +228,7 @@
     },
     "/users/all": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get all users",
         "description": "",
         "responses": {
@@ -261,9 +247,7 @@
     },
     "/users/paginate": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get paginated users",
         "description": "",
         "parameters": [
@@ -318,9 +302,7 @@
     },
     "/users/{id}": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get user by ID",
         "description": "",
         "parameters": [
@@ -359,9 +341,7 @@
     },
     "/users/cart/{id}": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get user cart",
         "description": "",
         "parameters": [
@@ -454,10 +434,7 @@
             "items": {}
           }
         },
-        "required": [
-          "phoneNumber",
-          "password"
-        ],
+        "required": ["phoneNumber", "password"],
         "additionalProperties": false
       },
       "UpdateUserPersonalInfoBody": {
@@ -495,10 +472,7 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "customer",
-              "admin"
-            ]
+            "enum": ["customer", "admin"]
           }
         },
         "required": [
@@ -533,13 +507,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "userId",
-          "address",
-          "city",
-          "province",
-          "postalCode"
-        ],
+        "required": ["userId", "address", "city", "province", "postalCode"],
         "additionalProperties": false
       },
       "ChangeUserPasswordBody": {
@@ -561,12 +529,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "password",
-          "oldPassword",
-          "repeatPassword",
-          "userId"
-        ],
+        "required": ["password", "oldPassword", "repeatPassword", "userId"],
         "additionalProperties": false
       },
       "SuccessResponse": {
@@ -581,9 +544,7 @@
           },
           "data": {}
         },
-        "required": [
-          "isSuccess"
-        ]
+        "required": ["isSuccess"]
       },
       "PaginatedResponse": {
         "type": "object",
@@ -633,9 +594,7 @@
             }
           }
         },
-        "required": [
-          "isSuccess"
-        ]
+        "required": ["isSuccess"]
       },
       "ErrorResponse": {
         "type": "object",
@@ -649,9 +608,7 @@
           },
           "data": {}
         },
-        "required": [
-          "isSuccess"
-        ]
+        "required": ["isSuccess"]
       }
     }
   }

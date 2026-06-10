@@ -7,7 +7,8 @@ import {
 } from '../entities/users/users.schema.js';
 
 function toOpenApi(zodSchema) {
-  const { $schema, ...schema } = z.toJSONSchema(zodSchema);
+  const schema = z.toJSONSchema(zodSchema);
+  delete schema.$schema; // Remove the $schema property added by zod-to-json-schema
   return schema;
 }
 
