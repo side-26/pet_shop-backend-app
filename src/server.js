@@ -1,11 +1,15 @@
 // import 'module-alias/register';
 import express from 'express';
 import dotenv from 'dotenv';
+import { createRequire } from 'module';
+import swaggerUi from 'swagger-ui-express';
 
 import connectDB from '#configs/db.config.js';
-import { swaggerUi, specs } from '#configs/swagger.config.js';
 import userRoutes from '#entities/users/users.route.js';
-import { setAllStatics } from './utils';
+import { setAllStatics } from './utils/index.js';
+
+const require = createRequire(import.meta.url);
+const swaggerDocument = require('./configs/swagger-output.json');
 
 // config dotenv
 dotenv.config();
@@ -21,10 +25,9 @@ server.use(express.urlencoded({ extended: false }));
 
 setAllStatics(server);
 
-// swagger route
-server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+server.use('/api-docs', ...swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-server.use(userRoutes);
+server.use('/api', userRoutes);
 
 // * end all middlewares
 // * DB connect

@@ -1,24 +1,30 @@
-import swaggerJsdoc from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
+import swaggerAutogen from 'swagger-autogen';
+import { schemas } from './swagger-schemas.js';
 
-const options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Pet-shop API Documentation',
-      version: '1.0.0',
-      description: 'Express API with Swagger',
-    },
-    servers: [
-      {
-        url: `http://localhost:8080`,
-        description: 'Dev server',
-      },
-    ],
+const doc = {
+  info: {
+    version: '1.0.0',
+    title: 'Pet-shop API Documentation',
+    description: 'Express API with Swagger',
   },
-  apis: ['./src/entities/**/*.js'], // مسیر فایل‌های route شما
+  servers: [
+    {
+      url: `http://localhost:8080/api`,
+      description: 'local server',
+    },
+  ],
+  components: {
+    '@schemas': schemas,
+  },
 };
 
-const specs = swaggerJsdoc(options);
+const outputFile = './swagger-output.json';
+const routes = [
+  '../entities/users/users.route.js',
+  // '../entities/products/products.route.js', // add when implemented
+  // '../entities/orders/orders.route.js',     // add when implemented
+];
 
-export { specs, swaggerUi };
+swaggerAutogen({ openapi: '3.0.0' })(outputFile, routes, doc).then(async () => {
+  await import('../server.js');
+});
