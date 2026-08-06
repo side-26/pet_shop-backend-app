@@ -116,14 +116,14 @@ export const getUserById = async (req, res, UserModel) => {
   const userId = req?.params?.id;
 
   if (!userId)
-    setErrorResponse(res, STATUES.BAD_REQUEST, {
+    setErrorResponse(STATUES.BAD_REQUEST, {
       message: 'ورودی معتبر نیست',
     });
 
   const user = await UserModel.findById(userId?.toString());
 
   if (!user)
-    setErrorResponse(res, STATUES.NOT_FOUND, {
+    setErrorResponse(STATUES.NOT_FOUND, {
       message: 'کاربری با این مشخصات یافت نشد',
     });
   return user;
@@ -131,7 +131,7 @@ export const getUserById = async (req, res, UserModel) => {
 
 export const updateUser = async (userId, res, UserModel, updateRecord) => {
   if (!userId)
-    setErrorResponse(res, STATUES.BAD_REQUEST, {
+    setErrorResponse(STATUES.BAD_REQUEST, {
       message: 'ورودی معتبر نیست',
     });
 
@@ -144,7 +144,7 @@ export const updateUser = async (userId, res, UserModel, updateRecord) => {
   );
 
   if (!result)
-    setErrorResponse(res, STATUES.NOT_FOUND, {
+    setErrorResponse(STATUES.NOT_FOUND, {
       message: 'کاربری یافت نشد',
     });
 

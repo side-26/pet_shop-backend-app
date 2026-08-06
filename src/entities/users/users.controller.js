@@ -7,6 +7,7 @@ import {
   setErrorResponse,
   setSuccessResponse,
   returnFormValidation,
+  onCatchPromiseController,
 } from '#utils/index.js';
 import {
   userChangePasswordFormBodyValidation,
@@ -44,12 +45,12 @@ export const createUserController = async (req, res, next) => {
     setSuccessResponse(res, STATUES.CREATED, {
       message: `کاربر با نام کاربری ${newUser.phoneNumber} با موفقیت ایجاد شد`,
     });
-  } catch (e) {
-    next(e);
+  } catch (err) {
+    onCatchPromiseController(err, next);
   }
 };
 
-export const updateUserPersonalInfoController = async (req, res) => {
+export const updateUserPersonalInfoController = async (req, res, next) => {
   try {
     const formBody = returnFormValidation(
       userUpdatePersonalInfoSchema,
@@ -68,14 +69,11 @@ export const updateUserPersonalInfoController = async (req, res) => {
       message: `اطلاعات ${getUserFullName(updatedUser)} ویرایش شد`,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: JSON.stringify(err),
-    });
+    onCatchPromiseController(err, next);
   }
 };
 
-export const updateUserLocationInfoController = async (req, res) => {
+export const updateUserLocationInfoController = async (req, res, next) => {
   try {
     const formBody = returnFormValidation(
       userUpdateLocationInfoSchema,
@@ -94,10 +92,7 @@ export const updateUserLocationInfoController = async (req, res) => {
       message: `اطلاعات موقعیتی ${getUserFullName(updatedUser)} ویرایش شد`,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: JSON.stringify(err),
-    });
+    onCatchPromiseController(err, next);
   }
 };
 
@@ -112,7 +107,7 @@ export const changeUserPasswordController = async (req, res) => {
     const user = await doesUserExist({ _id: body.userId });
 
     if (!user)
-      setErrorResponse(res, STATUES.NOT_FOUND, {
+      setErrorResponse(STATUES.NOT_FOUND, {
         message: 'کاربری با این شناسه یافت نشد',
       });
 
@@ -122,7 +117,7 @@ export const changeUserPasswordController = async (req, res) => {
     );
 
     if (!isOldPasswordCorrect)
-      setErrorResponse(res, STATUES.BAD_FORM_VALIDATION, {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
         message: 'کلمه عبور قبلی صحیح نیست',
       });
 
@@ -139,14 +134,14 @@ export const changeUserPasswordController = async (req, res) => {
       message: `${getUserFullName(user)} با موفقیت کلمه عبور ویرایش شد.`,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
+    setErrorResponse(STATUES.INTERNAL_SERVER, {
       message: 'خطای سمت سرور',
       data: err,
     });
   }
 };
 
-export const disableUserController = async (req, res) => {
+export const disableUserController = async (req, res, next) => {
   try {
     const updatedUser = await updateUser(req.params?.id, res, UserModel, {
       isEnable: false,
@@ -156,14 +151,11 @@ export const disableUserController = async (req, res) => {
       message: `${getUserFullName(updatedUser)} با موفقیت غیرفعال شد.`,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: err,
-    });
+    onCatchPromiseController(err, next);
   }
 };
 
-export const enableUserController = async (req, res) => {
+export const enableUserController = async (req, res, next) => {
   try {
     const updatedUser = await updateUser(req.params?.id, res, UserModel, {
       isEnable: true,
@@ -173,14 +165,11 @@ export const enableUserController = async (req, res) => {
       message: `${getUserFullName(updatedUser)} با موفقیت فعال شد.`,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: err,
-    });
+    onCatchPromiseController(err, next);
   }
 };
 
-export const getAllUsersListController = async (req, res) => {
+export const getAllUsersListController = async (req, res, next) => {
   try {
     const filterQuery = setAllUsersFilter(req.query);
     console.log(filterQuery);
@@ -190,15 +179,12 @@ export const getAllUsersListController = async (req, res) => {
       data: usersList,
       totalRecords: usersList?.length,
     });
-  } catch (error) {
-    setErrorResponse(res, STATUES.OTHER_PROBLEM, {
-      message: 'خطای سمت سرور',
-      error: JSON.stringify(error),
-    });
+  } catch (err) {
+    onCatchPromiseController(err, next);
   }
 };
 
-export const getAllUsersListPaginateController = async (req, res) => {
+export const getAllUsersListPaginateController = async (req, res, next) => {
   try {
     const filterQuery = setPaginateUsersFilter(req.query);
 
@@ -207,7 +193,7 @@ export const getAllUsersListPaginateController = async (req, res) => {
       filterQuery,
       '-password',
       (err) =>
-        setErrorResponse(res, STATUES.OTHER_PROBLEM, {
+        setErrorResponse(STATUES.OTHER_PROBLEM, {
           message: 'خطای سمت سرور',
           error: JSON.stringify(err),
         }),
@@ -215,15 +201,12 @@ export const getAllUsersListPaginateController = async (req, res) => {
     setSuccessResponse(res, STATUES.SUCCESS, {
       data,
     });
-  } catch (error) {
-    setErrorResponse(res, STATUES.OTHER_PROBLEM, {
-      message: 'خطای سمت سرور',
-      error: JSON.stringify(error),
-    });
+  } catch (err) {
+    onCatchPromiseController(err, next);
   }
 };
 
-export const getUserByIdController = async (req, res) => {
+export const getUserByIdController = async (req, res, next) => {
   try {
     const user = getUserById(req, res, UserModel);
 
@@ -231,14 +214,11 @@ export const getUserByIdController = async (req, res) => {
       data: user,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: err,
-    });
+    onCatchPromiseController(err, next);
   }
 };
 
-export const getUserCartListController = async (req, res) => {
+export const getUserCartListController = async (req, res, next) => {
   try {
     const user = await getUserById(req, res, UserModel);
     console.log(user);
@@ -246,9 +226,6 @@ export const getUserCartListController = async (req, res) => {
       data: user.cart,
     });
   } catch (err) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: err,
-    });
+    onCatchPromiseController(err, next);
   }
 };

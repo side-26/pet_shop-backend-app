@@ -15,15 +15,11 @@ export const doesBodyExist = (req, res, msg) => {
 };
 
 export const setErrorResponse = (statusCode, options = {}) => {
-  const err = new Error(options.message || 'Error'); // optionally set a default message
+  const err = new Error(options.message || 'خطای سمت سرور'); // optionally set a default message
 
-  // console.log(options?.data);
-
-  err.statusCode = statusCode;
+  err.statusCode = statusCode || STATUES.INTERNAL_SERVER;
 
   Object.assign(err, { ...options });
-
-  console.log(err);
 
   throw err;
 };
@@ -106,15 +102,13 @@ export const getPaginationData = async (
 export const returnFormValidation = (validationSchema, body) => {
   const result = validationSchema.safeParse(body);
   if (!result.success) {
-    console.log('before');
     const fieldErrors = JSON.parse(result?.error?.message)?.map(
       ({ path, message }) => ({
         field: path?.[0],
         value: message,
       }),
     );
-    console.log('after');
-    console.log(fieldErrors, 'fieldErrors');
+
     setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
       message: 'اطلاعات وارد شده معتبر نیست', // global message
       data: {
@@ -125,7 +119,7 @@ export const returnFormValidation = (validationSchema, body) => {
 
     return;
   }
-  console.log('after after');
+
   const validatedData = result.data;
 
   return validatedData;
@@ -133,4 +127,13 @@ export const returnFormValidation = (validationSchema, body) => {
 
 export const setAllStatics = (server) => {
   server.use(static_(path.join(__dirname, 'public')));
+};
+
+export const onCatchPromiseController = (err, next) => {
+  // setErrorResponse(STATUES.INTERNAL_SERVER, {
+  //   message: 'خطای سمت سرور',
+  //   data: JSON.stringify(err),
+  // });
+
+  next(err);
 };
