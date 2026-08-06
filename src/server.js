@@ -5,7 +5,8 @@ import dotenv from 'dotenv';
 import connectDB from '#configs/db.config.js';
 import { swaggerUi, specs } from '#configs/swagger.config.js';
 import userRoutes from '#entities/users/users.route.js';
-import { setAllStatics } from './utils';
+import { errorHandler } from '#middlewares/error.middleware.js';
+import { setAllStatics } from './utils/index.js';
 
 // config dotenv
 dotenv.config();
@@ -25,6 +26,10 @@ setAllStatics(server);
 server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 server.use(userRoutes);
+
+server.use(errorHandler);
+
+// * handling Errors
 
 // * end all middlewares
 // * DB connect

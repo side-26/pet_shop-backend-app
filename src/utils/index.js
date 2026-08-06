@@ -14,11 +14,18 @@ export const doesBodyExist = (req, res, msg) => {
     });
 };
 
-export const setErrorResponse = (res, statusCode, option) => {
-  res.status(statusCode).json({
-    isSuccess: false,
-    ...option,
-  });
+export const setErrorResponse = (statusCode, options = {}) => {
+  const err = new Error(options.message || 'Error'); // optionally set a default message
+
+  // console.log(options?.data);
+
+  err.statusCode = statusCode;
+
+  Object.assign(err, { ...options });
+
+  console.log(err);
+
+  throw err;
 };
 
 export const setSuccessResponse = (res, statusCode, option) => {
@@ -96,17 +103,19 @@ export const getPaginationData = async (
 };
 
 // export const globalPUTController = async();
-export const returnFormValidation = (validationSchema, body, res) => {
+export const returnFormValidation = (validationSchema, body) => {
   const result = validationSchema.safeParse(body);
   if (!result.success) {
+    console.log('before');
     const fieldErrors = JSON.parse(result?.error?.message)?.map(
       ({ path, message }) => ({
         field: path?.[0],
         value: message,
       }),
     );
-
-    setErrorResponse(res, STATUES.BAD_FORM_VALIDATION, {
+    console.log('after');
+    console.log(fieldErrors, 'fieldErrors');
+    setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
       message: 'اطلاعات وارد شده معتبر نیست', // global message
       data: {
         messages: fieldErrors,
@@ -116,7 +125,7 @@ export const returnFormValidation = (validationSchema, body, res) => {
 
     return;
   }
-
+  console.log('after after');
   const validatedData = result.data;
 
   return validatedData;

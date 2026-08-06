@@ -11,7 +11,12 @@ export const userZodSchema = object({
   address: string().optional(),
   isEnable: boolean().optional(),
   nationalCode: string().optional(),
-  postalCode: string().min(10).max(10).optional(),
+  postalCode: string()
+    .transform((val) => (val === '' ? undefined : val))
+    .optional()
+    .refine((val) => val === undefined || /^\d{10}$/.test(val), {
+      message: 'کد پستی باید دقیقاً ۱۰ رقم باشد', // This message will be overridden by the error map if we don't return issue.message, but it's optional.
+    }),
   city: string().optional(),
   role: string().optional(),
   province: string().optional(),

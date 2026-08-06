@@ -25,19 +25,19 @@ import {
   updateUser,
 } from './users.utils.js';
 
-export const createUserController = async (req, res) => {
+export const createUserController = async (req, res, next) => {
   try {
-    const body = returnFormValidation(userZodSchema, req.body, res);
+    const body = returnFormValidation(userZodSchema, req.body);
 
     const userExist = await doesUserExist({ phoneNumber: body.phoneNumber });
 
     if (userExist) {
-      setErrorResponse(res, STATUES.BAD_FORM_VALIDATION, {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
         message: 'کاربری با این مشخصات وجود دارد',
       });
     }
 
-    const formBody = await getBodyWithHashPassword(body, res);
+    const formBody = await getBodyWithHashPassword(body);
 
     const newUser = await UserModel.create(formBody);
 
@@ -45,12 +45,7 @@ export const createUserController = async (req, res) => {
       message: `کاربر با نام کاربری ${newUser.phoneNumber} با موفقیت ایجاد شد`,
     });
   } catch (e) {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: {
-        detail: e,
-      },
-    });
+    next(e);
   }
 };
 
@@ -131,7 +126,7 @@ export const changeUserPasswordController = async (req, res) => {
         message: 'کلمه عبور قبلی صحیح نیست',
       });
 
-    const formBody = await getBodyWithHashPassword(body, res);
+    const formBody = await getBodyWithHashPassword(body);
 
     await UserModel.updateOne(
       { _id: formBody.userId },

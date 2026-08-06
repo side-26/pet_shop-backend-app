@@ -11,7 +11,6 @@ export const doesUserExist = async (body) => {
 
 export const getBodyWithHashPassword = async (
   requestBody,
-  res,
   passwordFieldKey = 'password',
 ) => {
   try {
@@ -20,7 +19,7 @@ export const getBodyWithHashPassword = async (
     body[passwordFieldKey] = await bcrypt.hash(body[passwordFieldKey], salt);
     return body;
   } catch {
-    setErrorResponse(res, STATUES.INTERNAL_SERVER, {
+    setErrorResponse(STATUES.INTERNAL_SERVER, {
       message: 'مشکلی پیش آمده لطفا مجددا تلاش فرمایید',
     });
   }
