@@ -10,6 +10,7 @@ import {
   setSuccessResponse,
   returnFormValidation,
   onCatchPromiseController,
+  verifyUser,
 } from '#utils/index.js';
 import {
   userChangePasswordFormBodyValidation,
@@ -74,7 +75,7 @@ export const loginUserController = async (req, res, next) => {
         message: 'کاربری با این مشخصات یافت نشد',
       });
 
-    const accessToken = createNewToken(user._id, user.phoneNumber, '30seconds');
+    const accessToken = createNewToken(user._id, user.phoneNumber, '7h');
 
     const refreshToken = jwt.sign(
       {
@@ -82,7 +83,7 @@ export const loginUserController = async (req, res, next) => {
         phoneNumber: user.phoneNumber,
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: '1min' },
+      { expiresIn: '7d' },
     );
 
     setSuccessResponse(res, STATUES.SUCCESS, {
@@ -108,14 +109,7 @@ export const refreshTokenController = async (req, res, next) => {
         message: 'توکن نامعتبر است',
       });
     }
-
-    jwt.verify(refreshToken, process.env.JWT_SECRET_KEY, (err, decoded) => {
-      if (err) {
-        setErrorResponse(STATUES.UN_AUTHORIZED, {
-          message: 'توکن نامعتبر است یا منقضی شده است',
-        });
-      }
-
+    verifyUser(req, res, refreshToken, (decoded) => {
       const newToken = createNewToken(decoded.userId, decoded.phoneNumber);
 
       setSuccessResponse(res, STATUES.CREATED, {

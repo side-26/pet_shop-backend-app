@@ -13,11 +13,13 @@ import {
   refreshTokenController,
   updateUserLocationInfoController,
 } from './users.controller.js';
+import { authenticated } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
 router.post(
   '/users',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Create a new user'
@@ -60,6 +62,7 @@ router.post(
 
 router.post(
   '/users/refresh-token',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Refresh user token'
@@ -93,6 +96,7 @@ router.put(
 
 router.put(
   '/users/editLocationInfo',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Update location info'
@@ -114,6 +118,7 @@ router.put(
 
 router.put(
   '/users/changePassword',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Change user password'
@@ -135,6 +140,7 @@ router.put(
 
 router.put(
   '/users/disable/:id',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Disable a user'
@@ -149,6 +155,7 @@ router.put(
 
 router.put(
   '/users/enable/:id',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Enable a user'
@@ -163,6 +170,7 @@ router.put(
 
 router.get(
   '/users/all',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get all users'
@@ -176,6 +184,7 @@ router.get(
 
 router.get(
   '/users/paginate',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get paginated users'
@@ -191,6 +200,7 @@ router.get(
 
 router.get(
   '/users/:id',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get user by ID'
@@ -209,6 +219,7 @@ router.get(
 
 router.get(
   '/users/cart/:id',
+  authenticated,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get user cart'

@@ -1,4 +1,6 @@
 import { static as static_ } from 'express';
+import jwt from 'jsonwebtoken';
+
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -136,4 +138,16 @@ export const onCatchPromiseController = (err, next) => {
   // });
 
   next(err);
+};
+
+export const verifyUser = (token, onSuccess) => {
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    if (err) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'توکن نامعتبر است',
+      });
+    }
+
+    onSuccess(decoded);
+  });
 };
