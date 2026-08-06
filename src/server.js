@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 
 import connectDB from '#configs/db.config.js';
 import userRoutes from '#entities/users/users.route.js';
+import { headerMiddleware } from '#middlewares/header.middleware.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { setAllStatics } from './utils/index.js';
 
@@ -20,6 +21,9 @@ const server = express();
 server.use(express.json());
 
 server.use(express.urlencoded({ extended: false }));
+
+// * header middleware
+server.use(headerMiddleware);
 
 setAllStatics(server);
 

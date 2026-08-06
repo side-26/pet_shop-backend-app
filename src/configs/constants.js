@@ -55,3 +55,11 @@ export const STATUES = {
   INTERNAL_SERVER: 500,
   OTHER_PROBLEM: 503,
 };
+
+export const METHODS = {
+  // get: 'GET',
+  post: 'POST',
+  // Put: 'PUT',
+  // patch: 'PATCH',
+  // delete: 'DELETE',
+};
