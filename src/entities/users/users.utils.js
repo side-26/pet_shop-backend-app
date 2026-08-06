@@ -1,8 +1,10 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
 import { STATUES } from '#configs/constants.js';
 import { createNewQueryParam, setErrorResponse } from '#utils/index.js';
 import { UserModel } from './users.model.js';
 
-import bcrypt from 'bcryptjs';
 export const doesUserExist = async (body) => {
   const user = await UserModel.findOne(body);
 
@@ -167,4 +169,15 @@ export const getUserFullName = (
 
 export const compareTwoPassword = async (hashedPassword, rawPassword) => {
   return bcrypt.compare(rawPassword, hashedPassword);
+};
+
+export const createNewToken = (userId, phoneNumber, expiresIn = '8h') => {
+  return jwt.sign(
+    {
+      userId,
+      phoneNumber,
+    },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn },
+  );
 };

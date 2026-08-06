@@ -9,8 +9,9 @@ import {
   getAllUsersListPaginateController,
   getUserByIdController,
   getUserCartListController,
+  loginUserController,
+  refreshTokenController,
   updateUserLocationInfoController,
-  updateUserPersonalInfoController,
 } from './users.controller.js';
 
 const router = express.Router();
@@ -36,6 +37,39 @@ router.post(
   createUserController,
 );
 
+router.post(
+  '/users/login',
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Login user'
+    #swagger.requestBody = {
+      required: true,
+      content: { "application/json": { schema: { $ref: '#/components/schemas/LoginUserBody' } } }
+    }
+    #swagger.responses[200] = {
+      description: 'User logged in successfully',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
+    }
+    #swagger.responses[404] = {
+      description: 'User not found',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  loginUserController,
+);
+
+router.post(
+  '/users/refresh-token',
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Refresh user token'
+    #swagger.requestBody = {
+      required: true,
+      content: { "application/json": { schema: { $ref: '#/components/schemas/RefreshTokenBody' } } }
+    }
+    #swagger.responses[200] = {
+      description: 'Token refreshed successfully',  )
+
 router.put(
   '/users/editInfo',
   /*
@@ -54,7 +88,7 @@ router.put(
       content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
     }
   */
-  updateUserPersonalInfoController,
+  refreshTokenController,
 );
 
 router.put(

@@ -15,6 +15,8 @@ dotenv.config();
 
 const server = express();
 
+server.disable('x-powered-by');
+
 // * all middlewares
 
 // express body parser

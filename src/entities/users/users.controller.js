@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken';
+
 import { STATUES } from '#configs/constants.js';
 import { UserModel } from '#entities/users/users.model.js';
 
@@ -17,6 +19,7 @@ import {
 } from './users.schema.js';
 import {
   compareTwoPassword,
+  createNewToken,
   doesUserExist,
   getBodyWithHashPassword,
   getUserById,
@@ -44,6 +47,83 @@ export const createUserController = async (req, res, next) => {
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: `کاربر با نام کاربری ${newUser.phoneNumber} با موفقیت ایجاد شد`,
+    });
+  } catch (err) {
+    onCatchPromiseController(err, next);
+  }
+};
+
+export const loginUserController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(userZodSchema, req.body);
+
+    const user = await doesUserExist({ phoneNumber: body.phoneNumber });
+
+    if (!user)
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'کاربری با این مشخصات یافت نشد',
+      });
+
+    const isPasswordCorrect = await compareTwoPassword(
+      user.password,
+      body.password,
+    );
+
+    if (!isPasswordCorrect)
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'کاربری با این مشخصات یافت نشد',
+      });
+
+    const accessToken = createNewToken(user._id, user.phoneNumber, '30seconds');
+
+    const refreshToken = jwt.sign(
+      {
+        userId: user._id,
+        phoneNumber: user.phoneNumber,
+      },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: '1min' },
+    );
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: `کاربر با نام کاربری ${user.phoneNumber} با موفقیت وارد شد`,
+      data: {
+        accessToken,
+        refreshToken,
+        userId: user._id,
+        phoneNumber: user.phoneNumber,
+      },
+    });
+  } catch (err) {
+    onCatchPromiseController(err, next);
+  }
+};
+
+export const refreshTokenController = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'توکن نامعتبر است',
+      });
+    }
+
+    jwt.verify(refreshToken, process.env.JWT_SECRET_KEY, (err, decoded) => {
+      if (err) {
+        setErrorResponse(STATUES.UN_AUTHORIZED, {
+          message: 'توکن نامعتبر است یا منقضی شده است',
+        });
+      }
+
+      const newToken = createNewToken(decoded.userId, decoded.phoneNumber);
+
+      setSuccessResponse(res, STATUES.CREATED, {
+        message: null,
+        data: {
+          accessToken: newToken,
+        },
+      });
     });
   } catch (err) {
     onCatchPromiseController(err, next);
