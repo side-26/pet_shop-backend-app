@@ -1,0 +1,615 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Pet-shop API Documentation",
+    "description": "Express API with Swagger"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "local server"
+    }
+  ],
+  "paths": {
+    "/users": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Create a new user",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/editInfo": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update personal info",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Personal info updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPersonalInfoBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/editLocationInfo": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update location info",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Location info updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserLocationInfoBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/changePassword": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Change user password",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Wrong old password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeUserPasswordBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/disable/{id}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Disable a user",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/enable/{id}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Enable a user",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/all": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get all users",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/paginate": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get paginated users",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "default": {
+                  "type": "number",
+                  "example": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "default": {
+                  "type": "number",
+                  "example": 10
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user by ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/cart/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user cart",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User cart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateUserBody": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "minLength": 11,
+            "maxLength": 11
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "isEnable": {
+            "type": "boolean"
+          },
+          "nationalCode": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 10
+          },
+          "city": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "province": {
+            "type": "string"
+          },
+          "age": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orders": {
+            "type": "array",
+            "items": {}
+          },
+          "cart": {
+            "type": "array",
+            "items": {}
+          }
+        },
+        "required": ["phoneNumber", "password"],
+        "additionalProperties": false
+      },
+      "UpdateUserPersonalInfoBody": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "nationalCode": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 10
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 9007199254740991
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["customer", "admin"]
+          }
+        },
+        "required": [
+          "userId",
+          "firstName",
+          "lastName",
+          "email",
+          "nationalCode",
+          "age"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateUserLocationInfoBody": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "minLength": 5
+          },
+          "city": {
+            "type": "string",
+            "minLength": 2
+          },
+          "province": {
+            "type": "string",
+            "minLength": 2
+          },
+          "postalCode": {
+            "type": "string"
+          }
+        },
+        "required": ["userId", "address", "city", "province", "postalCode"],
+        "additionalProperties": false
+      },
+      "ChangeUserPasswordBody": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "oldPassword": {
+            "type": "string",
+            "minLength": 8
+          },
+          "repeatPassword": {
+            "type": "string",
+            "minLength": 8
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": ["password", "oldPassword", "repeatPassword", "userId"],
+        "additionalProperties": false
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {}
+        },
+        "required": ["isSuccess"]
+      },
+      "PaginatedResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "array",
+                "items": {}
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "currentPage": {
+                    "type": "integer"
+                  },
+                  "totalPages": {
+                    "type": "integer"
+                  },
+                  "totalItems": {
+                    "type": "integer"
+                  },
+                  "itemsPerPage": {
+                    "type": "integer"
+                  },
+                  "hasNextPage": {
+                    "type": "boolean"
+                  },
+                  "hasPrevPage": {
+                    "type": "boolean"
+                  },
+                  "nextPage": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "prevPage": {
+                    "type": "integer",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": ["isSuccess"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {}
+        },
+        "required": ["isSuccess"]
+      }
+    }
+  }
+}

@@ -2,8 +2,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
 
+// import swaggerUi from 'swagger-ui-express';
+
 import connectDB from '#configs/db.config.js';
-import { swaggerUi, specs } from '#configs/swagger.config.js';
 import userRoutes from '#entities/users/users.route.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { setAllStatics } from './utils/index.js';
@@ -22,10 +23,9 @@ server.use(express.urlencoded({ extended: false }));
 
 setAllStatics(server);
 
-// swagger route
-server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+// server.use('/api-docs', ...swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-server.use(userRoutes);
+server.use('/api', userRoutes);
 
 server.use(errorHandler);
 

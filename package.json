@@ -10,7 +10,8 @@
     "dev": "cross-env NODE_ENV=development nodemon ./src/server.js",
     "prestart": "npm run format && npm run lint",
     "start": "cross-env NODE_ENV=production node ./src/server.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "swagger": "node ./src/configs/swagger.config.js"
   },
   "keywords": [],
   "author": "",
@@ -42,7 +43,8 @@
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.6.0",
     "husky": "^9.1.7",
-    "prettier": "^3.8.3"
+    "prettier": "^3.8.3",
+    "swagger-autogen": "^2.23.7"
   },
   "imports": {
     "#configs/*": "./src/configs/*",
