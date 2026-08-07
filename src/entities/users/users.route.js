@@ -14,12 +14,15 @@ import {
   updateUserLocationInfoController,
 } from './users.controller.js';
 import { authenticated } from '../../middlewares/auth.middleware.js';
+import { roleMiddleware } from '#middlewares/role.middleware.js';
+import { ROLES } from '#configs/constants.js';
 
 const router = express.Router();
 
 router.post(
   '/users',
   authenticated,
+  roleMiddleware(ROLES.ADMIN),
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Create a new user'
@@ -141,6 +144,7 @@ router.put(
 router.put(
   '/users/disable/:id',
   authenticated,
+  roleMiddleware(ROLES.ADMIN),
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Disable a user'
@@ -156,6 +160,7 @@ router.put(
 router.put(
   '/users/enable/:id',
   authenticated,
+  roleMiddleware(ROLES.ADMIN),
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Enable a user'
@@ -171,6 +176,7 @@ router.put(
 router.get(
   '/users/all',
   authenticated,
+  roleMiddleware(ROLES.ADMIN),
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get all users'
@@ -185,6 +191,7 @@ router.get(
 router.get(
   '/users/paginate',
   authenticated,
+  roleMiddleware(ROLES.ADMIN),
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get paginated users'
@@ -201,6 +208,7 @@ router.get(
 router.get(
   '/users/:id',
   authenticated,
+  roleMiddleware(ROLES.ADMIN),
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Get user by ID'

@@ -1,5 +1,6 @@
 import { any, z } from 'zod';
 import '#configs/zod.config.js';
+import { ROLES } from '#configs/constants.js';
 const { string, number, array, object, email, boolean, url, enum: zEnum } = z;
 
 export const userZodSchema = object({
@@ -18,7 +19,9 @@ export const userZodSchema = object({
       message: 'کد پستی باید دقیقاً ۱۰ رقم باشد', // This message will be overridden by the error map if we don't return issue.message, but it's optional.
     }),
   city: string().optional(),
-  role: string().optional(),
+  role: zEnum([...Object.values(ROLES)])
+    .optional()
+    .default(ROLES.CUSTOMER),
   province: string().optional(),
   age: number().nullable().optional(), // new field – number
   orders: array(any()).optional(), // defaults handled by Mongoose
@@ -43,7 +46,7 @@ export const userUpdatePersonalInfoSchema = z.object({
   nationalCode: string().length(10),
   age: number().int().min(4),
   avatar: url().optional(),
-  role: zEnum(['customer', 'admin']).optional(),
+  role: zEnum([Object.values(ROLES)]).optional(),
 });
 
 export const userUpdateLocationInfoSchema = z.object({

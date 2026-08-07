@@ -50,6 +50,7 @@ export const createUserController = async (req, res, next) => {
       message: `کاربر با نام کاربری ${newUser.phoneNumber} با موفقیت ایجاد شد`,
     });
   } catch (err) {
+    console.log(err, 'err');
     onCatchPromiseController(err, next);
   }
 };
@@ -75,12 +76,16 @@ export const loginUserController = async (req, res, next) => {
         message: 'کاربری با این مشخصات یافت نشد',
       });
 
-    const accessToken = createNewToken(user._id, user.phoneNumber, '7h');
+    const accessToken = createNewToken(
+      user._id,
+      user.phoneNumber,
+      user.role,
+      '7h',
+    );
 
     const refreshToken = jwt.sign(
       {
         userId: user._id,
-        phoneNumber: user.phoneNumber,
       },
       process.env.JWT_SECRET_KEY,
       { expiresIn: '7d' },
@@ -91,8 +96,6 @@ export const loginUserController = async (req, res, next) => {
       data: {
         accessToken,
         refreshToken,
-        userId: user._id,
-        phoneNumber: user.phoneNumber,
       },
     });
   } catch (err) {
@@ -110,7 +113,12 @@ export const refreshTokenController = async (req, res, next) => {
       });
     }
     verifyUser(req, res, refreshToken, (decoded) => {
-      const newToken = createNewToken(decoded.userId, decoded.phoneNumber);
+      const newToken = createNewToken(
+        decoded.userId,
+        decoded.phoneNumber,
+        decoded.role,
+        '7h',
+      );
 
       setSuccessResponse(res, STATUES.CREATED, {
         message: null,

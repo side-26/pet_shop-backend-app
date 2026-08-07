@@ -63,3 +63,9 @@ export const METHODS = {
   // patch: 'PATCH',
   // delete: 'DELETE',
 };
+
+export const ROLES = {
+  ADMIN: 'admin',
+  CUSTOMER: 'customer',
+  SELLER: 'seller',
+};

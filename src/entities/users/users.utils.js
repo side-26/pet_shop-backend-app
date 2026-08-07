@@ -171,11 +171,12 @@ export const compareTwoPassword = async (hashedPassword, rawPassword) => {
   return bcrypt.compare(rawPassword, hashedPassword);
 };
 
-export const createNewToken = (userId, phoneNumber, expiresIn = '8h') => {
+export const createNewToken = (userId, phoneNumber, role, expiresIn = '8h') => {
   return jwt.sign(
     {
       userId,
-      phoneNumber,
+      username: phoneNumber,
+      role,
     },
     process.env.JWT_SECRET_KEY,
     { expiresIn },

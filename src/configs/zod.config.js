@@ -4,12 +4,12 @@ import { z } from 'zod';
 const fieldNamesMap = {
   // ... your existing map
   postalCode: 'کد پستی',
+  role: 'نقش کاربر',
   // ...
 };
 
-const customErrorMap = (issue, ctx) => {
+const customErrorMap = (issue) => {
   const fieldName = fieldNamesMap[issue.path.join('.')] || 'این فیلد';
-
   switch (issue.code) {
     case 'invalid_type':
       if (issue.received === 'undefined') {
@@ -33,18 +33,19 @@ const customErrorMap = (issue, ctx) => {
       }
       break;
 
-    // ✅ Add this block for custom validations
+    // ✅ Add this case for enum validation
+    case 'invalid_value': {
+      const validValues = issue.values?.join('، ') || '';
+      return {
+        message: `.${fieldName} باید یکی از ${validValues} باشد`,
+      };
+    }
     case 'custom':
-      // If you set a specific message in the refine, you can use it:
-      // return { message: issue.message || `${fieldName} معتبر نیست` };
       return { message: `${fieldName} معتبر نیست` };
-
-    // You can keep or remove 'invalid_format' – it's rarely used by Zod's built‑in methods
-    // case 'invalid_format':
-    //   return { message: `فرمت ${fieldName} معتبر نیست` };
   }
 
-  return { message: ctx.defaultError };
+  // Provide a fallback message instead of relying on ctx.defaultError
+  return { message: `${fieldName} معتبر نیست` };
 };
 
 z.setErrorMap(customErrorMap);

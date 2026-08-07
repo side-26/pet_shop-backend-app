@@ -8,7 +8,10 @@ export const authenticated = (req, res, next) => {
   const token = authHeader.split(' ')?.[1] || '';
 
   try {
-    verifyUser(token, () => next());
+    verifyUser(token, (decoded) => {
+      req.user = decoded;
+      next();
+    });
   } catch {
     setErrorResponse(STATUES.UN_AUTHORIZED, {
       message: 'توکن نامعتبر است',
