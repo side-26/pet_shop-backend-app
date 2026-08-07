@@ -28,7 +28,7 @@ import {
   setAllUsersFilter,
   setPaginateUsersFilter,
   updateUser,
-} from './users.utils.js';
+} from './users.helpers.js';
 
 export const createUserController = async (req, res, next) => {
   try {

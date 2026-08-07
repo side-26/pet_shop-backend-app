@@ -1,51 +1,131 @@
-// utils/zodErrorMap.js
+// utils/zod.persian.js
 import { z } from 'zod';
 
-const fieldNamesMap = {
-  // ... your existing map
-  postalCode: 'کد پستی',
+// ============================================
+// PERSIAN FIELD NAMES
+// ============================================
+const persianFieldNames = {
+  // User
+  firstName: 'نام',
+  lastName: 'نام خانوادگی',
+  email: 'ایمیل',
+  phoneNumber: 'شماره تلفن',
+  password: 'کلمه عبور',
   role: 'نقش کاربر',
-  // ...
+  nationalCode: 'کد ملی',
+  address: 'آدرس',
+  city: 'شهر',
+
+  // Pet
+  title: 'عنوان',
+  description: 'توضیحات',
+  petType: 'نوع حیوان',
+  breed: 'نژاد',
+  age: 'سن',
+  gender: 'جنسیت',
+  size: 'اندازه',
+  color: 'رنگ',
+  weight: 'وزن',
+  healthStatus: 'وضعیت سلامت',
+  availability: 'در دسترس بودن',
+  price: 'قیمت',
+  isEnabled: 'وضعیت فعال',
+
+  // Common
+  page: 'صفحه',
+  limit: 'تعداد در صفحه',
+  sort: 'مرتب‌سازی',
+  token: 'توکن',
+  userId: 'شناسه کاربر',
 };
 
-const customErrorMap = (issue) => {
-  const fieldName = fieldNamesMap[issue.path.join('.')] || 'این فیلد';
+// ============================================
+// ERROR MESSAGES
+// ============================================
+const persianMessages = {
+  // Required
+  required: (field) => `${field} الزامی است`,
+
+  // String length
+  minLength: (field, min) => `${field} باید حداقل ${min} کاراکتر باشد`,
+  maxLength: (field, max) => `${field} باید حداکثر ${max} کاراکتر باشد`,
+
+  // Number range
+  minNumber: (field, min) => `${field} باید حداقل ${min} باشد`,
+  maxNumber: (field, max) => `${field} باید حداکثر ${max} باشد`,
+
+  // Type
+  invalidType: (field) => `${field} باید یک مقدار معتبر باشد`,
+  invalidEmail: (field) => `${field} باید یک ایمیل معتبر باشد`,
+  invalidUrl: (field) => `${field} باید یک آدرس معتبر باشد`,
+
+  // Enum
+  invalidEnum: (field, values) =>
+    `${field} باید یکی از مقادیر (${values}) باشد`,
+
+  // Custom
+  invalid: (field) => `${field} معتبر نیست`,
+};
+
+// ============================================
+// CUSTOM ERROR MAP
+// ============================================
+const persianErrorMap = (issue) => {
+  const fieldPath = issue.path.join('.');
+  const fieldName =
+    persianFieldNames[fieldPath] ||
+    persianFieldNames[issue.path[0]] ||
+    'این فیلد';
+
   switch (issue.code) {
     case 'invalid_type':
       if (issue.received === 'undefined') {
-        return { message: `${fieldName} الزامی است` };
+        return { message: persianMessages.required(fieldName) };
       }
-      return { message: `${fieldName} باید یک مقدار معتبر باشد` };
+      return { message: persianMessages.invalidType(fieldName) };
 
     case 'too_small':
-      return {
-        message: `${fieldName} باید حداقل ${issue.minimum} کاراکتر باشد`,
-      };
-
-    case 'too_big':
-      return {
-        message: `${fieldName} باید حداکثر ${issue.maximum} کاراکتر باشد`,
-      };
-
-    case 'invalid_string':
-      if (issue.validation === 'email') {
-        return { message: `${fieldName} معتبر نیست` };
+      if (issue.type === 'string') {
+        return { message: persianMessages.minLength(fieldName, issue.minimum) };
+      }
+      if (issue.type === 'number') {
+        return { message: persianMessages.minNumber(fieldName, issue.minimum) };
       }
       break;
 
-    // ✅ Add this case for enum validation
+    case 'too_big':
+      if (issue.type === 'string') {
+        return { message: persianMessages.maxLength(fieldName, issue.maximum) };
+      }
+      if (issue.type === 'number') {
+        return { message: persianMessages.maxNumber(fieldName, issue.maximum) };
+      }
+      break;
+
+    case 'invalid_string':
+      if (issue.validation === 'email') {
+        return { message: persianMessages.invalidEmail(fieldName) };
+      }
+      if (issue.validation === 'url') {
+        return { message: persianMessages.invalidUrl(fieldName) };
+      }
+      break;
+
     case 'invalid_value': {
-      const validValues = issue.values?.join('، ') || '';
-      return {
-        message: `.${fieldName} باید یکی از ${validValues} باشد`,
-      };
+      const validValues = issue.options?.join('، ') || '';
+      return { message: persianMessages.invalidEnum(fieldName, validValues) };
     }
-    case 'custom':
-      return { message: `${fieldName} معتبر نیست` };
+
+    default:
+      return { message: persianMessages.invalid(fieldName) };
   }
 
-  // Provide a fallback message instead of relying on ctx.defaultError
-  return { message: `${fieldName} معتبر نیست` };
+  return { message: persianMessages.invalid(fieldName) };
 };
 
-z.setErrorMap(customErrorMap);
+// ============================================
+// SET PERSIAN ERROR MAP
+// ============================================
+z.setErrorMap(persianErrorMap);
+
+export default persianErrorMap;
