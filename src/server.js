@@ -1,50 +1,89 @@
-// import 'module-alias/register';
-import express from 'express';
-import dotenv from 'dotenv';
-
-// import swaggerUi from 'swagger-ui-express';
-
+import app from './app.js';
+import logger from '#configs/logger.js';
 import connectDB from '#configs/db.config.js';
-import userRoutes from '#entities/users/users.route.js';
-import { headerMiddleware } from '#middlewares/header.middleware.js';
-import { errorHandler } from '#middlewares/error.middleware.js';
-import { setAllStatics } from './utils/index.js';
 
-// config dotenv
-dotenv.config();
+const PORT = process.env.PORT || 3000;
 
-const server = express();
+// ============================================
+// SERVER STARTUP
+// ============================================
 
-server.disable('x-powered-by');
+const startServer = () => {
+  connectDB(() => {
+    const server = app.listen(PORT, () => {
+      logger.app.info('Server started successfully', {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        url: `http://localhost:${PORT}`,
+        nodeVersion: process.version,
+        pid: process.pid,
+      });
 
-// * all middlewares
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 URL: http://localhost:${PORT}`);
+      // console.log(`📚 Swagger docs: http://localhost:${PORT}/api-docs`);
+    });
 
-// express body parser
-server.use(express.json());
+    // ============================================
+    // GRACEFUL SHUTDOWN
+    // ============================================
 
-server.use(express.urlencoded({ extended: false }));
+    const gracefulShutdown = (signal) => {
+      logger.app.warn('Received shutdown signal', { signal });
+      console.log(`\n🔄 Received ${signal}, shutting down gracefully...`);
 
-// * header middleware
-server.use(headerMiddleware);
+      server.close(() => {
+        logger.app.info('Server closed gracefully', {
+          uptime: process.uptime(),
+          connections: server._connections || 0,
+        });
+        console.log('👋 Server closed gracefully');
+        process.exit(0);
+      });
 
-setAllStatics(server);
+      // Force shutdown after 10 seconds
+      setTimeout(() => {
+        logger.app.error('Force shutdown after timeout');
+        console.log('💥 Force shutdown');
+        process.exit(1);
+      }, 10000);
+    };
 
-// server.use('/api-docs', ...swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    // Listen for shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-server.use('/api', userRoutes);
+    // ============================================
+    // UNHANDLED EXCEPTIONS & REJECTIONS
+    // ============================================
 
-server.use(errorHandler);
+    process.on('uncaughtException', (error) => {
+      logger.app.error('Uncaught exception', error, {
+        type: 'uncaughtException',
+        stack: error.stack,
+      });
+      console.error('💥 Uncaught Exception:', error);
+      gracefulShutdown('uncaughtException');
+    });
 
-// * handling Errors
+    process.on('unhandledRejection', (reason, promise) => {
+      const error =
+        reason instanceof Error ? reason : new Error(String(reason));
+      logger.app.error('Unhandled rejection', error, {
+        type: 'unhandledRejection',
+        promise: String(promise),
+      });
+      console.error('💥 Unhandled Rejection:', reason);
+      gracefulShutdown('unhandledRejection');
+    });
 
-// * end all middlewares
-// * DB connect
-
-const DEV_PORT = process.env.PORT || 3000;
-
-connectDB(() => {
-  server.listen(DEV_PORT, () => {
-    console.log(`🚀 Server running on port ${DEV_PORT}`);
-    console.log(`Swagger docs: http://localhost:${DEV_PORT}/api-docs`);
+    return server;
   });
-});
+};
+
+// ============================================
+// START THE APPLICATION
+// ============================================
+
+startServer();

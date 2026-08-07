@@ -34,7 +34,6 @@ export const setAllUsersFilter = (queryParams) => {
     'phoneNumber',
     'nationalCode',
   ]);
-  console.log(filterParams);
   const query = {};
 
   // Handle fullName search
@@ -101,7 +100,6 @@ export const setPaginateUsersFilter = (queryParams) => {
   // Add other filters (only if value is truthy)
   Object.entries(filterParams).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
-      console.log(key, value);
       (key === 'page') | (key === 'limit') | (key === 'sort')
         ? (query[key] = value)
         : (query[key] =

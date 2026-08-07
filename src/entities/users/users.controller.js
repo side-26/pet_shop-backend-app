@@ -50,7 +50,6 @@ export const createUserController = async (req, res, next) => {
       message: `کاربر با نام کاربری ${newUser.phoneNumber} با موفقیت ایجاد شد`,
     });
   } catch (err) {
-    console.log(err, 'err');
     onCatchPromiseController(err, next);
   }
 };
@@ -242,7 +241,6 @@ export const enableUserController = async (req, res, next) => {
     const updatedUser = await updateUser(req.params?.id, res, UserModel, {
       isEnable: true,
     });
-    console.log(updatedUser);
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `${getUserFullName(updatedUser)} با موفقیت فعال شد.`,
     });
@@ -254,7 +252,6 @@ export const enableUserController = async (req, res, next) => {
 export const getAllUsersListController = async (req, res, next) => {
   try {
     const filterQuery = setAllUsersFilter(req.query);
-    console.log(filterQuery);
     const usersList = await UserModel.find(filterQuery);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
@@ -303,7 +300,6 @@ export const getUserByIdController = async (req, res, next) => {
 export const getUserCartListController = async (req, res, next) => {
   try {
     const user = await getUserById(req, res, UserModel);
-    console.log(user);
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: user.cart,
     });

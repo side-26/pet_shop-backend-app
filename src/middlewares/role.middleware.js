@@ -2,7 +2,6 @@ import { STATUES } from '#configs/constants.js';
 import { setErrorResponse } from '#utils/index.js';
 
 export const roleMiddleware = (allowedRoles) => (req, res, next) => {
-  console.log(req.user, 'req.user');
   const userRole = req.user?.role;
 
   const roles =
