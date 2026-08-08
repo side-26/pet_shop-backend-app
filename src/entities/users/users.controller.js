@@ -1,97 +1,51 @@
-import jwt from 'jsonwebtoken';
-
 import { STATUES } from '#configs/constants.js';
-import { UserModel } from '#entities/users/users.model.js';
 
 import {
-  getPaginationData,
-  // doesBodyExist,
-  setErrorResponse,
-  setSuccessResponse,
-  returnFormValidation,
   onCatchPromiseController,
-  verifyUser,
+  returnFormValidation,
+  setSuccessResponse,
 } from '#utils/index.js';
+
 import {
   userChangePasswordFormBodyValidation,
   userUpdateLocationInfoSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
 } from './users.schema.js';
-import {
-  compareTwoPassword,
-  createNewToken,
-  doesUserExist,
-  getBodyWithHashPassword,
-  getUserById,
-  getUserFullName,
-  setAllUsersFilter,
-  setPaginateUsersFilter,
-  updateUser,
-} from './users.helpers.js';
+
+import { UserService } from './users.service.js';
+
+// =========================================================
+// CREATE USER
+// =========================================================
 
 export const createUserController = async (req, res, next) => {
   try {
     const body = returnFormValidation(userZodSchema, req.body);
 
-    const userExist = await doesUserExist({ phoneNumber: body.phoneNumber });
-
-    if (userExist) {
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'کاربری با این مشخصات وجود دارد',
-      });
-    }
-
-    const formBody = await getBodyWithHashPassword(body);
-
-    const newUser = await UserModel.create(formBody);
+    const user = await UserService.create(body);
 
     setSuccessResponse(res, STATUES.CREATED, {
-      message: `کاربر با نام کاربری ${newUser.phoneNumber} با موفقیت ایجاد شد`,
+      message: `کاربر با نام کاربری ${user.phoneNumber} با موفقیت ایجاد شد`,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
 
+// =========================================================
+// LOGIN
+// =========================================================
+
 export const loginUserController = async (req, res, next) => {
   try {
     const body = returnFormValidation(userZodSchema, req.body);
 
-    const user = await doesUserExist({ phoneNumber: body.phoneNumber });
-
-    if (!user)
-      setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'کاربری با این مشخصات یافت نشد',
-      });
-
-    const isPasswordCorrect = await compareTwoPassword(
-      user.password,
-      body.password,
-    );
-
-    if (!isPasswordCorrect)
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'کاربری با این مشخصات یافت نشد',
-      });
-
-    const accessToken = createNewToken(
-      user._id,
-      user.phoneNumber,
-      user.role,
-      '7h',
-    );
-
-    const refreshToken = jwt.sign(
-      {
-        userId: user._id,
-      },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: '7d' },
-    );
+    const { user, accessToken, refreshToken } = await UserService.login(body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `کاربر با نام کاربری ${user.phoneNumber} با موفقیت وارد شد`,
+
       data: {
         accessToken,
         refreshToken,
@@ -102,181 +56,158 @@ export const loginUserController = async (req, res, next) => {
   }
 };
 
+// =========================================================
+// REFRESH TOKEN
+// =========================================================
+
 export const refreshTokenController = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
+    const accessToken = await UserService.refreshAccessToken(
+      req,
+      res,
+      req.body.refreshToken,
+    );
 
-    if (!refreshToken) {
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'توکن نامعتبر است',
-      });
-    }
-    verifyUser(req, res, refreshToken, (decoded) => {
-      const newToken = createNewToken(
-        decoded.userId,
-        decoded.phoneNumber,
-        decoded.role,
-        '7h',
-      );
+    setSuccessResponse(res, STATUES.CREATED, {
+      message: null,
 
-      setSuccessResponse(res, STATUES.CREATED, {
-        message: null,
-        data: {
-          accessToken: newToken,
-        },
-      });
+      data: {
+        accessToken,
+      },
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
+
+// =========================================================
+// UPDATE PERSONAL INFO
+// =========================================================
 
 export const updateUserPersonalInfoController = async (req, res, next) => {
   try {
-    const formBody = returnFormValidation(
-      userUpdatePersonalInfoSchema,
-      req.body,
-      res,
-    );
+    const body = returnFormValidation(userUpdatePersonalInfoSchema, req.body);
 
-    const updatedUser = await updateUser(
-      req.body.userId,
-      res,
-      UserModel,
-      formBody,
-    );
+    const updatedUser = await UserService.update(body.userId, body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `اطلاعات ${getUserFullName(updatedUser)} ویرایش شد`,
+      message: `اطلاعات ${UserService.getFullName(updatedUser)} ویرایش شد`,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
+
+// =========================================================
+// UPDATE LOCATION INFO
+// =========================================================
 
 export const updateUserLocationInfoController = async (req, res, next) => {
   try {
-    const formBody = returnFormValidation(
-      userUpdateLocationInfoSchema,
-      req.body,
-      res,
-    );
+    const body = returnFormValidation(userUpdateLocationInfoSchema, req.body);
 
-    const updatedUser = await updateUser(
-      req.body.userId,
-      res,
-      UserModel,
-      formBody,
-    );
+    const updatedUser = await UserService.update(body.userId, body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `اطلاعات موقعیتی ${getUserFullName(updatedUser)} ویرایش شد`,
+      message: `اطلاعات موقعیتی ${UserService.getFullName(
+        updatedUser,
+      )} ویرایش شد`,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
 
-export const changeUserPasswordController = async (req, res) => {
+// =========================================================
+// CHANGE PASSWORD
+// =========================================================
+
+export const changeUserPasswordController = async (req, res, next) => {
   try {
     const body = returnFormValidation(
       userChangePasswordFormBodyValidation,
       req.body,
-      res,
     );
 
-    const user = await doesUserExist({ _id: body.userId });
-
-    if (!user)
-      setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'کاربری با این شناسه یافت نشد',
-      });
-
-    const isOldPasswordCorrect = await compareTwoPassword(
-      user.password,
-      body.oldPassword,
-    );
-
-    if (!isOldPasswordCorrect)
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'کلمه عبور قبلی صحیح نیست',
-      });
-
-    const formBody = await getBodyWithHashPassword(body);
-
-    await UserModel.updateOne(
-      { _id: formBody.userId },
-      {
-        password: formBody.password,
-      },
-    );
+    const user = await UserService.changePassword(body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `${getUserFullName(user)} با موفقیت کلمه عبور ویرایش شد.`,
+      message: `${UserService.getFullName(
+        user,
+      )} با موفقیت کلمه عبور ویرایش شد.`,
     });
   } catch (err) {
-    setErrorResponse(STATUES.INTERNAL_SERVER, {
-      message: 'خطای سمت سرور',
-      data: err,
-    });
+    /*
+     * Do not turn every error into INTERNAL_SERVER.
+     *
+     * For example:
+     * - user not found -> 404
+     * - wrong old password -> 422
+     *
+     * Let the centralized error middleware preserve
+     * the original status.
+     */
+    onCatchPromiseController(err, next);
   }
 };
+
+// =========================================================
+// DISABLE USER
+// =========================================================
 
 export const disableUserController = async (req, res, next) => {
   try {
-    const updatedUser = await updateUser(req.params?.id, res, UserModel, {
-      isEnable: false,
-    });
+    const user = await UserService.disable(req.params?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `${getUserFullName(updatedUser)} با موفقیت غیرفعال شد.`,
+      message: `${UserService.getFullName(user)} با موفقیت غیرفعال شد.`,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
+
+// =========================================================
+// ENABLE USER
+// =========================================================
 
 export const enableUserController = async (req, res, next) => {
   try {
-    const updatedUser = await updateUser(req.params?.id, res, UserModel, {
-      isEnable: true,
-    });
+    const user = await UserService.enable(req.params?.id);
+
     setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `${getUserFullName(updatedUser)} با موفقیت فعال شد.`,
+      message: `${UserService.getFullName(user)} با موفقیت فعال شد.`,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
+
+// =========================================================
+// GET ALL USERS
+// =========================================================
 
 export const getAllUsersListController = async (req, res, next) => {
   try {
-    const filterQuery = setAllUsersFilter(req.query);
-    const usersList = await UserModel.find(filterQuery);
+    const users = await UserService.findAll(req.query);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: usersList,
-      totalRecords: usersList?.length,
+      data: users,
+      totalRecords: users.length,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
 
+// =========================================================
+// GET PAGINATED USERS
+// =========================================================
+
 export const getAllUsersListPaginateController = async (req, res, next) => {
   try {
-    const filterQuery = setPaginateUsersFilter(req.query);
+    const data = await UserService.findAllPaginated(req.query);
 
-    const data = await getPaginationData(
-      UserModel,
-      filterQuery,
-      '-password',
-      (err) =>
-        setErrorResponse(STATUES.OTHER_PROBLEM, {
-          message: 'خطای سمت سرور',
-          error: JSON.stringify(err),
-        }),
-    );
     setSuccessResponse(res, STATUES.SUCCESS, {
       data,
     });
@@ -285,9 +216,13 @@ export const getAllUsersListPaginateController = async (req, res, next) => {
   }
 };
 
+// =========================================================
+// GET USER BY ID
+// =========================================================
+
 export const getUserByIdController = async (req, res, next) => {
   try {
-    const user = getUserById(req, res, UserModel);
+    const user = await UserService.findById(req.params?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: user,
@@ -297,11 +232,16 @@ export const getUserByIdController = async (req, res, next) => {
   }
 };
 
+// =========================================================
+// GET USER CART
+// =========================================================
+
 export const getUserCartListController = async (req, res, next) => {
   try {
-    const user = await getUserById(req, res, UserModel);
+    const cart = await UserService.getCart(req.params?.id);
+
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: user.cart,
+      data: cart,
     });
   } catch (err) {
     onCatchPromiseController(err, next);
