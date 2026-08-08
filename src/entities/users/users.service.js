@@ -206,10 +206,6 @@ export class UserService {
       });
     }
 
-    /*
-     * userId belongs to request validation and should
-     * not become part of the User document.
-     */
     const { userId: ignoredUserId, ...data } = updateRecord;
 
     void ignoredUserId;
@@ -220,7 +216,7 @@ export class UserService {
         $set: data,
       },
       {
-        new: true,
+        returnDocument: 'after',
         runValidators: true,
       },
     );

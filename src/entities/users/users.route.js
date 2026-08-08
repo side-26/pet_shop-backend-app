@@ -12,6 +12,7 @@ import {
   loginUserController,
   refreshTokenController,
   updateUserLocationInfoController,
+  updateUserPersonalInfoController,
 } from './users.controller.js';
 import { authenticated } from '../../middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
@@ -63,64 +64,18 @@ router.post(
   loginUserController,
 );
 
-router.post(
-  '/users/refresh-token',
-  authenticated,
-  /*
-    #swagger.tags = ['Users']
-    #swagger.summary = 'Refresh user token'
-    #swagger.requestBody = {
-      required: true,
-      content: { "application/json": { schema: { $ref: '#/components/schemas/RefreshTokenBody' } } }
-    }
-    #swagger.responses[200] = {
-      description: 'Token refreshed successfully',  )
+router.post('/users/refresh-token', authenticated, refreshTokenController);
+
+router.put('/users/edit-info', authenticated, updateUserPersonalInfoController);
 
 router.put(
-  '/users/editInfo',
-  /*
-    #swagger.tags = ['Users']
-    #swagger.summary = 'Update personal info'
-    #swagger.requestBody = {
-      required: true,
-      content: { "application/json": { schema: { $ref: '#/components/schemas/UpdateUserPersonalInfoBody' } } }
-    }
-    #swagger.responses[200] = {
-      description: 'Personal info updated',
-      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
-    }
-    #swagger.responses[422] = {
-      description: 'Validation error',
-      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
-    }
-  */
-  refreshTokenController,
-);
-
-router.put(
-  '/users/editLocationInfo',
+  '/users/edit-location-info',
   authenticated,
-  /*
-    #swagger.tags = ['Users']
-    #swagger.summary = 'Update location info'
-    #swagger.requestBody = {
-      required: true,
-      content: { "application/json": { schema: { $ref: '#/components/schemas/UpdateUserLocationInfoBody' } } }
-    }
-    #swagger.responses[200] = {
-      description: 'Location info updated',
-      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
-    }
-    #swagger.responses[422] = {
-      description: 'Validation error',
-      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
-    }
-  */
   updateUserLocationInfoController,
 );
 
 router.put(
-  '/users/changePassword',
+  '/users/change-password',
   authenticated,
   /*
     #swagger.tags = ['Users']
