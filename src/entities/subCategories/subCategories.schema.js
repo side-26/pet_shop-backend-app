@@ -2,40 +2,33 @@ import { z } from 'zod';
 
 import '#configs/zod.config.js';
 
-// ============================================
-// SHARED
-// ============================================
-
 const mongoObjectIdSchema = z
   .string()
   .min(1)
   .regex(/^[0-9a-fA-F]{24}$/);
 
 // ============================================
-// CREATE SUB CATEGORY
-// title + categoryID are required
+// CREATE
 // ============================================
 
 export const createSubCategoryZodSchema = z.object({
   title: z.string().min(2).max(50).trim(),
 
-  categoryID: mongoObjectIdSchema,
+  category: mongoObjectIdSchema,
 });
 
 // ============================================
-// UPDATE SUB CATEGORY
-// title + categoryID are required
+// UPDATE
 // ============================================
 
 export const updateSubCategoryZodSchema = z.object({
   title: z.string().min(2).max(50).trim(),
 
-  categoryID: mongoObjectIdSchema,
+  category: mongoObjectIdSchema,
 });
 
 // ============================================
-// MODEL UPDATE VALIDATION
-// Used internally by Mongoose findOneAndUpdate
+// MODEL UPDATE
 // ============================================
 
 export const subCategoryModelUpdateZodSchema =
@@ -50,12 +43,11 @@ export const subCategoryIdSchema = z.object({
 });
 
 // ============================================
-// READ ALL QUERY
-// Allows filtering by category
+// QUERY
 // ============================================
 
 export const subCategoryQuerySchema = z.object({
-  categoryID: mongoObjectIdSchema.optional(),
+  category: mongoObjectIdSchema.optional(),
 });
 
 export default {

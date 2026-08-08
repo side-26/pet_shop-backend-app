@@ -13,15 +13,7 @@ import {
   updateSubCategoryZodSchema,
 } from './subCategories.schema.js';
 
-import {
-  createSubCategory,
-  deleteSubCategoryById,
-  formatSubCategoriesResponse,
-  formatSubCategoryResponse,
-  getAllSubCategories,
-  getSubCategoryById,
-  updateSubCategory,
-} from './subCategories.helpers.js';
+import { SubCategoryService } from './subCategories.service.js';
 
 // ============================================
 // CREATE
@@ -31,11 +23,12 @@ export const createSubCategoryController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createSubCategoryZodSchema, req.body);
 
-    const subCategory = await createSubCategory(body);
+    const subCategory = await SubCategoryService.create(body);
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: `زیر دسته‌بندی "${subCategory.title}" با موفقیت ایجاد شد`,
-      data: formatSubCategoryResponse(subCategory),
+
+      data: SubCategoryService.format(subCategory),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -52,11 +45,12 @@ export const updateSubCategoryController = async (req, res, next) => {
 
     const body = returnFormValidation(updateSubCategoryZodSchema, req.body);
 
-    const subCategory = await updateSubCategory(params.id, body);
+    const subCategory = await SubCategoryService.update(params.id, body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `زیر دسته‌بندی "${subCategory.title}" با موفقیت ویرایش شد`,
-      data: formatSubCategoryResponse(subCategory),
+
+      data: SubCategoryService.format(subCategory),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -64,17 +58,18 @@ export const updateSubCategoryController = async (req, res, next) => {
 };
 
 // ============================================
-// DELETE BY ID
+// DELETE
 // ============================================
 
 export const deleteSubCategoryByIdController = async (req, res, next) => {
   try {
     const params = returnFormValidation(subCategoryIdSchema, req.params);
 
-    const subCategory = await deleteSubCategoryById(params.id);
+    const subCategory = await SubCategoryService.delete(params.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `زیر دسته‌بندی "${subCategory.title}" با موفقیت حذف شد`,
+
       data: {
         id: subCategory._id,
       },
@@ -85,17 +80,17 @@ export const deleteSubCategoryByIdController = async (req, res, next) => {
 };
 
 // ============================================
-// READ ONE BY ID
+// GET ONE
 // ============================================
 
 export const getSubCategoryByIdController = async (req, res, next) => {
   try {
     const params = returnFormValidation(subCategoryIdSchema, req.params);
 
-    const subCategory = await getSubCategoryById(params.id);
+    const subCategory = await SubCategoryService.findById(params.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatSubCategoryResponse(subCategory),
+      data: SubCategoryService.format(subCategory),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -103,20 +98,20 @@ export const getSubCategoryByIdController = async (req, res, next) => {
 };
 
 // ============================================
-// READ ALL
-// WITHOUT PAGINATION
+// GET ALL
 // ============================================
 
 export const getAllSubCategoriesController = async (req, res, next) => {
   try {
     const query = returnFormValidation(subCategoryQuerySchema, req.query);
 
-    const subCategories = await getAllSubCategories({
-      categoryID: query.categoryID,
+    const subCategories = await SubCategoryService.findAll({
+      category: query.category,
     });
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatSubCategoriesResponse(subCategories),
+      data: SubCategoryService.formatMany(subCategories),
+
       totalRecords: subCategories.length,
     });
   } catch (err) {

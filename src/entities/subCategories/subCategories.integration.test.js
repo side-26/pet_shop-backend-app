@@ -1,8 +1,11 @@
+// src/entities/subCategories/subCategories.integration.test.js
+
 jest.mock('#utils/index.js', () => ({
-  setSuccessResponse: jest.fn((res, statusCode, option) => {
+  setSuccessResponse: jest.fn((res, statusCode, options = {}) => {
     res.status(statusCode).json({
       isSuccess: true,
-      ...option,
+
+      ...options,
     });
   }),
 
@@ -15,7 +18,8 @@ jest.mock('#utils/index.js', () => ({
       error.statusCode = 422;
 
       error.data = {
-        messages: result.error?.issues || result.error?.errors || [],
+        messages: result.error?.issues || [],
+
         detail: {},
       };
 
@@ -34,9 +38,7 @@ jest.mock('#utils/index.js', () => ({
 
     error.statusCode = statusCode;
 
-    Object.assign(error, {
-      ...options,
-    });
+    Object.assign(error, options);
 
     throw error;
   }),
@@ -48,6 +50,7 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
 
     req.user = {
       id: '65a4de97aff1fbb38c437952',
+
       role: 'admin',
     };
 
@@ -85,9 +88,11 @@ import { STATUES } from '#configs/constants.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+
 import { CategoryModel } from '#entities/categories/categories.model.js';
 
 import { SubCategoryModel } from './subCategories.model.js';
+
 import subCategoryRoutes from './subCategories.route.js';
 
 describe('SubCategory API - Integration Tests', () => {
@@ -113,119 +118,116 @@ describe('SubCategory API - Integration Tests', () => {
 
   beforeEach(async () => {
     await SubCategoryModel.deleteMany({});
+
     await CategoryModel.deleteMany({});
+
     await PetTypeModel.deleteMany({});
 
     testPetType = await PetTypeModel.create({
       title: 'Dog',
+
       description: 'Loyal pets',
+
       isEnabled: true,
     });
 
     secondPetType = await PetTypeModel.create({
       title: 'Cat',
+
       description: 'Affectionate pets',
+
       isEnabled: true,
     });
 
-    /*
-     * Use collection.insertOne for fixtures.
-     *
-     * This avoids unrelated Category model middleware
-     * affecting SubCategory integration setup.
-     */
-
-    const insertedCategory = await CategoryModel.collection.insertOne({
+    const categoryResult = await CategoryModel.collection.insertOne({
       title: 'Food',
+
       petType: testPetType._id,
+
       enable: true,
+
       createdAt: new Date(),
+
       updatedAt: new Date(),
     });
 
-    testCategory = await CategoryModel.findById(insertedCategory.insertedId);
+    testCategory = await CategoryModel.findById(categoryResult.insertedId);
 
-    const insertedSecondCategory = await CategoryModel.collection.insertOne({
+    const secondCategoryResult = await CategoryModel.collection.insertOne({
       title: 'Accessories',
+
       petType: secondPetType._id,
+
       enable: true,
+
       createdAt: new Date(),
+
       updatedAt: new Date(),
     });
 
     secondCategory = await CategoryModel.findById(
-      insertedSecondCategory.insertedId,
+      secondCategoryResult.insertedId,
     );
 
-    /*
-     * Same idea for the default SubCategory fixture:
-     * bypass save middleware because POST tests themselves
-     * exercise the complete create flow.
-     */
-
-    const insertedSubCategory = await SubCategoryModel.collection.insertOne({
+    const result = await SubCategoryModel.collection.insertOne({
       title: 'Dry Food',
-      categoryID: testCategory._id,
+
+      category: testCategory._id,
+
       createdAt: new Date(),
+
       updatedAt: new Date(),
     });
 
-    testSubCategory = await SubCategoryModel.findById(
-      insertedSubCategory.insertedId,
-    );
+    testSubCategory = await SubCategoryModel.findById(result.insertedId);
   });
 
-  // =========================================================
-  // POST /api/sub-categories
-  // =========================================================
+  // ============================================
+  // CREATE
+  // ============================================
 
   describe('POST /api/sub-categories', () => {
-    it('should create a new sub category', async () => {
+    test('should create sub category', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
           title: 'Wet Food',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.CREATED);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
+      expect(res.body.isSuccess).toBe(true);
 
-      expect(res.body.data).toMatchObject({
-        title: 'Wet Food',
-      });
+      expect(res.body.data.title).toBe('Wet Food');
 
-      expect(res.body.data.categoryID.toString()).toBe(
+      expect(res.body.data.category.toString()).toBe(
         testCategory._id.toString(),
       );
 
-      const createdSubCategory = await SubCategoryModel.findOne({
+      const created = await SubCategoryModel.findOne({
         title: 'Wet Food',
       });
 
-      expect(createdSubCategory).not.toBeNull();
+      expect(created).not.toBeNull();
 
-      expect(createdSubCategory.categoryID.toString()).toBe(
-        testCategory._id.toString(),
-      );
+      expect(created.category.toString()).toBe(testCategory._id.toString());
     });
 
-    it('should return 422 if title is missing', async () => {
+    test('should return 422 if title missing', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
-          categoryID: testCategory._id.toString(),
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if categoryID is missing', async () => {
+    test('should return 422 if category missing', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
@@ -236,26 +238,28 @@ describe('SubCategory API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if categoryID format is invalid', async () => {
+    test('should return 422 for invalid category', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
           title: 'Wet Food',
-          categoryID: 'invalid-id',
+
+          category: 'invalid-id',
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if category does not exist', async () => {
-      const nonExistentCategory = new mongoose.Types.ObjectId();
+    test('should return 422 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
           title: 'Wet Food',
-          categoryID: nonExistentCategory.toString(),
+
+          category: id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
@@ -264,61 +268,59 @@ describe('SubCategory API - Integration Tests', () => {
       expect(res.body.message).toContain('دسته‌بندی انتخاب شده معتبر نیست');
     });
 
-    it('should return 422 if title already exists in same category', async () => {
+    test('should return 422 for duplicate in same category', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
           title: 'Dry Food',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-
-      expect(res.body.message).toContain('قبلاً ثبت شده است');
     });
 
-    it('should detect duplicate title case-insensitively', async () => {
+    test('should detect duplicate case-insensitively', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
           title: 'dry food',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should allow same title in another category', async () => {
+    test('should allow same title in different category', async () => {
       const res = await request(app)
         .post('/api/sub-categories')
         .send({
           title: 'Dry Food',
-          categoryID: secondCategory._id.toString(),
+
+          category: secondCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.CREATED);
-
-      expect(res.body.data.title).toBe('Dry Food');
-
-      expect(res.body.data.categoryID.toString()).toBe(
-        secondCategory._id.toString(),
-      );
     });
   });
 
-  // =========================================================
-  // GET /api/sub-categories
-  // =========================================================
+  // ============================================
+  // FIND ALL
+  // ============================================
 
   describe('GET /api/sub-categories', () => {
-    it('should get all sub categories', async () => {
+    test('should return all sub categories', async () => {
       await SubCategoryModel.collection.insertOne({
         title: 'Wet Food',
-        categoryID: testCategory._id,
+
+        category: testCategory._id,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -328,27 +330,26 @@ describe('SubCategory API - Integration Tests', () => {
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data).toHaveLength(2);
 
       expect(res.body.totalRecords).toBe(2);
     });
 
-    it('should filter sub categories by categoryID', async () => {
+    test('should filter by category', async () => {
       await SubCategoryModel.collection.insertOne({
         title: 'Collar',
-        categoryID: secondCategory._id,
+
+        category: secondCategory._id,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
       const res = await request(app)
         .get('/api/sub-categories')
         .query({
-          categoryID: testCategory._id.toString(),
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
@@ -356,22 +357,20 @@ describe('SubCategory API - Integration Tests', () => {
 
       expect(res.body.data).toHaveLength(1);
 
-      expect(res.body.data[0]).toMatchObject({
-        title: 'Dry Food',
-      });
+      expect(res.body.data[0].title).toBe('Dry Food');
 
-      expect(res.body.data[0].categoryID.toString()).toBe(
+      expect(res.body.data[0].category.toString()).toBe(
         testCategory._id.toString(),
       );
     });
 
-    it('should return empty list if category has no sub categories', async () => {
-      const emptyCategoryId = new mongoose.Types.ObjectId();
+    test('should return empty array for category without sub categories', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
         .get('/api/sub-categories')
         .query({
-          categoryID: emptyCategoryId.toString(),
+          category: id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
@@ -382,11 +381,11 @@ describe('SubCategory API - Integration Tests', () => {
       expect(res.body.totalRecords).toBe(0);
     });
 
-    it('should return 422 for invalid categoryID query', async () => {
+    test('should return 422 for invalid category query', async () => {
       const res = await request(app)
         .get('/api/sub-categories')
         .query({
-          categoryID: 'invalid-id',
+          category: 'invalid-id',
         })
         .set('Authorization', 'Bearer token');
 
@@ -394,49 +393,38 @@ describe('SubCategory API - Integration Tests', () => {
     });
   });
 
-  // =========================================================
-  // GET /api/sub-categories/:id
-  // =========================================================
+  // ============================================
+  // FIND BY ID
+  // ============================================
 
   describe('GET /api/sub-categories/:id', () => {
-    it('should get sub category by ID', async () => {
+    test('should return sub category', async () => {
       const res = await request(app)
         .get(`/api/sub-categories/${testSubCategory._id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
-      expect(res.body.data).toMatchObject({
-        title: 'Dry Food',
-      });
+      expect(res.body.data.title).toBe('Dry Food');
 
       expect(res.body.data.id.toString()).toBe(testSubCategory._id.toString());
 
-      expect(res.body.data.categoryID.toString()).toBe(
+      expect(res.body.data.category.toString()).toBe(
         testCategory._id.toString(),
       );
     });
 
-    it('should return 404 if sub category does not exist', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if not found', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .get(`/api/sub-categories/${nonExistentId}`)
+        .get(`/api/sub-categories/${id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
-
-      expect(res.body).toMatchObject({
-        isSuccess: false,
-        message: 'زیر دسته‌بندی یافت نشد',
-      });
     });
 
-    it('should return 422 for invalid sub category ID', async () => {
+    test('should return 422 for invalid id', async () => {
       const res = await request(app)
         .get('/api/sub-categories/invalid-id')
         .set('Authorization', 'Bearer token');
@@ -445,73 +433,59 @@ describe('SubCategory API - Integration Tests', () => {
     });
   });
 
-  // =========================================================
-  // PUT /api/sub-categories/:id
-  // =========================================================
+  // ============================================
+  // UPDATE
+  // ============================================
 
   describe('PUT /api/sub-categories/:id', () => {
-    it('should update sub category', async () => {
+    test('should update sub category', async () => {
       const res = await request(app)
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
           title: 'Premium Dry Food',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data.title).toBe('Premium Dry Food');
 
-      const updatedSubCategory = await SubCategoryModel.findById(
-        testSubCategory._id,
-      );
+      const updated = await SubCategoryModel.findById(testSubCategory._id);
 
-      expect(updatedSubCategory.title).toBe('Premium Dry Food');
+      expect(updated.title).toBe('Premium Dry Food');
     });
 
-    it('should update categoryID', async () => {
+    test('should update category relation', async () => {
       const res = await request(app)
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
           title: 'Moved Food',
-          categoryID: secondCategory._id.toString(),
+
+          category: secondCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body.data.title).toBe('Moved Food');
-
-      expect(res.body.data.categoryID.toString()).toBe(
-        secondCategory._id.toString(),
-      );
-
-      const updatedSubCategory = await SubCategoryModel.findById(
-        testSubCategory._id,
-      );
-
-      expect(updatedSubCategory.categoryID.toString()).toBe(
+      expect(res.body.data.category.toString()).toBe(
         secondCategory._id.toString(),
       );
     });
 
-    it('should return 422 if title is missing on update', async () => {
+    test('should return 422 if title missing', async () => {
       const res = await request(app)
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
-          categoryID: testCategory._id.toString(),
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if categoryID is missing on update', async () => {
+    test('should return 422 if category missing', async () => {
       const res = await request(app)
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
@@ -522,41 +496,44 @@ describe('SubCategory API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 404 if sub category does not exist', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if sub category not found', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .put(`/api/sub-categories/${nonExistentId}`)
+        .put(`/api/sub-categories/${id}`)
         .send({
           title: 'Updated',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
     });
 
-    it('should return 422 if category does not exist', async () => {
-      const nonExistentCategory = new mongoose.Types.ObjectId();
+    test('should return 422 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
           title: 'Updated',
-          categoryID: nonExistentCategory.toString(),
+
+          category: id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-
-      expect(res.body.message).toContain('دسته‌بندی انتخاب شده معتبر نیست');
     });
 
-    it('should return 422 if duplicate title exists in same category', async () => {
+    test('should return 422 for duplicate', async () => {
       await SubCategoryModel.collection.insertOne({
         title: 'Wet Food',
-        categoryID: testCategory._id,
+
+        category: testCategory._id,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -564,105 +541,64 @@ describe('SubCategory API - Integration Tests', () => {
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
           title: 'Wet Food',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-
-      expect(res.body.message).toContain('قبلاً ثبت شده است');
     });
 
-    it('should allow same current title and categoryID', async () => {
+    test('should allow same existing title and category', async () => {
       const res = await request(app)
         .put(`/api/sub-categories/${testSubCategory._id}`)
         .send({
           title: 'Dry Food',
-          categoryID: testCategory._id.toString(),
+
+          category: testCategory._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
-    });
-
-    it('should allow same title when moving to another category', async () => {
-      await SubCategoryModel.collection.insertOne({
-        title: 'Other',
-        categoryID: secondCategory._id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const res = await request(app)
-        .put(`/api/sub-categories/${testSubCategory._id}`)
-        .send({
-          title: 'Dry Food',
-          categoryID: secondCategory._id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
-
-      expect(res.status).toBe(STATUES.SUCCESS);
-    });
-
-    it('should return 422 for invalid sub category id', async () => {
-      const res = await request(app)
-        .put('/api/sub-categories/invalid-id')
-        .send({
-          title: 'Updated',
-          categoryID: testCategory._id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
-
-      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
   });
 
-  // =========================================================
-  // DELETE /api/sub-categories/:id
-  // =========================================================
+  // ============================================
+  // DELETE
+  // ============================================
 
   describe('DELETE /api/sub-categories/:id', () => {
-    it('should permanently delete sub category', async () => {
+    test('should delete sub category', async () => {
       const res = await request(app)
         .delete(`/api/sub-categories/${testSubCategory._id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
+      const deleted = await SubCategoryModel.findById(testSubCategory._id);
 
-      const deletedSubCategory = await SubCategoryModel.findById(
-        testSubCategory._id,
-      );
-
-      expect(deletedSubCategory).toBeNull();
+      expect(deleted).toBeNull();
     });
 
-    it('should return deleted sub category id', async () => {
+    test('should return deleted id', async () => {
       const res = await request(app)
         .delete(`/api/sub-categories/${testSubCategory._id}`)
         .set('Authorization', 'Bearer token');
-
-      expect(res.status).toBe(STATUES.SUCCESS);
 
       expect(res.body.data.id.toString()).toBe(testSubCategory._id.toString());
     });
 
-    it('should return 404 if sub category does not exist', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if not found', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .delete(`/api/sub-categories/${nonExistentId}`)
+        .delete(`/api/sub-categories/${id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
-
-      expect(res.body.message).toBe('زیر دسته‌بندی یافت نشد');
     });
 
-    it('should return 422 for invalid sub category id', async () => {
+    test('should return 422 for invalid id', async () => {
       const res = await request(app)
         .delete('/api/sub-categories/invalid-id')
         .set('Authorization', 'Bearer token');

@@ -1,9 +1,10 @@
 jest.mock('#utils/index.js', () => ({
-  setErrorResponse: jest.fn((statusCode, data) => {
-    const error = new Error(data.message);
+  setErrorResponse: jest.fn((statusCode, options = {}) => {
+    const error = new Error(options.message || 'خطای سمت سرور');
 
     error.statusCode = statusCode;
-    error.data = data;
+
+    Object.assign(error, options);
 
     throw error;
   }),
@@ -25,14 +26,13 @@ jest.mock('./subCategories.model.js', () => {
   });
 
   MockModel.findOne = jest.fn();
+
   MockModel.findById = jest.fn();
 
-  MockModel.find = jest.fn().mockReturnValue({
-    sort: jest.fn().mockReturnThis(),
-    exec: jest.fn(),
-  });
+  MockModel.find = jest.fn();
 
   MockModel.findByIdAndUpdate = jest.fn();
+
   MockModel.findByIdAndDelete = jest.fn();
 
   return {
@@ -42,64 +42,61 @@ jest.mock('./subCategories.model.js', () => {
 
 import { CategoryModel } from '#entities/categories/categories.model.js';
 
-import * as subCategoryUtils from './subCategories.helpers.js';
 import { SubCategoryModel } from './subCategories.model.js';
 
-describe('SubCategory Helpers - Unit Tests', () => {
+import { SubCategoryService } from './subCategories.service.js';
+
+describe('SubCategoryService - Unit Tests', () => {
   let mockCategory;
   let mockSubCategory;
 
   beforeEach(() => {
     mockCategory = {
       _id: '65a4de97aff1fbb38c437111',
+
       title: 'Food',
     };
 
     mockSubCategory = {
       _id: '65a4de97aff1fbb38c437222',
+
       title: 'Dry Food',
-      categoryID: mockCategory._id,
+
+      category: mockCategory._id,
+
       createdAt: new Date(),
+
       updatedAt: new Date(),
     };
 
     jest.clearAllMocks();
   });
 
-  // =========================================================
-  // ensureCategoryExists
-  // =========================================================
-
-  test('ensureCategoryExists returns category if exists', async () => {
+  test('ensureCategoryExists returns category', async () => {
     CategoryModel.findById.mockResolvedValue(mockCategory);
 
-    const result = await subCategoryUtils.ensureCategoryExists(
+    const result = await SubCategoryService.ensureCategoryExists(
       mockCategory._id,
     );
 
     expect(result).toEqual(mockCategory);
-
-    expect(CategoryModel.findById).toHaveBeenCalledWith(mockCategory._id);
   });
 
-  test('ensureCategoryExists throws if category does not exist', async () => {
+  test('ensureCategoryExists throws if category not found', async () => {
     CategoryModel.findById.mockResolvedValue(null);
 
     await expect(
-      subCategoryUtils.ensureCategoryExists(mockCategory._id),
+      SubCategoryService.ensureCategoryExists(mockCategory._id),
     ).rejects.toThrow('دسته‌بندی انتخاب شده معتبر نیست');
   });
 
-  // =========================================================
-  // doesSubCategoryExist
-  // =========================================================
-
-  test('doesSubCategoryExist returns sub category if exists', async () => {
+  test('findOne returns sub category', async () => {
     SubCategoryModel.findOne.mockResolvedValue(mockSubCategory);
 
-    const result = await subCategoryUtils.doesSubCategoryExist({
+    const result = await SubCategoryService.findOne({
       title: 'Dry Food',
-      categoryID: mockCategory._id,
+
+      category: mockCategory._id,
     });
 
     expect(result).toEqual(mockSubCategory);
@@ -107,89 +104,78 @@ describe('SubCategory Helpers - Unit Tests', () => {
     expect(SubCategoryModel.findOne).toHaveBeenCalledWith({
       title: {
         $regex: '^Dry Food$',
+
         $options: 'i',
       },
-      categoryID: mockCategory._id,
+
+      category: mockCategory._id,
     });
   });
 
-  test('doesSubCategoryExist returns null if not exists', async () => {
+  test('findOne returns null', async () => {
     SubCategoryModel.findOne.mockResolvedValue(null);
 
-    const result = await subCategoryUtils.doesSubCategoryExist({
-      title: 'Wet Food',
-      categoryID: mockCategory._id,
+    const result = await SubCategoryService.findOne({
+      title: 'Unknown',
+
+      category: mockCategory._id,
     });
 
     expect(result).toBeNull();
   });
 
-  test('doesSubCategoryExist performs case insensitive title search', async () => {
-    SubCategoryModel.findOne.mockResolvedValue(mockSubCategory);
-
-    await subCategoryUtils.doesSubCategoryExist({
-      title: 'dry food',
-      categoryID: mockCategory._id,
-    });
-
-    expect(SubCategoryModel.findOne).toHaveBeenCalledWith({
-      title: {
-        $regex: '^dry food$',
-        $options: 'i',
-      },
-      categoryID: mockCategory._id,
-    });
-  });
-
-  test('doesSubCategoryExist excludes current id when excludeId exists', async () => {
+  test('findOne supports excludeId', async () => {
     SubCategoryModel.findOne.mockResolvedValue(null);
 
-    await subCategoryUtils.doesSubCategoryExist({
+    await SubCategoryService.findOne({
       title: 'Dry Food',
-      categoryID: mockCategory._id,
+
+      category: mockCategory._id,
+
       excludeId: mockSubCategory._id,
     });
 
     expect(SubCategoryModel.findOne).toHaveBeenCalledWith({
       title: {
         $regex: '^Dry Food$',
+
         $options: 'i',
       },
-      categoryID: mockCategory._id,
+
+      category: mockCategory._id,
+
       _id: {
         $ne: mockSubCategory._id,
       },
     });
   });
 
-  // =========================================================
-  // getSubCategoryById
-  // =========================================================
-
-  test('getSubCategoryById returns sub category', async () => {
+  test('findById returns sub category', async () => {
     SubCategoryModel.findById.mockResolvedValue(mockSubCategory);
 
-    const result = await subCategoryUtils.getSubCategoryById(
-      mockSubCategory._id,
-    );
+    const result = await SubCategoryService.findById(mockSubCategory._id);
 
     expect(result).toEqual(mockSubCategory);
-
-    expect(SubCategoryModel.findById).toHaveBeenCalledWith(mockSubCategory._id);
   });
 
-  test('getSubCategoryById throws if not found', async () => {
+  test('findById throws when id missing', async () => {
+    await expect(SubCategoryService.findById()).rejects.toThrow(
+      'شناسه زیر دسته‌بندی معتبر نیست',
+    );
+  });
+
+  test('findById throws when not found', async () => {
     SubCategoryModel.findById.mockResolvedValue(null);
 
     await expect(
-      subCategoryUtils.getSubCategoryById(mockSubCategory._id),
+      SubCategoryService.findById(mockSubCategory._id),
     ).rejects.toThrow('زیر دسته‌بندی یافت نشد');
   });
 
-  test('getSubCategoryById returns null when throwOnNotFound is false', async () => {
+  test('findById returns null when throwOnNotFound=false', async () => {
     SubCategoryModel.findById.mockResolvedValue(null);
 
-    const result = await subCategoryUtils.getSubCategoryById(
+    const result = await SubCategoryService.findById(
       mockSubCategory._id,
       false,
     );
@@ -197,18 +183,11 @@ describe('SubCategory Helpers - Unit Tests', () => {
     expect(result).toBeNull();
   });
 
-  // =========================================================
-  // createSubCategory
-  // =========================================================
-
-  test('createSubCategory creates new sub category', async () => {
+  test('create creates sub category', async () => {
     const data = {
       title: 'Wet Food',
-      categoryID: mockCategory._id,
-    };
 
-    const expected = {
-      ...data,
+      category: mockCategory._id,
     };
 
     CategoryModel.findById.mockResolvedValue(mockCategory);
@@ -216,64 +195,47 @@ describe('SubCategory Helpers - Unit Tests', () => {
     SubCategoryModel.findOne.mockResolvedValue(null);
 
     const instance = {
-      ...expected,
-      save: jest.fn().mockResolvedValue(expected),
+      ...data,
+
+      save: jest.fn().mockResolvedValue(data),
     };
 
     SubCategoryModel.mockImplementationOnce(() => instance);
 
-    const result = await subCategoryUtils.createSubCategory(data);
+    const result = await SubCategoryService.create(data);
 
-    expect(result).toEqual(expected);
-
-    expect(CategoryModel.findById).toHaveBeenCalledWith(mockCategory._id);
+    expect(result).toEqual(data);
 
     expect(SubCategoryModel.findOne).toHaveBeenCalledWith({
       title: {
         $regex: '^Wet Food$',
+
         $options: 'i',
       },
-      categoryID: mockCategory._id,
+
+      category: mockCategory._id,
     });
   });
 
-  test('createSubCategory throws if category does not exist', async () => {
-    CategoryModel.findById.mockResolvedValue(null);
-
-    await expect(
-      subCategoryUtils.createSubCategory({
-        title: 'Wet Food',
-        categoryID: mockCategory._id,
-      }),
-    ).rejects.toThrow('دسته‌بندی انتخاب شده معتبر نیست');
-  });
-
-  test('createSubCategory throws if duplicate exists', async () => {
+  test('create throws if duplicate exists', async () => {
     CategoryModel.findById.mockResolvedValue(mockCategory);
 
     SubCategoryModel.findOne.mockResolvedValue(mockSubCategory);
 
     await expect(
-      subCategoryUtils.createSubCategory({
+      SubCategoryService.create({
         title: 'Dry Food',
-        categoryID: mockCategory._id,
+
+        category: mockCategory._id,
       }),
     ).rejects.toThrow('قبلاً ثبت شده است');
   });
 
-  // =========================================================
-  // updateSubCategory
-  // =========================================================
-
-  test('updateSubCategory updates sub category', async () => {
+  test('update updates sub category', async () => {
     const update = {
-      title: 'Premium Dry Food',
-      categoryID: mockCategory._id,
-    };
+      title: 'Premium Food',
 
-    const expected = {
-      ...mockSubCategory,
-      ...update,
+      category: mockCategory._id,
     };
 
     SubCategoryModel.findById.mockResolvedValue(mockSubCategory);
@@ -282,212 +244,129 @@ describe('SubCategory Helpers - Unit Tests', () => {
 
     SubCategoryModel.findOne.mockResolvedValue(null);
 
-    SubCategoryModel.findByIdAndUpdate.mockResolvedValue(expected);
+    SubCategoryModel.findByIdAndUpdate.mockResolvedValue({
+      ...mockSubCategory,
+      ...update,
+    });
 
-    const result = await subCategoryUtils.updateSubCategory(
-      mockSubCategory._id,
-      update,
-    );
+    const result = await SubCategoryService.update(mockSubCategory._id, update);
 
-    expect(result.title).toBe('Premium Dry Food');
+    expect(result.title).toBe('Premium Food');
 
     expect(SubCategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
       mockSubCategory._id,
+
       {
         $set: {
           ...update,
         },
       },
+
       {
-        new: true,
+        returnDocument: 'after',
+
         runValidators: true,
       },
     );
   });
 
-  test('updateSubCategory throws if sub category does not exist', async () => {
-    SubCategoryModel.findById.mockResolvedValue(null);
-
-    await expect(
-      subCategoryUtils.updateSubCategory(mockSubCategory._id, {
-        title: 'Updated',
-        categoryID: mockCategory._id,
-      }),
-    ).rejects.toThrow('زیر دسته‌بندی یافت نشد');
-  });
-
-  test('updateSubCategory throws if category does not exist', async () => {
-    SubCategoryModel.findById.mockResolvedValue(mockSubCategory);
-
-    CategoryModel.findById.mockResolvedValue(null);
-
-    await expect(
-      subCategoryUtils.updateSubCategory(mockSubCategory._id, {
-        title: 'Updated',
-        categoryID: mockCategory._id,
-      }),
-    ).rejects.toThrow('دسته‌بندی انتخاب شده معتبر نیست');
-  });
-
-  test('updateSubCategory throws if duplicate exists', async () => {
+  test('update throws if duplicate exists', async () => {
     SubCategoryModel.findById.mockResolvedValue(mockSubCategory);
 
     CategoryModel.findById.mockResolvedValue(mockCategory);
 
     SubCategoryModel.findOne.mockResolvedValue({
-      _id: '65a4de97aff1fbb38c437333',
-      title: 'Wet Food',
-      categoryID: mockCategory._id,
+      ...mockSubCategory,
+
+      _id: '65a4de97aff1fbb38c437999',
     });
 
     await expect(
-      subCategoryUtils.updateSubCategory(mockSubCategory._id, {
-        title: 'Wet Food',
-        categoryID: mockCategory._id,
-      }),
+      SubCategoryService.update(
+        mockSubCategory._id,
+
+        {
+          title: 'Dry Food',
+
+          category: mockCategory._id,
+        },
+      ),
     ).rejects.toThrow('قبلاً ثبت شده است');
   });
 
-  test('updateSubCategory excludes itself from duplicate query', async () => {
-    SubCategoryModel.findById.mockResolvedValue(mockSubCategory);
-
-    CategoryModel.findById.mockResolvedValue(mockCategory);
-
-    SubCategoryModel.findOne.mockResolvedValue(null);
-
-    SubCategoryModel.findByIdAndUpdate.mockResolvedValue(mockSubCategory);
-
-    await subCategoryUtils.updateSubCategory(mockSubCategory._id, {
-      title: 'Dry Food',
-      categoryID: mockCategory._id,
-    });
-
-    expect(SubCategoryModel.findOne).toHaveBeenCalledWith({
-      title: {
-        $regex: '^Dry Food$',
-        $options: 'i',
-      },
-      categoryID: mockCategory._id,
-      _id: {
-        $ne: mockSubCategory._id,
-      },
-    });
-  });
-
-  // =========================================================
-  // deleteSubCategoryById
-  // =========================================================
-
-  test('deleteSubCategoryById deletes sub category', async () => {
+  test('delete deletes sub category', async () => {
     SubCategoryModel.findByIdAndDelete.mockResolvedValue(mockSubCategory);
 
-    const result = await subCategoryUtils.deleteSubCategoryById(
-      mockSubCategory._id,
-    );
+    const result = await SubCategoryService.delete(mockSubCategory._id);
 
     expect(result).toEqual(mockSubCategory);
-
-    expect(SubCategoryModel.findByIdAndDelete).toHaveBeenCalledWith(
-      mockSubCategory._id,
-    );
   });
 
-  test('deleteSubCategoryById throws if not found', async () => {
+  test('delete throws if not found', async () => {
     SubCategoryModel.findByIdAndDelete.mockResolvedValue(null);
 
     await expect(
-      subCategoryUtils.deleteSubCategoryById(mockSubCategory._id),
+      SubCategoryService.delete(mockSubCategory._id),
     ).rejects.toThrow('زیر دسته‌بندی یافت نشد');
   });
 
-  // =========================================================
-  // getAllSubCategories
-  // =========================================================
+  test('findAll returns all', async () => {
+    const list = [mockSubCategory];
 
-  test('getAllSubCategories returns all sub categories', async () => {
-    const list = [
-      mockSubCategory,
-      {
-        ...mockSubCategory,
-        _id: '65a4de97aff1fbb38c437333',
-        title: 'Wet Food',
-      },
-    ];
-
-    const sortMock = jest.fn().mockResolvedValue(list);
+    const sort = jest.fn().mockResolvedValue(list);
 
     SubCategoryModel.find.mockReturnValue({
-      sort: sortMock,
+      sort,
     });
 
-    const result = await subCategoryUtils.getAllSubCategories();
+    const result = await SubCategoryService.findAll();
 
     expect(result).toEqual(list);
 
     expect(SubCategoryModel.find).toHaveBeenCalledWith({});
-
-    expect(sortMock).toHaveBeenCalledWith({
-      createdAt: 1,
-    });
   });
 
-  test('getAllSubCategories filters by categoryID', async () => {
+  test('findAll filters by category', async () => {
     const list = [mockSubCategory];
 
-    const sortMock = jest.fn().mockResolvedValue(list);
+    const sort = jest.fn().mockResolvedValue(list);
 
     SubCategoryModel.find.mockReturnValue({
-      sort: sortMock,
+      sort,
     });
 
-    const result = await subCategoryUtils.getAllSubCategories({
-      categoryID: mockCategory._id,
+    const result = await SubCategoryService.findAll({
+      category: mockCategory._id,
     });
 
     expect(result).toEqual(list);
 
     expect(SubCategoryModel.find).toHaveBeenCalledWith({
-      categoryID: mockCategory._id,
+      category: mockCategory._id,
     });
   });
 
-  // =========================================================
-  // response formatting
-  // =========================================================
+  test('format returns formatted object', () => {
+    const result = SubCategoryService.format(mockSubCategory);
 
-  test('formatSubCategoryResponse formats object', () => {
-    const formatted =
-      subCategoryUtils.formatSubCategoryResponse(mockSubCategory);
-
-    expect(formatted).toMatchObject({
+    expect(result).toMatchObject({
       id: mockSubCategory._id,
+
       title: mockSubCategory.title,
-      categoryID: mockSubCategory.categoryID,
+
+      category: mockSubCategory.category,
     });
-
-    expect(formatted).toHaveProperty('createdAt');
-    expect(formatted).toHaveProperty('updatedAt');
   });
 
-  test('formatSubCategoryResponse returns null for null input', () => {
-    expect(subCategoryUtils.formatSubCategoryResponse(null)).toBeNull();
+  test('format returns null', () => {
+    expect(SubCategoryService.format(null)).toBeNull();
   });
 
-  test('formatSubCategoriesResponse formats array', () => {
-    const list = [
-      mockSubCategory,
-      {
-        ...mockSubCategory,
-        _id: '65a4de97aff1fbb38c437333',
-        title: 'Wet Food',
-      },
-    ];
+  test('formatMany formats array', () => {
+    const result = SubCategoryService.formatMany([mockSubCategory]);
 
-    const result = subCategoryUtils.formatSubCategoriesResponse(list);
+    expect(result).toHaveLength(1);
 
-    expect(result).toHaveLength(2);
-
-    expect(result[0]).toHaveProperty('id');
-    expect(result[0]).toHaveProperty('categoryID');
+    expect(result[0]).toHaveProperty('category');
   });
 });

@@ -15,7 +15,7 @@ const subCategorySchema = new mongoose.Schema(
       maxlength: 50,
     },
 
-    categoryID: {
+    category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
       required: true,
@@ -48,19 +48,20 @@ const subCategorySchema = new mongoose.Schema(
 // ============================================
 
 subCategorySchema.pre('save', function () {
-  const subCategoryData = {
+  const data = {
     title: this.title,
-    categoryID: this.categoryID?.toString(),
+
+    category: this.category?.toString(),
   };
 
-  const result = createSubCategoryZodSchema.safeParse(subCategoryData);
+  const result = createSubCategoryZodSchema.safeParse(data);
 
   if (!result.success) {
-    const errorMessages = result.error.issues
+    const errors = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join(', ');
 
-    throw new Error(`Validation failed: ${errorMessages}`);
+    throw new Error(`Validation failed: ${errors}`);
   }
 });
 
@@ -81,31 +82,29 @@ subCategorySchema.pre('findOneAndUpdate', function () {
     ...updateData,
   };
 
-  if (validationData.categoryID) {
-    validationData.categoryID = validationData.categoryID.toString();
+  if (validationData.category) {
+    validationData.category = validationData.category.toString();
   }
 
   const result = subCategoryModelUpdateZodSchema.safeParse(validationData);
 
   if (!result.success) {
-    const errorMessages = result.error.issues
+    const errors = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join(', ');
 
-    throw new Error(`Update validation failed: ${errorMessages}`);
+    throw new Error(`Update validation failed: ${errors}`);
   }
 });
 
 // ============================================
-// INDEXES
-// Same sub-category title cannot exist twice
-// inside the same category
+// UNIQUE CATEGORY + TITLE
 // ============================================
 
 subCategorySchema.index(
   {
     title: 1,
-    categoryID: 1,
+    category: 1,
   },
   {
     unique: true,
