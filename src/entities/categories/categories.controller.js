@@ -1,3 +1,5 @@
+// src/entities/categories/categories.controller.js
+
 import { STATUES } from '#configs/constants.js';
 
 import {
@@ -13,16 +15,7 @@ import {
   updateCategoryZodSchema,
 } from './categories.schema.js';
 
-import {
-  createCategory,
-  deleteCategoryById,
-  formatCategoriesResponse,
-  formatCategoryResponse,
-  getAllCategories,
-  getCategoryById,
-  setCategoryEnableStatus,
-  updateCategory,
-} from './categories.helpers.js';
+import { CategoryService } from './categories.service.js';
 
 // ============================================
 // CREATE
@@ -32,11 +25,11 @@ export const createCategoryController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createCategoryZodSchema, req.body);
 
-    const category = await createCategory(body, req.user?.id);
+    const category = await CategoryService.create(body, req.user?.id);
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: `دسته‌بندی "${category.title}" با موفقیت ایجاد شد`,
-      data: formatCategoryResponse(category),
+      data: CategoryService.format(category),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -53,11 +46,15 @@ export const updateCategoryController = async (req, res, next) => {
 
     const body = returnFormValidation(updateCategoryZodSchema, req.body);
 
-    const category = await updateCategory(params.id, body, req.user?.id);
+    const category = await CategoryService.update(
+      params.id,
+      body,
+      req.user?.id,
+    );
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `دسته‌بندی "${category.title}" با موفقیت ویرایش شد`,
-      data: formatCategoryResponse(category),
+      data: CategoryService.format(category),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -72,7 +69,7 @@ export const deleteCategoryByIdController = async (req, res, next) => {
   try {
     const params = returnFormValidation(categoryIdSchema, req.params);
 
-    const category = await deleteCategoryById(params.id);
+    const category = await CategoryService.delete(params.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `دسته‌بندی "${category.title}" با موفقیت حذف شد`,
@@ -93,15 +90,11 @@ export const enableCategoryByIdController = async (req, res, next) => {
   try {
     const params = returnFormValidation(categoryIdSchema, req.params);
 
-    const category = await setCategoryEnableStatus(
-      params.id,
-      true,
-      req.user?.id,
-    );
+    const category = await CategoryService.enable(params.id, req.user?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `دسته‌بندی "${category.title}" با موفقیت فعال شد`,
-      data: formatCategoryResponse(category),
+      data: CategoryService.format(category),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -116,15 +109,11 @@ export const disableCategoryByIdController = async (req, res, next) => {
   try {
     const params = returnFormValidation(categoryIdSchema, req.params);
 
-    const category = await setCategoryEnableStatus(
-      params.id,
-      false,
-      req.user?.id,
-    );
+    const category = await CategoryService.disable(params.id, req.user?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `دسته‌بندی "${category.title}" با موفقیت غیرفعال شد`,
-      data: formatCategoryResponse(category),
+      data: CategoryService.format(category),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -139,10 +128,10 @@ export const getCategoryByIdController = async (req, res, next) => {
   try {
     const params = returnFormValidation(categoryIdSchema, req.params);
 
-    const category = await getCategoryById(params.id);
+    const category = await CategoryService.findById(params.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatCategoryResponse(category),
+      data: CategoryService.format(category),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -158,13 +147,13 @@ export const getAllCategoriesController = async (req, res, next) => {
   try {
     const query = returnFormValidation(categoryQuerySchema, req.query);
 
-    const categories = await getAllCategories({
+    const categories = await CategoryService.findAll({
       includeDisabled: query.includeDisabled,
       petType: query.petType,
     });
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatCategoriesResponse(categories),
+      data: CategoryService.formatMany(categories),
       totalRecords: categories.length,
     });
   } catch (err) {

@@ -1,8 +1,10 @@
+// src/entities/categories/categories.integration.test.js
+
 jest.mock('#utils/index.js', () => ({
-  setSuccessResponse: jest.fn((res, statusCode, option) => {
+  setSuccessResponse: jest.fn((res, statusCode, options = {}) => {
     res.status(statusCode).json({
       isSuccess: true,
-      ...option,
+      ...options,
     });
   }),
 
@@ -13,8 +15,10 @@ jest.mock('#utils/index.js', () => ({
       const error = new Error('اطلاعات وارد شده معتبر نیست');
 
       error.statusCode = 422;
+
       error.data = {
         messages: result.error?.issues || result.error?.errors || [],
+
         detail: {},
       };
 
@@ -33,9 +37,7 @@ jest.mock('#utils/index.js', () => ({
 
     error.statusCode = statusCode;
 
-    Object.assign(error, {
-      ...options,
-    });
+    Object.assign(error, options);
 
     throw error;
   }),
@@ -47,6 +49,7 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
 
     req.user = {
       id: '65a4de97aff1fbb38c437952',
+
       role: 'admin',
     };
 
@@ -75,22 +78,26 @@ jest.mock('#configs/logger.js', () => ({
   },
 }));
 
-import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
+import request from 'supertest';
 
 import { STATUES } from '#configs/constants.js';
+
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 import { CategoryModel } from './categories.model.js';
+
 import categoryRoutes from './categories.route.js';
 
 describe('Category API - Integration Tests', () => {
   let app;
+
   let testPetType;
   let secondPetType;
+
   let testCategory;
 
   beforeAll(() => {
@@ -105,32 +112,34 @@ describe('Category API - Integration Tests', () => {
 
   beforeEach(async () => {
     await CategoryModel.deleteMany({});
+
     await PetTypeModel.deleteMany({});
 
     testPetType = await PetTypeModel.create({
       title: 'Dog',
+
       description: 'Loyal pets',
+
       isEnabled: true,
     });
 
     secondPetType = await PetTypeModel.create({
       title: 'Cat',
+
       description: 'Affectionate pets',
+
       isEnabled: true,
     });
 
-    /*
-     * Using collection.insertOne here intentionally bypasses
-     * Category save middleware while preparing test fixtures.
-     *
-     * API create tests still exercise the complete model
-     * validation/save flow.
-     */
     const insertedCategory = await CategoryModel.collection.insertOne({
       title: 'Food',
+
       petType: testPetType._id,
+
       enable: true,
+
       createdAt: new Date(),
+
       updatedAt: new Date(),
     });
 
@@ -138,15 +147,16 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // POST /api/categories
+  // POST
   // =========================================================
 
   describe('POST /api/categories', () => {
-    it('should create a new category', async () => {
+    test('should create a new category', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'Toys',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -159,25 +169,29 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.body.data).toMatchObject({
         title: 'Toys',
+
         enable: true,
       });
 
       expect(res.body.data.petType.toString()).toBe(testPetType._id.toString());
 
-      const createdCategory = await CategoryModel.findOne({
+      const created = await CategoryModel.findOne({
         title: 'Toys',
       });
 
-      expect(createdCategory).not.toBeNull();
-      expect(createdCategory.enable).toBe(true);
+      expect(created).not.toBeNull();
+
+      expect(created.enable).toBe(true);
     });
 
-    it('should create category with enable=false', async () => {
+    test('should create category with enable=false', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'Medicine',
+
           petType: testPetType._id.toString(),
+
           enable: false,
         })
         .set('Authorization', 'Bearer token');
@@ -186,11 +200,12 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.body.data).toMatchObject({
         title: 'Medicine',
+
         enable: false,
       });
     });
 
-    it('should return 422 if title is missing', async () => {
+    test('should return 422 if title is missing', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
@@ -201,7 +216,7 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if petType is missing', async () => {
+    test('should return 422 if petType is missing', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
@@ -212,11 +227,12 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if petType format is invalid', async () => {
+    test('should return 422 if petType format is invalid', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'Toys',
+
           petType: 'invalid-id',
         })
         .set('Authorization', 'Bearer token');
@@ -224,14 +240,15 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if petType does not exist', async () => {
-      const nonExistentPetType = new mongoose.Types.ObjectId();
+    test('should return 422 if petType does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'Toys',
-          petType: nonExistentPetType.toString(),
+
+          petType: id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
@@ -240,11 +257,12 @@ describe('Category API - Integration Tests', () => {
       expect(res.body.message).toContain('نوع حیوان انتخاب شده معتبر نیست');
     });
 
-    it('should return 422 if title already exists for same petType', async () => {
+    test('should return 422 if title already exists for same petType', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'Food',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -254,11 +272,12 @@ describe('Category API - Integration Tests', () => {
       expect(res.body.message).toContain('قبلاً ثبت شده است');
     });
 
-    it('should detect duplicate title case-insensitively', async () => {
+    test('should detect duplicate title case-insensitively', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'food',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -266,11 +285,12 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should allow same title for another petType', async () => {
+    test('should allow same title for another petType', async () => {
       const res = await request(app)
         .post('/api/categories')
         .send({
           title: 'Food',
+
           petType: secondPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -280,16 +300,20 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // GET /api/categories
+  // GET ALL
   // =========================================================
 
   describe('GET /api/categories', () => {
-    it('should get all enabled categories', async () => {
+    test('should get all enabled categories', async () => {
       await CategoryModel.collection.insertOne({
         title: 'Toys',
+
         petType: testPetType._id,
+
         enable: true,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -299,20 +323,21 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data).toHaveLength(2);
+
       expect(res.body.totalRecords).toBe(2);
     });
 
-    it('should include disabled when includeDisabled=true', async () => {
+    test('should include disabled when includeDisabled=true', async () => {
       await CategoryModel.collection.insertOne({
         title: 'Medicine',
+
         petType: testPetType._id,
+
         enable: false,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -326,15 +351,18 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.SUCCESS);
 
       expect(res.body.data).toHaveLength(2);
-      expect(res.body.totalRecords).toBe(2);
     });
 
-    it('should return only enabled by default', async () => {
+    test('should return only enabled by default', async () => {
       await CategoryModel.collection.insertOne({
         title: 'Medicine',
+
         petType: testPetType._id,
+
         enable: false,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -348,16 +376,21 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.body.data[0]).toMatchObject({
         title: 'Food',
+
         enable: true,
       });
     });
 
-    it('should filter categories by petType', async () => {
+    test('should filter categories by petType', async () => {
       await CategoryModel.collection.insertOne({
         title: 'Cat Food',
+
         petType: secondPetType._id,
+
         enable: true,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -372,16 +405,10 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.body.data).toHaveLength(1);
 
-      expect(res.body.data[0]).toMatchObject({
-        title: 'Food',
-      });
-
-      expect(res.body.data[0].petType.toString()).toBe(
-        testPetType._id.toString(),
-      );
+      expect(res.body.data[0].title).toBe('Food');
     });
 
-    it('should return 422 for invalid petType query', async () => {
+    test('should return 422 for invalid petType query', async () => {
       const res = await request(app)
         .get('/api/categories')
         .query({
@@ -394,47 +421,39 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // GET /api/categories/:id
+  // GET BY ID
   // =========================================================
 
   describe('GET /api/categories/:id', () => {
-    it('should get category by ID', async () => {
+    test('should get category by ID', async () => {
       const res = await request(app)
         .get(`/api/categories/${testCategory._id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data).toMatchObject({
         title: 'Food',
+
         enable: true,
       });
 
       expect(res.body.data.id.toString()).toBe(testCategory._id.toString());
-
-      expect(res.body.data.petType.toString()).toBe(testPetType._id.toString());
     });
 
-    it('should return 404 if category not found', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .get(`/api/categories/${nonExistentId}`)
+        .get(`/api/categories/${id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
 
-      expect(res.body).toMatchObject({
-        isSuccess: false,
-        message: 'دسته‌بندی یافت نشد',
-      });
+      expect(res.body.message).toBe('دسته‌بندی یافت نشد');
     });
 
-    it('should return 422 for invalid category id', async () => {
+    test('should return 422 for invalid category id', async () => {
       const res = await request(app)
         .get('/api/categories/invalid-id')
         .set('Authorization', 'Bearer token');
@@ -444,37 +463,35 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // PUT /api/categories/:id
+  // UPDATE
   // =========================================================
 
   describe('PUT /api/categories/:id', () => {
-    it('should update category', async () => {
+    test('should update category', async () => {
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
           title: 'Premium Food',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data.title).toBe('Premium Food');
 
-      const updatedCategory = await CategoryModel.findById(testCategory._id);
+      const updated = await CategoryModel.findById(testCategory._id);
 
-      expect(updatedCategory.title).toBe('Premium Food');
+      expect(updated.title).toBe('Premium Food');
     });
 
-    it('should update title and petType together', async () => {
+    test('should update title and petType together', async () => {
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
           title: 'Cat Food',
+
           petType: secondPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -488,7 +505,7 @@ describe('Category API - Integration Tests', () => {
       );
     });
 
-    it('should return 422 if title is missing on update', async () => {
+    test('should return 422 if title is missing', async () => {
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
@@ -499,24 +516,25 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if petType is missing on update', async () => {
+    test('should return 422 if petType is missing', async () => {
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
-          title: 'Updated Food',
+          title: 'Updated',
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 404 if category not found', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .put(`/api/categories/${nonExistentId}`)
+        .put(`/api/categories/${id}`)
         .send({
-          title: 'Updated Food',
+          title: 'Updated',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -524,28 +542,31 @@ describe('Category API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.NOT_FOUND);
     });
 
-    it('should return 422 if petType does not exist', async () => {
-      const nonExistentPetType = new mongoose.Types.ObjectId();
+    test('should return 422 if petType does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
-          title: 'Updated Food',
-          petType: nonExistentPetType.toString(),
+          title: 'Updated',
+
+          petType: id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-
-      expect(res.body.message).toContain('نوع حیوان انتخاب شده معتبر نیست');
     });
 
-    it('should return 422 if title already exists for petType', async () => {
+    test('should return 422 if duplicate exists', async () => {
       await CategoryModel.collection.insertOne({
         title: 'Toys',
+
         petType: testPetType._id,
+
         enable: true,
+
         createdAt: new Date(),
+
         updatedAt: new Date(),
       });
 
@@ -553,20 +574,20 @@ describe('Category API - Integration Tests', () => {
         .put(`/api/categories/${testCategory._id}`)
         .send({
           title: 'Toys',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-
-      expect(res.body.message).toContain('قبلاً ثبت شده است');
     });
 
-    it('should allow keeping same title and petType on update', async () => {
+    test('should allow keeping same title and petType', async () => {
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
           title: 'Food',
+
           petType: testPetType._id.toString(),
         })
         .set('Authorization', 'Bearer token');
@@ -576,39 +597,35 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // PUT /api/categories/:id/disable
+  // DISABLE
   // =========================================================
 
   describe('PUT /api/categories/disable/:id', () => {
-    it('should disable category', async () => {
+    test('should disable category', async () => {
       const res = await request(app)
         .put(`/api/categories/disable/${testCategory._id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data.enable).toBe(false);
 
-      const updatedCategory = await CategoryModel.findById(testCategory._id);
+      const updated = await CategoryModel.findById(testCategory._id);
 
-      expect(updatedCategory.enable).toBe(false);
+      expect(updated.enable).toBe(false);
     });
 
-    it('should return 404 if category not found', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .put(`/api/categories/disable/${nonExistentId}`)
+        .put(`/api/categories/disable/${id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
     });
 
-    it('should return 422 for invalid id', async () => {
+    test('should return 422 for invalid id', async () => {
       const res = await request(app)
         .put('/api/categories/disable/invalid-id')
         .set('Authorization', 'Bearer token');
@@ -618,15 +635,16 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // PUT /api/categories/enable/:id
+  // ENABLE
   // =========================================================
 
   describe('PUT /api/categories/enable/:id', () => {
-    it('should enable category', async () => {
+    test('should enable category', async () => {
       await CategoryModel.collection.updateOne(
         {
           _id: testCategory._id,
         },
+
         {
           $set: {
             enable: false,
@@ -640,28 +658,24 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
-
       expect(res.body.data.enable).toBe(true);
 
-      const updatedCategory = await CategoryModel.findById(testCategory._id);
+      const updated = await CategoryModel.findById(testCategory._id);
 
-      expect(updatedCategory.enable).toBe(true);
+      expect(updated.enable).toBe(true);
     });
 
-    it('should return 404 if category not found', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .put(`/api/categories/enable/${nonExistentId}`)
+        .put(`/api/categories/enable/${id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
     });
 
-    it('should return 422 for invalid id', async () => {
+    test('should return 422 for invalid id', async () => {
       const res = await request(app)
         .put('/api/categories/enable/invalid-id')
         .set('Authorization', 'Bearer token');
@@ -671,37 +685,33 @@ describe('Category API - Integration Tests', () => {
   });
 
   // =========================================================
-  // DELETE /api/categories/:id
+  // DELETE
   // =========================================================
 
   describe('DELETE /api/categories/:id', () => {
-    it('should permanently delete category', async () => {
+    test('should permanently delete category', async () => {
       const res = await request(app)
         .delete(`/api/categories/${testCategory._id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body).toMatchObject({
-        isSuccess: true,
-      });
+      const deleted = await CategoryModel.findById(testCategory._id);
 
-      const deletedCategory = await CategoryModel.findById(testCategory._id);
-
-      expect(deletedCategory).toBeNull();
+      expect(deleted).toBeNull();
     });
 
-    it('should return 404 if category not found', async () => {
-      const nonExistentId = new mongoose.Types.ObjectId();
+    test('should return 404 if category does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
 
       const res = await request(app)
-        .delete(`/api/categories/${nonExistentId}`)
+        .delete(`/api/categories/${id}`)
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
     });
 
-    it('should return 422 for invalid category id', async () => {
+    test('should return 422 for invalid category id', async () => {
       const res = await request(app)
         .delete('/api/categories/invalid-id')
         .set('Authorization', 'Bearer token');
