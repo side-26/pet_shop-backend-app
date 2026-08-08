@@ -76,12 +76,7 @@ router.delete(
 // READ ALL
 // ============================================
 
-router.get(
-  '/categories',
-  authenticated,
-  roleMiddleware(ROLES.ADMIN),
-  getAllCategoriesController,
-);
+router.get('/categories', authenticated, getAllCategoriesController);
 
 // ============================================
 // READ ONE
