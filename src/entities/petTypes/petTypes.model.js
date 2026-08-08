@@ -66,7 +66,7 @@ petTypeSchema.virtual('displayName').get(function () {
 // MIDDLEWARES
 // ============================================
 
-petTypeSchema.pre('save', function (next) {
+petTypeSchema.pre('save', function () {
   // Auto-generate slug from title
   if (!this.slug && this.title) {
     this.slug = this.title
@@ -75,7 +75,7 @@ petTypeSchema.pre('save', function (next) {
       .replace(/\s+/g, '-')
       .substring(0, 20);
   }
-  next();
+  // next();
 });
 
 // ============================================

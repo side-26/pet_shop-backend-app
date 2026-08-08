@@ -20,7 +20,7 @@ import {
   disablePetType,
   formatPetTypeResponse,
   formatPetTypesResponse,
-} from './petType.utils.js';
+} from './petTypes.helpers.js';
 import { PetTypeModel } from './petTypes.model.js';
 
 // ============================================
@@ -28,19 +28,19 @@ import { PetTypeModel } from './petTypes.model.js';
 // ============================================
 export const createPetTypeController = async (req, res, next) => {
   try {
-    // Validate request body
     const body = returnFormValidation(createPetTypeZodSchema, req.body);
 
-    // Check if title already exists
     const existingType = await doesPetTypeExist({
       title: body.title.toLowerCase(),
     });
 
     if (existingType) {
-      // This will throw error via setErrorResponse
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: `نوع حیوان "${body.title.toLowerCase()}" قبلاً ثبت شده است`,
+        code: 'PET_TYPE_ALREADY_EXISTS',
+      });
     }
 
-    // Create pet type
     const petType = await createPetType(body, req.user?.id);
 
     setSuccessResponse(res, STATUES.CREATED, {
@@ -51,7 +51,6 @@ export const createPetTypeController = async (req, res, next) => {
     onCatchPromiseController(err, next);
   }
 };
-
 // ============================================
 // GET ALL PET TYPES
 // ============================================
@@ -111,10 +110,21 @@ export const updatePetTypeController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Validate request body
     const body = returnFormValidation(updatePetTypeZodSchema, req.body);
 
-    // Update pet type
+    if (body.title) {
+      const existingType = await doesPetTypeExist({
+        title: body.title,
+      });
+
+      if (existingType && existingType._id.toString() !== id) {
+        setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+          message: `نوع حیوان "${body.title}" قبلاً ثبت شده است`,
+          code: 'PET_TYPE_ALREADY_EXISTS',
+        });
+      }
+    }
+
     const petType = await updatePetType(id, body, req.user?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
@@ -125,7 +135,6 @@ export const updatePetTypeController = async (req, res, next) => {
     onCatchPromiseController(err, next);
   }
 };
-
 // ============================================
 // DISABLE PET TYPE (Soft Delete)
 // ============================================

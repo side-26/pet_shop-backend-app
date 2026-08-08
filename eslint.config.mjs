@@ -40,6 +40,15 @@ export default [
     rules: json.configs.recommended.rules,
   },
   {
+    files: ['**/*.test.js', '**/*.spec.js', 'src/**/__tests__/**/*.js'],
+
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+  },
+  {
     ignores: ['node_modules/**', 'package-lock.json'],
   },
 ];

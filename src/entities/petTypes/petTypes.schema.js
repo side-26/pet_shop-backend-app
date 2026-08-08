@@ -53,7 +53,7 @@ export const petTypeQuerySchema = z.object({
     .string()
     .optional()
     .transform((val) => val === 'true'),
-  search: z.string().optional().max(50),
+  search: z.string().max(50).optional(), // ✅ fixed: .max() before .optional()
   page: z
     .string()
     .optional()

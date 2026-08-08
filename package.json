@@ -6,6 +6,11 @@
   "scripts": {
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "lint": "eslint . --fix",
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test:unit": "cross-env NODE_ENV=test jest --config jest.unit.config.js --runInBand",
+    "test:integration": "cross-env NODE_ENV=test jest --testMatch='**/*.integration.test.js' --runInBand",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage --runInBand",
+    "test:watch": "cross-env NODE_ENV=test jest --watch",
     "predev": "npm run format && npm run lint",
     "dev": "cross-env NODE_ENV=development nodemon ./src/server.js",
     "prestart": "npm run format && npm run lint",
@@ -38,17 +43,25 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
     "@eslint/js": "^10.0.1",
     "@eslint/json": "^1.2.0",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.7.0",
+    "@types/supertest": "^7.2.1",
+    "babel-jest": "^30.4.1",
     "cross-env": "^10.1.0",
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "globals": "^17.6.0",
+    "globals": "^17.9.0",
     "husky": "^9.1.7",
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.2.0",
     "prettier": "^3.8.3",
+    "supertest": "^7.2.2",
     "swagger-autogen": "^2.23.7"
   },
   "imports": {
