@@ -1,67 +1,51 @@
 import { STATUES } from '#configs/constants.js';
+
 import {
-  setSuccessResponse,
-  returnFormValidation,
   onCatchPromiseController,
-  setErrorResponse,
+  returnFormValidation,
+  setSuccessResponse,
 } from '#utils/index.js';
+
 import {
   createPetTypeZodSchema,
   updatePetTypeZodSchema,
 } from './petTypes.schema.js';
-import {
-  doesPetTypeExist,
-  getPetTypeById,
-  getPetTypeBySlug,
-  getAllPetTypes,
-  createPetType,
-  updatePetType,
-  enablePetType,
-  disablePetType,
-  formatPetTypeResponse,
-  formatPetTypesResponse,
-} from './petTypes.helpers.js';
-import { PetTypeModel } from './petTypes.model.js';
+
+import { PetTypeService } from './petTypes.service.js';
 
 // ============================================
-// CREATE PET TYPE
+// CREATE
 // ============================================
+
 export const createPetTypeController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createPetTypeZodSchema, req.body);
 
-    const existingType = await doesPetTypeExist({
-      title: body.title.toLowerCase(),
-    });
-
-    if (existingType) {
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: `نوع حیوان "${body.title.toLowerCase()}" قبلاً ثبت شده است`,
-        code: 'PET_TYPE_ALREADY_EXISTS',
-      });
-    }
-
-    const petType = await createPetType(body, req.user?.id);
+    const petType = await PetTypeService.create(body, req.user?.id);
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: `نوع حیوان "${petType.title}" با موفقیت ایجاد شد`,
-      data: formatPetTypeResponse(petType),
+
+      data: PetTypeService.format(petType),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
+
 // ============================================
-// GET ALL PET TYPES
+// GET ALL
 // ============================================
+
 export const getAllPetTypesController = async (req, res, next) => {
   try {
-    const { includeDisabled } = req.query;
+    const includeDisabled = req.query.includeDisabled === 'true';
 
-    const petTypes = await getAllPetTypes(includeDisabled === 'true');
+    const petTypes = await PetTypeService.findAll(includeDisabled);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatPetTypesResponse(petTypes),
+      data: PetTypeService.formatMany(petTypes),
+
       totalRecords: petTypes.length,
     });
   } catch (err) {
@@ -70,16 +54,15 @@ export const getAllPetTypesController = async (req, res, next) => {
 };
 
 // ============================================
-// GET PET TYPE BY ID
+// GET BY ID
 // ============================================
+
 export const getPetTypeByIdController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    const petType = await getPetTypeById(id);
+    const petType = await PetTypeService.findById(req.params.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatPetTypeResponse(petType),
+      data: PetTypeService.format(petType),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -87,16 +70,15 @@ export const getPetTypeByIdController = async (req, res, next) => {
 };
 
 // ============================================
-// GET PET TYPE BY SLUG
+// GET BY SLUG
 // ============================================
+
 export const getPetTypeBySlugController = async (req, res, next) => {
   try {
-    const { slug } = req.params;
-
-    const petType = await getPetTypeBySlug(slug);
+    const petType = await PetTypeService.findBySlug(req.params.slug);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: formatPetTypeResponse(petType),
+      data: PetTypeService.format(petType),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -104,50 +86,41 @@ export const getPetTypeBySlugController = async (req, res, next) => {
 };
 
 // ============================================
-// UPDATE PET TYPE
+// UPDATE
 // ============================================
+
 export const updatePetTypeController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
     const body = returnFormValidation(updatePetTypeZodSchema, req.body);
 
-    if (body.title) {
-      const existingType = await doesPetTypeExist({
-        title: body.title,
-      });
-
-      if (existingType && existingType._id.toString() !== id) {
-        setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-          message: `نوع حیوان "${body.title}" قبلاً ثبت شده است`,
-          code: 'PET_TYPE_ALREADY_EXISTS',
-        });
-      }
-    }
-
-    const petType = await updatePetType(id, body, req.user?.id);
+    const petType = await PetTypeService.update(
+      req.params.id,
+      body,
+      req.user?.id,
+    );
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `نوع حیوان "${petType.title}" با موفقیت ویرایش شد`,
-      data: formatPetTypeResponse(petType),
+
+      data: PetTypeService.format(petType),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
   }
 };
+
 // ============================================
-// DISABLE PET TYPE (Soft Delete)
+// DISABLE
 // ============================================
+
 export const disablePetTypeController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    // Disable pet type (soft delete)
-    const petType = await disablePetType(id, req.user?.id);
+    const petType = await PetTypeService.disable(req.params.id, req.user?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `نوع حیوان "${petType.title}" با موفقیت غیرفعال شد`,
-      data: { id: petType._id, isEnabled: false },
+
+      data: PetTypeService.format(petType),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -155,18 +128,17 @@ export const disablePetTypeController = async (req, res, next) => {
 };
 
 // ============================================
-// ENABLE PET TYPE
+// ENABLE
 // ============================================
+
 export const enablePetTypeController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    // Enable pet type
-    const petType = await enablePetType(id, req.user?.id);
+    const petType = await PetTypeService.enable(req.params.id, req.user?.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `نوع حیوان "${petType.title}" با موفقیت فعال شد`,
-      data: formatPetTypeResponse(petType),
+
+      data: PetTypeService.format(petType),
     });
   } catch (err) {
     onCatchPromiseController(err, next);
@@ -174,25 +146,19 @@ export const enablePetTypeController = async (req, res, next) => {
 };
 
 // ============================================
-// DELETE PET TYPE (Permanent Delete)
+// DELETE
 // ============================================
+
 export const deletePetTypeController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    // Permanent delete
-    const petType = await PetTypeModel.findByIdAndDelete(id);
-
-    if (!petType) {
-      setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'نوع حیوان یافت نشد',
-        code: 'PET_TYPE_NOT_FOUND',
-      });
-    }
+    const petType = await PetTypeService.delete(req.params.id);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `نوع حیوان "${petType.title}" با موفقیت حذف شد`,
-      data: { id: petType._id },
+
+      data: {
+        id: petType._id,
+      },
     });
   } catch (err) {
     onCatchPromiseController(err, next);
