@@ -16,10 +16,13 @@ const persianFieldNames = {
   address: 'آدرس',
   city: 'شهر',
 
-  // Pet
+  // Pet / Pet Type / Category
   title: 'عنوان',
   description: 'توضیحات',
   petType: 'نوع حیوان',
+  petTypeId: 'شناسه نوع حیوان',
+  categoryId: 'شناسه دسته‌بندی',
+
   breed: 'نژاد',
   age: 'سن',
   gender: 'جنسیت',
@@ -29,12 +32,20 @@ const persianFieldNames = {
   healthStatus: 'وضعیت سلامت',
   availability: 'در دسترس بودن',
   price: 'قیمت',
+
+  // Status
   isEnabled: 'وضعیت فعال',
+  enable: 'وضعیت فعال',
 
   // Common
+  id: 'شناسه',
   page: 'صفحه',
   limit: 'تعداد در صفحه',
   sort: 'مرتب‌سازی',
+  sortBy: 'فیلد مرتب‌سازی',
+  sortOrder: 'ترتیب مرتب‌سازی',
+  search: 'جستجو',
+  includeDisabled: 'نمایش موارد غیرفعال',
   token: 'توکن',
   userId: 'شناسه کاربر',
 };
@@ -72,6 +83,7 @@ const persianMessages = {
 // ============================================
 const persianErrorMap = (issue) => {
   const fieldPath = issue.path.join('.');
+
   const fieldName =
     persianFieldNames[fieldPath] ||
     persianFieldNames[issue.path[0]] ||
@@ -80,47 +92,77 @@ const persianErrorMap = (issue) => {
   switch (issue.code) {
     case 'invalid_type':
       if (issue.received === 'undefined') {
-        return { message: persianMessages.required(fieldName) };
+        return {
+          message: persianMessages.required(fieldName),
+        };
       }
-      return { message: persianMessages.invalidType(fieldName) };
+
+      return {
+        message: persianMessages.invalidType(fieldName),
+      };
 
     case 'too_small':
       if (issue.type === 'string') {
-        return { message: persianMessages.minLength(fieldName, issue.minimum) };
+        return {
+          message: persianMessages.minLength(fieldName, issue.minimum),
+        };
       }
+
       if (issue.type === 'number') {
-        return { message: persianMessages.minNumber(fieldName, issue.minimum) };
+        return {
+          message: persianMessages.minNumber(fieldName, issue.minimum),
+        };
       }
+
       break;
 
     case 'too_big':
       if (issue.type === 'string') {
-        return { message: persianMessages.maxLength(fieldName, issue.maximum) };
+        return {
+          message: persianMessages.maxLength(fieldName, issue.maximum),
+        };
       }
+
       if (issue.type === 'number') {
-        return { message: persianMessages.maxNumber(fieldName, issue.maximum) };
+        return {
+          message: persianMessages.maxNumber(fieldName, issue.maximum),
+        };
       }
+
       break;
 
     case 'invalid_string':
       if (issue.validation === 'email') {
-        return { message: persianMessages.invalidEmail(fieldName) };
+        return {
+          message: persianMessages.invalidEmail(fieldName),
+        };
       }
+
       if (issue.validation === 'url') {
-        return { message: persianMessages.invalidUrl(fieldName) };
+        return {
+          message: persianMessages.invalidUrl(fieldName),
+        };
       }
+
       break;
 
     case 'invalid_value': {
       const validValues = issue.options?.join('، ') || '';
-      return { message: persianMessages.invalidEnum(fieldName, validValues) };
+
+      return {
+        message: persianMessages.invalidEnum(fieldName, validValues),
+      };
     }
 
     default:
-      return { message: persianMessages.invalid(fieldName) };
+      return {
+        message: persianMessages.invalid(fieldName),
+      };
   }
 
-  return { message: persianMessages.invalid(fieldName) };
+  return {
+    message: persianMessages.invalid(fieldName),
+  };
 };
 
 // ============================================
