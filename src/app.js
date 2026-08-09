@@ -11,6 +11,7 @@ import orderRoutes from '#entities/orders/orders.route.js';
 import productRoutes from '#entities/products/products.route.js';
 import subCategoryRoutes from '#entities/subCategories/subCategories.route.js';
 import countryRoutes from './integrations/countries/countries.route.js';
+import breedRoutes from '#entities/breeds/breeds.route.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', landingRoutes);
 app.use('/api', countryRoutes);
+app.use('/api', breedRoutes);
 
 // 4. Error handling (after routes)
 app.use(logError); // Just marks error as logged
