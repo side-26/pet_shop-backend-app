@@ -8,7 +8,7 @@ jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(),
 }));
 
-jest.mock('#utils/index.js', () => ({
+jest.mock('#utils/helpers.js', () => ({
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
 
@@ -51,7 +51,8 @@ jest.mock('./users.model.js', () => ({
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-import { getPaginationData, verifyUser } from '#utils/index.js';
+import { ROLES } from '#configs/constants.js';
+import { getPaginationData, verifyUser } from '#utils/helpers.js';
 
 import { UserModel } from './users.model.js';
 
@@ -71,7 +72,7 @@ describe('UserService - Unit Tests', () => {
 
       password: 'hashed-password',
 
-      role: 'customer',
+      role: ROLES.CUSTOMER,
 
       isEnable: true,
 
@@ -361,17 +362,13 @@ describe('UserService - Unit Tests', () => {
 
     jwt.sign.mockReturnValue('new-access-token');
 
-    verifyUser.mockImplementation((req, res, token, callback) => {
+    verifyUser.mockImplementation((token, callback) => {
       callback({
         userId: mockUser._id,
       });
     });
 
-    const result = await UserService.refreshAccessToken(
-      {},
-      {},
-      'refresh-token',
-    );
+    const result = await UserService.refreshAccessToken('refresh-token');
 
     expect(result).toBe('new-access-token');
 
@@ -379,9 +376,9 @@ describe('UserService - Unit Tests', () => {
   });
 
   test('refreshAccessToken throws if token is missing', async () => {
-    await expect(
-      UserService.refreshAccessToken({}, {}, undefined),
-    ).rejects.toThrow('توکن نامعتبر است');
+    await expect(UserService.refreshAccessToken(undefined)).rejects.toThrow(
+      'توکن نامعتبر است',
+    );
   });
 
   // =========================================================
@@ -614,7 +611,7 @@ describe('UserService - Unit Tests', () => {
 
   test('buildAllUsersFilter adds other filters', () => {
     const result = UserService.buildAllUsersFilter({
-      role: 'customer',
+      role: ROLES.CUSTOMER,
       phoneNumber: '09123456789',
     });
 
@@ -636,7 +633,7 @@ describe('UserService - Unit Tests', () => {
       page: 2,
       limit: 20,
       sort: '-createdAt',
-      role: 'customer',
+      role: ROLES.CUSTOMER,
     });
 
     expect(result).toEqual({

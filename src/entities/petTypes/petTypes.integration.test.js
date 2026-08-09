@@ -1,6 +1,6 @@
 // src/entities/petTypes/petTypes.integration.test.js
 
-jest.mock('#utils/index.js', () => ({
+jest.mock('#utils/helpers.js', () => ({
   setSuccessResponse: jest.fn((res, statusCode, option) => {
     res.status(statusCode).json({
       isSuccess: true,

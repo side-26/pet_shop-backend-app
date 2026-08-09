@@ -38,6 +38,10 @@ export const userChangePasswordFormBodyValidation = object({
   path: ['repeatPassword'],
 });
 
+export const userRefreshTokenSchema = object({
+  refreshToken: string().min(1),
+});
+
 export const userUpdatePersonalInfoSchema = z.object({
   userId: string(),
   firstName: string().min(2),
@@ -46,7 +50,7 @@ export const userUpdatePersonalInfoSchema = z.object({
   nationalCode: string().length(10),
   age: number().int().min(4),
   avatar: url().optional(),
-  role: zEnum([Object.values(ROLES)]).optional(),
+  role: zEnum(Object.values(ROLES)).optional(),
 });
 
 export const userUpdateLocationInfoSchema = z.object({

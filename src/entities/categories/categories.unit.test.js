@@ -1,6 +1,6 @@
 // src/entities/categories/categories.unit.test.js
 
-jest.mock('#utils/index.js', () => ({
+jest.mock('#utils/helpers.js', () => ({
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
 

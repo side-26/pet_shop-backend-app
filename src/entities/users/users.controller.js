@@ -4,10 +4,11 @@ import {
   onCatchPromiseController,
   returnFormValidation,
   setSuccessResponse,
-} from '#utils/index.js';
+} from '#utils/helpers.js';
 
 import {
   userChangePasswordFormBodyValidation,
+  userRefreshTokenSchema,
   userUpdateLocationInfoSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
@@ -62,11 +63,11 @@ export const loginUserController = async (req, res, next) => {
 
 export const refreshTokenController = async (req, res, next) => {
   try {
-    const accessToken = await UserService.refreshAccessToken(
-      req,
-      res,
-      req.body.refreshToken,
+    const { refreshToken } = returnFormValidation(
+      userRefreshTokenSchema,
+      req.body,
     );
+    const accessToken = await UserService.refreshAccessToken(refreshToken);
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: null,

@@ -6,7 +6,7 @@ import {
   onCatchPromiseController,
   returnFormValidation,
   setSuccessResponse,
-} from '#utils/index.js';
+} from '#utils/helpers.js';
 
 import {
   categoryIdSchema,

@@ -1,22 +1,15 @@
 import { STATUES } from '#configs/constants.js';
-import { setErrorResponse } from '#utils/index.js';
+import { setErrorResponse } from '#utils/helpers.js';
 
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 import { CategoryModel } from './categories.model.js';
+import { escapeCategoryRegex } from './categories.helpers.js';
 
 export class CategoryService {
-  // =========================================================
-  // INTERNAL HELPER
-  // =========================================================
-
   static escapeRegex(value = '') {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escapeCategoryRegex(value);
   }
-
-  // =========================================================
-  // CHECK PET TYPE
-  // =========================================================
 
   static async ensurePetTypeExists(petTypeId) {
     const petType = await PetTypeModel.findById(petTypeId);
@@ -31,10 +24,6 @@ export class CategoryService {
 
     return petType;
   }
-
-  // =========================================================
-  // FIND ONE
-  // =========================================================
 
   static async findOne({ title, petType, excludeId } = {}) {
     const query = {};
@@ -60,10 +49,6 @@ export class CategoryService {
     return CategoryModel.findOne(query);
   }
 
-  // =========================================================
-  // FIND BY ID
-  // =========================================================
-
   static async findById(categoryId, throwOnNotFound = true) {
     if (!categoryId) {
       setErrorResponse(STATUES.BAD_REQUEST, {
@@ -85,10 +70,6 @@ export class CategoryService {
 
     return category;
   }
-
-  // =========================================================
-  // CREATE
-  // =========================================================
 
   static async create(data, userId) {
     await this.ensurePetTypeExists(data.petType);
@@ -118,10 +99,6 @@ export class CategoryService {
 
     return category.save();
   }
-
-  // =========================================================
-  // UPDATE
-  // =========================================================
 
   static async update(categoryId, data, userId) {
     const currentCategory = await this.findById(categoryId);
@@ -174,10 +151,6 @@ export class CategoryService {
     return updatedCategory;
   }
 
-  // =========================================================
-  // SET ENABLE STATUS
-  // =========================================================
-
   static async setEnableStatus(categoryId, enable, userId) {
     await this.findById(categoryId);
 
@@ -210,25 +183,13 @@ export class CategoryService {
     return category;
   }
 
-  // =========================================================
-  // ENABLE
-  // =========================================================
-
   static async enable(categoryId, userId) {
     return this.setEnableStatus(categoryId, true, userId);
   }
 
-  // =========================================================
-  // DISABLE
-  // =========================================================
-
   static async disable(categoryId, userId) {
     return this.setEnableStatus(categoryId, false, userId);
   }
-
-  // =========================================================
-  // DELETE
-  // =========================================================
 
   static async delete(categoryId) {
     const category = await CategoryModel.findByIdAndDelete(categoryId);
@@ -243,10 +204,6 @@ export class CategoryService {
 
     return category;
   }
-
-  // =========================================================
-  // FIND ALL
-  // =========================================================
 
   static async findAll({ includeDisabled = false, petType } = {}) {
     const query = {};
@@ -263,10 +220,6 @@ export class CategoryService {
       createdAt: 1,
     });
   }
-
-  // =========================================================
-  // FORMAT ONE
-  // =========================================================
 
   static format(category) {
     if (!category) {
@@ -294,10 +247,6 @@ export class CategoryService {
       updatedAt: value.updatedAt,
     };
   }
-
-  // =========================================================
-  // FORMAT MANY
-  // =========================================================
 
   static formatMany(categories) {
     return categories.map((category) => this.format(category));

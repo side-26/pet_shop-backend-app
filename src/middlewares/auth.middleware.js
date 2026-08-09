@@ -1,5 +1,5 @@
 import { STATUES } from '#configs/constants.js';
-import { setErrorResponse, verifyUser } from '#utils/index.js';
+import { setErrorResponse, verifyUser } from '#utils/helpers.js';
 
 export const authenticated = (req, res, next) => {
   const authHeader = req.get('Authorization')?.toString() || '';

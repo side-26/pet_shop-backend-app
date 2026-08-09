@@ -1,6 +1,60 @@
 import { z } from 'zod';
 
-import '#configs/zod.config';
+import '#configs/zod.config.js';
+
+const propertyDefinitionZodSchema = z
+  .object({
+    key: z
+      .string()
+      .trim()
+      .regex(/^[a-z][a-zA-Z0-9]*$/),
+    label: z.string().trim().min(1).max(80),
+    valueType: z.enum(['string', 'number', 'boolean', 'date', 'enum']),
+    required: z.boolean().optional().default(false),
+    options: z.array(z.string().trim().min(1)).min(1).optional(),
+    min: z.number().optional(),
+    max: z.number().optional(),
+    defaultValue: z.unknown().optional(),
+  })
+  .superRefine((definition, context) => {
+    if (definition.valueType === 'enum' && !definition.options?.length) {
+      context.addIssue({
+        code: 'custom',
+        path: ['options'],
+        message: 'Enum properties require at least one option',
+      });
+    }
+
+    if (
+      definition.min !== undefined &&
+      definition.max !== undefined &&
+      definition.min > definition.max
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['min'],
+        message: 'Minimum cannot be greater than maximum',
+      });
+    }
+  });
+
+const propertyDefinitionsZodSchema = z
+  .array(propertyDefinitionZodSchema)
+  .max(50)
+  .superRefine((definitions, context) => {
+    const seenKeys = new Set();
+
+    definitions.forEach((definition, index) => {
+      if (seenKeys.has(definition.key)) {
+        context.addIssue({
+          code: 'custom',
+          path: [index, 'key'],
+          message: 'Property definition keys must be unique',
+        });
+      }
+      seenKeys.add(definition.key);
+    });
+  });
 
 // ============================================
 // CREATE PET TYPE SCHEMA
@@ -11,6 +65,8 @@ export const createPetTypeZodSchema = z.object({
   description: z.string().max(150).optional().default(''),
 
   isEnabled: z.boolean().optional().default(true),
+
+  propertyDefinitions: propertyDefinitionsZodSchema.optional().default([]),
 });
 
 // ============================================
@@ -22,6 +78,8 @@ export const updatePetTypeZodSchema = z.object({
   description: z.string().max(150).optional(),
 
   isEnabled: z.boolean().optional(),
+
+  propertyDefinitions: propertyDefinitionsZodSchema.optional(),
 });
 
 // ============================================

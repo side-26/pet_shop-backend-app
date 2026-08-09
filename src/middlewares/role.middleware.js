@@ -1,5 +1,5 @@
 import { STATUES } from '#configs/constants.js';
-import { setErrorResponse } from '#utils/index.js';
+import { setErrorResponse } from '#utils/helpers.js';
 
 export const roleMiddleware = (allowedRoles) => (req, res, next) => {
   const userRole = req.user?.role;

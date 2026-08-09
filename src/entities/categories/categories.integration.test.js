@@ -1,6 +1,6 @@
 // src/entities/categories/categories.integration.test.js
 
-jest.mock('#utils/index.js', () => ({
+jest.mock('#utils/helpers.js', () => ({
   setSuccessResponse: jest.fn((res, statusCode, options = {}) => {
     res.status(statusCode).json({
       isSuccess: true,
@@ -50,7 +50,7 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
     req.user = {
       id: '65a4de97aff1fbb38c437952',
 
-      role: 'admin',
+      role: jest.requireActual('#configs/constants.js').ROLES.ADMIN,
     };
 
     next();

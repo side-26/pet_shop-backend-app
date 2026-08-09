@@ -2,10 +2,6 @@ import { static as static_ } from 'express';
 import jwt from 'jsonwebtoken';
 
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 import { STATUES } from '#configs/constants.js';
 
 export const doesBodyExist = (req, res, msg) => {
@@ -127,7 +123,7 @@ export const returnFormValidation = (validationSchema, body) => {
 };
 
 export const setAllStatics = (server) => {
-  server.use(static_(path.join(__dirname, 'public')));
+  server.use(static_(path.join(process.cwd(), 'public')));
 };
 
 export const onCatchPromiseController = (err, next) => {

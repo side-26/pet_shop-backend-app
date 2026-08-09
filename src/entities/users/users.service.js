@@ -8,9 +8,10 @@ import {
   getPaginationData,
   setErrorResponse,
   verifyUser,
-} from '#utils/index.js';
+} from '#utils/helpers.js';
 
 import { UserModel } from './users.model.js';
+import { formatUserFullName } from './users.helpers.js';
 
 export class UserService {
   // =========================================================
@@ -158,7 +159,7 @@ export class UserService {
   // REFRESH TOKEN
   // =========================================================
 
-  static async refreshAccessToken(req, res, refreshToken) {
+  static async refreshAccessToken(refreshToken) {
     if (!refreshToken) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
         message: 'توکن نامعتبر است',
@@ -167,7 +168,7 @@ export class UserService {
 
     return new Promise((resolve, reject) => {
       try {
-        verifyUser(req, res, refreshToken, async (decoded) => {
+        verifyUser(refreshToken, async (decoded) => {
           try {
             /*
              * Refresh token currently contains only userId.
@@ -289,13 +290,7 @@ export class UserService {
     firstNameKey = 'firstName',
     lastNameKey = 'lastName',
   ) {
-    const firstName = user?.[firstNameKey];
-
-    const lastName = user?.[lastNameKey];
-
-    return firstName || lastName
-      ? `${firstName}${lastName ? ` ${lastName}` : ''}`
-      : 'کاربر';
+    return formatUserFullName(user, firstNameKey, lastNameKey);
   }
 
   // =========================================================

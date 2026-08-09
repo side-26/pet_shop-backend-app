@@ -1,5 +1,5 @@
 import { STATUES } from '#configs/constants.js';
-import { setErrorResponse } from '#utils/index.js';
+import { setErrorResponse } from '#utils/helpers.js';
 
 import { PetTypeModel } from './petTypes.model.js';
 
@@ -145,6 +145,7 @@ export class PetTypeService {
       title: petType.title,
       description: petType.description,
       isEnabled: petType.isEnabled,
+      propertyDefinitions: petType.propertyDefinitions || [],
       slug: petType.slug,
       createdAt: petType.createdAt,
       updatedAt: petType.updatedAt,

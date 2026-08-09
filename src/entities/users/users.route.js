@@ -64,7 +64,7 @@ router.post(
   loginUserController,
 );
 
-router.post('/users/refresh-token', authenticated, refreshTokenController);
+router.post('/users/refresh-token', refreshTokenController);
 
 router.put('/users/edit-info', authenticated, updateUserPersonalInfoController);
 

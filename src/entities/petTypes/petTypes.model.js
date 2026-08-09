@@ -1,5 +1,28 @@
 import mongoose from 'mongoose';
 
+const propertyDefinitionSchema = new mongoose.Schema(
+  {
+    key: {
+      type: String,
+      required: true,
+      trim: true,
+      match: /^[a-z][a-zA-Z0-9]*$/,
+    },
+    label: { type: String, required: true, trim: true, maxlength: 80 },
+    valueType: {
+      type: String,
+      required: true,
+      enum: ['string', 'number', 'boolean', 'date', 'enum'],
+    },
+    required: { type: Boolean, default: false },
+    options: { type: [String], default: undefined },
+    min: { type: Number, default: undefined },
+    max: { type: Number, default: undefined },
+    defaultValue: { type: mongoose.Schema.Types.Mixed, default: undefined },
+  },
+  { _id: false },
+);
+
 const petTypeSchema = new mongoose.Schema(
   {
     // Title
@@ -26,6 +49,20 @@ const petTypeSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
       index: true,
+    },
+
+    propertyDefinitions: {
+      type: [propertyDefinitionSchema],
+      default: [],
+      validate: {
+        validator(definitions) {
+          return (
+            new Set(definitions.map(({ key }) => key)).size ===
+            definitions.length
+          );
+        },
+        message: 'Property definition keys must be unique',
+      },
     },
 
     // SEO-friendly slug (auto-generated)
@@ -95,6 +132,5 @@ petTypeSchema.statics.findBySlug = function (slug) {
 // ============================================
 
 petTypeSchema.index({ title: 'text' });
-petTypeSchema.index({ isEnabled: 1 });
 
 export const PetTypeModel = mongoose.model('PetType', petTypeSchema);

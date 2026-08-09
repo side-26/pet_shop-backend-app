@@ -1,10 +1,11 @@
 import { STATUES } from '#configs/constants.js';
 
-import { setErrorResponse } from '#utils/index.js';
+import { setErrorResponse } from '#utils/helpers.js';
 
 import { CategoryModel } from '#entities/categories/categories.model.js';
 
 import { SubCategoryModel } from './subCategories.model.js';
+import { escapeSubCategoryRegex } from './subCategories.helpers.js';
 
 export class SubCategoryService {
   // ============================================
@@ -12,7 +13,7 @@ export class SubCategoryService {
   // ============================================
 
   static escapeRegex(value = '') {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return escapeSubCategoryRegex(value);
   }
 
   // ============================================
