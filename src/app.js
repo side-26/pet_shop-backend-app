@@ -2,6 +2,11 @@ import express from 'express';
 import { logRequest, logError } from '#middlewares/logger.middleware.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { headerMiddleware } from '#middlewares/header.middleware.js';
+import {
+  rateLimiterMiddleware,
+  securityHeadersMiddleware,
+} from '#middlewares/security.middleware.js';
+
 import userRoutes from '#entities/users/users.route.js';
 import petRoutes from '#entities/pet/pet.route.js';
 import petTypeRoutes from '#entities/petTypes/petTypes.route.js';
@@ -15,17 +20,14 @@ import breedRoutes from '#entities/breeds/breeds.route.js';
 
 const app = express();
 
-// ✅ CORRECT ORDER - Important!
+// Security and CORS headers must be present even on a throttled response.
+app.use(securityHeadersMiddleware);
+app.use(headerMiddleware);
+app.use(logRequest);
+app.use('/api', rateLimiterMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// 1. Header middleware
-app.use(headerMiddleware);
-
-// 2. Logging middleware (before routes)
-app.use(logRequest);
-
-// 3. Routes
 app.use('/api', userRoutes);
 app.use('/api', petTypeRoutes);
 app.use('/api', petRoutes);
@@ -37,8 +39,7 @@ app.use('/api', landingRoutes);
 app.use('/api', countryRoutes);
 app.use('/api', breedRoutes);
 
-// 4. Error handling (after routes)
-app.use(logError); // Just marks error as logged
-app.use(errorHandler); // Sends response
+app.use(logError);
+app.use(errorHandler);
 
 export default app;
