@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "mongoose-mongodb": {
+      "source": "pluginagentmarketplace/custom-plugin-nodejs",
+      "sourceType": "github",
+      "skillPath": "skills/mongoose-mongodb/SKILL.md",
+      "computedHash": "f5fd5d7ec4a82dff2e0282fec53e8c5b55e59b689cf717377e91331be09c80eb"
+    },
     "nodejs-backend-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",

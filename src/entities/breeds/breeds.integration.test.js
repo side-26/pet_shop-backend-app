@@ -104,9 +104,7 @@ describe('Breed API', () => {
     expect((await request(app).get('/api/breeds').set(seller)).status).toBe(
       STATUES.SUCCESS,
     );
-    expect(
-      (await request(app).get('/api/breeds/paginate').set(seller)).status,
-    ).toBe(STATUES.NO_ACCESS);
+
     expect(
       (await request(app).get(`/api/breeds/${breed._id}`).set(seller)).status,
     ).toBe(STATUES.NO_ACCESS);

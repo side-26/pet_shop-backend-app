@@ -20,7 +20,7 @@ const router = express.Router();
 router.get(
   '/breeds/paginate',
   authenticated,
-  roleMiddleware(ROLES.ADMIN),
+  roleMiddleware([ROLES.ADMIN, ROLES.SELLER]),
   getAllBreedsWithPaginationController,
 );
 router.get(
