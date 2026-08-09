@@ -99,3 +99,20 @@ export const COUNTRIES_API = {
   FLAGPEDIA_BASE_URL: 'https://flagpedia.net/data/flags',
   FLAG_HEIGHT: 80,
 };
+
+export const IMAGE_FORMATS = {
+  WEBP: 'webp',
+  JPEG: 'jpeg',
+  PNG: 'png',
+  AVIF: 'avif',
+};
+
+export const IMAGE_PROCESSING = {
+  ONE_MB: 1024 * 1024,
+  THREE_MB: 3 * 1024 * 1024,
+  FOUR_MB: 4 * 1024 * 1024,
+  MAX_THUMBNAIL_SIZE_BYTES: 10 * 1024,
+  THUMBNAIL_BLUR_SIGMA: 8,
+  THUMBNAIL_WIDTHS: [160, 128, 96, 64],
+  THUMBNAIL_QUALITIES: [70, 60, 50, 40, 30, 20],
+};
