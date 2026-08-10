@@ -8,12 +8,8 @@ import {
 } from '#middlewares/security.middleware.js';
 
 import userRoutes from '#entities/users/users.route.js';
-import petRoutes from '#entities/pet/pet.route.js';
 import petTypeRoutes from '#entities/petTypes/petTypes.route.js';
 import categoryRoutes from '#entities/categories/categories.route.js';
-import landingRoutes from '#entities/landing/landing.route.js';
-import orderRoutes from '#entities/orders/orders.route.js';
-import productRoutes from '#entities/products/products.route.js';
 import subCategoryRoutes from '#entities/subCategories/subCategories.route.js';
 import countryRoutes from './integrations/countries/countries.route.js';
 import breedRoutes from '#entities/breeds/breeds.route.js';
@@ -30,12 +26,8 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/api', userRoutes);
 app.use('/api', petTypeRoutes);
-app.use('/api', petRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', subCategoryRoutes);
-app.use('/api', productRoutes);
-app.use('/api', orderRoutes);
-app.use('/api', landingRoutes);
 app.use('/api', countryRoutes);
 app.use('/api', breedRoutes);
 

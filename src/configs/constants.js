@@ -118,6 +118,20 @@ export const IMAGE_PROCESSING = {
   THUMBNAIL_QUALITIES: [70, 60, 50, 40, 30, 20],
 };
 
+export const IMAGE_UPLOAD = {
+  MAX_FILE_SIZE_BYTES: 5 * IMAGE_PROCESSING.ONE_MB,
+  MAX_PET_IMAGES: 5,
+  MAX_MULTIPART_FIELDS: 20,
+  AVATAR_FIELD: 'avatar',
+  PET_IMAGES_FIELD: 'images',
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+};
+
+export const OBJECT_STORAGE = {
+  DEFAULT_CACHE_CONTROL: 'public, max-age=31536000, immutable',
+  DEFAULT_ID_LENGTH: 21,
+};
+
 export const RATE_LIMIT = {
   API_WINDOW_MS: 15 * 60 * 1000,
   API_MAX_REQUESTS: 100,
