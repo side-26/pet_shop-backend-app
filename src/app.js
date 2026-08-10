@@ -11,9 +11,10 @@ import userRoutes from '#entities/users/users.route.js';
 import petTypeRoutes from '#entities/petTypes/petTypes.route.js';
 import categoryRoutes from '#entities/categories/categories.route.js';
 import subCategoryRoutes from '#entities/subCategories/subCategories.route.js';
-import countryRoutes from './integrations/countries/countries.route.js';
 import breedRoutes from '#entities/breeds/breeds.route.js';
 import petRoutes from '#entities/pets/pets.route.js';
+
+import countryRoutes from './integrations/countries/countries.route.js';
 
 const app = express();
 

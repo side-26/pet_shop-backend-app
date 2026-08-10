@@ -23,10 +23,10 @@ jest.mock('#entities/petTypes/petTypes.model.js', () => ({
 }));
 
 import { getPaginationData } from '#utils/helpers.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 import { BreedModel } from './breeds.model.js';
 import { BreedService } from './breeds.service.js';
-import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 const id = '65a4de97aff1fbb38c437111';
 const data = {

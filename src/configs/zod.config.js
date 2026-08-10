@@ -33,6 +33,14 @@ const persianFieldNames = {
   availability: 'در دسترس بودن',
   price: 'قیمت',
 
+  quantity: 'تعداد',
+  discountPercentage: 'درصد تخفیف',
+  slug: 'نامک',
+  summary: 'خلاصه',
+  mainImage: 'تصویر اصلی',
+  mainImageThumbnail: 'تصویر بندانگشتی اصلی',
+  images: 'تصاویر',
+
   // Status
   isEnabled: 'وضعیت فعال',
   enable: 'وضعیت فعال',
@@ -139,6 +147,15 @@ const persianErrorMap = (issue) => {
       }
 
       if (issue.validation === 'url') {
+        return {
+          message: persianMessages.invalidUrl(fieldName),
+        };
+      }
+
+      break;
+
+    case 'invalid_format':
+      if (issue.format === 'url') {
         return {
           message: persianMessages.invalidUrl(fieldName),
         };

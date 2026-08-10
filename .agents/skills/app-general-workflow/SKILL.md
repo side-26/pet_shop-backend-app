@@ -16,6 +16,9 @@ Apply these requirements to every code change in this repository.
 5. Run focused linting and related tests first, then run the broadest practical relevant suite.
 6. If a test fails or conflicts with the change, determine whether the implementation or expectation is wrong and fix the root cause. Do not weaken, delete, or skip a valid test merely to obtain a passing run.
 7. Inspect the final diff and run formatting/lint checks. Report what was verified and disclose anything that could not be run.
+8. When adding or changing a Zod schema, inspect `src/configs/zod.config.js`. Add Persian field labels and Persian mappings for every newly used Zod issue code when they are missing.
+9. Group imports in new or modified files in this order: external packages, internal application imports, then relative imports. Separate each non-empty group with one blank line.
+10. Never call Zod schema builders through `z.<functionName>`. Destructure every required builder from `z` first and use those destructured functions throughout the schema.
 
 ## Entity architecture
 
@@ -53,3 +56,4 @@ When introducing a constant, replace applicable duplicated literals and test beh
 
 - Persist uploaded image fields as their complete public bucket URL string. Do not store an object key or an image metadata object in an entity document.
 - Write every application success, validation, error, and informational message in Persian. This includes messages originating from middleware, services, controllers, storage integrations, and mapped third-party errors.
+- For every new schema field, add or confirm its Persian label in `src/configs/zod.config.js`. For every newly used Zod validation issue code, add or confirm its Persian mapping there.

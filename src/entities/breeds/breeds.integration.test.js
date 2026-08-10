@@ -15,11 +15,11 @@ import express from 'express';
 import request from 'supertest';
 
 import { ROLES, STATUES } from '#configs/constants.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import { BreedModel } from './breeds.model.js';
 import breedRoutes from './breeds.route.js';
-import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 const breedData = {
   title: 'Persian Cat',

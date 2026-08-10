@@ -35,4 +35,14 @@ describe('Persian Zod error map', () => {
       }),
     ).not.toThrow();
   });
+
+  it('translates URL format errors using the Persian field label', () => {
+    const result = persianErrorMap({
+      code: 'invalid_format',
+      path: ['mainImage'],
+      format: 'url',
+    });
+
+    expect(result.message).toBe('تصویر اصلی باید یک آدرس معتبر باشد');
+  });
 });
