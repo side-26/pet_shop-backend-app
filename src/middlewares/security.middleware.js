@@ -3,7 +3,8 @@ import helmet from 'helmet';
 
 import { RATE_LIMIT, STATUES } from '#configs/constants.js';
 
-const RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
+const RATE_LIMIT_MESSAGE =
+  'تعداد درخواست های زیاد، لطفا بعد از چند دقیقه مجددا تلاش فرمایید';
 
 export const createRateLimiter = (overrides = {}) =>
   rateLimit({
