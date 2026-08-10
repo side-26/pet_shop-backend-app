@@ -1,0 +1,38 @@
+import persianErrorMap from './zod.config.js';
+
+describe('Persian Zod error map', () => {
+  it('uses options for an invalid value when options are available', () => {
+    const result = persianErrorMap({
+      code: 'invalid_value',
+      path: ['role'],
+      options: ['admin', 'customer'],
+      values: ['fallback'],
+    });
+
+    expect(result.message).toContain('admin, customer');
+    expect(result.message).not.toContain('fallback');
+  });
+
+  it.each([undefined, null, []])(
+    'uses values when options is %p',
+    (options) => {
+      const result = persianErrorMap({
+        code: 'invalid_value',
+        path: ['role'],
+        options,
+        values: ['admin', 'customer'],
+      });
+
+      expect(result.message).toContain('admin, customer');
+    },
+  );
+
+  it('handles missing options and values without throwing', () => {
+    expect(() =>
+      persianErrorMap({
+        code: 'invalid_value',
+        path: ['role'],
+      }),
+    ).not.toThrow();
+  });
+});

@@ -36,7 +36,8 @@ describe('security middleware', () => {
     expect(response.status).toBe(STATUES.TOO_MANY_REQUESTS);
     expect(response.body).toEqual({
       isSuccess: false,
-      message: 'Too many requests. Please try again later.',
+      message:
+        'تعداد درخواست های زیاد، لطفا بعد از چند دقیقه مجددا تلاش فرمایید',
       data: { messages: null, detail: null },
     });
     expect(response.headers).toHaveProperty('ratelimit');

@@ -1,7 +1,15 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-import { STATUES } from '#configs/constants.js';
+import {
+  ERROR_CODES,
+  IMAGE_FORMATS,
+  ROLES,
+  STATUES,
+} from '#configs/constants.js';
+import { getJwtSecret } from '#configs/env.config.js';
+import logger from '#configs/logger.js';
+import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import {
   createNewQueryParam,
@@ -9,6 +17,7 @@ import {
   setErrorResponse,
   verifyUser,
 } from '#utils/helpers.js';
+import { formatImageFile } from '#utils/image.helpers.js';
 
 import { UserModel } from './users.model.js';
 import { formatUserFullName } from './users.helpers.js';
@@ -71,7 +80,7 @@ export class UserService {
         username: phoneNumber,
         role,
       },
-      process.env.JWT_SECRET_KEY,
+      getJwtSecret(),
       {
         expiresIn,
       },
@@ -83,7 +92,7 @@ export class UserService {
       {
         userId,
       },
-      process.env.JWT_SECRET_KEY,
+      getJwtSecret(),
       {
         expiresIn,
       },
@@ -229,6 +238,128 @@ export class UserService {
     }
 
     return updatedUser;
+  }
+
+  static resolveProfileTargetUserId(actor, requestedUserId) {
+    const actorId = actor?.userId || actor?.id;
+
+    if (!actorId) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'هویت کاربر احراز نشده است',
+      });
+    }
+
+    const targetUserId = requestedUserId || actorId;
+    const isEditingAnotherUser = targetUserId.toString() !== actorId.toString();
+
+    if (isEditingAnotherUser && actor.role !== ROLES.ADMIN) {
+      setErrorResponse(STATUES.NO_ACCESS, {
+        message: 'شما اجازه ویرایش اطلاعات کاربر دیگری را ندارید',
+        code: ERROR_CODES.USER_PROFILE_ACCESS_DENIED,
+      });
+    }
+
+    return targetUserId;
+  }
+
+  static async updatePersonalInfo(actor, updateRecord, avatarFile) {
+    const { userId: requestedUserId, ...data } = updateRecord;
+    const userId = this.resolveProfileTargetUserId(actor, requestedUserId);
+
+    if (!avatarFile && Object.keys(data).length === 0) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'حداقل یک فیلد پروفایل یا تصویر آواتار باید ارسال شود',
+      });
+    }
+
+    const avatarProcessing = avatarFile
+      ? formatImageFile(avatarFile.buffer, IMAGE_FORMATS.WEBP).catch(() =>
+          setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+            message: 'تصویر آواتار ارسال‌شده معتبر نیست',
+            code: 'INVALID_AVATAR_IMAGE',
+          }),
+        )
+      : Promise.resolve(null);
+
+    const [currentUser, processedAvatar] = await Promise.all([
+      this.findById(userId),
+      avatarProcessing,
+    ]);
+
+    let uploadedAvatarKey;
+    let avatarUrl;
+
+    if (processedAvatar) {
+      const key = ObjectStorageService.createObjectKey(
+        `users/${currentUser._id}/avatar`,
+        IMAGE_FORMATS.WEBP,
+      );
+
+      uploadedAvatarKey = await ObjectStorageService.uploadObject({
+        key,
+        body: processedAvatar,
+        contentType: 'image/webp',
+      });
+      avatarUrl = ObjectStorageService.buildPublicUrl(uploadedAvatarKey);
+    }
+
+    let updatedUser;
+
+    try {
+      updatedUser = await this.update(
+        userId,
+        avatarUrl ? { ...data, avatar: avatarUrl } : data,
+      );
+    } catch (error) {
+      if (uploadedAvatarKey) {
+        await ObjectStorageService.deleteObject(uploadedAvatarKey).catch(
+          (cleanupError) =>
+            logger.app.error(
+              'حذف آواتار بارگذاری‌شده پس از خطای پایگاه داده ناموفق بود',
+              cleanupError,
+              { userId, key: uploadedAvatarKey },
+            ),
+        );
+      }
+
+      throw error;
+    }
+
+    let previousAvatarKey;
+    if (currentUser.avatar) {
+      try {
+        previousAvatarKey = ObjectStorageService.getObjectKeyFromUrl(
+          currentUser.avatar,
+        );
+      } catch (error) {
+        logger.app.error(
+          'استخراج کلید آواتار قبلی از نشانی ذخیره‌شده ناموفق بود',
+          error,
+          { userId, avatar: currentUser.avatar },
+        );
+      }
+    }
+    if (uploadedAvatarKey && previousAvatarKey) {
+      await ObjectStorageService.deleteObject(previousAvatarKey).catch(
+        (error) =>
+          logger.app.error('حذف آواتار قبلی کاربر ناموفق بود', error, {
+            userId,
+            key: previousAvatarKey,
+          }),
+      );
+    }
+
+    return updatedUser;
+  }
+
+  static format(user) {
+    if (!user) return null;
+
+    const value =
+      typeof user.toObject === 'function' ? user.toObject() : { ...user };
+    delete value.password;
+
+    return value;
   }
 
   // =========================================================

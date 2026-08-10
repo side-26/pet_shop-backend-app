@@ -14,7 +14,7 @@ const toImageBuffer = (imageFile) => {
   if (imageFile instanceof Uint8Array) return Buffer.from(imageFile);
   if (imageFile instanceof ArrayBuffer) return Buffer.from(imageFile);
 
-  throw new TypeError('Image file must be binary data');
+  throw new TypeError('محتوای تصویر باید به‌صورت داده باینری باشد');
 };
 
 export const getImageQuality = (byteLength) => {
@@ -27,7 +27,7 @@ export const getImageQuality = (byteLength) => {
 export const normalizeImageFormat = (format = IMAGE_FORMATS.WEBP) => {
   const normalizedFormat = format.toLowerCase() === 'jpg' ? 'jpeg' : format;
   if (!SUPPORTED_IMAGE_FORMATS.has(normalizedFormat)) {
-    throw new TypeError(`Unsupported image format: ${format}`);
+    throw new TypeError(`فرمت تصویر پشتیبانی نمی‌شود: ${format}`);
   }
   return normalizedFormat;
 };
@@ -64,5 +64,7 @@ export const createBlurThumbnail = async (imageFile) => {
     }
   }
 
-  throw new RangeError('Unable to create a thumbnail below the 10 KB maximum');
+  throw new RangeError(
+    'ساخت تصویر بندانگشتی با حجم کمتر از ۱۰ کیلوبایت ممکن نشد',
+  );
 };

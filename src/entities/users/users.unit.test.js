@@ -8,6 +8,35 @@ jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(),
 }));
 
+jest.mock('sharp', () =>
+  jest.fn(() => ({
+    metadata: jest.fn().mockResolvedValue({
+      width: 320,
+      height: 240,
+      format: 'webp',
+    }),
+  })),
+);
+
+jest.mock('#utils/image.helpers.js', () => ({
+  formatImageFile: jest.fn(),
+}));
+
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    createObjectKey: jest.fn(),
+    uploadObject: jest.fn(),
+    deleteObject: jest.fn(),
+    buildPublicUrl: jest.fn(),
+    getObjectKeyFromUrl: jest.fn(),
+  },
+}));
+
+jest.mock('#configs/logger.js', () => ({
+  __esModule: true,
+  default: { app: { error: jest.fn() } },
+}));
+
 jest.mock('#utils/helpers.js', () => ({
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
@@ -52,7 +81,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 import { ROLES } from '#configs/constants.js';
+import { ObjectStorageService } from '#services/objectStorage.service.js';
 import { getPaginationData, verifyUser } from '#utils/helpers.js';
+import { formatImageFile } from '#utils/image.helpers.js';
 
 import { UserModel } from './users.model.js';
 
@@ -60,6 +91,7 @@ import { UserService } from './users.service.js';
 
 describe('UserService - Unit Tests', () => {
   let mockUser;
+  let mockActor;
 
   beforeEach(() => {
     mockUser = {
@@ -96,6 +128,11 @@ describe('UserService - Unit Tests', () => {
       ],
 
       orders: [],
+    };
+
+    mockActor = {
+      userId: mockUser._id,
+      role: ROLES.CUSTOMER,
     };
 
     jest.clearAllMocks();
@@ -452,6 +489,155 @@ describe('UserService - Unit Tests', () => {
         firstName: 'Ali',
       }),
     ).rejects.toThrow('کاربری یافت نشد');
+  });
+
+  test('updatePersonalInfo processes, uploads, and persists an avatar', async () => {
+    const avatarFile = { buffer: Buffer.from('source-image') };
+    const formattedImage = Buffer.from('formatted-image');
+    const avatarUrl = 'https://cdn.test/users/id/avatar/new.webp';
+
+    UserModel.findById.mockResolvedValue(mockUser);
+    UserModel.findByIdAndUpdate.mockResolvedValue({
+      ...mockUser,
+      firstName: 'Ali',
+      avatar: avatarUrl,
+    });
+    formatImageFile.mockResolvedValue(formattedImage);
+    ObjectStorageService.createObjectKey.mockReturnValue(
+      'users/id/avatar/new.webp',
+    );
+    ObjectStorageService.uploadObject.mockResolvedValue(
+      'users/id/avatar/new.webp',
+    );
+    ObjectStorageService.buildPublicUrl.mockReturnValue(avatarUrl);
+
+    const result = await UserService.updatePersonalInfo(
+      mockActor,
+      { firstName: 'Ali' },
+      avatarFile,
+    );
+
+    expect(result.avatar).toBe(avatarUrl);
+    expect(formatImageFile).toHaveBeenCalledWith(avatarFile.buffer, 'webp');
+    expect(ObjectStorageService.uploadObject).toHaveBeenCalledWith({
+      key: 'users/id/avatar/new.webp',
+      body: formattedImage,
+      contentType: 'image/webp',
+    });
+    expect(UserModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      mockUser._id,
+      { $set: { firstName: 'Ali', avatar: avatarUrl } },
+      { returnDocument: 'after', runValidators: true },
+    );
+  });
+
+  test('updatePersonalInfo rejects an empty update', async () => {
+    await expect(UserService.updatePersonalInfo(mockActor, {})).rejects.toThrow(
+      'حداقل یک فیلد پروفایل یا تصویر آواتار باید ارسال شود',
+    );
+
+    expect(UserModel.findById).not.toHaveBeenCalled();
+  });
+
+  test('updatePersonalInfo rejects invalid image bytes before upload', async () => {
+    formatImageFile.mockRejectedValue(new Error('invalid image'));
+
+    await expect(
+      UserService.updatePersonalInfo(
+        mockActor,
+        {},
+        {
+          buffer: Buffer.from('invalid-image'),
+        },
+      ),
+    ).rejects.toThrow('تصویر آواتار ارسال‌شده معتبر نیست');
+
+    expect(ObjectStorageService.uploadObject).not.toHaveBeenCalled();
+  });
+
+  test('updatePersonalInfo rolls back a new avatar when persistence fails', async () => {
+    UserModel.findById.mockResolvedValue(mockUser);
+    UserModel.findByIdAndUpdate.mockRejectedValue(new Error('database failed'));
+    formatImageFile.mockResolvedValue(Buffer.from('formatted-image'));
+    ObjectStorageService.createObjectKey.mockReturnValue('new-avatar.webp');
+    ObjectStorageService.uploadObject.mockResolvedValue('new-avatar.webp');
+    ObjectStorageService.buildPublicUrl.mockReturnValue(
+      'https://cdn.test/new-avatar.webp',
+    );
+    ObjectStorageService.deleteObject.mockResolvedValue();
+
+    await expect(
+      UserService.updatePersonalInfo(
+        mockActor,
+        {},
+        {
+          buffer: Buffer.from('source-image'),
+        },
+      ),
+    ).rejects.toThrow('database failed');
+
+    expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+      'new-avatar.webp',
+    );
+  });
+
+  test('updatePersonalInfo replaces the previous avatar after persistence', async () => {
+    const userWithAvatar = {
+      ...mockUser,
+      avatar: 'https://cdn.test/old-avatar.webp',
+    };
+    UserModel.findById.mockResolvedValue(userWithAvatar);
+    UserModel.findByIdAndUpdate.mockResolvedValue(userWithAvatar);
+    formatImageFile.mockResolvedValue(Buffer.from('formatted-image'));
+    ObjectStorageService.createObjectKey.mockReturnValue('new-avatar.webp');
+    ObjectStorageService.uploadObject.mockResolvedValue('new-avatar.webp');
+    ObjectStorageService.buildPublicUrl.mockReturnValue(
+      'https://cdn.test/new-avatar.webp',
+    );
+    ObjectStorageService.getObjectKeyFromUrl.mockReturnValue('old-avatar.webp');
+    ObjectStorageService.deleteObject.mockResolvedValue();
+
+    await UserService.updatePersonalInfo(
+      mockActor,
+      {},
+      {
+        buffer: Buffer.from('source-image'),
+      },
+    );
+
+    expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+      'old-avatar.webp',
+    );
+  });
+
+  test('resolveProfileTargetUserId lets an admin target another user', () => {
+    const targetUserId = '65a4de97aff1fbb38c437999';
+
+    expect(
+      UserService.resolveProfileTargetUserId(
+        { ...mockActor, role: ROLES.ADMIN },
+        targetUserId,
+      ),
+    ).toBe(targetUserId);
+  });
+
+  test('resolveProfileTargetUserId prevents a customer editing another user', () => {
+    expect(() =>
+      UserService.resolveProfileTargetUserId(
+        mockActor,
+        '65a4de97aff1fbb38c437999',
+      ),
+    ).toThrow('شما اجازه ویرایش اطلاعات کاربر دیگری را ندارید');
+  });
+
+  test('format preserves the saved avatar URL and removes the password', () => {
+    const result = UserService.format({
+      ...mockUser,
+      avatar: 'https://cdn.test/avatar.webp',
+    });
+
+    expect(result.password).toBeUndefined();
+    expect(result.avatar).toBe('https://cdn.test/avatar.webp');
   });
 
   // =========================================================

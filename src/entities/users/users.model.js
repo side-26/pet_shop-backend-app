@@ -7,9 +7,10 @@ const userSchema = new mongoose.Schema(
     firstName: { type: String, default: '' },
     lastName: { type: String, default: '' },
     phoneNumber: { type: String, required: true, unique: true },
+    email: { type: String, default: '' },
     password: { type: String, required: true },
     isEnable: { type: Boolean, default: true },
-    avatar: { type: String, default: '' }, // stores file path/URL
+    avatar: { type: String, default: '' },
     address: { type: String, default: '' },
     nationalCode: { type: String, default: '' },
     city: { type: String, default: '' },
@@ -47,7 +48,7 @@ userSchema.pre('save', function () {
     const errorMessages = result.error.issues
       .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join(', ');
-    throw new Error(`Validation failed: ${errorMessages}`);
+    throw new Error(`اعتبارسنجی ناموفق بود: ${errorMessages}`);
   }
 });
 
@@ -61,7 +62,7 @@ userSchema.pre('findOneAndUpdate', function () {
       const errorMessages = result.error.issues
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join(', ');
-      throw new Error(`Update validation failed: ${errorMessages}`);
+      throw new Error(`اعتبارسنجی به‌روزرسانی ناموفق بود: ${errorMessages}`);
     }
   }
 });

@@ -1,14 +1,24 @@
 import { any, z } from 'zod';
 import '#configs/zod.config.js';
 import { ROLES } from '#configs/constants.js';
-const { string, number, array, object, email, boolean, url, enum: zEnum } = z;
+const {
+  string,
+  number,
+  array,
+  object,
+  boolean,
+  enum: zEnum,
+  email,
+  coerce,
+} = z;
 
 export const userZodSchema = object({
   firstName: string().optional(),
   lastName: string().optional(),
   phoneNumber: string().min(11).max(11),
   password: string().min(8),
-  avatar: string().optional(), // file path / URL stored as string
+  email: email().optional().or(z.literal('')),
+  avatar: z.url().optional().or(z.literal('')),
   address: string().optional(),
   isEnable: boolean().optional(),
   nationalCode: string().optional(),
@@ -43,14 +53,17 @@ export const userRefreshTokenSchema = object({
 });
 
 export const userUpdatePersonalInfoSchema = z.object({
-  userId: string(),
-  firstName: string().min(2),
-  lastName: string().min(2),
-  email: email(),
-  nationalCode: string().length(10),
-  age: number().int().min(4),
-  avatar: url().optional(),
-  role: zEnum(Object.values(ROLES)).optional(),
+  userId: string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .optional(),
+  firstName: string().trim().min(2).optional(),
+  lastName: string().trim().min(2).optional(),
+  email: email().optional(),
+  nationalCode: string()
+    .regex(/^\d{10}$/)
+    .optional(),
+  age: coerce.number().int().min(4).optional(),
+  avatar: string().optional(),
 });
 
 export const userUpdateLocationInfoSchema = z.object({

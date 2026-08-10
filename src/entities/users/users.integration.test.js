@@ -3,8 +3,10 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
     void res;
 
     req.user = {
-      id: '65a4de97aff1fbb38c437952',
-      role: jest.requireActual('#configs/constants.js').ROLES.ADMIN,
+      userId: global.__TEST_USER_ID__,
+      role:
+        global.__TEST_USER_ROLE__ ||
+        jest.requireActual('#configs/constants.js').ROLES.ADMIN,
     };
 
     next();
@@ -29,6 +31,20 @@ jest.mock('#configs/logger.js', () => ({
 
   api: {
     request: jest.fn(),
+  },
+}));
+
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    createObjectKey: jest.fn(
+      (directory, extension) => `${directory}/generated.${extension}`,
+    ),
+    uploadObject: jest.fn(async ({ key }) => key),
+    deleteObject: jest.fn().mockResolvedValue(undefined),
+    buildPublicUrl: jest.fn((key) => `https://cdn.example.test/${key}`),
+    getObjectKeyFromUrl: jest.fn((url) =>
+      url.replace('https://cdn.example.test/', ''),
+    ),
   },
 }));
 
@@ -134,10 +150,12 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
+import sharp from 'sharp';
 
 import { ROLES, STATUES } from '#configs/constants.js';
 
 import { errorHandler } from '#middlewares/error.middleware.js';
+import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import { UserModel } from './users.model.js';
 
@@ -203,10 +221,14 @@ describe('User API - Integration Tests', () => {
     testUser = await createTestUser();
 
     global.__TEST_USER_ID__ = testUser._id.toString();
+    global.__TEST_USER_ROLE__ = ROLES.ADMIN;
+    ObjectStorageService.deleteObject.mockClear();
+    ObjectStorageService.getObjectKeyFromUrl.mockClear();
   });
 
   afterAll(() => {
     delete global.__TEST_USER_ID__;
+    delete global.__TEST_USER_ROLE__;
   });
 
   // =========================================================
@@ -402,6 +424,125 @@ describe('User API - Integration Tests', () => {
       expect(updatedUser.firstName).toBe('Ali');
 
       expect(updatedUser.age).toBe(26);
+    });
+
+    test('should update form fields and upload an avatar together', async () => {
+      const avatar = await sharp({
+        create: {
+          width: 32,
+          height: 32,
+          channels: 3,
+          background: '#336699',
+        },
+      })
+        .png()
+        .toBuffer();
+
+      const res = await request(app)
+        .put('/api/users/edit-info')
+        .field('firstName', 'Sara')
+        .field('lastName', 'Ahmadi')
+        .field('email', 'sara@example.com')
+        .field('nationalCode', '1234567890')
+        .field('age', '29')
+        .attach('avatar', avatar, {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      const expectedAvatarUrl = `https://cdn.example.test/users/${testUser._id}/avatar/generated.webp`;
+      expect(res.body.data.avatar).toBe(expectedAvatarUrl);
+
+      const updatedUser = await UserModel.findById(testUser._id);
+      expect(updatedUser.firstName).toBe('Sara');
+      expect(updatedUser.age).toBe(29);
+      expect(updatedUser.avatar).toBe(expectedAvatarUrl);
+    });
+
+    test('should reject image MIME claims when the bytes are invalid', async () => {
+      const res = await request(app)
+        .put('/api/users/edit-info')
+        .attach('avatar', Buffer.from('not-an-image'), {
+          filename: 'avatar.png',
+          contentType: 'image/png',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(res.body.message).toBe('تصویر آواتار ارسال‌شده معتبر نیست');
+    });
+
+    test('should let an admin update another user and delete only that user previous avatar', async () => {
+      const oldAvatarUrl =
+        'https://cdn.example.test/users/other/avatar/old.webp';
+      const otherUser = await createTestUser({
+        phoneNumber: '09111111111',
+        firstName: 'Other',
+        avatar: oldAvatarUrl,
+      });
+
+      const avatar = await sharp({
+        create: {
+          width: 32,
+          height: 32,
+          channels: 3,
+          background: '#993366',
+        },
+      })
+        .png()
+        .toBuffer();
+
+      const res = await request(app)
+        .put('/api/users/edit-info')
+        .field('userId', otherUser._id.toString())
+        .field('firstName', 'Updated Other')
+        .attach('avatar', avatar, {
+          filename: 'other-avatar.png',
+          contentType: 'image/png',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      const authenticatedUser = await UserModel.findById(testUser._id);
+      const updatedOtherUser = await UserModel.findById(otherUser._id);
+      const expectedAvatarUrl = `https://cdn.example.test/users/${otherUser._id}/avatar/generated.webp`;
+
+      expect(authenticatedUser.firstName).toBe('Mahdi');
+      expect(authenticatedUser.avatar).toBe('');
+      expect(updatedOtherUser.firstName).toBe('Updated Other');
+      expect(updatedOtherUser.avatar).toBe(expectedAvatarUrl);
+      expect(ObjectStorageService.createObjectKey).toHaveBeenCalledWith(
+        `users/${otherUser._id}/avatar`,
+        'webp',
+      );
+      expect(ObjectStorageService.getObjectKeyFromUrl).toHaveBeenCalledWith(
+        oldAvatarUrl,
+      );
+      expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+        'users/other/avatar/old.webp',
+      );
+    });
+
+    test('should prevent a customer from updating another user', async () => {
+      const otherUser = await createTestUser({
+        phoneNumber: '09111111111',
+        firstName: 'Other',
+      });
+      global.__TEST_USER_ROLE__ = ROLES.CUSTOMER;
+
+      const res = await request(app)
+        .put('/api/users/edit-info')
+        .send({
+          userId: otherUser._id.toString(),
+          firstName: 'Forbidden Update',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.NO_ACCESS);
+      const unchangedOtherUser = await UserModel.findById(otherUser._id);
+      expect(unchangedOtherUser.firstName).toBe('Other');
     });
 
     test('should return 422 for invalid personal information', async () => {

@@ -89,10 +89,15 @@ export const updateUserPersonalInfoController = async (req, res, next) => {
   try {
     const body = returnFormValidation(userUpdatePersonalInfoSchema, req.body);
 
-    const updatedUser = await UserService.update(body.userId, body);
+    const updatedUser = await UserService.updatePersonalInfo(
+      req.user,
+      body,
+      req.file,
+    );
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `اطلاعات ${UserService.getFullName(updatedUser)} ویرایش شد`,
+      data: UserService.format(updatedUser),
     });
   } catch (err) {
     onCatchPromiseController(err, next);

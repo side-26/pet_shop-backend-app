@@ -1,5 +1,11 @@
 jest.mock('#configs/arvanCloud.config.js', () => ({
   arvanS3: { send: jest.fn() },
+  arvanEndpoint: 'https://s3.example.test',
+}));
+
+jest.mock('#configs/logger.js', () => ({
+  __esModule: true,
+  default: { app: { error: jest.fn() } },
 }));
 
 jest.mock('nanoid', () => ({
@@ -61,6 +67,34 @@ describe('ObjectStorageService', () => {
     });
   });
 
+  it('returns a Persian message when storage upload fails', async () => {
+    mockSend.mockRejectedValue(new Error('provider failure'));
+
+    await expect(
+      ObjectStorageService.uploadObject({
+        key: 'users/avatar.webp',
+        body: Buffer.from('image'),
+        contentType: 'image/webp',
+      }),
+    ).rejects.toThrow('بارگذاری فایل در فضای ذخیره‌سازی ناموفق بود');
+  });
+
+  it('returns a useful Persian message when Arvan rejects access', async () => {
+    const providerError = new Error('forbidden');
+    providerError.$metadata = { httpStatusCode: 403 };
+    mockSend.mockRejectedValue(providerError);
+
+    await expect(
+      ObjectStorageService.uploadObject({
+        key: 'users/avatar.webp',
+        body: Buffer.from('image'),
+        contentType: 'image/webp',
+      }),
+    ).rejects.toThrow(
+      'دسترسی به فضای ذخیره‌سازی رد شد؛ نام باکت، کلیدهای دسترسی و مجوزها را بررسی کنید',
+    );
+  });
+
   it('deletes one object', async () => {
     await ObjectStorageService.deleteObject('users/id/avatar.webp');
 
@@ -105,9 +139,29 @@ describe('ObjectStorageService', () => {
     );
   });
 
+  it('extracts an object key from its public bucket URL', () => {
+    process.env.ARVAN_PUBLIC_BASE_URL = 'https://cdn.example.test/assets';
+
+    expect(
+      ObjectStorageService.getObjectKeyFromUrl(
+        'https://cdn.example.test/assets/users/avatar.webp',
+      ),
+    ).toBe('users/avatar.webp');
+  });
+
+  it('rejects URLs outside the configured bucket', () => {
+    process.env.ARVAN_PUBLIC_BASE_URL = 'https://cdn.example.test';
+
+    expect(() =>
+      ObjectStorageService.getObjectKeyFromUrl(
+        'https://attacker.example/users/avatar.webp',
+      ),
+    ).toThrow('نشانی فایل متعلق به فضای ذخیره‌سازی نیست');
+  });
+
   it('rejects unsafe object keys and missing configuration', async () => {
     expect(() => ObjectStorageService.createObjectKey('../pets')).toThrow(
-      'Directory is invalid',
+      'پوشه معتبر نیست',
     );
 
     delete process.env.ARVAN_BUCKET;
@@ -117,6 +171,6 @@ describe('ObjectStorageService', () => {
         body: Buffer.from('image'),
         contentType: 'image/webp',
       }),
-    ).rejects.toThrow('ARVAN_BUCKET is not configured');
+    ).rejects.toThrow('متغیر محیطی ARVAN_BUCKET تنظیم نشده است');
   });
 });

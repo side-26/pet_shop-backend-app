@@ -70,7 +70,7 @@ describe('upload middleware', () => {
 
     expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
     expect(response.body.message).toBe(
-      'Only JPEG, PNG, WebP, and AVIF images are allowed',
+      'فقط تصاویر با فرمت JPEG، PNG، WebP و AVIF مجاز هستند',
     );
   });
 
@@ -93,7 +93,7 @@ describe('upload middleware', () => {
     const response = await pendingRequest;
 
     expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
-    expect(response.body.message).toBe('Too many files');
+    expect(response.body.message).toBe('تعداد فایل‌ها بیشتر از حد مجاز است');
   });
 
   it('rejects an image larger than the configured byte limit', async () => {
@@ -107,6 +107,6 @@ describe('upload middleware', () => {
       });
 
     expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
-    expect(response.body.message).toBe('File too large');
+    expect(response.body.message).toBe('حجم فایل بیشتر از حد مجاز است');
   });
 });

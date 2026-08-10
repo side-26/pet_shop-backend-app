@@ -48,3 +48,8 @@ Reuse existing constants such as `STATUES`, `ROLES`, and domain constants in pro
 Create a clearly named constant when a stable value represents shared domain vocabulary, protocol behavior, status, role, error code, property type, or another repeated concept. Keep entity-only constants with the entity and cross-entity constants in the shared constants module. Do not turn incidental one-use values into constants without a maintenance benefit.
 
 When introducing a constant, replace applicable duplicated literals and test behavior through the constant-backed public interface.
+
+## Storage and message rules
+
+- Persist uploaded image fields as their complete public bucket URL string. Do not store an object key or an image metadata object in an entity document.
+- Write every application success, validation, error, and informational message in Persian. This includes messages originating from middleware, services, controllers, storage integrations, and mapped third-party errors.

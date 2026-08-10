@@ -10,7 +10,9 @@ const imageFileFilter = (_req, file, callback) => {
     return;
   }
 
-  const error = new Error('Only JPEG, PNG, WebP, and AVIF images are allowed');
+  const error = new Error(
+    'فقط تصاویر با فرمت JPEG، PNG، WebP و AVIF مجاز هستند',
+  );
   error.statusCode = STATUES.BAD_FORM_VALIDATION;
   error.code = 'UNSUPPORTED_IMAGE_TYPE';
   callback(error);

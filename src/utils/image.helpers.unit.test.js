@@ -35,7 +35,7 @@ describe('image helpers', () => {
     expect(normalizeImageFormat()).toBe('webp');
     expect(normalizeImageFormat('jpg')).toBe('jpeg');
     expect(() => normalizeImageFormat('gif')).toThrow(
-      'Unsupported image format',
+      'فرمت تصویر پشتیبانی نمی‌شود',
     );
   });
 
@@ -54,7 +54,7 @@ describe('image helpers', () => {
 
   test('rejects non-binary image input', async () => {
     await expect(formatImageFile('not-an-image')).rejects.toThrow(
-      'Image file must be binary data',
+      'محتوای تصویر باید به‌صورت داده باینری باشد',
     );
   });
 

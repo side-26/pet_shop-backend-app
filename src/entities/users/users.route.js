@@ -17,6 +17,7 @@ import {
 import { authenticated } from '../../middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { ROLES } from '#configs/constants.js';
+import { uploadAvatar } from '#middlewares/upload.middleware.js';
 
 const router = express.Router();
 
@@ -66,7 +67,12 @@ router.post(
 
 router.post('/users/refresh-token', refreshTokenController);
 
-router.put('/users/edit-info', authenticated, updateUserPersonalInfoController);
+router.put(
+  '/users/edit-info',
+  authenticated,
+  uploadAvatar,
+  updateUserPersonalInfoController,
+);
 
 router.put(
   '/users/edit-location-info',

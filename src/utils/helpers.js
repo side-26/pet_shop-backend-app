@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import path from 'path';
 import { STATUES } from '#configs/constants.js';
+import { getJwtSecret } from '#configs/env.config.js';
 
 export const doesBodyExist = (req, res, msg) => {
   if (!req.body)
@@ -136,7 +137,7 @@ export const onCatchPromiseController = (err, next) => {
 };
 
 export const verifyUser = (token, onSuccess) => {
-  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, getJwtSecret(), (err, decoded) => {
     if (err) {
       setErrorResponse(STATUES.UN_AUTHORIZED, {
         message: 'توکن نامعتبر است',

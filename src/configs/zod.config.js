@@ -147,7 +147,10 @@ const persianErrorMap = (issue) => {
       break;
 
     case 'invalid_value': {
-      const validValues = issue.options?.join('، ') || '';
+      const allowedValues = issue.options?.length
+        ? issue.options
+        : issue?.values || [];
+      const validValues = allowedValues.join(', ');
 
       return {
         message: persianMessages.invalidEnum(fieldName, validValues),
