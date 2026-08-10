@@ -22,6 +22,8 @@ const persianFieldNames = {
   petType: 'نوع حیوان',
   petTypeId: 'شناسه نوع حیوان',
   categoryId: 'شناسه دسته‌بندی',
+  category: 'دسته‌بندی',
+  subCategory: 'زیر دسته‌بندی',
 
   breed: 'نژاد',
   age: 'سن',
