@@ -4,7 +4,7 @@ description: Redis security guidance covering authentication (requirepass and AC
 license: MIT
 metadata:
   author: Redis, Inc.
-  version: "0.1.0"
+  version: '0.1.0'
 ---
 
 # Redis Security
@@ -61,12 +61,12 @@ ACL SETUSER admin        on >strong-password ~* +@all
 
 Useful command categories:
 
-| Category | What it covers |
-|---|---|
-| `@read` | Read commands (`GET`, `MGET`, `HGET`, ...) |
-| `@write` | Write commands (`SET`, `DEL`, `XADD`, ...) |
-| `@dangerous` | `FLUSHALL`, `DEBUG`, `KEYS`, etc. |
-| `@admin` | Administrative commands |
+| Category     | What it covers                             |
+| ------------ | ------------------------------------------ |
+| `@read`      | Read commands (`GET`, `MGET`, `HGET`, ...) |
+| `@write`     | Write commands (`SET`, `DEL`, `XADD`, ...) |
+| `@dangerous` | `FLUSHALL`, `DEBUG`, `KEYS`, etc.          |
+| `@admin`     | Administrative commands                    |
 
 If app credentials leak, a tight ACL bounds the blast radius — the attacker can't `FLUSHALL` your DB just because they grabbed a cache reader's password.
 
