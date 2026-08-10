@@ -13,6 +13,7 @@ import categoryRoutes from '#entities/categories/categories.route.js';
 import subCategoryRoutes from '#entities/subCategories/subCategories.route.js';
 import countryRoutes from './integrations/countries/countries.route.js';
 import breedRoutes from '#entities/breeds/breeds.route.js';
+import petRoutes from '#entities/pets/pets.route.js';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', subCategoryRoutes);
 app.use('/api', countryRoutes);
 app.use('/api', breedRoutes);
+app.use('/api', petRoutes);
 
 app.use(logError);
 app.use(errorHandler);

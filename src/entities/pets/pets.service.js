@@ -1,0 +1,211 @@
+import { ERROR_CODES, STATUES } from '#configs/constants.js';
+import { BreedModel } from '#entities/breeds/breeds.model.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
+
+import {
+  buildPetFilter,
+  escapePetRegex,
+  formatCustomerPetDetail,
+  formatCustomerPetListItem,
+  formatManagementPet,
+} from './pets.helpers.js';
+import { PetModel } from './pets.model.js';
+
+const populateRelations = async (documents) =>
+  PetModel.populate(documents, [{ path: 'petType' }, { path: 'breed' }]);
+
+export class PetService {
+  static escapeRegex(value = '') {
+    return escapePetRegex(value);
+  }
+
+  static async findOne({ slug, excludeId } = {}) {
+    const query = {};
+    if (slug) query.slug = slug.toLowerCase();
+    if (excludeId) query._id = { $ne: excludeId };
+    return PetModel.findOne(query);
+  }
+
+  static async findById(id, throwOnNotFound = true) {
+    const pet = await PetModel.findById(id);
+    if (!pet && throwOnNotFound) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return pet;
+  }
+
+  static async validateRelations(petTypeId, breedId) {
+    const [petType, breed] = await Promise.all([
+      PetTypeModel.findById(petTypeId),
+      BreedModel.findById(breedId),
+    ]);
+    if (!petType) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نوع حیوان انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PET_TYPE_NOT_FOUND,
+      });
+    }
+    if (!breed) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نژاد انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PET_BREED_NOT_FOUND,
+      });
+    }
+    if (breed.petType?.toString() !== petType._id.toString()) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نژاد انتخاب‌شده متعلق به نوع حیوان انتخاب‌شده نیست',
+        code: ERROR_CODES.PET_BREED_TYPE_MISMATCH,
+      });
+    }
+    return { petType, breed };
+  }
+
+  static async ensureUniqueSlug(slug, excludeId) {
+    const existingPet = await this.findOne({ slug, excludeId });
+    if (existingPet) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'حیوانی با این نامک قبلاً ثبت شده است',
+        code: ERROR_CODES.PET_ALREADY_EXISTS,
+      });
+    }
+  }
+
+  static async create(data, userId) {
+    await Promise.all([
+      this.validateRelations(data.petType, data.breed),
+      this.ensureUniqueSlug(data.slug),
+    ]);
+    return PetModel.create({ ...data, createdBy: userId });
+  }
+
+  static async update(id, data, userId) {
+    const currentPet = await this.findById(id);
+    const petTypeId = data.petType || currentPet.petType;
+    const breedId = data.breed || currentPet.breed;
+    const validations = [this.validateRelations(petTypeId, breedId)];
+    if (data.slug) validations.push(this.ensureUniqueSlug(data.slug, id));
+    await Promise.all(validations);
+
+    const pet = await PetModel.findByIdAndUpdate(
+      id,
+      { $set: { ...data, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return pet;
+  }
+
+  static edit(id, data, userId) {
+    return this.update(id, data, userId);
+  }
+
+  static async setEnableStatus(id, enable, userId) {
+    await this.findById(id);
+    const pet = await PetModel.findByIdAndUpdate(
+      id,
+      { $set: { enable, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return pet;
+  }
+
+  static enable(id, userId) {
+    return this.setEnableStatus(id, true, userId);
+  }
+
+  static disable(id, userId) {
+    return this.setEnableStatus(id, false, userId);
+  }
+
+  static async delete(id) {
+    const pet = await PetModel.findByIdAndDelete(id);
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return pet;
+  }
+
+  static async findManagementById(id) {
+    const pet = await this.findById(id);
+    return populateRelations(pet);
+  }
+
+  static async findManagementList(queryParams = {}) {
+    const filter = {
+      ...buildPetFilter(queryParams),
+      page: queryParams.page,
+      limit: queryParams.limit,
+      sort: queryParams.sort,
+    };
+    const result = await getPaginationData(PetModel, filter, '', (error) =>
+      setErrorResponse(STATUES.OTHER_PROBLEM, {
+        message: 'دریافت فهرست حیوانات ناموفق بود',
+        error: String(error),
+      }),
+    );
+    result.result = await populateRelations(result.result);
+    return result;
+  }
+
+  static async findCustomerList(queryParams = {}) {
+    const filter = {
+      ...buildPetFilter(queryParams, true),
+      page: queryParams.page,
+      limit: queryParams.limit,
+      sort: queryParams.sort,
+    };
+    const result = await getPaginationData(PetModel, filter, '', (error) =>
+      setErrorResponse(STATUES.OTHER_PROBLEM, {
+        message: 'دریافت فهرست حیوانات ناموفق بود',
+        error: String(error),
+      }),
+    );
+    result.result = await populateRelations(result.result);
+    return result;
+  }
+
+  static async findCustomerById(id) {
+    const pet = await PetModel.findOne({ _id: id, enable: true });
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return populateRelations(pet);
+  }
+
+  static formatManagement(pet) {
+    return formatManagementPet(pet);
+  }
+
+  static formatManagementMany(pets) {
+    return pets.map(formatManagementPet);
+  }
+
+  static formatCustomerList(pets) {
+    return pets.map(formatCustomerPetListItem);
+  }
+
+  static formatCustomerDetail(pet) {
+    return formatCustomerPetDetail(pet);
+  }
+}

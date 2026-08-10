@@ -18,14 +18,20 @@ jest.mock('./breeds.model.js', () => ({
   },
 }));
 
+jest.mock('#entities/petTypes/petTypes.model.js', () => ({
+  PetTypeModel: { findById: jest.fn() },
+}));
+
 import { getPaginationData } from '#utils/helpers.js';
 
 import { BreedModel } from './breeds.model.js';
 import { BreedService } from './breeds.service.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 const id = '65a4de97aff1fbb38c437111';
 const data = {
   title: 'Persian Cat',
+  petType: id,
   country: 'Iran',
   ageAverage: '12-17 years',
   size: 2,
@@ -35,7 +41,10 @@ const data = {
 const breed = { _id: id, ...data };
 
 describe('BreedService', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    PetTypeModel.findById.mockResolvedValue({ _id: id });
+  });
 
   test('escapeRegex escapes special characters', () => {
     expect(BreedService.escapeRegex('Persian+Cat')).toBe('Persian\\+Cat');
@@ -56,7 +65,17 @@ describe('BreedService', () => {
       .mockResolvedValueOnce(breed)
       .mockResolvedValueOnce(null);
     await expect(BreedService.findById(id)).resolves.toBe(breed);
-    await expect(BreedService.findById(id)).rejects.toThrow('Breed not found');
+    await expect(BreedService.findById(id)).rejects.toThrow('نژاد یافت نشد');
+  });
+
+  test('ensurePetTypeExists accepts an existing type and rejects a missing type', async () => {
+    await expect(BreedService.ensurePetTypeExists(id)).resolves.toEqual({
+      _id: id,
+    });
+    PetTypeModel.findById.mockResolvedValue(null);
+    await expect(BreedService.ensurePetTypeExists(id)).rejects.toThrow(
+      'نوع حیوان انتخاب‌شده وجود ندارد',
+    );
   });
 
   test('create saves a unique breed and rejects duplicates', async () => {
@@ -65,7 +84,7 @@ describe('BreedService', () => {
     await expect(BreedService.create(data, id)).resolves.toBe(breed);
     expect(BreedModel.create).toHaveBeenCalledWith({ ...data, createdBy: id });
     await expect(BreedService.create(data, id)).rejects.toThrow(
-      'A breed with this title already exists',
+      'نژادی با این عنوان برای نوع حیوان انتخاب‌شده وجود دارد',
     );
   });
 
@@ -106,7 +125,7 @@ describe('BreedService', () => {
       .mockResolvedValueOnce(breed)
       .mockResolvedValueOnce(null);
     await expect(BreedService.delete(id)).resolves.toBe(breed);
-    await expect(BreedService.delete(id)).rejects.toThrow('Breed not found');
+    await expect(BreedService.delete(id)).rejects.toThrow('نژاد یافت نشد');
   });
 
   test('findAll filters enabled breeds and sorts by title', () => {

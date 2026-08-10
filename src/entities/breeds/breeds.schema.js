@@ -12,6 +12,7 @@ const mongoObjectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/);
 
 export const createBreedZodSchema = z.object({
   title: z.string().trim().min(2).max(100),
+  petType: mongoObjectIdSchema,
   country: z.string().trim().min(2).max(100).nullable(),
   ageAverage: z.string().trim().min(1).max(50),
   size: breedLevelSchema,
@@ -24,6 +25,7 @@ export const breedModelUpdateZodSchema = createBreedZodSchema.partial();
 export const breedIdSchema = z.object({ id: mongoObjectIdSchema });
 
 export const breedQuerySchema = z.object({
+  petType: mongoObjectIdSchema.optional(),
   includeDisabled: z
     .string()
     .optional()

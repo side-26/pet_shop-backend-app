@@ -1,5 +1,6 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 import {
   buildBreedFilter,
@@ -13,7 +14,7 @@ export class BreedService {
     return escapeBreedRegex(value);
   }
 
-  static async findOne({ title, excludeId } = {}) {
+  static async findOne({ title, petType, excludeId } = {}) {
     const query = {};
     if (title) {
       query.title = {
@@ -22,14 +23,26 @@ export class BreedService {
       };
     }
     if (excludeId) query._id = { $ne: excludeId };
+    if (petType) query.petType = petType;
     return BreedModel.findOne(query);
+  }
+
+  static async ensurePetTypeExists(petTypeId) {
+    const petType = await PetTypeModel.findById(petTypeId);
+    if (!petType) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نوع حیوان انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PET_TYPE_NOT_FOUND,
+      });
+    }
+    return petType;
   }
 
   static async findById(id, throwOnNotFound = true) {
     const breed = await BreedModel.findById(id);
     if (!breed && throwOnNotFound) {
       setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'Breed not found',
+        message: 'نژاد یافت نشد',
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
@@ -37,10 +50,14 @@ export class BreedService {
   }
 
   static async create(data, userId) {
-    const existingBreed = await this.findOne({ title: data.title });
+    await this.ensurePetTypeExists(data.petType);
+    const existingBreed = await this.findOne({
+      title: data.title,
+      petType: data.petType,
+    });
     if (existingBreed) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'A breed with this title already exists',
+        message: 'نژادی با این عنوان برای نوع حیوان انتخاب‌شده وجود دارد',
         code: ERROR_CODES.BREED_ALREADY_EXISTS,
       });
     }
@@ -49,13 +66,15 @@ export class BreedService {
 
   static async update(id, data, userId) {
     await this.findById(id);
+    await this.ensurePetTypeExists(data.petType);
     const existingBreed = await this.findOne({
       title: data.title,
+      petType: data.petType,
       excludeId: id,
     });
     if (existingBreed) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'A breed with this title already exists',
+        message: 'نژادی با این عنوان برای نوع حیوان انتخاب‌شده وجود دارد',
         code: ERROR_CODES.BREED_ALREADY_EXISTS,
       });
     }
@@ -66,7 +85,7 @@ export class BreedService {
     );
     if (!breed) {
       setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'Breed not found',
+        message: 'نژاد یافت نشد',
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
@@ -82,7 +101,7 @@ export class BreedService {
     );
     if (!breed) {
       setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'Breed not found',
+        message: 'نژاد یافت نشد',
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
@@ -101,7 +120,7 @@ export class BreedService {
     const breed = await BreedModel.findByIdAndDelete(id);
     if (!breed) {
       setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'Breed not found',
+        message: 'نژاد یافت نشد',
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
@@ -121,7 +140,7 @@ export class BreedService {
     };
     return getPaginationData(BreedModel, filter, '', (error) =>
       setErrorResponse(STATUES.OTHER_PROBLEM, {
-        message: 'Unable to retrieve breeds',
+        message: 'دریافت فهرست نژادها ناموفق بود',
         error: String(error),
       }),
     );

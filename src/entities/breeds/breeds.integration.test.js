@@ -19,6 +19,7 @@ import { errorHandler } from '#middlewares/error.middleware.js';
 
 import { BreedModel } from './breeds.model.js';
 import breedRoutes from './breeds.route.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 const breedData = {
   title: 'Persian Cat',
@@ -31,6 +32,7 @@ const breedData = {
 
 describe('Breed API', () => {
   let app;
+  let petType;
 
   beforeAll(() => {
     app = express();
@@ -39,7 +41,11 @@ describe('Breed API', () => {
     app.use(errorHandler);
   });
 
-  beforeEach(() => BreedModel.deleteMany({}));
+  beforeEach(async () => {
+    await Promise.all([BreedModel.deleteMany({}), PetTypeModel.deleteMany({})]);
+    petType = await PetTypeModel.create({ title: 'Cat' });
+    breedData.petType = petType._id.toString();
+  });
 
   test('admin can create, read one, edit, change status, paginate, and delete', async () => {
     const created = await request(app).post('/api/breeds').send(breedData);

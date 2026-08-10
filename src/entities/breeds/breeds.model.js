@@ -10,6 +10,12 @@ import {
 const breedSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 100 },
+    petType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'PetType',
+      required: true,
+      index: true,
+    },
     country: { type: String, trim: true, maxlength: 100, default: undefined },
     ageAverage: { type: String, required: true, trim: true, maxlength: 50 },
     size: { type: Number, required: true, enum: BREED_LEVELS },
@@ -44,13 +50,14 @@ breedSchema.pre('save', function () {
     createBreedZodSchema,
     {
       title: this.title,
+      petType: this.petType?.toString(),
       country: this.country,
       ageAverage: this.ageAverage,
       size: this.size,
       activityLevel: this.activityLevel,
       enable: this.enable,
     },
-    'Validation failed',
+    'اعتبارسنجی نژاد ناموفق بود',
   );
 });
 
@@ -59,10 +66,10 @@ breedSchema.pre('findOneAndUpdate', function () {
   validateBreedData(
     breedModelUpdateZodSchema,
     update?.$set || update || {},
-    'Update validation failed',
+    'اعتبارسنجی ویرایش نژاد ناموفق بود',
   );
 });
 
-breedSchema.index({ title: 1 }, { unique: true });
+breedSchema.index({ title: 1, petType: 1 }, { unique: true });
 
 export const BreedModel = mongoose.model('Breeds', breedSchema);

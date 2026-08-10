@@ -8,6 +8,7 @@ export const formatBreed = (breed) => {
   return {
     id: value._id,
     title: value.title,
+    petType: value.petType,
     country: value.country,
     ageAverage: value.ageAverage,
     size: value.size,
@@ -18,9 +19,10 @@ export const formatBreed = (breed) => {
   };
 };
 
-export const buildBreedFilter = ({ includeDisabled, search } = {}) => {
+export const buildBreedFilter = ({ includeDisabled, search, petType } = {}) => {
   const filter = {};
   if (!includeDisabled) filter.enable = true;
+  if (petType) filter.petType = petType;
   if (search) {
     filter.title = { $regex: escapeBreedRegex(search), $options: 'i' };
   }
