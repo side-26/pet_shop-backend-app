@@ -24,6 +24,9 @@ const persianFieldNames = {
   receiverIsMe: 'گیرنده خودم هستم',
   addressId: 'شناسه نشانی',
 
+  itemId: 'شناسه آیتم',
+  itemType: 'نوع آیتم',
+
   // Pet / Pet Type / Category
   title: 'عنوان',
   description: 'توضیحات',

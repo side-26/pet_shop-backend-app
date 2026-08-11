@@ -7,9 +7,12 @@ import {
   ROLES,
   STATUES,
   USER_ADDRESS_LIMITS,
+  USER_ITEM_TYPES,
 } from '#configs/constants.js';
 import { getJwtSecret } from '#configs/env.config.js';
 import logger from '#configs/logger.js';
+import { PetService } from '#entities/pets/pets.service.js';
+import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import {
@@ -466,6 +469,129 @@ export class UserService {
     const userId = this.getAuthenticatedUserId(actor);
     const user = await this.findById(userId);
     return user.addresses;
+  }
+
+  static validateReferencedItem(itemId, itemType) {
+    return itemType === USER_ITEM_TYPES.PRODUCT
+      ? ProductService.findById(itemId)
+      : PetService.findById(itemId);
+  }
+
+  static findOwnedItem(entries, itemId, itemType) {
+    return entries.find(
+      (entry) =>
+        entry.item.toString() === itemId && entry.itemType === itemType,
+    );
+  }
+
+  static async addCartItem(actor, { itemId, itemType, quantity }) {
+    const userId = this.getAuthenticatedUserId(actor);
+    await this.validateReferencedItem(itemId, itemType);
+
+    const existingItemUpdate = await UserModel.findOneAndUpdate(
+      { _id: userId, cart: { $elemMatch: { item: itemId, itemType } } },
+      { $set: { 'cart.$.quantity': quantity } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (existingItemUpdate) {
+      return this.findOwnedItem(existingItemUpdate.cart, itemId, itemType);
+    }
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      {
+        _id: userId,
+        cart: { $not: { $elemMatch: { item: itemId, itemType } } },
+      },
+      { $push: { cart: { item: itemId, itemType, quantity } } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      const concurrentlyAddedItemUpdate = await UserModel.findOneAndUpdate(
+        { _id: userId, cart: { $elemMatch: { item: itemId, itemType } } },
+        { $set: { 'cart.$.quantity': quantity } },
+        { returnDocument: 'after', runValidators: true },
+      );
+      if (!concurrentlyAddedItemUpdate) {
+        await this.findById(userId);
+      }
+      return this.findOwnedItem(
+        concurrentlyAddedItemUpdate.cart,
+        itemId,
+        itemType,
+      );
+    }
+    return updatedUser.cart.at(-1);
+  }
+
+  static async deleteCartItem(actor, cartEntryId) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId, 'cart._id': cartEntryId },
+      { $pull: { cart: { _id: cartEntryId } } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'آیتم سبد خرید یافت نشد',
+        code: ERROR_CODES.USER_CART_ITEM_NOT_FOUND,
+      });
+    }
+    return updatedUser.cart;
+  }
+
+  static async getCartItems(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await UserModel.findById(userId).populate('cart.item');
+    if (!user) {
+      setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
+    }
+    return user.cart;
+  }
+
+  static async addWishlistItem(actor, { itemId, itemType }) {
+    const userId = this.getAuthenticatedUserId(actor);
+    await this.validateReferencedItem(itemId, itemType);
+    const updatedUser = await UserModel.findOneAndUpdate(
+      {
+        _id: userId,
+        wishlist: { $not: { $elemMatch: { item: itemId, itemType } } },
+      },
+      { $push: { wishlist: { item: itemId, itemType } } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      await this.findById(userId);
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'این آیتم قبلاً به لیست علاقه‌مندی‌ها اضافه شده است',
+        code: ERROR_CODES.USER_WISHLIST_ITEM_ALREADY_EXISTS,
+      });
+    }
+    return updatedUser.wishlist.at(-1);
+  }
+
+  static async deleteWishlistItem(actor, wishlistEntryId) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId, 'wishlist._id': wishlistEntryId },
+      { $pull: { wishlist: { _id: wishlistEntryId } } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'آیتم لیست علاقه‌مندی‌ها یافت نشد',
+        code: ERROR_CODES.USER_WISHLIST_ITEM_NOT_FOUND,
+      });
+    }
+    return updatedUser.wishlist;
+  }
+
+  static async getWishlistItems(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await UserModel.findById(userId).populate('wishlist.item');
+    if (!user) {
+      setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
+    }
+    return user.wishlist;
   }
 
   static format(user) {

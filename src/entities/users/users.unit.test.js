@@ -37,6 +37,14 @@ jest.mock('#configs/logger.js', () => ({
   default: { app: { error: jest.fn() } },
 }));
 
+jest.mock('#entities/products/products.service.js', () => ({
+  ProductService: { findById: jest.fn() },
+}));
+
+jest.mock('#entities/pets/pets.service.js', () => ({
+  PetService: { findById: jest.fn() },
+}));
+
 jest.mock('#utils/helpers.js', () => ({
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
@@ -82,6 +90,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 import { ROLES } from '#configs/constants.js';
+import { PetService } from '#entities/pets/pets.service.js';
+import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
 import { getPaginationData, verifyUser } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
@@ -117,10 +127,13 @@ describe('UserService - Unit Tests', () => {
 
       cart: [
         {
-          itemId: 'item-1',
+          item: '65a4de97aff1fbb38c437950',
+          itemType: 'product',
           quantity: 2,
         },
       ],
+
+      wishlist: [],
 
       orders: [],
     };
@@ -992,5 +1005,86 @@ describe('UserService - Unit Tests', () => {
     const result = await UserService.getCart(mockUser._id);
 
     expect(result).toEqual(mockUser.cart);
+  });
+
+  test('addCartItem validates a product and updates an existing entry quantity', async () => {
+    const data = {
+      itemId: mockUser.cart[0].item,
+      itemType: 'product',
+      quantity: 7,
+    };
+    ProductService.findById.mockResolvedValue({ _id: data.itemId });
+    UserModel.findOneAndUpdate.mockResolvedValue({
+      cart: [{ ...mockUser.cart[0], quantity: 7 }],
+    });
+
+    await expect(
+      UserService.addCartItem(mockActor, data),
+    ).resolves.toMatchObject({
+      quantity: 7,
+    });
+    expect(ProductService.findById).toHaveBeenCalledWith(data.itemId);
+    expect(UserModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  test('addCartItem validates a pet and atomically pushes a new unique entry', async () => {
+    const data = {
+      itemId: '65a4de97aff1fbb38c437951',
+      itemType: 'pet',
+      quantity: 5,
+    };
+    PetService.findById.mockResolvedValue({ _id: data.itemId });
+    UserModel.findOneAndUpdate
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ cart: [{ ...data, item: data.itemId }] });
+
+    await expect(
+      UserService.addCartItem(mockActor, data),
+    ).resolves.toMatchObject({
+      itemType: 'pet',
+      quantity: 5,
+    });
+    expect(PetService.findById).toHaveBeenCalledWith(data.itemId);
+  });
+
+  test('deleteCartItem rejects an entry not owned by the authenticated user', async () => {
+    UserModel.findOneAndUpdate.mockResolvedValue(null);
+    await expect(
+      UserService.deleteCartItem(mockActor, '65a4de97aff1fbb38c437951'),
+    ).rejects.toThrow('آیتم سبد خرید یافت نشد');
+  });
+
+  test('getCartItems populates only the authenticated user cart', async () => {
+    const populate = jest.fn().mockResolvedValue(mockUser);
+    UserModel.findById.mockReturnValue({ populate });
+    await expect(UserService.getCartItems(mockActor)).resolves.toEqual(
+      mockUser.cart,
+    );
+    expect(UserModel.findById).toHaveBeenCalledWith(mockActor.userId);
+    expect(populate).toHaveBeenCalledWith('cart.item');
+  });
+
+  test('addWishlistItem prevents duplicate entries atomically', async () => {
+    const data = { itemId: '65a4de97aff1fbb38c437951', itemType: 'product' };
+    ProductService.findById.mockResolvedValue({ _id: data.itemId });
+    UserModel.findOneAndUpdate.mockResolvedValue(null);
+    UserModel.findById.mockResolvedValue(mockUser);
+    await expect(UserService.addWishlistItem(mockActor, data)).rejects.toThrow(
+      'این آیتم قبلاً به لیست علاقه‌مندی‌ها اضافه شده است',
+    );
+  });
+
+  test('deleteWishlistItem returns the remaining owned entries', async () => {
+    UserModel.findOneAndUpdate.mockResolvedValue({ wishlist: [] });
+    await expect(
+      UserService.deleteWishlistItem(mockActor, '65a4de97aff1fbb38c437951'),
+    ).resolves.toEqual([]);
+  });
+
+  test('getWishlistItems populates only the authenticated user wishlist', async () => {
+    const populate = jest.fn().mockResolvedValue(mockUser);
+    UserModel.findById.mockReturnValue({ populate });
+    await expect(UserService.getWishlistItems(mockActor)).resolves.toEqual([]);
+    expect(populate).toHaveBeenCalledWith('wishlist.item');
   });
 });

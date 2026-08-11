@@ -6,16 +6,22 @@ import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadAvatar } from '#middlewares/upload.middleware.js';
 
 import {
+  addCartItemController,
   addUserAddressController,
+  addWishlistItemController,
   changeUserPasswordController,
   createUserController,
   disableUserController,
+  deleteCartItemController,
+  deleteWishlistItemController,
   enableUserController,
   getAllUsersListController,
   getAllUsersListPaginateController,
+  getCartItemsController,
   getUserByIdController,
   getUserAddressListController,
   getUserCartListController,
+  getWishlistItemsController,
   loginUserController,
   refreshTokenController,
   editUserAddressController,
@@ -84,6 +90,18 @@ router.patch(
   editUserAddressController,
 );
 router.get('/users/addresses', authenticated, getUserAddressListController);
+
+router.post('/cart/add', authenticated, addCartItemController);
+router.delete('/cart/delete/:id', authenticated, deleteCartItemController);
+router.get('/cart/all', authenticated, getCartItemsController);
+
+router.post('/wishlist/add', authenticated, addWishlistItemController);
+router.delete(
+  '/wishlist/delete/:id',
+  authenticated,
+  deleteWishlistItemController,
+);
+router.get('/wishlist/all', authenticated, getWishlistItemsController);
 
 router.put(
   '/users/change-password',

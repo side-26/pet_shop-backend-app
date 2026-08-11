@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ROLES } from '#configs/constants.js';
+import { ROLES, USER_ITEM_TYPES } from '#configs/constants.js';
 import '#configs/zod.config.js';
 
 const {
@@ -64,6 +64,18 @@ export const userAddressIdSchema = object({
   addressId: mongoObjectIdSchema,
 });
 
+export const addCartItemSchema = object({
+  itemId: mongoObjectIdSchema,
+  itemType: zEnum([...Object.values(USER_ITEM_TYPES)]),
+  quantity: number().int().min(1),
+});
+
+export const addWishlistItemSchema = addCartItemSchema.omit({ quantity: true });
+
+export const cartEntryIdSchema = object({ id: mongoObjectIdSchema });
+
+export const wishlistEntryIdSchema = cartEntryIdSchema;
+
 export const userZodSchema = object({
   firstName: string().optional(),
   lastName: string().optional(),
@@ -79,6 +91,7 @@ export const userZodSchema = object({
   age: number().nullable().optional(), // new field – number
   orders: array(any()).optional(), // defaults handled by Mongoose
   cart: array(any()).optional(),
+  wishlist: array(any()).optional(),
 });
 
 export const userChangePasswordFormBodyValidation = object({

@@ -7,13 +7,17 @@ import {
 } from '#utils/helpers.js';
 
 import {
+  addCartItemSchema,
   userChangePasswordFormBodyValidation,
   addUserAddressSchema,
+  addWishlistItemSchema,
+  cartEntryIdSchema,
   editUserAddressSchema,
   userAddressIdSchema,
   userRefreshTokenSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
+  wishlistEntryIdSchema,
 } from './users.schema.js';
 
 import { UserService } from './users.service.js';
@@ -110,6 +114,70 @@ export const getUserAddressListController = async (req, res, next) => {
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: addresses,
       totalRecords: addresses.length,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const addCartItemController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(addCartItemSchema, req.body);
+    const item = await UserService.addCartItem(req.user, body);
+    setSuccessResponse(res, STATUES.CREATED, { data: item });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const deleteCartItemController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(cartEntryIdSchema, req.params);
+    const items = await UserService.deleteCartItem(req.user, id);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: items });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getCartItemsController = async (req, res, next) => {
+  try {
+    const items = await UserService.getCartItems(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: items,
+      totalRecords: items.length,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const addWishlistItemController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(addWishlistItemSchema, req.body);
+    const item = await UserService.addWishlistItem(req.user, body);
+    setSuccessResponse(res, STATUES.CREATED, { data: item });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const deleteWishlistItemController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(wishlistEntryIdSchema, req.params);
+    const items = await UserService.deleteWishlistItem(req.user, id);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: items });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getWishlistItemsController = async (req, res, next) => {
+  try {
+    const items = await UserService.getWishlistItems(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: items,
+      totalRecords: items.length,
     });
   } catch (error) {
     onCatchPromiseController(error, next);

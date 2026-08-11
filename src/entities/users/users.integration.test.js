@@ -153,6 +153,8 @@ import request from 'supertest';
 import sharp from 'sharp';
 
 import { ROLES, STATUES } from '#configs/constants.js';
+import { PetModel } from '#entities/pets/pets.model.js';
+import { ProductModel } from '#entities/products/products.model.js';
 
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
@@ -222,7 +224,11 @@ describe('User API - Integration Tests', () => {
   });
 
   beforeEach(async () => {
-    await UserModel.deleteMany({});
+    await Promise.all([
+      UserModel.deleteMany({}),
+      ProductModel.deleteMany({}),
+      PetModel.deleteMany({}),
+    ]);
 
     testUser = await createTestUser();
 
@@ -1062,7 +1068,8 @@ describe('User API - Integration Tests', () => {
           $set: {
             cart: [
               {
-                itemId: 'item-1',
+                item: new mongoose.Types.ObjectId(),
+                itemType: 'product',
                 quantity: 2,
               },
             ],
@@ -1082,7 +1089,7 @@ describe('User API - Integration Tests', () => {
       expect(res.body.data).toHaveLength(1);
 
       expect(res.body.data[0]).toMatchObject({
-        itemId: 'item-1',
+        itemType: 'product',
         quantity: 2,
       });
     });
@@ -1095,6 +1102,163 @@ describe('User API - Integration Tests', () => {
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
+    });
+  });
+
+  describe('authenticated cart and wishlist', () => {
+    const createReferencedItem = async (Model, slug) => {
+      const item = {
+        _id: new mongoose.Types.ObjectId(),
+        title: slug,
+        mainImage: 'https://example.test/main.webp',
+        mainImageThumbnail: 'https://example.test/thumb.webp',
+        images: [],
+        description: 'valid description',
+        quantity: 10,
+        price: 100,
+        discountPercentage: 0,
+        enable: true,
+        slug,
+        category: new mongoose.Types.ObjectId(),
+        petType: new mongoose.Types.ObjectId(),
+        breed: new mongoose.Types.ObjectId(),
+      };
+      await Model.collection.insertOne(item);
+      return item;
+    };
+
+    test.each([
+      ['product', ProductModel],
+      ['pet', PetModel],
+    ])('adds, lists, and deletes a %s cart item', async (itemType, Model) => {
+      const referenced = await createReferencedItem(Model, `${itemType}-cart`);
+      const addResponse = await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({ itemId: referenced._id.toString(), itemType, quantity: 5 });
+
+      expect(addResponse.status).toBe(STATUES.CREATED);
+      expect(addResponse.body.data).toMatchObject({ itemType, quantity: 5 });
+
+      await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({ itemId: referenced._id.toString(), itemType, quantity: 7 });
+
+      const listResponse = await request(app)
+        .get('/api/cart/all')
+        .set('Authorization', 'Bearer token');
+      expect(listResponse.body.data).toHaveLength(1);
+      expect(listResponse.body.data[0]).toMatchObject({
+        itemType,
+        quantity: 7,
+      });
+      expect(listResponse.body.data[0].item.title).toBe(`${itemType}-cart`);
+
+      const deleteResponse = await request(app)
+        .delete(`/api/cart/delete/${listResponse.body.data[0]._id}`)
+        .set('Authorization', 'Bearer token');
+      expect(deleteResponse.status).toBe(STATUES.SUCCESS);
+      expect(deleteResponse.body.data).toHaveLength(0);
+    });
+
+    test.each([0, -1])('rejects cart quantity %s', async (quantity) => {
+      const response = await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({
+          itemId: new mongoose.Types.ObjectId().toString(),
+          itemType: 'product',
+          quantity,
+        });
+      expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    test('rejects invalid cart type and nonexistent referenced items', async () => {
+      const itemId = new mongoose.Types.ObjectId().toString();
+      const invalidType = await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({ itemId, itemType: 'order', quantity: 1 });
+      expect(invalidType.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      for (const itemType of ['product', 'pet']) {
+        const missingItem = await request(app)
+          .post('/api/cart/add')
+          .set('Authorization', 'Bearer token')
+          .send({ itemId, itemType, quantity: 1 });
+        expect(missingItem.status).toBe(STATUES.NOT_FOUND);
+      }
+    });
+
+    test('keeps cart and wishlist data isolated to the authenticated user', async () => {
+      const otherUser = await createTestUser({ phoneNumber: '09111111111' });
+      await UserModel.findByIdAndUpdate(otherUser._id, {
+        $push: {
+          cart: {
+            item: new mongoose.Types.ObjectId(),
+            itemType: 'pet',
+            quantity: 2,
+          },
+          wishlist: { item: new mongoose.Types.ObjectId(), itemType: 'pet' },
+        },
+      });
+      const [cartResponse, wishlistResponse] = await Promise.all([
+        request(app).get('/api/cart/all').set('Authorization', 'Bearer token'),
+        request(app)
+          .get('/api/wishlist/all')
+          .set('Authorization', 'Bearer token'),
+      ]);
+      expect(cartResponse.body.data).toHaveLength(0);
+      expect(wishlistResponse.body.data).toHaveLength(0);
+    });
+
+    test('adds each wishlist type once and deletes by embedded entry id', async () => {
+      for (const [itemType, Model] of [
+        ['product', ProductModel],
+        ['pet', PetModel],
+      ]) {
+        const referenced = await createReferencedItem(
+          Model,
+          `${itemType}-wishlist`,
+        );
+        const body = { itemId: referenced._id.toString(), itemType };
+        const created = await request(app)
+          .post('/api/wishlist/add')
+          .set('Authorization', 'Bearer token')
+          .send(body);
+        expect(created.status).toBe(STATUES.CREATED);
+        const duplicate = await request(app)
+          .post('/api/wishlist/add')
+          .set('Authorization', 'Bearer token')
+          .send(body);
+        expect(duplicate.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      }
+
+      const listed = await request(app)
+        .get('/api/wishlist/all')
+        .set('Authorization', 'Bearer token');
+      expect(listed.body.data).toHaveLength(2);
+      expect(listed.body.data[0].item.title).toBeDefined();
+
+      const deleted = await request(app)
+        .delete(`/api/wishlist/delete/${listed.body.data[0]._id}`)
+        .set('Authorization', 'Bearer token');
+      expect(deleted.status).toBe(STATUES.SUCCESS);
+      expect(deleted.body.data).toHaveLength(1);
+    });
+
+    test('returns not found for unknown embedded cart and wishlist ids', async () => {
+      const id = new mongoose.Types.ObjectId();
+      const [cartResponse, wishlistResponse] = await Promise.all([
+        request(app)
+          .delete(`/api/cart/delete/${id}`)
+          .set('Authorization', 'Bearer token'),
+        request(app)
+          .delete(`/api/wishlist/delete/${id}`)
+          .set('Authorization', 'Bearer token'),
+      ]);
+      expect(cartResponse.status).toBe(STATUES.NOT_FOUND);
+      expect(wishlistResponse.status).toBe(STATUES.NOT_FOUND);
     });
   });
 });

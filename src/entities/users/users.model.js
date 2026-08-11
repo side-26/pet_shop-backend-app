@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import { USER_ADDRESS_LIMITS } from '#configs/constants.js';
+import { USER_ADDRESS_LIMITS, USER_ITEM_TYPES } from '#configs/constants.js';
 
 import { userZodSchema } from './users.schema.js';
 
@@ -30,6 +30,38 @@ const addressSchema = new mongoose.Schema({
   },
 });
 
+const itemReference = {
+  type: mongoose.Schema.Types.ObjectId,
+  required: true,
+  ref() {
+    return this.itemType === USER_ITEM_TYPES.PRODUCT ? 'Products' : 'Pets';
+  },
+};
+
+const cartItemSchema = new mongoose.Schema({
+  item: itemReference,
+  itemType: {
+    type: String,
+    required: true,
+    enum: Object.values(USER_ITEM_TYPES),
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1,
+    validate: Number.isInteger,
+  },
+});
+
+const wishlistItemSchema = new mongoose.Schema({
+  item: itemReference,
+  itemType: {
+    type: String,
+    required: true,
+    enum: Object.values(USER_ITEM_TYPES),
+  },
+});
+
 const userSchema = new mongoose.Schema(
   {
     firstName: { type: String, default: '' },
@@ -52,7 +84,8 @@ const userSchema = new mongoose.Schema(
     age: { type: Number, default: null },
     role: { type: String, default: 'customer' },
     orders: { type: [mongoose.Schema.Types.Mixed], default: [] },
-    cart: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    cart: { type: [cartItemSchema], default: [] },
+    wishlist: { type: [wishlistItemSchema], default: [] },
   },
   {
     timestamps: true, // Apply to when using res.json() (calls .toJSON())
