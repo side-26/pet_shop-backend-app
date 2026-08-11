@@ -55,4 +55,17 @@ describe('Persian Zod error map', () => {
 
     expect(result.message).toContain('استان');
   });
+
+  it.each([
+    ['lat', 'عرض جغرافیایی'],
+    ['lng', 'طول جغرافیایی'],
+  ])('uses the Persian coordinate label for %s', (field, label) => {
+    const result = persianErrorMap({
+      code: 'invalid_type',
+      path: [field],
+      received: 'NaN',
+    });
+
+    expect(result.message).toContain(label);
+  });
 });

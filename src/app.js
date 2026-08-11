@@ -17,6 +17,7 @@ import productRoutes from '#entities/products/products.route.js';
 
 import countryRoutes from './integrations/countries/countries.route.js';
 import locationRoutes from './integrations/locations/locations.route.js';
+import reverseGeocodingRoutes from './integrations/reverseGeocoding/reverseGeocoding.route.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', subCategoryRoutes);
 app.use('/api', countryRoutes);
 app.use('/api', locationRoutes);
+app.use('/api', reverseGeocodingRoutes);
 app.use('/api', breedRoutes);
 app.use('/api', petRoutes);
 app.use('/api', productRoutes);
