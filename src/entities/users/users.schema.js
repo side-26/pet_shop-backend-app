@@ -1,7 +1,10 @@
-import { any, z } from 'zod';
-import '#configs/zod.config.js';
+import { z } from 'zod';
+
 import { ROLES } from '#configs/constants.js';
+import '#configs/zod.config.js';
+
 const {
+  any,
   string,
   number,
   array,
@@ -10,29 +13,69 @@ const {
   enum: zEnum,
   email,
   coerce,
+  literal,
+  url,
 } = z;
+
+const iranianPhoneNumberSchema = string().regex(/^09\d{9}$/);
+const nationalCodeSchema = string().regex(/^\d{10}$/);
+const postalCodeSchema = string().regex(/^\d{10}$/);
+const mongoObjectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
+
+const addressFields = {
+  province: string().trim().min(2),
+  city: string().trim().min(2),
+  detailAddress: string().trim().min(5),
+  plate: string().trim().min(1),
+  unit: string().trim().nullable().optional(),
+  postalCode: postalCodeSchema,
+  receiverIsMe: boolean().optional().default(false),
+  firstName: string().trim().min(2).optional(),
+  lastName: string().trim().min(2).optional(),
+  nationalCode: nationalCodeSchema.optional(),
+  phoneNumber: iranianPhoneNumberSchema.optional(),
+};
+
+const requireOtherReceiver = (data, context) => {
+  if (data.receiverIsMe) return;
+
+  ['firstName', 'lastName', 'nationalCode', 'phoneNumber'].forEach((field) => {
+    if (!data[field]) {
+      context.addIssue({
+        code: 'custom',
+        path: [field],
+        message: 'اطلاعات گیرنده الزامی است',
+      });
+    }
+  });
+};
+
+export const userAddressSchema =
+  object(addressFields).superRefine(requireOtherReceiver);
+
+export const addUserAddressSchema = userAddressSchema;
+
+export const editUserAddressSchema = object({
+  ...addressFields,
+  receiverIsMe: boolean().optional(),
+}).partial();
+
+export const userAddressIdSchema = object({
+  addressId: mongoObjectIdSchema,
+});
 
 export const userZodSchema = object({
   firstName: string().optional(),
   lastName: string().optional(),
-  phoneNumber: string().min(11).max(11),
+  phoneNumber: iranianPhoneNumberSchema,
   password: string().min(8),
-  email: email().optional().or(z.literal('')),
-  avatar: z.url().optional().or(z.literal('')),
-  address: string().optional(),
+  email: email().optional().or(literal('')),
+  avatar: url().optional().or(literal('')),
   isEnable: boolean().optional(),
-  nationalCode: string().optional(),
-  postalCode: string()
-    .transform((val) => (val === '' ? undefined : val))
-    .optional()
-    .refine((val) => val === undefined || /^\d{10}$/.test(val), {
-      message: 'کد پستی باید دقیقاً ۱۰ رقم باشد', // This message will be overridden by the error map if we don't return issue.message, but it's optional.
-    }),
-  city: string().optional(),
+  nationalCode: nationalCodeSchema.optional().or(literal('')),
   role: zEnum([...Object.values(ROLES)])
     .optional()
     .default(ROLES.CUSTOMER),
-  province: string().optional(),
   age: number().nullable().optional(), // new field – number
   orders: array(any()).optional(), // defaults handled by Mongoose
   cart: array(any()).optional(),
@@ -52,7 +95,7 @@ export const userRefreshTokenSchema = object({
   refreshToken: string().min(1),
 });
 
-export const userUpdatePersonalInfoSchema = z.object({
+export const userUpdatePersonalInfoSchema = object({
   userId: string()
     .regex(/^[0-9a-fA-F]{24}$/)
     .optional(),
@@ -64,14 +107,6 @@ export const userUpdatePersonalInfoSchema = z.object({
     .optional(),
   age: coerce.number().int().min(4).optional(),
   avatar: string().optional(),
-});
-
-export const userUpdateLocationInfoSchema = z.object({
-  userId: string(),
-  address: string().min(5),
-  city: string().min(2),
-  province: string().min(2),
-  postalCode: string(),
 });
 
 export const userSwaggerSchema = () => {};

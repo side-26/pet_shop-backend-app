@@ -187,14 +187,6 @@ describe('User API - Integration Tests', () => {
 
       nationalCode: '1234567890',
 
-      address: 'Tehran test address',
-
-      city: 'Tehran',
-
-      province: 'Tehran',
-
-      postalCode: '1234567890',
-
       age: 25,
 
       cart: [],
@@ -204,6 +196,20 @@ describe('User API - Integration Tests', () => {
       ...overrides,
     });
   };
+
+  const createAddressBody = (overrides = {}) => ({
+    province: 'Tehran',
+    city: 'Tehran',
+    detailAddress: 'Example detailed address',
+    plate: '12',
+    postalCode: '1234567890',
+    receiverIsMe: false,
+    firstName: 'Ali',
+    lastName: 'Ahmadi',
+    nationalCode: '1234567890',
+    phoneNumber: '09121234567',
+    ...overrides,
+  });
 
   beforeAll(() => {
     app = express();
@@ -249,6 +255,16 @@ describe('User API - Integration Tests', () => {
           password: 'password123',
 
           role: ROLES.CUSTOMER,
+
+          address: 'legacy address',
+
+          city: 'legacy city',
+
+          province: 'legacy province',
+
+          postalCode: '1234567890',
+
+          addresses: [createAddressBody()],
         })
         .set('Authorization', 'Bearer token');
 
@@ -265,6 +281,10 @@ describe('User API - Integration Tests', () => {
       expect(user.firstName).toBe('Ali');
 
       expect(user.password).not.toBe('password123');
+
+      expect(user.addresses).toEqual([]);
+
+      expect(user.toObject()).not.toHaveProperty('address');
 
       const passwordCorrect = await bcrypt.compare(
         'password123',
@@ -568,54 +588,203 @@ describe('User API - Integration Tests', () => {
   });
 
   // =========================================================
-  // PUT /api/users/edit-location-info
+  // USER ADDRESSES
   // =========================================================
 
-  describe('PUT /api/users/edit-location-info', () => {
-    test('should update location information', async () => {
-      const res = await request(app)
-        .put('/api/users/edit-location-info')
-        .send({
-          userId: testUser._id.toString(),
+  describe('authenticated user addresses', () => {
+    test('legacy root address fields are no longer persisted', async () => {
+      const user = await createTestUser({
+        phoneNumber: '09120000001',
+        address: 'legacy',
+        city: 'legacy',
+        province: 'legacy',
+        postalCode: '1234567890',
+      });
 
-          address: 'New test address',
-
-          city: 'Karaj',
-
-          province: 'Alborz',
-
-          postalCode: '1234567890',
-        })
-        .set('Authorization', 'Bearer token');
-
-      expect(res.status).toBe(STATUES.SUCCESS);
-
-      const updatedUser = await UserModel.findById(testUser._id);
-
-      expect(updatedUser.address).toBe('New test address');
-
-      expect(updatedUser.city).toBe('Karaj');
-
-      expect(updatedUser.province).toBe('Alborz');
+      expect(user.toObject()).not.toHaveProperty('address');
+      expect(user.toObject()).not.toHaveProperty('city');
+      expect(user.toObject()).not.toHaveProperty('province');
+      expect(user.toObject()).not.toHaveProperty('postalCode');
+      expect(user.addresses).toEqual([]);
     });
 
-    test('should return 422 for invalid location information', async () => {
-      const res = await request(app)
-        .put('/api/users/edit-location-info')
+    test('creates an address without an optional unit', async () => {
+      const response = await request(app)
+        .post('/api/users/addresses')
+        .set('Authorization', 'Bearer token')
+        .send(createAddressBody());
+
+      expect(response.status).toBe(STATUES.CREATED);
+      expect(response.body.data).toMatchObject(createAddressBody());
+      expect(response.body.data._id).toBeDefined();
+      const user = await UserModel.findById(testUser._id);
+      expect(user.addresses).toHaveLength(1);
+    });
+
+    test('receiverIsMe snapshots authenticated user identity and ignores request identity', async () => {
+      const response = await request(app)
+        .post('/api/users/addresses')
+        .set('Authorization', 'Bearer token')
+        .send(
+          createAddressBody({
+            receiverIsMe: true,
+            firstName: 'Wrong',
+            lastName: 'Receiver',
+            nationalCode: '0000000000',
+            phoneNumber: '09999999999',
+          }),
+        );
+
+      expect(response.status).toBe(STATUES.CREATED);
+      expect(response.body.data).toMatchObject({
+        receiverIsMe: true,
+        firstName: testUser.firstName,
+        lastName: testUser.lastName,
+        nationalCode: testUser.nationalCode,
+        phoneNumber: testUser.phoneNumber,
+      });
+    });
+
+    test('rejects another receiver with incomplete or invalid information', async () => {
+      for (const invalid of [
+        { firstName: undefined },
+        { nationalCode: '123' },
+        { phoneNumber: '12345678901' },
+        { postalCode: '123' },
+        { postalCode: '123456789' },
+        { postalCode: '12345678901' },
+        { postalCode: 'abcdefghij' },
+      ]) {
+        const response = await request(app)
+          .post('/api/users/addresses')
+          .set('Authorization', 'Bearer token')
+          .send(createAddressBody(invalid));
+        expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      }
+    });
+
+    test.each(['province', 'city', 'detailAddress', 'plate', 'postalCode'])(
+      'rejects an address missing %s',
+      async (field) => {
+        const body = createAddressBody();
+        delete body[field];
+
+        const response = await request(app)
+          .post('/api/users/addresses')
+          .set('Authorization', 'Bearer token')
+          .send(body);
+        expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      },
+    );
+
+    test('atomically enforces five addresses and unique subdocument ids', async () => {
+      const responses = await Promise.all(
+        Array.from({ length: 6 }, (_, index) =>
+          request(app)
+            .post('/api/users/addresses')
+            .set('Authorization', 'Bearer token')
+            .send(createAddressBody({ plate: String(index + 1) })),
+        ),
+      );
+      expect(
+        responses.filter(({ status }) => status === STATUES.CREATED),
+      ).toHaveLength(5);
+      expect(
+        responses.filter(
+          ({ status }) => status === STATUES.BAD_FORM_VALIDATION,
+        ),
+      ).toHaveLength(1);
+
+      const user = await UserModel.findById(testUser._id);
+      expect(user.addresses).toHaveLength(5);
+      expect(new Set(user.addresses.map(({ id }) => id)).size).toBe(5);
+    });
+
+    test('rejects receiverIsMe when current user identity is incomplete', async () => {
+      testUser.firstName = '';
+      await testUser.save();
+
+      const response = await request(app)
+        .post('/api/users/addresses')
+        .set('Authorization', 'Bearer token')
+        .send(createAddressBody({ receiverIsMe: true }));
+      expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    test('partially edits only the selected owned address', async () => {
+      testUser.addresses.push(
+        createAddressBody({ plate: '10' }),
+        createAddressBody({ plate: '20' }),
+      );
+      await testUser.save();
+      const [target, untouched] = testUser.addresses;
+
+      const response = await request(app)
+        .patch(`/api/users/addresses/${target._id}`)
+        .set('Authorization', 'Bearer token')
+        .send({ plate: '25' });
+
+      expect(response.status).toBe(STATUES.SUCCESS);
+      const user = await UserModel.findById(testUser._id);
+      expect(user.addresses.id(target._id).plate).toBe('25');
+      expect(user.addresses.id(target._id).city).toBe('Tehran');
+      expect(user.addresses.id(untouched._id).plate).toBe('20');
+    });
+
+    test('switches receiver modes without retaining stale receiver data', async () => {
+      testUser.addresses.push(createAddressBody());
+      await testUser.save();
+      const addressId = testUser.addresses[0]._id;
+
+      const toMe = await request(app)
+        .patch(`/api/users/addresses/${addressId}`)
+        .set('Authorization', 'Bearer token')
+        .send({ receiverIsMe: true });
+      expect(toMe.body.data.firstName).toBe(testUser.firstName);
+
+      const incomplete = await request(app)
+        .patch(`/api/users/addresses/${addressId}`)
+        .set('Authorization', 'Bearer token')
+        .send({ receiverIsMe: false });
+      expect(incomplete.status).toBe(STATUES.BAD_FORM_VALIDATION);
+
+      const toOther = await request(app)
+        .patch(`/api/users/addresses/${addressId}`)
+        .set('Authorization', 'Bearer token')
         .send({
-          userId: testUser._id.toString(),
+          receiverIsMe: false,
+          firstName: 'Sara',
+          lastName: 'Ahmadi',
+          nationalCode: '0987654321',
+          phoneNumber: '09121111111',
+        });
+      expect(toOther.status).toBe(STATUES.SUCCESS);
+      expect(toOther.body.data.firstName).toBe('Sara');
+    });
 
-          address: 'x',
+    test('cannot edit another user address and only lists own addresses', async () => {
+      const otherUser = await createTestUser({ phoneNumber: '09120000002' });
+      otherUser.addresses.push(createAddressBody({ plate: '99' }));
+      await otherUser.save();
+      testUser.addresses.push(createAddressBody({ plate: '11' }));
+      await testUser.save();
 
-          city: 'x',
+      const editResponse = await request(app)
+        .patch(`/api/users/addresses/${otherUser.addresses[0]._id}`)
+        .set('Authorization', 'Bearer token')
+        .send({ plate: 'changed' });
+      expect(editResponse.status).toBe(STATUES.NOT_FOUND);
 
-          province: 'x',
-
-          postalCode: '1234567890',
-        })
+      const listResponse = await request(app)
+        .get('/api/users/addresses')
         .set('Authorization', 'Bearer token');
+      expect(listResponse.status).toBe(STATUES.SUCCESS);
+      expect(listResponse.body.totalRecords).toBe(1);
+      expect(listResponse.body.data[0].plate).toBe('11');
+      expect(listResponse.body).not.toHaveProperty('password');
 
-      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      const unchangedOther = await UserModel.findById(otherUser._id);
+      expect(unchangedOther.addresses[0].plate).toBe('99');
     });
   });
 

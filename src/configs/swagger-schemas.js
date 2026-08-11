@@ -1,7 +1,9 @@
 import { z } from 'zod';
+
 import {
+  addUserAddressSchema,
+  editUserAddressSchema,
   userChangePasswordFormBodyValidation,
-  userUpdateLocationInfoSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
 } from '../entities/users/users.schema.js';
@@ -16,7 +18,8 @@ export const schemas = {
   // ── User request bodies ──────────────────────────────────────────────────
   CreateUserBody: toOpenApi(userZodSchema),
   UpdateUserPersonalInfoBody: toOpenApi(userUpdatePersonalInfoSchema),
-  UpdateUserLocationInfoBody: toOpenApi(userUpdateLocationInfoSchema),
+  AddUserAddressBody: toOpenApi(addUserAddressSchema),
+  EditUserAddressBody: toOpenApi(editUserAddressSchema),
   ChangeUserPasswordBody: toOpenApi(userChangePasswordFormBodyValidation),
 
   // ── Generic responses ────────────────────────────────────────────────────

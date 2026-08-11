@@ -72,6 +72,7 @@ jest.mock('./users.model.js', () => ({
     find: jest.fn(),
     create: jest.fn(),
     findByIdAndUpdate: jest.fn(),
+    findOneAndUpdate: jest.fn(),
     updateOne: jest.fn(),
     countDocuments: jest.fn(),
   },
@@ -110,13 +111,7 @@ describe('UserService - Unit Tests', () => {
 
       nationalCode: '1234567890',
 
-      address: 'Tehran address',
-
-      city: 'Tehran',
-
-      province: 'Tehran',
-
-      postalCode: '1234567890',
+      addresses: [],
 
       age: 25,
 
@@ -877,6 +872,114 @@ describe('UserService - Unit Tests', () => {
       '-password',
       expect.any(Function),
     );
+  });
+
+  describe('address management', () => {
+    const address = {
+      province: 'Tehran',
+      city: 'Tehran',
+      detailAddress: 'Example detailed address',
+      plate: '12',
+      postalCode: '1234567890',
+      receiverIsMe: false,
+      firstName: 'Ali',
+      lastName: 'Ahmadi',
+      nationalCode: '1234567890',
+      phoneNumber: '09121234567',
+    };
+
+    test('addAddress uses an atomic maximum-length condition', async () => {
+      const createdAddress = { ...address, _id: 'address-id' };
+      UserModel.findById.mockResolvedValue(mockUser);
+      UserModel.findOneAndUpdate.mockResolvedValue({
+        addresses: [createdAddress],
+      });
+
+      await expect(UserService.addAddress(mockActor, address)).resolves.toEqual(
+        createdAddress,
+      );
+      expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: mockUser._id, 'addresses.4': { $exists: false } },
+        { $push: { addresses: expect.objectContaining(address) } },
+        { returnDocument: 'after', runValidators: true },
+      );
+    });
+
+    test('addAddress maps a failed atomic condition to the address limit', async () => {
+      UserModel.findById.mockResolvedValue(mockUser);
+      UserModel.findOneAndUpdate.mockResolvedValue(null);
+
+      await expect(UserService.addAddress(mockActor, address)).rejects.toThrow(
+        'حداکثر 5 نشانی قابل ثبت است',
+      );
+    });
+
+    test('resolveAddressReceiver snapshots the current user', () => {
+      expect(
+        UserService.resolveAddressReceiver(mockUser, {
+          ...address,
+          receiverIsMe: true,
+        }),
+      ).toMatchObject({
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
+        nationalCode: mockUser.nationalCode,
+        phoneNumber: mockUser.phoneNumber,
+      });
+    });
+
+    test('editAddress persists a validated partial final state by subdocument id', async () => {
+      const addressId = '65a4de97aff1fbb38c437951';
+      const existing = {
+        ...address,
+        _id: addressId,
+        toObject: jest.fn(() => ({ ...address, _id: addressId })),
+      };
+      const updated = { ...address, _id: addressId, plate: '25' };
+      mockUser.addresses = { id: jest.fn(() => existing) };
+      UserModel.findById.mockResolvedValue(mockUser);
+      UserModel.findOneAndUpdate.mockResolvedValue({
+        addresses: { id: jest.fn(() => updated) },
+      });
+
+      await expect(
+        UserService.editAddress(mockActor, addressId, { plate: '25' }),
+      ).resolves.toEqual(updated);
+      expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: mockUser._id, 'addresses._id': addressId },
+        {
+          $set: {
+            'addresses.$': expect.objectContaining({
+              _id: addressId,
+              plate: '25',
+              city: address.city,
+            }),
+          },
+        },
+        { returnDocument: 'after', runValidators: true },
+      );
+    });
+
+    test('editAddress hides addresses owned by another user as not found', async () => {
+      mockUser.addresses = { id: jest.fn(() => null) };
+      UserModel.findById.mockResolvedValue(mockUser);
+
+      await expect(
+        UserService.editAddress(mockActor, '65a4de97aff1fbb38c437951', {
+          plate: '25',
+        }),
+      ).rejects.toThrow('نشانی یافت نشد');
+      expect(UserModel.findOneAndUpdate).not.toHaveBeenCalled();
+    });
+
+    test('getAddresses returns only the authenticated user addresses', async () => {
+      mockUser.addresses = [address];
+      UserModel.findById.mockResolvedValue(mockUser);
+
+      await expect(UserService.getAddresses(mockActor)).resolves.toEqual([
+        address,
+      ]);
+    });
   });
 
   // =========================================================

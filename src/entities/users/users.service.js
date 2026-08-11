@@ -6,6 +6,7 @@ import {
   IMAGE_FORMATS,
   ROLES,
   STATUES,
+  USER_ADDRESS_LIMITS,
 } from '#configs/constants.js';
 import { getJwtSecret } from '#configs/env.config.js';
 import logger from '#configs/logger.js';
@@ -21,6 +22,7 @@ import { formatImageFile } from '#utils/image.helpers.js';
 
 import { UserModel } from './users.model.js';
 import { formatUserFullName } from './users.helpers.js';
+import { userAddressSchema } from './users.schema.js';
 
 export class UserService {
   // =========================================================
@@ -350,6 +352,120 @@ export class UserService {
     }
 
     return updatedUser;
+  }
+
+  static getAuthenticatedUserId(actor) {
+    const userId = actor?.userId || actor?.id;
+    if (!userId) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'هویت کاربر احراز نشده است',
+      });
+    }
+    return userId;
+  }
+
+  static resolveAddressReceiver(user, address) {
+    if (!address.receiverIsMe) return address;
+
+    const receiver = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nationalCode: user.nationalCode,
+      phoneNumber: user.phoneNumber,
+    };
+    if (Object.values(receiver).some((value) => !value)) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'اطلاعات هویتی کاربر برای ثبت گیرنده کامل نیست',
+        code: ERROR_CODES.USER_RECEIVER_INFO_INCOMPLETE,
+      });
+    }
+
+    return { ...address, ...receiver };
+  }
+
+  static validateAddress(address) {
+    const result = userAddressSchema.safeParse(address);
+    if (!result.success) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'اطلاعات نشانی معتبر نیست',
+        data: {
+          messages: result.error.issues.map((issue) => ({
+            field: issue.path[0],
+            value: issue.message,
+          })),
+          detail: {},
+        },
+      });
+    }
+    return result.data;
+  }
+
+  static async addAddress(actor, address) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
+    const resolvedAddress = this.validateAddress(
+      this.resolveAddressReceiver(user, address),
+    );
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId, 'addresses.4': { $exists: false } },
+      { $push: { addresses: resolvedAddress } },
+      { returnDocument: 'after', runValidators: true },
+    );
+
+    if (!updatedUser) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: `حداکثر ${USER_ADDRESS_LIMITS.MAX_ADDRESSES} نشانی قابل ثبت است`,
+        code: ERROR_CODES.USER_ADDRESS_LIMIT_REACHED,
+      });
+    }
+
+    return updatedUser.addresses.at(-1);
+  }
+
+  static async editAddress(actor, addressId, changes) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
+    const existingAddress = user.addresses.id(addressId);
+    if (!existingAddress) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نشانی یافت نشد',
+        code: ERROR_CODES.USER_ADDRESS_NOT_FOUND,
+      });
+    }
+
+    const existingValue = existingAddress.toObject();
+    let candidate = { ...existingValue, ...changes };
+    if (existingValue.receiverIsMe && changes.receiverIsMe === false) {
+      candidate = {
+        ...candidate,
+        firstName: changes.firstName,
+        lastName: changes.lastName,
+        nationalCode: changes.nationalCode,
+        phoneNumber: changes.phoneNumber,
+      };
+    }
+    candidate = this.resolveAddressReceiver(user, candidate);
+    const validatedAddress = this.validateAddress(candidate);
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId, 'addresses._id': addressId },
+      { $set: { 'addresses.$': { ...validatedAddress, _id: addressId } } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نشانی یافت نشد',
+        code: ERROR_CODES.USER_ADDRESS_NOT_FOUND,
+      });
+    }
+
+    return updatedUser.addresses.id(addressId);
+  }
+
+  static async getAddresses(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
+    return user.addresses;
   }
 
   static format(user) {

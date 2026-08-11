@@ -8,8 +8,10 @@ import {
 
 import {
   userChangePasswordFormBodyValidation,
+  addUserAddressSchema,
+  editUserAddressSchema,
+  userAddressIdSchema,
   userRefreshTokenSchema,
-  userUpdateLocationInfoSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
 } from './users.schema.js';
@@ -81,6 +83,39 @@ export const refreshTokenController = async (req, res, next) => {
   }
 };
 
+export const addUserAddressController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(addUserAddressSchema, req.body);
+    const address = await UserService.addAddress(req.user, body);
+    setSuccessResponse(res, STATUES.CREATED, { data: address });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const editUserAddressController = async (req, res, next) => {
+  try {
+    const { addressId } = returnFormValidation(userAddressIdSchema, req.params);
+    const body = returnFormValidation(editUserAddressSchema, req.body);
+    const address = await UserService.editAddress(req.user, addressId, body);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: address });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getUserAddressListController = async (req, res, next) => {
+  try {
+    const addresses = await UserService.getAddresses(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: addresses,
+      totalRecords: addresses.length,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 // =========================================================
 // UPDATE PERSONAL INFO
 // =========================================================
@@ -98,26 +133,6 @@ export const updateUserPersonalInfoController = async (req, res, next) => {
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `اطلاعات ${UserService.getFullName(updatedUser)} ویرایش شد`,
       data: UserService.format(updatedUser),
-    });
-  } catch (err) {
-    onCatchPromiseController(err, next);
-  }
-};
-
-// =========================================================
-// UPDATE LOCATION INFO
-// =========================================================
-
-export const updateUserLocationInfoController = async (req, res, next) => {
-  try {
-    const body = returnFormValidation(userUpdateLocationInfoSchema, req.body);
-
-    const updatedUser = await UserService.update(body.userId, body);
-
-    setSuccessResponse(res, STATUES.SUCCESS, {
-      message: `اطلاعات موقعیتی ${UserService.getFullName(
-        updatedUser,
-      )} ویرایش شد`,
     });
   } catch (err) {
     onCatchPromiseController(err, next);

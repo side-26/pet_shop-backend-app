@@ -1,6 +1,12 @@
 import express from 'express';
 
+import { ROLES } from '#configs/constants.js';
+import { authenticated } from '#middlewares/auth.middleware.js';
+import { roleMiddleware } from '#middlewares/role.middleware.js';
+import { uploadAvatar } from '#middlewares/upload.middleware.js';
+
 import {
+  addUserAddressController,
   changeUserPasswordController,
   createUserController,
   disableUserController,
@@ -8,16 +14,13 @@ import {
   getAllUsersListController,
   getAllUsersListPaginateController,
   getUserByIdController,
+  getUserAddressListController,
   getUserCartListController,
   loginUserController,
   refreshTokenController,
-  updateUserLocationInfoController,
+  editUserAddressController,
   updateUserPersonalInfoController,
 } from './users.controller.js';
-import { authenticated } from '../../middlewares/auth.middleware.js';
-import { roleMiddleware } from '#middlewares/role.middleware.js';
-import { ROLES } from '#configs/constants.js';
-import { uploadAvatar } from '#middlewares/upload.middleware.js';
 
 const router = express.Router();
 
@@ -74,11 +77,13 @@ router.put(
   updateUserPersonalInfoController,
 );
 
-router.put(
-  '/users/edit-location-info',
+router.post('/users/addresses', authenticated, addUserAddressController);
+router.patch(
+  '/users/addresses/:addressId',
   authenticated,
-  updateUserLocationInfoController,
+  editUserAddressController,
 );
+router.get('/users/addresses', authenticated, getUserAddressListController);
 
 router.put(
   '/users/change-password',

@@ -1,6 +1,34 @@
 import mongoose from 'mongoose';
 
+import { USER_ADDRESS_LIMITS } from '#configs/constants.js';
+
 import { userZodSchema } from './users.schema.js';
+
+const addressSchema = new mongoose.Schema({
+  province: { type: String, required: true, trim: true },
+  city: { type: String, required: true, trim: true },
+  detailAddress: { type: String, required: true, trim: true },
+  plate: { type: String, required: true, trim: true },
+  unit: { type: String, default: null, trim: true },
+  postalCode: {
+    type: String,
+    required: true,
+    match: /^\d{10}$/,
+  },
+  receiverIsMe: { type: Boolean, default: false },
+  firstName: { type: String, required: true, trim: true },
+  lastName: { type: String, required: true, trim: true },
+  nationalCode: {
+    type: String,
+    required: true,
+    match: /^\d{10}$/,
+  },
+  phoneNumber: {
+    type: String,
+    required: true,
+    match: /^09\d{9}$/,
+  },
+});
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,11 +39,16 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     isEnable: { type: Boolean, default: true },
     avatar: { type: String, default: '' },
-    address: { type: String, default: '' },
     nationalCode: { type: String, default: '' },
-    city: { type: String, default: '' },
-    province: { type: String, default: '' },
-    postalCode: { type: String, default: '' },
+    addresses: {
+      type: [addressSchema],
+      default: [],
+      validate: {
+        validator: (addresses) =>
+          addresses.length <= USER_ADDRESS_LIMITS.MAX_ADDRESSES,
+        message: 'حداکثر پنج نشانی قابل ثبت است',
+      },
+    },
     age: { type: Number, default: null },
     role: { type: String, default: 'customer' },
     orders: { type: [mongoose.Schema.Types.Mixed], default: [] },

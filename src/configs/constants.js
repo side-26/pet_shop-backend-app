@@ -6,7 +6,9 @@ export const ROUTES = {
     getUserCart: '/users/cart/:id',
     createUser: '/users',
     updateUserInfo: '/users/editInfo',
-    updateUserLocationInfo: '/users/editLocationInfo',
+    addAddress: '/users/addresses',
+    editAddress: '/users/addresses/:addressId',
+    getAddresses: '/users/addresses',
     deleteUser: '/users/delete/:id',
     disableUser: '/users/disable/:id',
     enableUser: '/users/enable/:id',
@@ -118,6 +120,13 @@ export const ERROR_CODES = {
   PET_BREED_NOT_FOUND: 'PET_BREED_NOT_FOUND',
   PET_BREED_TYPE_MISMATCH: 'PET_BREED_TYPE_MISMATCH',
   USER_PROFILE_ACCESS_DENIED: 'USER_PROFILE_ACCESS_DENIED',
+  USER_ADDRESS_LIMIT_REACHED: 'USER_ADDRESS_LIMIT_REACHED',
+  USER_ADDRESS_NOT_FOUND: 'USER_ADDRESS_NOT_FOUND',
+  USER_RECEIVER_INFO_INCOMPLETE: 'USER_RECEIVER_INFO_INCOMPLETE',
+};
+
+export const USER_ADDRESS_LIMITS = {
+  MAX_ADDRESSES: 5,
 };
 
 export const COUNTRIES_API = {

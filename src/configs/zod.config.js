@@ -14,7 +14,15 @@ const persianFieldNames = {
   role: 'نقش کاربر',
   nationalCode: 'کد ملی',
   address: 'آدرس',
+  addresses: 'نشانی‌ها',
   city: 'شهر',
+  province: 'استان',
+  detailAddress: 'نشانی دقیق',
+  plate: 'پلاک',
+  unit: 'واحد',
+  postalCode: 'کد پستی',
+  receiverIsMe: 'گیرنده خودم هستم',
+  addressId: 'شناسه نشانی',
 
   // Pet / Pet Type / Category
   title: 'عنوان',
@@ -178,6 +186,11 @@ const persianErrorMap = (issue) => {
         message: persianMessages.invalidEnum(fieldName, validValues),
       };
     }
+
+    case 'custom':
+      return {
+        message: issue.message || persianMessages.invalid(fieldName),
+      };
 
     default:
       return {
