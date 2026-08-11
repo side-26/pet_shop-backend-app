@@ -36,6 +36,13 @@ const persianFieldNames = {
   estimateDeliveryDate: 'تاریخ تخمینی تحویل',
   paymentType: 'نوع پرداخت',
   instalmentCompany: 'شرکت پرداخت اقساطی',
+  orderNumber: 'شماره سفارش',
+  deliveryState: 'وضعیت تحویل',
+  paymentTrackingId: 'شناسه رهگیری پرداخت',
+  items: 'اقلام سفارش',
+  sourceId: 'شناسه منبع',
+  user: 'کاربر',
+  item: 'آیتم',
 
   // Pet / Pet Type / Category
   title: 'عنوان',

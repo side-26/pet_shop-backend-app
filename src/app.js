@@ -14,6 +14,7 @@ import subCategoryRoutes from '#entities/subCategories/subCategories.route.js';
 import breedRoutes from '#entities/breeds/breeds.route.js';
 import petRoutes from '#entities/pets/pets.route.js';
 import productRoutes from '#entities/products/products.route.js';
+import orderRoutes from '#entities/orders/orders.route.js';
 
 import countryRoutes from './integrations/countries/countries.route.js';
 import locationRoutes from './integrations/locations/locations.route.js';
@@ -39,6 +40,7 @@ app.use('/api', reverseGeocodingRoutes);
 app.use('/api', breedRoutes);
 app.use('/api', petRoutes);
 app.use('/api', productRoutes);
+app.use('/api', orderRoutes);
 
 app.use(logError);
 app.use(errorHandler);

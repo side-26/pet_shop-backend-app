@@ -22,7 +22,7 @@ const outputFile = './swagger-output.json';
 const routes = [
   '../entities/users/users.route.js',
   // '../entities/products/products.route.js', // add when implemented
-  // '../entities/orders/orders.route.js',     // add when implemented
+  '../entities/orders/orders.route.js',
 ];
 
 swaggerAutogen({ openapi: '3.0.0' })(outputFile, routes, doc).then(async () => {
