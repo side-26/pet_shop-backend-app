@@ -45,4 +45,14 @@ describe('Persian Zod error map', () => {
 
     expect(result.message).toBe('تصویر اصلی باید یک آدرس معتبر باشد');
   });
+
+  it('uses the Persian province label for provinceId', () => {
+    const result = persianErrorMap({
+      code: 'invalid_format',
+      path: ['provinceId'],
+      format: 'regex',
+    });
+
+    expect(result.message).toContain('استان');
+  });
 });

@@ -58,6 +58,7 @@ const persianFieldNames = {
   includeDisabled: 'نمایش موارد غیرفعال',
   token: 'توکن',
   userId: 'شناسه کاربر',
+  provinceId: 'استان',
 };
 
 // ============================================

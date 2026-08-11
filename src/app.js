@@ -16,6 +16,7 @@ import petRoutes from '#entities/pets/pets.route.js';
 import productRoutes from '#entities/products/products.route.js';
 
 import countryRoutes from './integrations/countries/countries.route.js';
+import locationRoutes from './integrations/locations/locations.route.js';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api', petTypeRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', subCategoryRoutes);
 app.use('/api', countryRoutes);
+app.use('/api', locationRoutes);
 app.use('/api', breedRoutes);
 app.use('/api', petRoutes);
 app.use('/api', productRoutes);
