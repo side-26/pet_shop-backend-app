@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
-import { USER_ADDRESS_LIMITS, USER_ITEM_TYPES } from '#configs/constants.js';
+import {
+  CART_PAYMENT_TYPES,
+  USER_ADDRESS_LIMITS,
+  USER_ITEM_TYPES,
+} from '#configs/constants.js';
 
 import { userZodSchema } from './users.schema.js';
 
@@ -53,6 +57,43 @@ const cartItemSchema = new mongoose.Schema({
   },
 });
 
+const shippingInfoSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: '', trim: true },
+    trackingCode: { type: String, default: '', trim: true },
+    estimateDeliveryDate: { type: Date, default: null },
+  },
+  { _id: false },
+);
+
+const cartSchema = new mongoose.Schema(
+  {
+    totalPrice: { type: Number, default: 0, min: 0 },
+    items: { type: [cartItemSchema], default: [] },
+    discountPrice: { type: Number, default: 0, min: 0 },
+    userAddress: { type: mongoose.Schema.Types.ObjectId, default: null },
+    deliveringDateToShipping: { type: Date, default: null },
+    shippingPrice: { type: Number, default: 0, min: 0 },
+    shippingInfo: { type: shippingInfoSchema, default: () => ({}) },
+    paymentType: {
+      type: Number,
+      enum: Object.values(CART_PAYMENT_TYPES),
+      default: CART_PAYMENT_TYPES.DIRECT,
+    },
+    instalmentCompany: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+    },
+  },
+  { _id: false },
+);
+
+cartSchema.pre('validate', function () {
+  if (this.paymentType === CART_PAYMENT_TYPES.DIRECT) {
+    this.instalmentCompany = null;
+  }
+});
+
 const wishlistItemSchema = new mongoose.Schema({
   item: itemReference,
   itemType: {
@@ -84,7 +125,7 @@ const userSchema = new mongoose.Schema(
     age: { type: Number, default: null },
     role: { type: String, default: 'customer' },
     orders: { type: [mongoose.Schema.Types.Mixed], default: [] },
-    cart: { type: [cartItemSchema], default: [] },
+    cart: { type: cartSchema, default: () => ({}) },
     wishlist: { type: [wishlistItemSchema], default: [] },
   },
   {

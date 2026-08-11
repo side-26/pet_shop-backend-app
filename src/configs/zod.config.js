@@ -26,6 +26,16 @@ const persianFieldNames = {
 
   itemId: 'شناسه آیتم',
   itemType: 'نوع آیتم',
+  totalPrice: 'قیمت کل سبد خرید',
+  discountPrice: 'مبلغ تخفیف سبد خرید',
+  userAddress: 'نشانی سبد خرید',
+  deliveringDateToShipping: 'تاریخ تحویل به ارسال‌کننده',
+  shippingPrice: 'هزینه ارسال',
+  shippingInfo: 'اطلاعات ارسال',
+  trackingCode: 'کد رهگیری',
+  estimateDeliveryDate: 'تاریخ تخمینی تحویل',
+  paymentType: 'نوع پرداخت',
+  instalmentCompany: 'شرکت پرداخت اقساطی',
 
   // Pet / Pet Type / Category
   title: 'عنوان',

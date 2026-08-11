@@ -14,13 +14,13 @@ import {
   disableUserController,
   deleteCartItemController,
   deleteWishlistItemController,
+  emptyCartController,
   enableUserController,
   getAllUsersListController,
   getAllUsersListPaginateController,
   getCartItemsController,
   getUserByIdController,
   getUserAddressListController,
-  getUserCartListController,
   getWishlistItemsController,
   loginUserController,
   refreshTokenController,
@@ -94,6 +94,7 @@ router.get('/users/addresses', authenticated, getUserAddressListController);
 router.post('/cart/add', authenticated, addCartItemController);
 router.delete('/cart/delete/:id', authenticated, deleteCartItemController);
 router.get('/cart/all', authenticated, getCartItemsController);
+router.delete('/cart/empty', authenticated, emptyCartController);
 
 router.post('/wishlist/add', authenticated, addWishlistItemController);
 router.delete(
@@ -207,21 +208,6 @@ router.get(
     }
   */
   getUserByIdController,
-);
-
-router.get(
-  '/users/cart/:id',
-  authenticated,
-  /*
-    #swagger.tags = ['Users']
-    #swagger.summary = 'Get user cart'
-    #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string' } }
-    #swagger.responses[200] = {
-      description: 'User cart',
-      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
-    }
-  */
-  getUserCartListController,
 );
 
 export default router;

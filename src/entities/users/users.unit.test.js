@@ -38,11 +38,11 @@ jest.mock('#configs/logger.js', () => ({
 }));
 
 jest.mock('#entities/products/products.service.js', () => ({
-  ProductService: { findById: jest.fn() },
+  ProductService: { findById: jest.fn(), findCustomerById: jest.fn() },
 }));
 
 jest.mock('#entities/pets/pets.service.js', () => ({
-  PetService: { findById: jest.fn() },
+  PetService: { findById: jest.fn(), findCustomerById: jest.fn() },
 }));
 
 jest.mock('#utils/helpers.js', () => ({
@@ -125,13 +125,21 @@ describe('UserService - Unit Tests', () => {
 
       age: 25,
 
-      cart: [
-        {
-          item: '65a4de97aff1fbb38c437950',
-          itemType: 'product',
-          quantity: 2,
-        },
-      ],
+      cart: {
+        totalPrice: 200,
+        discountPrice: 20,
+        items: [
+          {
+            item: {
+              _id: '65a4de97aff1fbb38c437950',
+              price: 100,
+              discountPercentage: 10,
+            },
+            itemType: 'product',
+            quantity: 2,
+          },
+        ],
+      },
 
       wishlist: [],
 
@@ -999,52 +1007,72 @@ describe('UserService - Unit Tests', () => {
   // CART
   // =========================================================
 
-  test('getCart returns user cart', async () => {
-    UserModel.findById.mockResolvedValue(mockUser);
-
-    const result = await UserService.getCart(mockUser._id);
-
-    expect(result).toEqual(mockUser.cart);
-  });
-
-  test('addCartItem validates a product and updates an existing entry quantity', async () => {
+  test('addCartItem validates a product, increments quantity, and recalculates pricing', async () => {
     const data = {
-      itemId: mockUser.cart[0].item,
+      itemId: mockUser.cart.items[0].item._id,
       itemType: 'product',
-      quantity: 7,
+      quantity: 3,
     };
-    ProductService.findById.mockResolvedValue({ _id: data.itemId });
-    UserModel.findOneAndUpdate.mockResolvedValue({
-      cart: [{ ...mockUser.cart[0], quantity: 7 }],
+    const recalculatedUser = {
+      ...mockUser,
+      cart: {
+        ...mockUser.cart,
+        items: [{ ...mockUser.cart.items[0], quantity: 5 }],
+      },
+    };
+    ProductService.findCustomerById.mockResolvedValue({ _id: data.itemId });
+    UserModel.findOneAndUpdate.mockResolvedValue(recalculatedUser);
+    UserModel.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue(recalculatedUser),
     });
+    UserModel.updateOne.mockResolvedValue({ acknowledged: true });
 
     await expect(
       UserService.addCartItem(mockActor, data),
     ).resolves.toMatchObject({
-      quantity: 7,
+      totalPrice: 500,
+      discountPrice: 50,
     });
-    expect(ProductService.findById).toHaveBeenCalledWith(data.itemId);
+    expect(ProductService.findCustomerById).toHaveBeenCalledWith(data.itemId);
+    expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ _id: mockActor.userId }),
+      { $inc: { 'cart.items.$.quantity': 3 } },
+      expect.any(Object),
+    );
     expect(UserModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
   });
 
-  test('addCartItem validates a pet and atomically pushes a new unique entry', async () => {
+  test('addCartItem validates a pet and atomically pushes a unique entry', async () => {
     const data = {
       itemId: '65a4de97aff1fbb38c437951',
       itemType: 'pet',
       quantity: 5,
     };
-    PetService.findById.mockResolvedValue({ _id: data.itemId });
+    const petItem = {
+      item: { _id: data.itemId, price: 200, discountPercentage: 20 },
+      itemType: data.itemType,
+      quantity: data.quantity,
+    };
+    const recalculatedUser = {
+      ...mockUser,
+      cart: { ...mockUser.cart, items: [petItem] },
+    };
+    PetService.findCustomerById.mockResolvedValue({ _id: data.itemId });
     UserModel.findOneAndUpdate
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ cart: [{ ...data, item: data.itemId }] });
+      .mockResolvedValueOnce(recalculatedUser);
+    UserModel.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue(recalculatedUser),
+    });
+    UserModel.updateOne.mockResolvedValue({ acknowledged: true });
 
     await expect(
       UserService.addCartItem(mockActor, data),
     ).resolves.toMatchObject({
-      itemType: 'pet',
-      quantity: 5,
+      totalPrice: 1000,
+      discountPrice: 200,
     });
-    expect(PetService.findById).toHaveBeenCalledWith(data.itemId);
+    expect(PetService.findCustomerById).toHaveBeenCalledWith(data.itemId);
   });
 
   test('deleteCartItem rejects an entry not owned by the authenticated user', async () => {
@@ -1054,14 +1082,53 @@ describe('UserService - Unit Tests', () => {
     ).rejects.toThrow('آیتم سبد خرید یافت نشد');
   });
 
+  test('deleteCartItem recalculates totals after removing an owned entry', async () => {
+    const emptyUser = {
+      ...mockUser,
+      cart: { ...mockUser.cart, items: [] },
+    };
+    UserModel.findOneAndUpdate.mockResolvedValue(emptyUser);
+    UserModel.findById.mockReturnValue({
+      populate: jest.fn().mockResolvedValue(emptyUser),
+    });
+    UserModel.updateOne.mockResolvedValue({ acknowledged: true });
+    await expect(
+      UserService.deleteCartItem(mockActor, '65a4de97aff1fbb38c437951'),
+    ).resolves.toMatchObject({
+      items: [],
+      totalPrice: 0,
+      discountPrice: 0,
+    });
+  });
+
   test('getCartItems populates only the authenticated user cart', async () => {
     const populate = jest.fn().mockResolvedValue(mockUser);
     UserModel.findById.mockReturnValue({ populate });
+    UserModel.updateOne.mockResolvedValue({ acknowledged: true });
     await expect(UserService.getCartItems(mockActor)).resolves.toEqual(
       mockUser.cart,
     );
     expect(UserModel.findById).toHaveBeenCalledWith(mockActor.userId);
-    expect(populate).toHaveBeenCalledWith('cart.item');
+    expect(populate).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'cart.items.item' }),
+    );
+  });
+
+  test('emptyCart resets items and calculated prices while preserving metadata', async () => {
+    UserModel.findByIdAndUpdate.mockResolvedValue({
+      cart: {
+        items: [],
+        totalPrice: 0,
+        discountPrice: 0,
+        shippingPrice: 500,
+      },
+    });
+    await expect(UserService.emptyCart(mockActor)).resolves.toMatchObject({
+      items: [],
+      totalPrice: 0,
+      discountPrice: 0,
+      shippingPrice: 500,
+    });
   });
 
   test('addWishlistItem prevents duplicate entries atomically', async () => {

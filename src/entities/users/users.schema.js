@@ -90,7 +90,6 @@ export const userZodSchema = object({
     .default(ROLES.CUSTOMER),
   age: number().nullable().optional(), // new field – number
   orders: array(any()).optional(), // defaults handled by Mongoose
-  cart: array(any()).optional(),
   wishlist: array(any()).optional(),
 });
 

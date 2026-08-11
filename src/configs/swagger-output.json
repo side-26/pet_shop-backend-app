@@ -7,14 +7,16 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api",
+      "url": "http://localhost:8080/api",
       "description": "local server"
     }
   ],
   "paths": {
     "/users": {
       "post": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Create a new user",
         "description": "",
         "responses": {
@@ -51,14 +53,16 @@
         }
       }
     },
-    "/users/editInfo": {
-      "put": {
-        "tags": ["Users"],
-        "summary": "Update personal info",
+    "/users/login": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Login user",
         "description": "",
         "responses": {
           "200": {
-            "description": "Personal info updated",
+            "description": "User logged in successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -67,8 +71,8 @@
               }
             }
           },
-          "422": {
-            "description": "Validation error",
+          "404": {
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -83,55 +87,166 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateUserPersonalInfoBody"
+                "$ref": "#/components/schemas/LoginUserBody"
               }
             }
           }
         }
       }
     },
-    "/users/editLocationInfo": {
-      "put": {
-        "tags": ["Users"],
-        "summary": "Update location info",
+    "/users/refresh-token": {
+      "post": {
         "description": "",
         "responses": {
-          "200": {
-            "description": "Location info updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserLocationInfoBody"
-              }
-            }
+          "default": {
+            "description": ""
           }
         }
       }
     },
-    "/users/changePassword": {
+    "/users/edit-info": {
       "put": {
-        "tags": ["Users"],
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/users/addresses": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/users/addresses/{addressId}": {
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cart/add": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cart/delete/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cart/all": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cart/empty": {
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/wishlist/add": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/wishlist/delete/{id}": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/wishlist/all": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/users/change-password": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
         "summary": "Change user password",
         "description": "",
         "responses": {
@@ -170,7 +285,9 @@
     },
     "/users/disable/{id}": {
       "put": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Disable a user",
         "description": "",
         "parameters": [
@@ -199,7 +316,9 @@
     },
     "/users/enable/{id}": {
       "put": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Enable a user",
         "description": "",
         "parameters": [
@@ -228,7 +347,9 @@
     },
     "/users/all": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get all users",
         "description": "",
         "responses": {
@@ -247,7 +368,9 @@
     },
     "/users/paginate": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get paginated users",
         "description": "",
         "parameters": [
@@ -302,7 +425,9 @@
     },
     "/users/{id}": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get user by ID",
         "description": "",
         "parameters": [
@@ -338,35 +463,6 @@
           }
         }
       }
-    },
-    "/users/cart/{id}": {
-      "get": {
-        "tags": ["Users"],
-        "summary": "Get user cart",
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "User cart",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -382,38 +478,60 @@
           },
           "phoneNumber": {
             "type": "string",
-            "minLength": 11,
-            "maxLength": 11
+            "pattern": "^09\\d{9}$"
           },
           "password": {
             "type": "string",
             "minLength": 8
           },
-          "avatar": {
-            "type": "string"
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email",
+                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
           },
-          "address": {
-            "type": "string"
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
           },
           "isEnable": {
             "type": "boolean"
           },
           "nationalCode": {
-            "type": "string"
-          },
-          "postalCode": {
-            "type": "string",
-            "minLength": 10,
-            "maxLength": 10
-          },
-          "city": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{10}$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
           },
           "role": {
-            "type": "string"
-          },
-          "province": {
-            "type": "string"
+            "default": "customer",
+            "type": "string",
+            "enum": [
+              "admin",
+              "customer",
+              "seller"
+            ]
           },
           "age": {
             "anyOf": [
@@ -429,19 +547,24 @@
             "type": "array",
             "items": {}
           },
-          "cart": {
+          "wishlist": {
             "type": "array",
             "items": {}
           }
         },
-        "required": ["phoneNumber", "password"],
+        "required": [
+          "phoneNumber",
+          "password",
+          "role"
+        ],
         "additionalProperties": false
       },
       "UpdateUserPersonalInfoBody": {
         "type": "object",
         "properties": {
           "userId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{24}$"
           },
           "firstName": {
             "type": "string",
@@ -458,8 +581,7 @@
           },
           "nationalCode": {
             "type": "string",
-            "minLength": 10,
-            "maxLength": 10
+            "pattern": "^\\d{10}$"
           },
           "age": {
             "type": "integer",
@@ -467,47 +589,128 @@
             "maximum": 9007199254740991
           },
           "avatar": {
-            "type": "string",
-            "format": "uri"
-          },
-          "role": {
-            "type": "string",
-            "enum": ["customer", "admin"]
+            "type": "string"
           }
         },
-        "required": [
-          "userId",
-          "firstName",
-          "lastName",
-          "email",
-          "nationalCode",
-          "age"
-        ],
         "additionalProperties": false
       },
-      "UpdateUserLocationInfoBody": {
+      "AddUserAddressBody": {
         "type": "object",
         "properties": {
-          "userId": {
-            "type": "string"
-          },
-          "address": {
+          "province": {
             "type": "string",
-            "minLength": 5
+            "minLength": 2
           },
           "city": {
             "type": "string",
             "minLength": 2
           },
+          "detailAddress": {
+            "type": "string",
+            "minLength": 5
+          },
+          "plate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "postalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "receiverIsMe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "nationalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          }
+        },
+        "required": [
+          "province",
+          "city",
+          "detailAddress",
+          "plate",
+          "postalCode",
+          "receiverIsMe"
+        ],
+        "additionalProperties": false
+      },
+      "EditUserAddressBody": {
+        "type": "object",
+        "properties": {
           "province": {
             "type": "string",
             "minLength": 2
           },
+          "city": {
+            "type": "string",
+            "minLength": 2
+          },
+          "detailAddress": {
+            "type": "string",
+            "minLength": 5
+          },
+          "plate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "postalCode": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "receiverIsMe": {
+            "type": "boolean"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "nationalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
           }
         },
-        "required": ["userId", "address", "city", "province", "postalCode"],
         "additionalProperties": false
       },
       "ChangeUserPasswordBody": {
@@ -529,7 +732,12 @@
             "type": "string"
           }
         },
-        "required": ["password", "oldPassword", "repeatPassword", "userId"],
+        "required": [
+          "password",
+          "oldPassword",
+          "repeatPassword",
+          "userId"
+        ],
         "additionalProperties": false
       },
       "SuccessResponse": {
@@ -544,7 +752,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "PaginatedResponse": {
         "type": "object",
@@ -594,7 +804,9 @@
             }
           }
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "ErrorResponse": {
         "type": "object",
@@ -608,7 +820,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       }
     }
   }

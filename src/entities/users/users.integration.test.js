@@ -1,6 +1,8 @@
 jest.mock('#middlewares/auth.middleware.js', () => ({
   authenticated: (req, res, next) => {
-    void res;
+    if (global.__TEST_UNAUTHENTICATED__) {
+      return res.status(401).json({ isSuccess: false });
+    }
 
     req.user = {
       userId: global.__TEST_USER_ID__,
@@ -191,7 +193,7 @@ describe('User API - Integration Tests', () => {
 
       age: 25,
 
-      cart: [],
+      cart: { items: [] },
 
       orders: [],
 
@@ -234,6 +236,7 @@ describe('User API - Integration Tests', () => {
 
     global.__TEST_USER_ID__ = testUser._id.toString();
     global.__TEST_USER_ROLE__ = ROLES.ADMIN;
+    global.__TEST_UNAUTHENTICATED__ = false;
     ObjectStorageService.deleteObject.mockClear();
     ObjectStorageService.getObjectKeyFromUrl.mockClear();
   });
@@ -1056,57 +1059,8 @@ describe('User API - Integration Tests', () => {
     });
   });
 
-  // =========================================================
-  // GET /api/users/cart/:id
-  // =========================================================
-
-  describe('GET /api/users/cart/:id', () => {
-    test('should return user cart', async () => {
-      await UserModel.findByIdAndUpdate(
-        testUser._id,
-        {
-          $set: {
-            cart: [
-              {
-                item: new mongoose.Types.ObjectId(),
-                itemType: 'product',
-                quantity: 2,
-              },
-            ],
-          },
-        },
-        {
-          returnDocument: 'after',
-        },
-      );
-
-      const res = await request(app)
-        .get(`/api/users/cart/${testUser._id}`)
-        .set('Authorization', 'Bearer token');
-
-      expect(res.status).toBe(STATUES.SUCCESS);
-
-      expect(res.body.data).toHaveLength(1);
-
-      expect(res.body.data[0]).toMatchObject({
-        itemType: 'product',
-        quantity: 2,
-      });
-    });
-
-    test('should return 404 if user does not exist', async () => {
-      const id = new mongoose.Types.ObjectId();
-
-      const res = await request(app)
-        .get(`/api/users/cart/${id}`)
-        .set('Authorization', 'Bearer token');
-
-      expect(res.status).toBe(STATUES.NOT_FOUND);
-    });
-  });
-
   describe('authenticated cart and wishlist', () => {
-    const createReferencedItem = async (Model, slug) => {
+    const createReferencedItem = async (Model, slug, overrides = {}) => {
       const item = {
         _id: new mongoose.Types.ObjectId(),
         title: slug,
@@ -1122,10 +1076,30 @@ describe('User API - Integration Tests', () => {
         category: new mongoose.Types.ObjectId(),
         petType: new mongoose.Types.ObjectId(),
         breed: new mongoose.Types.ObjectId(),
+        ...overrides,
       };
       await Model.collection.insertOne(item);
       return item;
     };
+
+    test('creates the structured cart with safe checkout defaults', async () => {
+      const user = await UserModel.findById(testUser._id);
+      expect(user.cart).toMatchObject({
+        totalPrice: 0,
+        items: [],
+        discountPrice: 0,
+        userAddress: null,
+        deliveringDateToShipping: null,
+        shippingPrice: 0,
+        paymentType: 1,
+        instalmentCompany: null,
+      });
+      expect(user.cart.shippingInfo).toMatchObject({
+        name: '',
+        trackingCode: '',
+        estimateDeliveryDate: null,
+      });
+    });
 
     test.each([
       ['product', ProductModel],
@@ -1138,7 +1112,14 @@ describe('User API - Integration Tests', () => {
         .send({ itemId: referenced._id.toString(), itemType, quantity: 5 });
 
       expect(addResponse.status).toBe(STATUES.CREATED);
-      expect(addResponse.body.data).toMatchObject({ itemType, quantity: 5 });
+      expect(addResponse.body.data).toMatchObject({
+        totalPrice: 500,
+        discountPrice: 0,
+      });
+      expect(addResponse.body.data.items[0]).toMatchObject({
+        itemType,
+        quantity: 5,
+      });
 
       await request(app)
         .post('/api/cart/add')
@@ -1148,21 +1129,31 @@ describe('User API - Integration Tests', () => {
       const listResponse = await request(app)
         .get('/api/cart/all')
         .set('Authorization', 'Bearer token');
-      expect(listResponse.body.data).toHaveLength(1);
-      expect(listResponse.body.data[0]).toMatchObject({
-        itemType,
-        quantity: 7,
+      expect(listResponse.body.data.items).toHaveLength(1);
+      expect(listResponse.body.data).toMatchObject({
+        totalPrice: 1200,
+        discountPrice: 0,
       });
-      expect(listResponse.body.data[0].item.title).toBe(`${itemType}-cart`);
+      expect(listResponse.body.data.items[0]).toMatchObject({
+        itemType,
+        quantity: 12,
+      });
+      expect(listResponse.body.data.items[0].item.title).toBe(
+        `${itemType}-cart`,
+      );
 
       const deleteResponse = await request(app)
-        .delete(`/api/cart/delete/${listResponse.body.data[0]._id}`)
+        .delete(`/api/cart/delete/${listResponse.body.data.items[0]._id}`)
         .set('Authorization', 'Bearer token');
       expect(deleteResponse.status).toBe(STATUES.SUCCESS);
-      expect(deleteResponse.body.data).toHaveLength(0);
+      expect(deleteResponse.body.data).toMatchObject({
+        items: [],
+        totalPrice: 0,
+        discountPrice: 0,
+      });
     });
 
-    test.each([0, -1])('rejects cart quantity %s', async (quantity) => {
+    test.each([0, -1, 1.5])('rejects cart quantity %s', async (quantity) => {
       const response = await request(app)
         .post('/api/cart/add')
         .set('Authorization', 'Bearer token')
@@ -1172,6 +1163,97 @@ describe('User API - Integration Tests', () => {
           quantity,
         });
       expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    test('calculates mixed Product/Pet totals and discounts from current database prices', async () => {
+      const product = await createReferencedItem(
+        ProductModel,
+        'priced-product',
+        { price: 100, discountPercentage: 10 },
+      );
+      const pet = await createReferencedItem(PetModel, 'priced-pet', {
+        price: 200,
+        discountPercentage: 20,
+      });
+
+      await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({
+          itemId: product._id.toString(),
+          itemType: 'product',
+          quantity: 2,
+          totalPrice: 1,
+          discountPrice: 999999,
+        });
+      await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({ itemId: pet._id.toString(), itemType: 'pet', quantity: 3 });
+
+      const response = await request(app)
+        .get('/api/cart/all')
+        .set('Authorization', 'Bearer token');
+      expect(response.body.data.items).toHaveLength(2);
+      expect(response.body.data).toMatchObject({
+        totalPrice: 800,
+        discountPrice: 140,
+      });
+    });
+
+    test('recalculates current prices on read and empty resets only content pricing', async () => {
+      const product = await createReferencedItem(ProductModel, 'repriced', {
+        price: 100,
+        discountPercentage: 10,
+      });
+      await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({
+          itemId: product._id.toString(),
+          itemType: 'product',
+          quantity: 2,
+        });
+      await ProductModel.collection.updateOne(
+        { _id: product._id },
+        { $set: { price: 150, discountPercentage: 20 } },
+      );
+      await UserModel.updateOne(
+        { _id: testUser._id },
+        { $set: { 'cart.shippingPrice': 50 } },
+      );
+
+      const refreshed = await request(app)
+        .get('/api/cart/all')
+        .set('Authorization', 'Bearer token');
+      expect(refreshed.body.data).toMatchObject({
+        totalPrice: 300,
+        discountPrice: 60,
+        shippingPrice: 50,
+      });
+
+      const emptied = await request(app)
+        .delete('/api/cart/empty')
+        .set('Authorization', 'Bearer token');
+      expect(emptied.body.data).toMatchObject({
+        items: [],
+        totalPrice: 0,
+        discountPrice: 0,
+        shippingPrice: 50,
+      });
+      const secondEmpty = await request(app)
+        .delete('/api/cart/empty')
+        .set('Authorization', 'Bearer token');
+      expect(secondEmpty.status).toBe(STATUES.SUCCESS);
+    });
+
+    test.each([
+      ['post', '/api/cart/add'],
+      ['delete', '/api/cart/empty'],
+    ])('rejects unauthenticated %s %s requests', async (method, path) => {
+      global.__TEST_UNAUTHENTICATED__ = true;
+      const response = await request(app)[method](path).send({});
+      expect(response.status).toBe(STATUES.UN_AUTHORIZED);
     });
 
     test('rejects invalid cart type and nonexistent referenced items', async () => {
@@ -1194,7 +1276,7 @@ describe('User API - Integration Tests', () => {
       const otherUser = await createTestUser({ phoneNumber: '09111111111' });
       await UserModel.findByIdAndUpdate(otherUser._id, {
         $push: {
-          cart: {
+          'cart.items': {
             item: new mongoose.Types.ObjectId(),
             itemType: 'pet',
             quantity: 2,
@@ -1208,7 +1290,7 @@ describe('User API - Integration Tests', () => {
           .get('/api/wishlist/all')
           .set('Authorization', 'Bearer token'),
       ]);
-      expect(cartResponse.body.data).toHaveLength(0);
+      expect(cartResponse.body.data.items).toHaveLength(0);
       expect(wishlistResponse.body.data).toHaveLength(0);
     });
 

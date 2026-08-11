@@ -3,7 +3,6 @@ export const ROUTES = {
     getAll: '/users/all',
     getAllPaginate: '/users/paginate',
     getUserById: '/users/:id',
-    getUserCart: '/users/cart/:id',
     createUser: '/users',
     updateUserInfo: '/users/editInfo',
     addAddress: '/users/addresses',
@@ -135,6 +134,11 @@ export const USER_ADDRESS_LIMITS = {
 export const USER_ITEM_TYPES = {
   PRODUCT: 'product',
   PET: 'pet',
+};
+
+export const CART_PAYMENT_TYPES = {
+  DIRECT: 1,
+  INSTALLMENT: 2,
 };
 
 export const COUNTRIES_API = {

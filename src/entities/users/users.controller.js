@@ -123,8 +123,8 @@ export const getUserAddressListController = async (req, res, next) => {
 export const addCartItemController = async (req, res, next) => {
   try {
     const body = returnFormValidation(addCartItemSchema, req.body);
-    const item = await UserService.addCartItem(req.user, body);
-    setSuccessResponse(res, STATUES.CREATED, { data: item });
+    const cart = await UserService.addCartItem(req.user, body);
+    setSuccessResponse(res, STATUES.CREATED, { data: cart });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
@@ -142,11 +142,17 @@ export const deleteCartItemController = async (req, res, next) => {
 
 export const getCartItemsController = async (req, res, next) => {
   try {
-    const items = await UserService.getCartItems(req.user);
-    setSuccessResponse(res, STATUES.SUCCESS, {
-      data: items,
-      totalRecords: items.length,
-    });
+    const cart = await UserService.getCartItems(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const emptyCartController = async (req, res, next) => {
+  try {
+    const cart = await UserService.emptyCart(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
@@ -315,22 +321,6 @@ export const getUserByIdController = async (req, res, next) => {
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: user,
-    });
-  } catch (err) {
-    onCatchPromiseController(err, next);
-  }
-};
-
-// =========================================================
-// GET USER CART
-// =========================================================
-
-export const getUserCartListController = async (req, res, next) => {
-  try {
-    const cart = await UserService.getCart(req.params?.id);
-
-    setSuccessResponse(res, STATUES.SUCCESS, {
-      data: cart,
     });
   } catch (err) {
     onCatchPromiseController(err, next);

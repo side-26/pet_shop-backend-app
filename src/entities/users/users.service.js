@@ -24,7 +24,7 @@ import {
 import { formatImageFile } from '#utils/image.helpers.js';
 
 import { UserModel } from './users.model.js';
-import { formatUserFullName } from './users.helpers.js';
+import { calculateCartPrices, formatUserFullName } from './users.helpers.js';
 import { userAddressSchema } from './users.schema.js';
 
 export class UserService {
@@ -477,57 +477,85 @@ export class UserService {
       : PetService.findById(itemId);
   }
 
-  static findOwnedItem(entries, itemId, itemType) {
-    return entries.find(
-      (entry) =>
-        entry.item.toString() === itemId && entry.itemType === itemType,
+  static validateCartReferencedItem(itemId, itemType) {
+    return itemType === USER_ITEM_TYPES.PRODUCT
+      ? ProductService.findCustomerById(itemId)
+      : PetService.findCustomerById(itemId);
+  }
+
+  static async recalculateCart(userId) {
+    const user = await UserModel.findById(userId).populate({
+      path: 'cart.items.item',
+      select:
+        'title mainImage mainImageThumbnail price discountPercentage enable slug',
+    });
+    if (!user) {
+      setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
+    }
+
+    const prices = calculateCartPrices(user.cart.items);
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          'cart.totalPrice': prices.totalPrice,
+          'cart.discountPrice': prices.discountPrice,
+        },
+      },
+      { runValidators: true },
     );
+    user.cart.totalPrice = prices.totalPrice;
+    user.cart.discountPrice = prices.discountPrice;
+    return user.cart;
   }
 
   static async addCartItem(actor, { itemId, itemType, quantity }) {
     const userId = this.getAuthenticatedUserId(actor);
-    await this.validateReferencedItem(itemId, itemType);
+    await this.validateCartReferencedItem(itemId, itemType);
 
     const existingItemUpdate = await UserModel.findOneAndUpdate(
-      { _id: userId, cart: { $elemMatch: { item: itemId, itemType } } },
-      { $set: { 'cart.$.quantity': quantity } },
-      { returnDocument: 'after', runValidators: true },
-    );
-    if (existingItemUpdate) {
-      return this.findOwnedItem(existingItemUpdate.cart, itemId, itemType);
-    }
-
-    const updatedUser = await UserModel.findOneAndUpdate(
       {
         _id: userId,
-        cart: { $not: { $elemMatch: { item: itemId, itemType } } },
+        'cart.items': { $elemMatch: { item: itemId, itemType } },
       },
-      { $push: { cart: { item: itemId, itemType, quantity } } },
+      { $inc: { 'cart.items.$.quantity': quantity } },
       { returnDocument: 'after', runValidators: true },
     );
-    if (!updatedUser) {
-      const concurrentlyAddedItemUpdate = await UserModel.findOneAndUpdate(
-        { _id: userId, cart: { $elemMatch: { item: itemId, itemType } } },
-        { $set: { 'cart.$.quantity': quantity } },
+
+    if (!existingItemUpdate) {
+      const updatedUser = await UserModel.findOneAndUpdate(
+        {
+          _id: userId,
+          'cart.items': {
+            $not: { $elemMatch: { item: itemId, itemType } },
+          },
+        },
+        { $push: { 'cart.items': { item: itemId, itemType, quantity } } },
         { returnDocument: 'after', runValidators: true },
       );
-      if (!concurrentlyAddedItemUpdate) {
-        await this.findById(userId);
+      if (!updatedUser) {
+        const concurrentlyAddedItemUpdate = await UserModel.findOneAndUpdate(
+          {
+            _id: userId,
+            'cart.items': { $elemMatch: { item: itemId, itemType } },
+          },
+          { $inc: { 'cart.items.$.quantity': quantity } },
+          { returnDocument: 'after', runValidators: true },
+        );
+        if (!concurrentlyAddedItemUpdate) {
+          await this.findById(userId);
+        }
       }
-      return this.findOwnedItem(
-        concurrentlyAddedItemUpdate.cart,
-        itemId,
-        itemType,
-      );
     }
-    return updatedUser.cart.at(-1);
+
+    return this.recalculateCart(userId);
   }
 
   static async deleteCartItem(actor, cartEntryId) {
     const userId = this.getAuthenticatedUserId(actor);
     const updatedUser = await UserModel.findOneAndUpdate(
-      { _id: userId, 'cart._id': cartEntryId },
-      { $pull: { cart: { _id: cartEntryId } } },
+      { _id: userId, 'cart.items._id': cartEntryId },
+      { $pull: { 'cart.items': { _id: cartEntryId } } },
       { returnDocument: 'after', runValidators: true },
     );
     if (!updatedUser) {
@@ -536,16 +564,31 @@ export class UserService {
         code: ERROR_CODES.USER_CART_ITEM_NOT_FOUND,
       });
     }
-    return updatedUser.cart;
+    return this.recalculateCart(userId);
   }
 
   static async getCartItems(actor) {
     const userId = this.getAuthenticatedUserId(actor);
-    const user = await UserModel.findById(userId).populate('cart.item');
-    if (!user) {
+    return this.recalculateCart(userId);
+  }
+
+  static async emptyCart(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          'cart.items': [],
+          'cart.totalPrice': 0,
+          'cart.discountPrice': 0,
+        },
+      },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
       setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
     }
-    return user.cart;
+    return updatedUser.cart;
   }
 
   static async addWishlistItem(actor, { itemId, itemType }) {
@@ -800,15 +843,5 @@ export class UserService {
         error: JSON.stringify(err),
       }),
     );
-  }
-
-  // =========================================================
-  // CART
-  // =========================================================
-
-  static async getCart(userId) {
-    const user = await this.findById(userId);
-
-    return user.cart;
   }
 }
