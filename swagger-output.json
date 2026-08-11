@@ -14,9 +14,7 @@
   "paths": {
     "/users": {
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Create a new user",
         "description": "",
         "responses": {
@@ -55,9 +53,7 @@
     },
     "/users/login": {
       "post": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Login user",
         "description": "",
         "responses": {
@@ -244,9 +240,7 @@
     },
     "/users/change-password": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Change user password",
         "description": "",
         "responses": {
@@ -285,9 +279,7 @@
     },
     "/users/disable/{id}": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Disable a user",
         "description": "",
         "parameters": [
@@ -316,9 +308,7 @@
     },
     "/users/enable/{id}": {
       "put": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Enable a user",
         "description": "",
         "parameters": [
@@ -347,9 +337,7 @@
     },
     "/users/all": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get all users",
         "description": "",
         "responses": {
@@ -368,9 +356,7 @@
     },
     "/users/paginate": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get paginated users",
         "description": "",
         "parameters": [
@@ -425,9 +411,7 @@
     },
     "/users/{id}": {
       "get": {
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "summary": "Get user by ID",
         "description": "",
         "parameters": [
@@ -615,11 +599,7 @@
           "role": {
             "default": "customer",
             "type": "string",
-            "enum": [
-              "admin",
-              "customer",
-              "seller"
-            ]
+            "enum": ["admin", "customer", "seller"]
           },
           "age": {
             "anyOf": [
@@ -640,11 +620,7 @@
             "items": {}
           }
         },
-        "required": [
-          "phoneNumber",
-          "password",
-          "role"
-        ],
+        "required": ["phoneNumber", "password", "role"],
         "additionalProperties": false
       },
       "UpdateUserPersonalInfoBody": {
@@ -820,12 +796,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "password",
-          "oldPassword",
-          "repeatPassword",
-          "userId"
-        ],
+        "required": ["password", "oldPassword", "repeatPassword", "userId"],
         "additionalProperties": false
       },
       "SuccessResponse": {
@@ -840,9 +811,7 @@
           },
           "data": {}
         },
-        "required": [
-          "isSuccess"
-        ]
+        "required": ["isSuccess"]
       },
       "PaginatedResponse": {
         "type": "object",
@@ -892,9 +861,7 @@
             }
           }
         },
-        "required": [
-          "isSuccess"
-        ]
+        "required": ["isSuccess"]
       },
       "ErrorResponse": {
         "type": "object",
@@ -908,9 +875,7 @@
           },
           "data": {}
         },
-        "required": [
-          "isSuccess"
-        ]
+        "required": ["isSuccess"]
       }
     }
   }
