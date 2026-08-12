@@ -1,0 +1,2445 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Pet-shop API Documentation",
+    "description": "Pet-shop Express API reference"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api",
+      "description": "local server"
+    }
+  ],
+  "paths": {
+    "/users": {
+      "post": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Create a new user",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Login user",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "User logged in successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUserBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/refresh-token": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/users"
+        ]
+      }
+    },
+    "/users/edit-info": {
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/users"
+        ]
+      }
+    },
+    "/users/addresses": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/users"
+        ]
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/users"
+        ]
+      }
+    },
+    "/users/addresses/{addressId}": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/users"
+        ]
+      }
+    },
+    "/cart/add": {
+      "post": {
+        "tags": [
+          "/cart"
+        ],
+        "summary": "Add an item to the authenticated user's cart",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Cart updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Product or Pet not found"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCartItemBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cart/delete/{id}": {
+      "delete": {
+        "tags": [
+          "/cart"
+        ],
+        "summary": "Delete an item from the authenticated user's cart",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "pattern": {
+                  "type": "string",
+                  "example": "^[0-9a-fA-F]{24}$"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart item deleted"
+          },
+          "404": {
+            "description": "Cart item not found"
+          },
+          "422": {
+            "description": "Invalid cart item ID"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/cart/all": {
+      "get": {
+        "tags": [
+          "/cart"
+        ],
+        "summary": "Get the authenticated user's cart",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Current cart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Cart"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/cart/empty": {
+      "delete": {
+        "tags": [
+          "/cart"
+        ],
+        "summary": "Empty the authenticated user's cart",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Cart emptied"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/wishlist/add": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/wishlist"
+        ]
+      }
+    },
+    "/wishlist/delete/{id}": {
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/wishlist"
+        ]
+      }
+    },
+    "/wishlist/all": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/wishlist"
+        ]
+      }
+    },
+    "/users/change-password": {
+      "put": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Change user password",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Wrong old password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeUserPasswordBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/disable/{id}": {
+      "put": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Disable a user",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/enable/{id}": {
+      "put": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Enable a user",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/all": {
+      "get": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Get all users",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/paginate": {
+      "get": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Get paginated users",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "default": {
+                  "type": "number",
+                  "example": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "default": {
+                  "type": "number",
+                  "example": 10
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Get user by ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pet-types": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
+    "/pet-types/{id}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      },
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
+    "/pet-types/slug/{slug}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
+    "/pet-types/{id}/disable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
+    "/pet-types/{id}/enable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
+    "/categories": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      }
+    },
+    "/categories/{id}": {
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      }
+    },
+    "/categories/enable/{id}": {
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      }
+    },
+    "/categories/disable/{id}": {
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/categories"
+        ]
+      }
+    },
+    "/sub-categories": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/sub-categories"
+        ]
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/sub-categories"
+        ]
+      }
+    },
+    "/sub-categories/{id}": {
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/sub-categories"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/sub-categories"
+        ]
+      },
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/sub-categories"
+        ]
+      }
+    },
+    "/breeds/paginate": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      }
+    },
+    "/breeds": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      }
+    },
+    "/breeds/{id}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      },
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      }
+    },
+    "/breeds/{id}/enable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      }
+    },
+    "/breeds/{id}/disable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/breeds"
+        ]
+      }
+    },
+    "/pets": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MainImageCreateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/customer/{id}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/get-full-info-paginate-list": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/manage/{id}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/{id}": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MainImageUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MainImageUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/{id}/enable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/{id}/disable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/products": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      },
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MainImageCreateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/products/customer/{id}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/products/get-full-info-paginate-list": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/products/manage/{id}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/products/{id}": {
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MainImageUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      },
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MainImageUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      },
+      "delete": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/products/{id}/enable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/products/{id}/disable": {
+      "patch": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/products"
+        ]
+      }
+    },
+    "/orders": {
+      "post": {
+        "tags": [
+          "/orders"
+        ],
+        "summary": "Create an order from the authenticated user's cart",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Order created"
+          },
+          "422": {
+            "description": "Cart or payment validation error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderBody"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "/orders"
+        ],
+        "summary": "List the authenticated user's orders",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "default": {
+                  "type": "number",
+                  "example": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "maximum": {
+                  "type": "number",
+                  "example": 100
+                },
+                "default": {
+                  "type": "number",
+                  "example": 10
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/orders/all": {
+      "get": {
+        "tags": [
+          "/orders"
+        ],
+        "summary": "List all orders for Admin or Seller",
+        "description": "",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "default": {
+                  "type": "number",
+                  "example": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "maximum": {
+                  "type": "number",
+                  "example": 100
+                },
+                "default": {
+                  "type": "number",
+                  "example": 10
+                }
+              }
+            }
+          },
+          {
+            "name": "deliveryState",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "enum": {
+                  "type": "array",
+                  "example": [
+                    0,
+                    1,
+                    2,
+                    3
+                  ],
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin or Seller role required"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/orders/{id}/delivery-state": {
+      "patch": {
+        "tags": [
+          "/orders"
+        ],
+        "summary": "Update order delivery state",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery state updated"
+          },
+          "403": {
+            "description": "Admin or Seller role required"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderDeliveryStateBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/shipping-info": {
+      "patch": {
+        "tags": [
+          "/orders"
+        ],
+        "summary": "Update order shipping information",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipping information updated"
+          },
+          "403": {
+            "description": "Admin or Seller role required"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderShippingInfoBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": [
+          "/orders"
+        ],
+        "summary": "Get one of the authenticated user's orders",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/countries": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/countries"
+        ]
+      }
+    },
+    "/provinces": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/provinces"
+        ]
+      }
+    },
+    "/cities/{provinceId}": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/cities"
+        ]
+      }
+    },
+    "/reverse-geocode": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/reverse-geocode"
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "MainImageCreateBody": {
+        "type": "object",
+        "required": [
+          "mainImage"
+        ],
+        "properties": {
+          "mainImage": {
+            "type": "string",
+            "format": "binary"
+          },
+          "title": {
+            "type": "string"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "subCategory": {
+            "type": "string",
+            "nullable": true
+          },
+          "petType": {
+            "type": "string"
+          },
+          "breed": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "discountPercentage": {
+            "type": "number"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
+      "MainImageUpdateBody": {
+        "type": "object",
+        "properties": {
+          "mainImage": {
+            "type": "string",
+            "format": "binary",
+            "description": "Optional replacement image; regenerates mainImageThumbnail"
+          },
+          "title": {
+            "type": "string"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "summary": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "subCategory": {
+            "type": "string",
+            "nullable": true
+          },
+          "petType": {
+            "type": "string"
+          },
+          "breed": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "price": {
+            "type": "number"
+          },
+          "discountPercentage": {
+            "type": "number"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateUserBody": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email",
+                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
+          },
+          "isEnable": {
+            "type": "boolean"
+          },
+          "nationalCode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{10}$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              }
+            ]
+          },
+          "role": {
+            "default": "customer",
+            "type": "string",
+            "enum": [
+              "admin",
+              "customer",
+              "seller"
+            ]
+          },
+          "age": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orders": {
+            "type": "array",
+            "items": {}
+          },
+          "wishlist": {
+            "type": "array",
+            "items": {}
+          }
+        },
+        "required": [
+          "phoneNumber",
+          "password",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "LoginUserBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phoneNumber",
+          "password"
+        ],
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "UpdateUserPersonalInfoBody": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{24}$"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "nationalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 9007199254740991
+          },
+          "avatar": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddUserAddressBody": {
+        "type": "object",
+        "properties": {
+          "province": {
+            "type": "string",
+            "minLength": 2
+          },
+          "city": {
+            "type": "string",
+            "minLength": 2
+          },
+          "detailAddress": {
+            "type": "string",
+            "minLength": 5
+          },
+          "plate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "postalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "receiverIsMe": {
+            "default": false,
+            "type": "boolean"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "nationalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          }
+        },
+        "required": [
+          "province",
+          "city",
+          "detailAddress",
+          "plate",
+          "postalCode",
+          "receiverIsMe"
+        ],
+        "additionalProperties": false
+      },
+      "EditUserAddressBody": {
+        "type": "object",
+        "properties": {
+          "province": {
+            "type": "string",
+            "minLength": 2
+          },
+          "city": {
+            "type": "string",
+            "minLength": 2
+          },
+          "detailAddress": {
+            "type": "string",
+            "minLength": 5
+          },
+          "plate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "postalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "receiverIsMe": {
+            "type": "boolean"
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 2
+          },
+          "nationalCode": {
+            "type": "string",
+            "pattern": "^\\d{10}$"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangeUserPasswordBody": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "oldPassword": {
+            "type": "string",
+            "minLength": 8
+          },
+          "repeatPassword": {
+            "type": "string",
+            "minLength": 8
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "password",
+          "oldPassword",
+          "repeatPassword",
+          "userId"
+        ],
+        "additionalProperties": false
+      },
+      "AddCartItemBody": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{24}$"
+          },
+          "itemType": {
+            "type": "string",
+            "enum": [
+              "product",
+              "pet"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "itemId",
+          "itemType",
+          "quantity"
+        ],
+        "additionalProperties": false
+      },
+      "CreateOrderBody": {
+        "type": "object",
+        "properties": {
+          "paymentTrackingId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "paymentTrackingId"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateOrderDeliveryStateBody": {
+        "type": "object",
+        "properties": {
+          "deliveryState": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "deliveryState"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateOrderShippingInfoBody": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "trackingCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "estimateDeliveryDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "currentPage": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          },
+          "totalItems": {
+            "type": "integer"
+          },
+          "itemsPerPage": {
+            "type": "integer"
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          },
+          "hasPrevPage": {
+            "type": "boolean"
+          },
+          "nextPage": {
+            "type": "integer",
+            "nullable": true
+          },
+          "prevPage": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "Cart": {
+        "type": "object",
+        "properties": {
+          "totalPrice": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string"
+                },
+                "item": {
+                  "type": "object"
+                },
+                "itemType": {
+                  "type": "string",
+                  "enum": [
+                    "product",
+                    "pet"
+                  ]
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "discountPrice": {
+            "type": "number"
+          },
+          "userAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveringDateToShipping": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "shippingPrice": {
+            "type": "number"
+          },
+          "shippingInfo": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "trackingCode": {
+                "type": "string"
+              },
+              "estimateDeliveryDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          },
+          "paymentType": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "instalmentCompany": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          },
+          "trackingCode": {
+            "type": "string",
+            "pattern": "^\\d{9}$"
+          },
+          "orderNumber": {
+            "type": "string",
+            "pattern": "^\\d{9}$"
+          },
+          "deliveryState": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "paymentTrackingId": {
+            "type": "string"
+          },
+          "totalPrice": {
+            "type": "number"
+          },
+          "discountPrice": {
+            "type": "number"
+          },
+          "shippingPrice": {
+            "type": "number"
+          },
+          "paymentType": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "userAddress": {
+            "type": "object"
+          },
+          "shippingInfo": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {}
+        },
+        "required": [
+          "isSuccess"
+        ]
+      },
+      "PaginatedResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "array",
+            "items": {}
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": [
+          "isSuccess"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {}
+        },
+        "required": [
+          "isSuccess"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "/breeds",
+      "description": "Endpoints under /api/breeds"
+    },
+    {
+      "name": "/cart",
+      "description": "Endpoints under /api/cart"
+    },
+    {
+      "name": "/categories",
+      "description": "Endpoints under /api/categories"
+    },
+    {
+      "name": "/cities",
+      "description": "Endpoints under /api/cities"
+    },
+    {
+      "name": "/countries",
+      "description": "Endpoints under /api/countries"
+    },
+    {
+      "name": "/orders",
+      "description": "Endpoints under /api/orders"
+    },
+    {
+      "name": "/pet-types",
+      "description": "Endpoints under /api/pet-types"
+    },
+    {
+      "name": "/pets",
+      "description": "Endpoints under /api/pets"
+    },
+    {
+      "name": "/products",
+      "description": "Endpoints under /api/products"
+    },
+    {
+      "name": "/provinces",
+      "description": "Endpoints under /api/provinces"
+    },
+    {
+      "name": "/reverse-geocode",
+      "description": "Endpoints under /api/reverse-geocode"
+    },
+    {
+      "name": "/sub-categories",
+      "description": "Endpoints under /api/sub-categories"
+    },
+    {
+      "name": "/users",
+      "description": "Endpoints under /api/users"
+    },
+    {
+      "name": "/wishlist",
+      "description": "Endpoints under /api/wishlist"
+    }
+  ]
+}

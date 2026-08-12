@@ -27,3 +27,11 @@ export const rateLimiterMiddleware = createRateLimiter();
 
 // Helmet's maintained defaults protect this JSON API without a browser-only CSP.
 export const securityHeadersMiddleware = helmet();
+
+export const scalarContentSecurityPolicy = (_req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self'",
+  );
+  next();
+};

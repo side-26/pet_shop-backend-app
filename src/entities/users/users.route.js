@@ -91,10 +91,57 @@ router.patch(
 );
 router.get('/users/addresses', authenticated, getUserAddressListController);
 
-router.post('/cart/add', authenticated, addCartItemController);
-router.delete('/cart/delete/:id', authenticated, deleteCartItemController);
-router.get('/cart/all', authenticated, getCartItemsController);
-router.delete('/cart/empty', authenticated, emptyCartController);
+router.post(
+  '/cart/add',
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = "Add an item to the authenticated user's cart"
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/AddCartItemBody' } } } }
+    #swagger.responses[201] = { description: 'Cart updated', content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } } }
+    #swagger.responses[401] = { description: 'Authentication required' }
+    #swagger.responses[404] = { description: 'Product or Pet not found' }
+    #swagger.responses[422] = { description: 'Validation error' }
+  */
+  addCartItemController,
+);
+router.delete(
+  '/cart/delete/:id',
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = "Delete an item from the authenticated user's cart"
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' } }
+    #swagger.responses[200] = { description: 'Cart item deleted' }
+    #swagger.responses[404] = { description: 'Cart item not found' }
+    #swagger.responses[422] = { description: 'Invalid cart item ID' }
+  */
+  deleteCartItemController,
+);
+router.get(
+  '/cart/all',
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = "Get the authenticated user's cart"
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.responses[200] = { description: 'Current cart', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { $ref: '#/components/schemas/Cart' } } } } } }
+  */
+  getCartItemsController,
+);
+router.delete(
+  '/cart/empty',
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = "Empty the authenticated user's cart"
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.responses[200] = { description: 'Cart emptied' }
+  */
+  emptyCartController,
+);
 
 router.post('/wishlist/add', authenticated, addWishlistItemController);
 router.delete(

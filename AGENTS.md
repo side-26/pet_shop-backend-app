@@ -12,7 +12,7 @@ This is an ES-module Express 5 and Mongoose backend. The normal HTTP flow is:
 - [`src/entities/AGENTS.md`](./src/entities/AGENTS.md) — business-domain modules and their required layers.
 - [`src/integrations/AGENTS.md`](./src/integrations/AGENTS.md) — external and reference-data adapters.
 - [`src/middlewares/AGENTS.md`](./src/middlewares/AGENTS.md) — cross-cutting HTTP middleware.
-- [`src/configs/AGENTS.md`](./src/configs/AGENTS.md) — environment, infrastructure, constants, validation messages, and Swagger configuration.
+- [`src/configs/AGENTS.md`](./src/configs/AGENTS.md) — environment, infrastructure, constants, validation messages, and OpenAPI configuration.
 - [`src/services/AGENTS.md`](./src/services/AGENTS.md) — cross-domain application services.
 - [`src/utils/AGENTS.md`](./src/utils/AGENTS.md) — shared response, pagination, token, path, and image helpers.
 
@@ -41,3 +41,7 @@ When adding or changing a Zod schema, inspect `src/configs/zod.config.js`. Add a
 In every new or modified source file, group imports in this order: external packages, internal application imports, then relative imports. Separate each non-empty group with one blank line.
 
 Never call Zod schema builders through `z.<functionName>`. Destructure the required builders from `z` first, then use the destructured functions in schemas.
+
+## API documentation
+
+OpenAPI is the API contract and Scalar at `/docs` is the interactive reference. When routes, authentication, authorization, validation, schemas, pagination, responses, or HTTP statuses change, update the colocated OpenAPI annotations/components, run `npm run openapi`, and verify both `/openapi.json` and `/docs`. Do not add Swagger UI.

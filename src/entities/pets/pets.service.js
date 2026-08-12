@@ -1,6 +1,7 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
@@ -74,15 +75,26 @@ export class PetService {
     }
   }
 
-  static async create(data, userId) {
+  static async create(data, userId, imageFile) {
     await Promise.all([
       this.validateRelations(data.petType, data.breed),
       this.ensureUniqueSlug(data.slug),
     ]);
-    return PetModel.create({ ...data, createdBy: userId });
+    const uploadedImage = await MainImageService.upload(imageFile, 'pets/main');
+    try {
+      return await PetModel.create({
+        ...data,
+        mainImage: uploadedImage.mainImage,
+        mainImageThumbnail: uploadedImage.mainImageThumbnail,
+        createdBy: userId,
+      });
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage.key, { userId });
+      throw error;
+    }
   }
 
-  static async update(id, data, userId) {
+  static async update(id, data, userId, imageFile) {
     const currentPet = await this.findById(id);
     const petTypeId = data.petType || currentPet.petType;
     const breedId = data.breed || currentPet.breed;
@@ -90,22 +102,46 @@ export class PetService {
     if (data.slug) validations.push(this.ensureUniqueSlug(data.slug, id));
     await Promise.all(validations);
 
-    const pet = await PetModel.findByIdAndUpdate(
-      id,
-      { $set: { ...data, updatedBy: userId } },
-      { returnDocument: 'after', runValidators: true },
-    );
+    const uploadedImage = imageFile
+      ? await MainImageService.upload(imageFile, 'pets/main')
+      : null;
+    const imageData = uploadedImage
+      ? {
+          mainImage: uploadedImage.mainImage,
+          mainImageThumbnail: uploadedImage.mainImageThumbnail,
+        }
+      : {};
+
+    let pet;
+    try {
+      pet = await PetModel.findByIdAndUpdate(
+        id,
+        { $set: { ...data, ...imageData, updatedBy: userId } },
+        { returnDocument: 'after', runValidators: true },
+      );
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
+      throw error;
+    }
     if (!pet) {
+      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'حیوان یافت نشد',
         code: ERROR_CODES.PET_NOT_FOUND,
       });
     }
+    if (uploadedImage) {
+      const previousKey = MainImageService.getStoredKey(currentPet.mainImage, {
+        id,
+        userId,
+      });
+      await MainImageService.cleanup(previousKey, { id, userId });
+    }
     return pet;
   }
 
-  static edit(id, data, userId) {
-    return this.update(id, data, userId);
+  static edit(id, data, userId, imageFile) {
+    return this.update(id, data, userId, imageFile);
   }
 
   static async setEnableStatus(id, enable, userId) {

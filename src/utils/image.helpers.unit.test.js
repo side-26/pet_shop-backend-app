@@ -61,13 +61,19 @@ describe('image helpers', () => {
   test('never returns a blurred WebP thumbnail larger than the 10 KB maximum', async () => {
     const input = await createImage(1600, 1200);
     const thumbnail = await createBlurThumbnail(input);
-    const metadata = await sharp(thumbnail).metadata();
+    const [, base64] = thumbnail.split(',');
+    const thumbnailBuffer = Buffer.from(base64, 'base64');
+    const metadata = await sharp(thumbnailBuffer).metadata();
 
-    expect(thumbnail.length).toBeLessThanOrEqual(
+    expect(thumbnail).toMatch(/^data:image\/webp;base64,/);
+    expect(Buffer.byteLength(thumbnail)).toBeLessThan(
+      IMAGE_PROCESSING.MAX_THUMBNAIL_SIZE_BYTES,
+    );
+    expect(thumbnailBuffer.length).toBeLessThan(
       IMAGE_PROCESSING.MAX_THUMBNAIL_SIZE_BYTES,
     );
     expect(metadata.format).toBe('webp');
-    expect(metadata.width).toBeLessThanOrEqual(160);
+    expect(metadata.width).toBeLessThanOrEqual(20);
     expect(metadata.height).toBeGreaterThan(0);
   });
 });

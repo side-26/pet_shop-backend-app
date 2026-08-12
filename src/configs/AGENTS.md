@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This folder centralizes runtime environment access, MongoDB and object-storage clients, logging, upload limits, shared domain constants, Persian Zod errors, and Swagger generation.
+This folder centralizes runtime environment access, MongoDB and object-storage clients, logging, upload limits, shared domain constants, Persian Zod errors, and OpenAPI generation/loading.
 
 ## Important Files
 
@@ -12,7 +12,8 @@ This folder centralizes runtime environment access, MongoDB and object-storage c
 - `zod.config.js` — maps Zod issues and schema field names to Persian messages.
 - `arvanCloud.config.js` and `upload.config.js` — configure S3-compatible storage and in-memory image uploads.
 - `logger.js` — shared structured logger used by startup, middleware, and services.
-- `swagger.config.js` and `swagger-schemas.js` — generate OpenAPI output from routes and Zod-backed schemas.
+- `openapi.generate.js` and `openapi-schemas.js` — generate the OpenAPI 3.0 contract from colocated route annotations and Zod-backed schemas.
+- `openapi.config.js` and `openapi.json` — load and store the single contract served to machines and Scalar.
 
 ## Dependencies
 
@@ -23,7 +24,8 @@ All source layers depend on values from this folder; configuration files should 
 - Add stable shared vocabulary to `constants.js` instead of duplicating literals.
 - Access required secrets through `env.config.js` helpers.
 - For every added or changed Zod field or issue code, update `zod.config.js` and its unit tests when coverage changes.
-- Regenerate Swagger output when public API documentation changes.
+- Run `npm run openapi` whenever a route, validation schema, authentication/authorization rule, response, pagination contract, or HTTP status changes.
+- OpenAPI is the contract and Scalar is the UI; never add Swagger UI middleware or dependencies.
 
 ## Summary
 

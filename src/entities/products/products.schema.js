@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PRODUCT_LIMITS } from '#configs/constants.js';
+import { IMAGE_PROCESSING, PRODUCT_LIMITS } from '#configs/constants.js';
 import '#configs/zod.config.js';
 
 const {
@@ -8,8 +8,8 @@ const {
   boolean,
   coerce,
   enum: enumValue,
-  number,
   object,
+  preprocess,
   string,
   url,
 } = z;
@@ -17,11 +17,19 @@ const {
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
 const titleSchema = string().trim().min(2).max(150);
 const imageSchema = url().max(2048);
+const thumbnailSchema = string()
+  .max(IMAGE_PROCESSING.MAX_THUMBNAIL_SIZE_BYTES - 1)
+  .regex(/^data:image\/webp;base64,[A-Za-z0-9+/]+={0,2}$/);
+const imageListSchema = preprocess(
+  (value) => (typeof value === 'string' ? [value] : value),
+  array(imageSchema).max(PRODUCT_LIMITS.MAX_IMAGES),
+);
 const summarySchema = string().trim().max(500).optional();
 const descriptionSchema = string().trim().min(1).max(5000);
-const quantitySchema = number().int().min(0);
-const priceSchema = number().min(0);
-const discountPercentageSchema = number()
+const quantitySchema = coerce.number().int().min(0);
+const priceSchema = coerce.number().min(0);
+const discountPercentageSchema = coerce
+  .number()
   .min(PRODUCT_LIMITS.MIN_DISCOUNT_PERCENTAGE)
   .max(PRODUCT_LIMITS.MAX_DISCOUNT_PERCENTAGE);
 const slugSchema = string()
@@ -29,12 +37,16 @@ const slugSchema = string()
   .min(2)
   .max(160)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const booleanSchema = preprocess(
+  (value) => (value === 'true' ? true : value === 'false' ? false : value),
+  boolean(),
+);
 
 const productFields = {
   title: titleSchema,
   mainImage: imageSchema,
-  images: array(imageSchema).max(PRODUCT_LIMITS.MAX_IMAGES),
-  mainImageThumbnail: imageSchema,
+  images: imageListSchema,
+  mainImageThumbnail: thumbnailSchema,
   summary: summarySchema,
   description: descriptionSchema,
   category: objectIdSchema,
@@ -42,11 +54,11 @@ const productFields = {
   quantity: quantitySchema,
   price: priceSchema,
   discountPercentage: discountPercentageSchema,
-  enable: boolean(),
+  enable: booleanSchema,
   slug: slugSchema,
 };
 
-export const createProductZodSchema = object({
+export const productPersistedZodSchema = object({
   ...productFields,
   images: productFields.images.optional().default([]),
   subCategory: productFields.subCategory.optional(),
@@ -55,8 +67,20 @@ export const createProductZodSchema = object({
   discountPercentage: discountPercentageSchema.optional().default(0),
 });
 
-export const updateProductZodSchema = object(productFields).partial();
-export const productModelUpdateZodSchema = updateProductZodSchema;
+const productRequestFields = { ...productFields };
+delete productRequestFields.mainImage;
+delete productRequestFields.mainImageThumbnail;
+
+export const createProductZodSchema = object({
+  ...productRequestFields,
+  images: productRequestFields.images.optional().default([]),
+  subCategory: productRequestFields.subCategory.optional(),
+  quantity: quantitySchema.optional().default(0),
+  price: priceSchema.optional().default(0),
+  discountPercentage: discountPercentageSchema.optional().default(0),
+});
+export const updateProductZodSchema = object(productRequestFields).partial();
+export const productModelUpdateZodSchema = object(productFields).partial();
 export const productIdSchema = object({ id: objectIdSchema });
 
 export const productQuerySchema = object({

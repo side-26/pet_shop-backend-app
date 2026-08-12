@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { PRODUCT_LIMITS } from '#configs/constants.js';
 
 import {
-  createProductZodSchema,
+  productPersistedZodSchema,
   productModelUpdateZodSchema,
 } from './products.schema.js';
 
@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 2048,
+      maxlength: PRODUCT_LIMITS.MAX_THUMBNAIL_LENGTH,
     },
     summary: { type: String, trim: true, maxlength: 500, default: undefined },
     description: { type: String, required: true, trim: true, maxlength: 5000 },
@@ -80,7 +80,7 @@ const validateProductData = (schema, data, message) => {
 
 productSchema.pre('save', function () {
   validateProductData(
-    createProductZodSchema,
+    productPersistedZodSchema,
     {
       title: this.title,
       mainImage: this.mainImage,

@@ -11,7 +11,18 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
   },
 }));
 
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    createObjectKey: jest.fn(() => 'products/main/generated.webp'),
+    uploadObject: jest.fn(async ({ key }) => key),
+    buildPublicUrl: jest.fn((key) => `https://cdn.example.com/${key}`),
+    deleteObject: jest.fn(async () => undefined),
+    getObjectKeyFromUrl: jest.fn(() => 'products/main/previous.webp'),
+  },
+}));
+
 import express from 'express';
+import sharp from 'sharp';
 import request from 'supertest';
 
 import { ROLES, STATUES } from '#configs/constants.js';
@@ -27,7 +38,7 @@ const baseProductData = {
   title: 'Premium cat food',
   mainImage: 'https://cdn.example.com/products/main.webp',
   images: ['https://cdn.example.com/products/one.webp'],
-  mainImageThumbnail: 'https://cdn.example.com/products/thumb.webp',
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
   summary: 'Healthy daily food',
   description: 'Complete dry food for adult cats.',
   quantity: 12,
@@ -44,13 +55,44 @@ describe('Product API', () => {
   let subCategory;
   let otherSubCategory;
   let productData;
+  let imageBuffer;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     app = express();
     app.use(express.json());
     app.use('/api', productRoutes);
     app.use(errorHandler);
+    imageBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 80,
+        channels: 3,
+        background: '#336699',
+      },
+    })
+      .png()
+      .toBuffer();
   });
+
+  const multipartProduct = (requestBuilder, values) => {
+    let form = requestBuilder;
+    for (const [field, value] of Object.entries(values)) {
+      if (
+        value === undefined ||
+        field === 'mainImage' ||
+        field === 'mainImageThumbnail'
+      ) {
+        continue;
+      }
+      for (const item of Array.isArray(value) ? value : [value]) {
+        form = form.field(field, String(item));
+      }
+    }
+    return form.attach('mainImage', imageBuffer, {
+      filename: 'product.png',
+      contentType: 'image/png',
+    });
+  };
 
   beforeEach(async () => {
     await Promise.all([
@@ -76,14 +118,15 @@ describe('Product API', () => {
   });
 
   test('creates products with and without a subCategory and applies defaults', async () => {
-    const withSubCategory = await request(app)
-      .post('/api/products')
-      .send({
+    const withSubCategory = await multipartProduct(
+      request(app).post('/api/products'),
+      {
         ...productData,
         quantity: undefined,
         price: undefined,
         discountPercentage: undefined,
-      });
+      },
+    );
     expect(withSubCategory.status).toBe(STATUES.CREATED);
     expect(withSubCategory.body.data).toMatchObject({
       quantity: 0,
@@ -91,16 +134,26 @@ describe('Product API', () => {
       discountPercentage: 0,
     });
 
-    const withoutSubCategory = await request(app)
-      .post('/api/products')
-      .send({
+    const withoutSubCategory = await multipartProduct(
+      request(app).post('/api/products'),
+      {
         ...productData,
         title: 'Simple cat food',
         slug: 'simple-cat-food',
         subCategory: undefined,
-      });
+      },
+    );
     expect(withoutSubCategory.status).toBe(STATUES.CREATED);
     expect(withoutSubCategory.body.data.subCategory).toBeNull();
+    expect(withSubCategory.body.data.mainImage).toMatch(
+      /^https:\/\/cdn\.example\.com\//,
+    );
+    expect(withSubCategory.body.data.mainImageThumbnail).toMatch(
+      /^data:image\/webp;base64,/,
+    );
+    expect(
+      Buffer.byteLength(withSubCategory.body.data.mainImageThumbnail),
+    ).toBeLessThan(10 * 1024);
   });
 
   test('rejects required-field and percentage validation failures', async () => {
@@ -142,14 +195,28 @@ describe('Product API', () => {
     const product = await ProductModel.create(productData);
     const seller = { 'x-test-role': ROLES.SELLER };
 
-    expect(
-      (
-        await request(app)
-          .put(`/api/products/${product._id}`)
-          .set(seller)
-          .send({ title: 'Updated food' })
-      ).status,
-    ).toBe(STATUES.SUCCESS);
+    const updated = await request(app)
+      .put(`/api/products/${product._id}`)
+      .set(seller)
+      .send({ title: 'Updated food' });
+    expect(updated.status).toBe(STATUES.SUCCESS);
+    expect(updated.body.data.mainImageThumbnail).toBe(
+      productData.mainImageThumbnail,
+    );
+    const imageUpdated = await request(app)
+      .patch(`/api/products/${product._id}`)
+      .set(seller)
+      .attach('mainImage', imageBuffer, {
+        filename: 'replacement.png',
+        contentType: 'image/png',
+      });
+    expect(imageUpdated.status).toBe(STATUES.SUCCESS);
+    expect(imageUpdated.body.data.mainImageThumbnail).toMatch(
+      /^data:image\/webp;base64,/,
+    );
+    expect(imageUpdated.body.data.mainImageThumbnail).not.toBe(
+      productData.mainImageThumbnail,
+    );
     const edited = await request(app)
       .patch(`/api/products/${product._id}`)
       .set(seller)

@@ -120,5 +120,3 @@ export const userUpdatePersonalInfoSchema = object({
   age: coerce.number().int().min(4).optional(),
   avatar: string().optional(),
 });
-
-export const userSwaggerSchema = () => {};

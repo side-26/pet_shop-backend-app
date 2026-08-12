@@ -11,7 +11,18 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
   },
 }));
 
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    createObjectKey: jest.fn(() => 'pets/main/generated.webp'),
+    uploadObject: jest.fn(async ({ key }) => key),
+    buildPublicUrl: jest.fn((key) => `https://cdn.example.com/${key}`),
+    deleteObject: jest.fn(async () => undefined),
+    getObjectKeyFromUrl: jest.fn(() => 'pets/main/previous.webp'),
+  },
+}));
+
 import express from 'express';
+import sharp from 'sharp';
 import request from 'supertest';
 
 import { ERROR_CODES, ROLES, STATUES } from '#configs/constants.js';
@@ -26,7 +37,7 @@ const basePetData = {
   title: 'Persian kitten',
   mainImage: 'https://cdn.example.com/pets/main.webp',
   images: ['https://cdn.example.com/pets/one.webp'],
-  mainImageThumbnail: 'https://cdn.example.com/pets/thumb.webp',
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
   summary: 'A friendly kitten',
   description: 'A healthy and friendly Persian kitten.',
   quantity: 2,
@@ -43,13 +54,44 @@ describe('Pet API', () => {
   let catBreed;
   let dogBreed;
   let petData;
+  let imageBuffer;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     app = express();
     app.use(express.json());
     app.use('/api', petRoutes);
     app.use(errorHandler);
+    imageBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 80,
+        channels: 3,
+        background: '#996633',
+      },
+    })
+      .png()
+      .toBuffer();
   });
+
+  const multipartPet = (requestBuilder, values) => {
+    let form = requestBuilder;
+    for (const [field, value] of Object.entries(values)) {
+      if (
+        value === undefined ||
+        field === 'mainImage' ||
+        field === 'mainImageThumbnail'
+      ) {
+        continue;
+      }
+      for (const item of Array.isArray(value) ? value : [value]) {
+        form = form.field(field, String(item));
+      }
+    }
+    return form.attach('mainImage', imageBuffer, {
+      filename: 'pet.png',
+      contentType: 'image/png',
+    });
+  };
 
   beforeEach(async () => {
     await Promise.all([
@@ -89,14 +131,12 @@ describe('Pet API', () => {
   });
 
   test('creates a valid pet and applies numeric defaults', async () => {
-    const response = await request(app)
-      .post('/api/pets')
-      .send({
-        ...petData,
-        quantity: undefined,
-        price: undefined,
-        discountPercentage: undefined,
-      });
+    const response = await multipartPet(request(app).post('/api/pets'), {
+      ...petData,
+      quantity: undefined,
+      price: undefined,
+      discountPercentage: undefined,
+    });
 
     expect(response.status).toBe(STATUES.CREATED);
     expect(response.body.data).toMatchObject({
@@ -105,7 +145,9 @@ describe('Pet API', () => {
       discountPercentage: 0,
     });
     const saved = await PetModel.findById(response.body.data.id);
-    expect(saved.mainImage).toBe(basePetData.mainImage);
+    expect(saved.mainImage).toMatch(/^https:\/\/cdn\.example\.com\//);
+    expect(saved.mainImageThumbnail).toMatch(/^data:image\/webp;base64,/);
+    expect(Buffer.byteLength(saved.mainImageThumbnail)).toBeLessThan(10 * 1024);
   });
 
   test('rejects missing required fields and invalid percentages', async () => {
@@ -148,6 +190,24 @@ describe('Pet API', () => {
       .set(seller)
       .send({ title: 'Updated kitten' });
     expect(updated.status).toBe(STATUES.SUCCESS);
+    expect(updated.body.data.mainImageThumbnail).toBe(
+      petData.mainImageThumbnail,
+    );
+
+    const imageUpdated = await request(app)
+      .patch(`/api/pets/${pet._id}`)
+      .set(seller)
+      .attach('mainImage', imageBuffer, {
+        filename: 'replacement.png',
+        contentType: 'image/png',
+      });
+    expect(imageUpdated.status).toBe(STATUES.SUCCESS);
+    expect(imageUpdated.body.data.mainImageThumbnail).toMatch(
+      /^data:image\/webp;base64,/,
+    );
+    expect(imageUpdated.body.data.mainImageThumbnail).not.toBe(
+      petData.mainImageThumbnail,
+    );
 
     const edited = await request(app)
       .patch(`/api/pets/${pet._id}`)

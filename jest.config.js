@@ -3,6 +3,7 @@ export default {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
+  transformIgnorePatterns: ['/node_modules/(?!@scalar/)'],
   testEnvironment: 'node',
   testMatch: [
     '**/src/entities/**/*.integration.test.js',

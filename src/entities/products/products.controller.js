@@ -20,7 +20,12 @@ const updateProduct = async (req, res, next, method) => {
   try {
     const { id } = returnFormValidation(productIdSchema, req.params);
     const body = returnFormValidation(updateProductZodSchema, req.body);
-    const product = await ProductService[method](id, body, getUserId(req.user));
+    const product = await ProductService[method](
+      id,
+      body,
+      getUserId(req.user),
+      req.file,
+    );
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: ProductService.formatManagement(product),
       message: 'اطلاعات محصول با موفقیت ویرایش شد',
@@ -33,7 +38,11 @@ const updateProduct = async (req, res, next, method) => {
 export const createProductController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createProductZodSchema, req.body);
-    const product = await ProductService.create(body, getUserId(req.user));
+    const product = await ProductService.create(
+      body,
+      getUserId(req.user),
+      req.file,
+    );
     setSuccessResponse(res, STATUES.CREATED, {
       data: ProductService.formatManagement(product),
       message: 'محصول با موفقیت ایجاد شد',

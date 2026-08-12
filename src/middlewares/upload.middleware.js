@@ -34,6 +34,10 @@ export const uploadAvatar = handleUpload(
   imageUpload.single(IMAGE_UPLOAD.AVATAR_FIELD),
 );
 
+export const uploadMainImage = handleUpload(
+  imageUpload.single(IMAGE_UPLOAD.MAIN_IMAGE_FIELD),
+);
+
 export const uploadPetImages = handleUpload(
   imageUpload.array(IMAGE_UPLOAD.PET_IMAGES_FIELD, IMAGE_UPLOAD.MAX_PET_IMAGES),
 );

@@ -26,9 +26,18 @@ jest.mock('./pets.model.js', () => ({
   },
 }));
 
+jest.mock('#services/mainImage.service.js', () => ({
+  MainImageService: {
+    upload: jest.fn(),
+    cleanup: jest.fn(),
+    getStoredKey: jest.fn(),
+  },
+}));
+
 import { getPaginationData } from '#utils/helpers.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
 
 import { PetModel } from './pets.model.js';
 import { PetService } from './pets.service.js';
@@ -55,7 +64,7 @@ const data = {
   title: 'Persian kitten',
   mainImage: 'https://cdn.example.com/main.webp',
   images: ['https://cdn.example.com/one.webp'],
-  mainImageThumbnail: 'https://cdn.example.com/thumb.webp',
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
   description: 'Friendly kitten',
   petType: petTypeId,
   breed: breedId,
@@ -73,6 +82,11 @@ describe('PetService', () => {
     PetTypeModel.findById.mockResolvedValue(petType);
     BreedModel.findById.mockResolvedValue(breed);
     PetModel.populate.mockImplementation(async (value) => value);
+    MainImageService.upload.mockResolvedValue({
+      key: 'pets/main/new.webp',
+      mainImage: data.mainImage,
+      mainImageThumbnail: data.mainImageThumbnail,
+    });
   });
 
   test('escapeRegex and findOne build safe lookups', async () => {
@@ -122,7 +136,9 @@ describe('PetService', () => {
   test('create validates relations and saves the pet', async () => {
     PetModel.findOne.mockResolvedValue(null);
     PetModel.create.mockResolvedValue(pet);
-    await expect(PetService.create(data, userId)).resolves.toBe(pet);
+    await expect(
+      PetService.create(data, userId, { buffer: Buffer.from('image') }),
+    ).resolves.toBe(pet);
     expect(PetModel.create).toHaveBeenCalledWith({
       ...data,
       createdBy: userId,
@@ -143,7 +159,12 @@ describe('PetService', () => {
 
     jest.spyOn(PetService, 'update').mockResolvedValue(pet);
     await PetService.edit(id, { price: 1 }, userId);
-    expect(PetService.update).toHaveBeenCalledWith(id, { price: 1 }, userId);
+    expect(PetService.update).toHaveBeenCalledWith(
+      id,
+      { price: 1 },
+      userId,
+      undefined,
+    );
   });
 
   test('setEnableStatus, enable, and disable update visibility', async () => {

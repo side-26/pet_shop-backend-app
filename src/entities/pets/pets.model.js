@@ -2,7 +2,10 @@ import mongoose from 'mongoose';
 
 import { PET_LIMITS } from '#configs/constants.js';
 
-import { createPetZodSchema, petModelUpdateZodSchema } from './pets.schema.js';
+import {
+  petModelUpdateZodSchema,
+  petPersistedZodSchema,
+} from './pets.schema.js';
 
 const petSchema = new mongoose.Schema(
   {
@@ -20,7 +23,7 @@ const petSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 2048,
+      maxlength: PET_LIMITS.MAX_THUMBNAIL_LENGTH,
     },
     summary: { type: String, trim: true, maxlength: 500, default: undefined },
     description: { type: String, required: true, trim: true, maxlength: 5000 },
@@ -77,7 +80,7 @@ const validatePetData = (schema, data, message) => {
 
 petSchema.pre('save', function () {
   validatePetData(
-    createPetZodSchema,
+    petPersistedZodSchema,
     {
       title: this.title,
       mainImage: this.mainImage,

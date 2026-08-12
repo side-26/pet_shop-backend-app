@@ -14,6 +14,10 @@ Builds the Express application, applies global security, header, logging, parsin
 
 Connects MongoDB, starts the HTTP server, and handles shutdown signals and unhandled process errors.
 
+### API documentation
+
+`app.js` serves the generated OpenAPI contract at `/openapi.json` and Scalar at `/docs`. The generator and reusable components live under `configs`.
+
 ## Flow
 
 `server.js -> database connection -> app.js -> middleware -> entity/integration route -> controller -> service -> model/client -> error middleware`
@@ -31,6 +35,7 @@ Connects MongoDB, starts the HTTP server, and handles shutdown signals and unhan
 ## Modification Rules
 
 - Mount new routers in `app.js` under `/api` and preserve error middleware ordering.
+- Treat OpenAPI impact as part of every public HTTP contract change and verify Scalar rendering.
 - Keep process startup and shutdown behavior in `server.js`, not in domain modules.
 - Use the `#configs`, `#entities`, `#middlewares`, `#services`, and `#utils` import aliases configured in `package.json` and Jest mappings.
 

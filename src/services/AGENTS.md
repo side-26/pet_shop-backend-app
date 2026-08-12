@@ -14,9 +14,13 @@ Uploads, replaces, and deletes images in Arvan's S3-compatible object storage. I
 
 Mocks the S3 client and verifies storage success and failure behavior without network access.
 
+### `mainImage.service.js`
+
+Processes Product and Pet main-image buffers, uploads the full WebP image, returns a matching Base64 blur placeholder, and provides rollback/replacement cleanup helpers.
+
 ## Dependencies
 
-The users service currently uses object storage for profile images; image transformation is provided by `src/utils/image.helpers.js`.
+The users, products, and pets services use object storage; image transformation is provided by `src/utils/image.helpers.js`.
 
 ## Modification Rules
 

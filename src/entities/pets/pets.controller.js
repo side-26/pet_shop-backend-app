@@ -23,7 +23,12 @@ const updatePet = async (req, res, next, method) => {
   try {
     const { id } = returnFormValidation(petIdSchema, req.params);
     const body = returnFormValidation(updatePetZodSchema, req.body);
-    const pet = await PetService[method](id, body, getUserId(req.user));
+    const pet = await PetService[method](
+      id,
+      body,
+      getUserId(req.user),
+      req.file,
+    );
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: PetService.formatManagement(pet),
       message: 'اطلاعات حیوان با موفقیت ویرایش شد',
@@ -36,7 +41,7 @@ const updatePet = async (req, res, next, method) => {
 export const createPetController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createPetZodSchema, req.body);
-    const pet = await PetService.create(body, getUserId(req.user));
+    const pet = await PetService.create(body, getUserId(req.user), req.file);
     setSuccessResponse(res, STATUES.CREATED, {
       data: PetService.formatManagement(pet),
       message: 'حیوان با موفقیت ایجاد شد',

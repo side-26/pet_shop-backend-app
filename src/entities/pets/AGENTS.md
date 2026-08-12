@@ -7,7 +7,7 @@ Owns the pet catalog and its separate customer-facing and management-facing view
 ## Important Files
 
 - `pets.model.js` — pet persistence, limits, Zod-backed hooks, filters, and text indexes.
-- `pets.service.js` — pet-type/breed validation, CRUD, enable/disable, search, pagination, and view formatting.
+- `pets.service.js` — pet-type/breed validation, CRUD, main-image upload and replacement, enable/disable, search, pagination, and view formatting.
 - `pets.schema.js` — create, partial update, id, and query validation.
 - `pets.controller.js`, `pets.route.js`, and `pets.helpers.js` — route orchestration and customer/management filters and projections.
 - Colocated tests cover public and management behavior.
@@ -20,7 +20,8 @@ References `PetTypeModel` and `BreedModel`; routes use authentication, role chec
 
 - Keep customer responses restricted to customer-safe formatting and enabled records.
 - Validate pet type and breed relationships in the service.
-- Persist uploaded image fields as complete public URLs.
+- Persist full uploaded images as complete public URLs.
+- Accept the main image as a multipart upload and generate `mainImageThumbnail` server-side as a WebP Base64 Data URL.
 
 ## Summary
 

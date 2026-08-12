@@ -3,6 +3,7 @@ import express from 'express';
 import { ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
+import { uploadMainImage } from '#middlewares/upload.middleware.js';
 
 import {
   createProductController,
@@ -36,20 +37,29 @@ router.get(
 );
 router.post(
   '/products',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageCreateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
+  uploadMainImage,
   createProductController,
 );
 router.put(
   '/products/:id',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
+  uploadMainImage,
   updateProductController,
 );
 router.patch(
   '/products/:id',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
+  uploadMainImage,
   editProductController,
 );
 router.patch(

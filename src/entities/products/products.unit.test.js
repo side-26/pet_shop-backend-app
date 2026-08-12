@@ -26,9 +26,18 @@ jest.mock('./products.model.js', () => ({
   },
 }));
 
+jest.mock('#services/mainImage.service.js', () => ({
+  MainImageService: {
+    upload: jest.fn(),
+    cleanup: jest.fn(),
+    getStoredKey: jest.fn(),
+  },
+}));
+
 import { getPaginationData } from '#utils/helpers.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
 
 import { ProductModel } from './products.model.js';
 import { ProductService } from './products.service.js';
@@ -51,7 +60,7 @@ const data = {
   title: 'Premium cat food',
   mainImage: 'https://cdn.example.com/main.webp',
   images: ['https://cdn.example.com/one.webp'],
-  mainImageThumbnail: 'https://cdn.example.com/thumb.webp',
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
   description: 'Complete food',
   category: categoryId,
   subCategory: subCategoryId,
@@ -69,6 +78,11 @@ describe('ProductService', () => {
     CategoryModel.findById.mockResolvedValue(category);
     SubCategoryModel.findById.mockResolvedValue(subCategory);
     ProductModel.populate.mockImplementation(async (value) => value);
+    MainImageService.upload.mockResolvedValue({
+      key: 'products/main/new.webp',
+      mainImage: data.mainImage,
+      mainImageThumbnail: data.mainImageThumbnail,
+    });
   });
 
   test('escapeRegex and findOne build safe lookups', async () => {
@@ -133,7 +147,9 @@ describe('ProductService', () => {
   test('create validates and saves the product', async () => {
     ProductModel.findOne.mockResolvedValue(null);
     ProductModel.create.mockResolvedValue(product);
-    await expect(ProductService.create(data, userId)).resolves.toBe(product);
+    await expect(
+      ProductService.create(data, userId, { buffer: Buffer.from('image') }),
+    ).resolves.toBe(product);
     expect(ProductModel.create).toHaveBeenCalledWith({
       ...data,
       createdBy: userId,
@@ -161,6 +177,7 @@ describe('ProductService', () => {
       id,
       { price: 1 },
       userId,
+      undefined,
     );
   });
 

@@ -9,7 +9,7 @@ This folder owns cross-cutting Express request behavior: authentication, role ch
 - `auth.middleware.js` and `role.middleware.js` — verify JWT identity and allowed roles.
 - `security.middleware.js` and `header.middleware.js` — configure Helmet, rate limiting, and CORS-related headers.
 - `logger.middleware.js` — records request completion and errors through the shared logger.
-- `upload.middleware.js` — applies configured Multer upload limits for avatars and pet images.
+- `upload.middleware.js` — applies configured Multer upload limits for avatars and Product/Pet main images.
 - `error.middleware.js` — converts propagated errors to the final HTTP response.
 - `permission.middleware.js` — current extension point for permission checks.
 

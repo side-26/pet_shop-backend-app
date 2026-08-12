@@ -58,8 +58,11 @@ export const createBlurThumbnail = async (imageFile) => {
         .webp({ quality })
         .toBuffer();
 
-      if (thumbnail.length <= IMAGE_PROCESSING.MAX_THUMBNAIL_SIZE_BYTES) {
-        return thumbnail;
+      const dataUrl = `data:image/webp;base64,${thumbnail.toString('base64')}`;
+      if (
+        Buffer.byteLength(dataUrl) < IMAGE_PROCESSING.MAX_THUMBNAIL_SIZE_BYTES
+      ) {
+        return dataUrl;
       }
     }
   }

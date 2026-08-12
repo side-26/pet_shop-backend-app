@@ -1,9 +1,13 @@
 import express from 'express';
+import { apiReference } from '@scalar/express-api-reference';
+
+import { openapiDocument } from '#configs/openapi.config.js';
 import { logRequest, logError } from '#middlewares/logger.middleware.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { headerMiddleware } from '#middlewares/header.middleware.js';
 import {
   rateLimiterMiddleware,
+  scalarContentSecurityPolicy,
   securityHeadersMiddleware,
 } from '#middlewares/security.middleware.js';
 
@@ -29,6 +33,13 @@ app.use(logRequest);
 app.use('/api', rateLimiterMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.get('/openapi.json', (_req, res) => res.json(openapiDocument));
+app.use(
+  '/docs',
+  scalarContentSecurityPolicy,
+  apiReference({ url: '/openapi.json' }),
+);
 
 app.use('/api', userRoutes);
 app.use('/api', petTypeRoutes);
