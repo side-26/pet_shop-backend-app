@@ -4,6 +4,8 @@ import { getMelipayamakOtpToken } from '#configs/env.config.js';
 export class OtpCodeClient {
   static async send({ to }) {
     const token = getMelipayamakOtpToken();
+    const body = JSON.stringify({ to });
+
     const url = new URL(
       `${MELIPAYAMAK_API.OTP_PATH}/${encodeURIComponent(token)}`,
       MELIPAYAMAK_API.BASE_URL,
@@ -14,8 +16,10 @@ export class OtpCodeClient {
       headers: {
         accept: 'application/json',
         'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
       },
-      body: JSON.stringify({ to }),
+      port: 443,
+      body,
       signal: AbortSignal.timeout(MELIPAYAMAK_API.TIMEOUT_MS),
     });
 

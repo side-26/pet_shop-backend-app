@@ -45,14 +45,17 @@ describe('OTP-code integration', () => {
     );
     expect(options).toMatchObject({
       method: 'POST',
+      port: 443,
       headers: {
         accept: 'application/json',
         'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(
+          JSON.stringify({ to: '09123456789' }),
+        ),
       },
       body: JSON.stringify({ to: '09123456789' }),
     });
     expect(options.signal).toBeDefined();
-    expect(options.headers).not.toHaveProperty('Content-Length');
   });
 
   test('service returns a valid normalized provider response', async () => {

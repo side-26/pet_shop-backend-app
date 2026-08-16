@@ -6,7 +6,7 @@ import { OtpCodeClient } from './otpCode.client.js';
 const throwMappedProviderError = (error) => {
   if (error.code === ERROR_CODES.MELIPAYAMAK_OTP_TOKEN_NOT_CONFIGURED) {
     setErrorResponse(STATUES.INTERNAL_SERVER, {
-      message: 'سرویس ارسال پیامک به‌درستی پیکربندی نشده است',
+      message: error?.message || 'سرویس ارسال پیامک به‌درستی پیکربندی نشده است',
       code: error.code,
     });
   }
@@ -21,6 +21,7 @@ export class OtpCodeService {
   static async send(destination) {
     try {
       const result = await OtpCodeClient.send(destination);
+
       if (
         !result ||
         typeof result !== 'object' ||
