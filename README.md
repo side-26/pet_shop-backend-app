@@ -182,6 +182,7 @@ ARVAN_BUCKET=your-bucket-name
 ARVAN_PUBLIC_BASE_URL=https://your-public-cdn.example.com
 
 NESHAN_API_KEY=your-neshan-api-key
+MELIPAYAMAK_OTP_TOKEN=your-melipayamak-otp-token
 COUNTRIES_API_URL=https://www.apicountries.com/countries
 
 LOG_LEVEL=info

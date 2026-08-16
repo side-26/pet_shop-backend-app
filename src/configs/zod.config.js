@@ -10,6 +10,7 @@ const persianFieldNames = {
   lastName: 'نام خانوادگی',
   email: 'ایمیل',
   phoneNumber: 'شماره تلفن',
+  to: 'شماره تلفن مقصد',
   password: 'کلمه عبور',
   role: 'نقش کاربر',
   nationalCode: 'کد ملی',
@@ -123,11 +124,12 @@ const persianMessages = {
 // CUSTOM ERROR MAP
 // ============================================
 const persianErrorMap = (issue) => {
-  const fieldPath = issue.path.join('.');
+  const issuePath = Array.isArray(issue.path) ? issue.path : [];
+  const fieldPath = issuePath.join('.');
 
   const fieldName =
     persianFieldNames[fieldPath] ||
-    persianFieldNames[issue.path[0]] ||
+    persianFieldNames[issuePath[0]] ||
     'این فیلد';
 
   switch (issue.code) {

@@ -78,6 +78,7 @@ const routes = [
   '../integrations/countries/countries.route.js',
   '../integrations/locations/locations.route.js',
   '../integrations/reverseGeocoding/reverseGeocoding.route.js',
+  '../integrations/otpCode/otpCode.route.js',
 ].map((route) => path.join(configDirectory, route));
 
 await swaggerAutogen({ openapi: '3.0.0' })(outputFile, routes, doc);

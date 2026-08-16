@@ -14,7 +14,9 @@
   "paths": {
     "/users": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Create a new user",
         "description": "",
         "responses": {
@@ -53,7 +55,9 @@
     },
     "/users/login": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Login user",
         "description": "",
         "responses": {
@@ -98,7 +102,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/edit-info": {
@@ -109,7 +115,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/addresses": {
@@ -120,7 +128,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       },
       "get": {
         "description": "",
@@ -129,7 +139,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/addresses/{addressId}": {
@@ -140,12 +152,16 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/cart/add": {
       "post": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Add an item to the authenticated user's cart",
         "description": "",
         "responses": {
@@ -188,7 +204,9 @@
     },
     "/cart/delete/{id}": {
       "delete": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Delete an item from the authenticated user's cart",
         "description": "",
         "parameters": [
@@ -231,7 +249,9 @@
     },
     "/cart/all": {
       "get": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Get the authenticated user's cart",
         "description": "",
         "responses": {
@@ -263,7 +283,9 @@
     },
     "/cart/empty": {
       "delete": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Empty the authenticated user's cart",
         "description": "",
         "responses": {
@@ -286,7 +308,9 @@
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/wishlist/delete/{id}": {
@@ -297,7 +321,9 @@
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/wishlist/all": {
@@ -308,12 +334,16 @@
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/users/change-password": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Change user password",
         "description": "",
         "responses": {
@@ -352,7 +382,9 @@
     },
     "/users/disable/{id}": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Disable a user",
         "description": "",
         "parameters": [
@@ -381,7 +413,9 @@
     },
     "/users/enable/{id}": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Enable a user",
         "description": "",
         "parameters": [
@@ -410,7 +444,9 @@
     },
     "/users/all": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get all users",
         "description": "",
         "responses": {
@@ -429,7 +465,9 @@
     },
     "/users/paginate": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get paginated users",
         "description": "",
         "parameters": [
@@ -484,7 +522,9 @@
     },
     "/users/{id}": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get user by ID",
         "description": "",
         "parameters": [
@@ -529,7 +569,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "post": {
         "description": "",
@@ -538,7 +580,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}": {
@@ -549,7 +593,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "put": {
         "description": "",
@@ -558,7 +604,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "delete": {
         "description": "",
@@ -567,7 +615,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/slug/{slug}": {
@@ -578,7 +628,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}/disable": {
@@ -589,7 +641,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}/enable": {
@@ -600,7 +654,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/categories": {
@@ -611,7 +667,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "get": {
         "description": "",
@@ -620,7 +678,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/{id}": {
@@ -631,7 +691,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "delete": {
         "description": "",
@@ -640,7 +702,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "get": {
         "description": "",
@@ -649,7 +713,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/enable/{id}": {
@@ -660,7 +726,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/disable/{id}": {
@@ -671,7 +739,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/sub-categories": {
@@ -682,7 +752,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "get": {
         "description": "",
@@ -691,7 +763,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       }
     },
     "/sub-categories/{id}": {
@@ -702,7 +776,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "delete": {
         "description": "",
@@ -711,7 +787,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "get": {
         "description": "",
@@ -720,7 +798,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       }
     },
     "/breeds/paginate": {
@@ -731,7 +811,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds": {
@@ -742,7 +824,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "post": {
         "description": "",
@@ -751,7 +835,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}": {
@@ -762,7 +848,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "put": {
         "description": "",
@@ -771,7 +859,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "delete": {
         "description": "",
@@ -780,7 +870,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}/enable": {
@@ -791,7 +883,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}/disable": {
@@ -802,7 +896,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/pets": {
@@ -813,7 +909,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "post": {
         "description": "",
@@ -837,7 +935,9 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/customer/{id}": {
@@ -848,7 +948,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/get-full-info-paginate-list": {
@@ -859,7 +961,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/manage/{id}": {
@@ -870,7 +974,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}": {
@@ -906,7 +1012,9 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "patch": {
         "description": "",
@@ -940,7 +1048,9 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "delete": {
         "description": "",
@@ -949,7 +1059,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}/enable": {
@@ -960,7 +1072,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}/disable": {
@@ -971,7 +1085,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/products": {
@@ -982,7 +1098,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "post": {
         "description": "",
@@ -1006,7 +1124,9 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/customer/{id}": {
@@ -1017,7 +1137,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/get-full-info-paginate-list": {
@@ -1028,7 +1150,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/manage/{id}": {
@@ -1039,7 +1163,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}": {
@@ -1075,7 +1201,9 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "patch": {
         "description": "",
@@ -1109,7 +1237,9 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "delete": {
         "description": "",
@@ -1118,7 +1248,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}/enable": {
@@ -1129,7 +1261,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}/disable": {
@@ -1140,12 +1274,16 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/orders": {
       "post": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Create an order from the authenticated user's cart",
         "description": "",
         "responses": {
@@ -1173,7 +1311,9 @@
         }
       },
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "List the authenticated user's orders",
         "description": "",
         "parameters": [
@@ -1245,7 +1385,9 @@
     },
     "/orders/all": {
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "List all orders for Admin or Seller",
         "description": "",
         "parameters": [
@@ -1307,7 +1449,12 @@
                 },
                 "enum": {
                   "type": "array",
-                  "example": [0, 1, 2, 3],
+                  "example": [
+                    0,
+                    1,
+                    2,
+                    3
+                  ],
                   "items": {
                     "type": "number"
                   }
@@ -1340,7 +1487,9 @@
     },
     "/orders/{id}/delivery-state": {
       "patch": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Update order delivery state",
         "description": "",
         "parameters": [
@@ -1383,7 +1532,9 @@
     },
     "/orders/{id}/shipping-info": {
       "patch": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Update order shipping information",
         "description": "",
         "parameters": [
@@ -1426,7 +1577,9 @@
     },
     "/orders/{id}": {
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Get one of the authenticated user's orders",
         "description": "",
         "parameters": [
@@ -1477,7 +1630,9 @@
             "description": ""
           }
         },
-        "tags": ["/countries"]
+        "tags": [
+          "/countries"
+        ]
       }
     },
     "/provinces": {
@@ -1488,7 +1643,9 @@
             "description": ""
           }
         },
-        "tags": ["/provinces"]
+        "tags": [
+          "/provinces"
+        ]
       }
     },
     "/cities/{provinceId}": {
@@ -1499,7 +1656,9 @@
             "description": ""
           }
         },
-        "tags": ["/cities"]
+        "tags": [
+          "/cities"
+        ]
       }
     },
     "/reverse-geocode": {
@@ -1510,7 +1669,71 @@
             "description": ""
           }
         },
-        "tags": ["/reverse-geocode"]
+        "tags": [
+          "/reverse-geocode"
+        ]
+      }
+    },
+    "/otp-code": {
+      "post": {
+        "summary": "Request an OTP code from Melipayamak",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OTP provider response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error"
+          },
+          "503": {
+            "description": "Provider unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "to"
+                ],
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "pattern": "^09\\d{9}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "/otp-code"
+        ]
       }
     }
   },
@@ -1525,7 +1748,9 @@
     "schemas": {
       "MainImageCreateBody": {
         "type": "object",
-        "required": ["mainImage"],
+        "required": [
+          "mainImage"
+        ],
         "properties": {
           "mainImage": {
             "type": "string",
@@ -1691,7 +1916,11 @@
           "role": {
             "default": "customer",
             "type": "string",
-            "enum": ["admin", "customer", "seller"]
+            "enum": [
+              "admin",
+              "customer",
+              "seller"
+            ]
           },
           "age": {
             "anyOf": [
@@ -1712,13 +1941,20 @@
             "items": {}
           }
         },
-        "required": ["phoneNumber", "password", "role"],
+        "required": [
+          "phoneNumber",
+          "password",
+          "role"
+        ],
         "additionalProperties": false
       },
       "LoginUserBody": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["phoneNumber", "password"],
+        "required": [
+          "phoneNumber",
+          "password"
+        ],
         "properties": {
           "phoneNumber": {
             "type": "string",
@@ -1903,7 +2139,12 @@
             "type": "string"
           }
         },
-        "required": ["password", "oldPassword", "repeatPassword", "userId"],
+        "required": [
+          "password",
+          "oldPassword",
+          "repeatPassword",
+          "userId"
+        ],
         "additionalProperties": false
       },
       "AddCartItemBody": {
@@ -1915,7 +2156,10 @@
           },
           "itemType": {
             "type": "string",
-            "enum": ["product", "pet"]
+            "enum": [
+              "product",
+              "pet"
+            ]
           },
           "quantity": {
             "type": "integer",
@@ -1923,7 +2167,11 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["itemId", "itemType", "quantity"],
+        "required": [
+          "itemId",
+          "itemType",
+          "quantity"
+        ],
         "additionalProperties": false
       },
       "CreateOrderBody": {
@@ -1935,7 +2183,9 @@
             "maxLength": 200
           }
         },
-        "required": ["paymentTrackingId"],
+        "required": [
+          "paymentTrackingId"
+        ],
         "additionalProperties": false
       },
       "UpdateOrderDeliveryStateBody": {
@@ -1947,7 +2197,9 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["deliveryState"],
+        "required": [
+          "deliveryState"
+        ],
         "additionalProperties": false
       },
       "UpdateOrderShippingInfoBody": {
@@ -2022,7 +2274,10 @@
                 },
                 "itemType": {
                   "type": "string",
-                  "enum": ["product", "pet"]
+                  "enum": [
+                    "product",
+                    "pet"
+                  ]
                 },
                 "quantity": {
                   "type": "integer",
@@ -2064,7 +2319,10 @@
           },
           "paymentType": {
             "type": "integer",
-            "enum": [1, 2]
+            "enum": [
+              1,
+              2
+            ]
           },
           "instalmentCompany": {
             "type": "string",
@@ -2091,7 +2349,12 @@
           },
           "deliveryState": {
             "type": "integer",
-            "enum": [0, 1, 2, 3]
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
           },
           "paymentTrackingId": {
             "type": "string"
@@ -2107,7 +2370,10 @@
           },
           "paymentType": {
             "type": "integer",
-            "enum": [1, 2]
+            "enum": [
+              1,
+              2
+            ]
           },
           "items": {
             "type": "array",
@@ -2139,7 +2405,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "PaginatedResponse": {
         "type": "object",
@@ -2156,7 +2424,9 @@
             "$ref": "#/components/schemas/Pagination"
           }
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "ErrorResponse": {
         "type": "object",
@@ -2170,7 +2440,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       }
     }
   },
@@ -2198,6 +2470,10 @@
     {
       "name": "/orders",
       "description": "Endpoints under /api/orders"
+    },
+    {
+      "name": "/otp-code",
+      "description": "Endpoints under /api/otp-code"
     },
     {
       "name": "/pet-types",

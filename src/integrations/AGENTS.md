@@ -9,6 +9,7 @@ This folder isolates external API adapters and location reference-data endpoints
 - [`countries/AGENTS.md`](./countries/AGENTS.md) — cached country data from a remote countries API.
 - [`locations/AGENTS.md`](./locations/AGENTS.md) — MongoDB-backed province and city lookup data.
 - [`reverseGeocoding/AGENTS.md`](./reverseGeocoding/AGENTS.md) — authenticated coordinate lookup through Neshan.
+- [`otpCode/AGENTS.md`](./otpCode/AGENTS.md) — public OTP-code requests through Melipayamak.
 
 ## Flow
 

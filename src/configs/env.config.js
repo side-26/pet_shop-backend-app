@@ -29,3 +29,16 @@ export const getNeshanApiKey = () => {
 
   return apiKey;
 };
+
+export const getMelipayamakOtpToken = () => {
+  const token = process.env.MELIPAYAMAK_OTP_TOKEN?.trim();
+
+  if (!token) {
+    const error = new Error('توکن سرویس پیامک در تنظیمات محیطی تعریف نشده است');
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = ERROR_CODES.MELIPAYAMAK_OTP_TOKEN_NOT_CONFIGURED;
+    throw error;
+  }
+
+  return token;
+};
