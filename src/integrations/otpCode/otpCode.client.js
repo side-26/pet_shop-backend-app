@@ -8,7 +8,7 @@ export class OtpCodeClient {
       `${MELIPAYAMAK_API.OTP_PATH}/${encodeURIComponent(token)}`,
       MELIPAYAMAK_API.BASE_URL,
     );
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
