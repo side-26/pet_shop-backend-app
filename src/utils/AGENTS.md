@@ -6,7 +6,7 @@ This folder contains shared helpers that are not owned by one entity.
 
 ## Important Files
 
-- `helpers.js` — response builders, body checks, pagination, Zod validation, static serving, controller error forwarding, and JWT verification.
+- `helpers.js` — response builders, body checks, pagination, Zod validation, static serving, controller error forwarding, and separate access/refresh JWT verification.
 - `image.helpers.js` — image format normalization, compression quality selection, conversion, and sub-10 KB WebP Data URL blur-placeholder creation.
 - `fullPath.js` — resolves project-relative filesystem paths.
 - `globalErrors.js` — legacy/global error definitions.

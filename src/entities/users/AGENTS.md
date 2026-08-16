@@ -15,11 +15,12 @@ Owns user accounts, login and token refresh, profile data, password changes, add
 
 ## Dependencies
 
-Uses `ObjectStorageService` and image helpers for profile images, shared JWT/environment helpers, roles/status constants, and authentication/role/upload middleware.
+Uses `ObjectStorageService` and image helpers for profile images, separate access-token and refresh-token secrets through shared JWT/environment helpers, roles/status constants, and authentication/role/upload middleware.
 
 ## Modification Rules
 
 - Keep passwords hashed and exclude sensitive fields from public formatting.
+- Sign and verify access tokens with `JWT_SECRET_KEY`; sign and verify refresh tokens with `JWT_REFRESH_SECRET_KEY`.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.
 - Cart and wishlist operations always derive ownership from the authenticated actor. See [`docs/cart.md`](./docs/cart.md) and [`docs/cart-and-wishlist.md`](./docs/cart-and-wishlist.md).

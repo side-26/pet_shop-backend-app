@@ -1,7 +1,12 @@
-import { getJwtSecret, getNeshanApiKey } from './env.config.js';
+import {
+  getJwtRefreshSecret,
+  getJwtSecret,
+  getNeshanApiKey,
+} from './env.config.js';
 
 describe('environment configuration', () => {
   const originalJwtSecret = process.env.JWT_SECRET_KEY;
+  const originalJwtRefreshSecret = process.env.JWT_REFRESH_SECRET_KEY;
   const originalNeshanApiKey = process.env.NESHAN_API_KEY;
 
   afterEach(() => {
@@ -9,6 +14,12 @@ describe('environment configuration', () => {
       delete process.env.JWT_SECRET_KEY;
     } else {
       process.env.JWT_SECRET_KEY = originalJwtSecret;
+    }
+
+    if (originalJwtRefreshSecret === undefined) {
+      delete process.env.JWT_REFRESH_SECRET_KEY;
+    } else {
+      process.env.JWT_REFRESH_SECRET_KEY = originalJwtRefreshSecret;
     }
 
     if (originalNeshanApiKey === undefined) {
@@ -29,6 +40,20 @@ describe('environment configuration', () => {
 
     expect(() => getJwtSecret()).toThrow(
       'کلید امنیتی JWT در تنظیمات محیطی تعریف نشده است',
+    );
+  });
+
+  it('returns the configured JWT refresh secret', () => {
+    process.env.JWT_REFRESH_SECRET_KEY = 'test-refresh-secret';
+
+    expect(getJwtRefreshSecret()).toBe('test-refresh-secret');
+  });
+
+  it('throws a Persian configuration error when the refresh secret is missing', () => {
+    delete process.env.JWT_REFRESH_SECRET_KEY;
+
+    expect(() => getJwtRefreshSecret()).toThrow(
+      'کلید امنیتی توکن تازه‌سازی در تنظیمات محیطی تعریف نشده است',
     );
   });
 

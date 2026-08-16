@@ -70,7 +70,7 @@ jest.mock('#utils/helpers.js', () => ({
 
   getPaginationData: jest.fn(),
 
-  verifyUser: jest.fn(),
+  verifyRefreshToken: jest.fn(),
 }));
 
 jest.mock('./users.model.js', () => ({
@@ -93,7 +93,7 @@ import { ROLES } from '#configs/constants.js';
 import { PetService } from '#entities/pets/pets.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
-import { getPaginationData, verifyUser } from '#utils/helpers.js';
+import { getPaginationData, verifyRefreshToken } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
 import { UserModel } from './users.model.js';
@@ -301,7 +301,7 @@ describe('UserService - Unit Tests', () => {
       {
         userId: mockUser._id,
       },
-      process.env.JWT_SECRET_KEY,
+      process.env.JWT_REFRESH_SECRET_KEY,
       {
         expiresIn: '7d',
       },
@@ -415,7 +415,7 @@ describe('UserService - Unit Tests', () => {
 
     jwt.sign.mockReturnValue('new-access-token');
 
-    verifyUser.mockImplementation((token, callback) => {
+    verifyRefreshToken.mockImplementation((token, callback) => {
       callback({
         userId: mockUser._id,
       });
@@ -425,7 +425,10 @@ describe('UserService - Unit Tests', () => {
 
     expect(result).toBe('new-access-token');
 
-    expect(verifyUser).toHaveBeenCalled();
+    expect(verifyRefreshToken).toHaveBeenCalledWith(
+      'refresh-token',
+      expect.any(Function),
+    );
   });
 
   test('refreshAccessToken throws if token is missing', async () => {

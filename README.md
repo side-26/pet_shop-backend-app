@@ -174,6 +174,7 @@ MONGODB_URI=mongodb://localhost:27017/pet_shop_db
 MONGODB_TEST_URI=mongodb://localhost:27017/pet_shop_test_db
 
 JWT_SECRET_KEY=replace-with-a-long-random-secret
+JWT_REFRESH_SECRET_KEY=replace-with-a-different-long-random-secret
 
 ARVAN_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.ir
 ARVAN_ACCESS_KEY=your-access-key

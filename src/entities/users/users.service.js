@@ -9,7 +9,7 @@ import {
   USER_ADDRESS_LIMITS,
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
-import { getJwtSecret } from '#configs/env.config.js';
+import { getJwtRefreshSecret, getJwtSecret } from '#configs/env.config.js';
 import logger from '#configs/logger.js';
 import { PetService } from '#entities/pets/pets.service.js';
 import { ProductService } from '#entities/products/products.service.js';
@@ -19,7 +19,7 @@ import {
   createNewQueryParam,
   getPaginationData,
   setErrorResponse,
-  verifyUser,
+  verifyRefreshToken,
 } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
@@ -97,7 +97,7 @@ export class UserService {
       {
         userId,
       },
-      getJwtSecret(),
+      getJwtRefreshSecret(),
       {
         expiresIn,
       },
@@ -182,7 +182,7 @@ export class UserService {
 
     return new Promise((resolve, reject) => {
       try {
-        verifyUser(refreshToken, async (decoded) => {
+        verifyRefreshToken(refreshToken, async (decoded) => {
           try {
             /*
              * Refresh token currently contains only userId.

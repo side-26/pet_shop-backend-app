@@ -146,6 +146,14 @@ jest.mock('#utils/helpers.js', () => ({
       userId: global.__TEST_USER_ID__,
     });
   }),
+
+  verifyRefreshToken: jest.fn((token, callback) => {
+    void token;
+
+    callback({
+      userId: global.__TEST_USER_ID__,
+    });
+  }),
 }));
 
 import bcrypt from 'bcryptjs';

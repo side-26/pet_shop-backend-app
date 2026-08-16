@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import path from 'path';
 import { STATUES } from '#configs/constants.js';
-import { getJwtSecret } from '#configs/env.config.js';
+import { getJwtRefreshSecret, getJwtSecret } from '#configs/env.config.js';
 
 export const doesBodyExist = (req, res, msg) => {
   if (!req.body)
@@ -141,6 +141,18 @@ export const verifyUser = (token, onSuccess) => {
     if (err) {
       setErrorResponse(STATUES.UN_AUTHORIZED, {
         message: 'توکن نامعتبر است',
+      });
+    }
+
+    onSuccess(decoded);
+  });
+};
+
+export const verifyRefreshToken = (token, onSuccess) => {
+  jwt.verify(token, getJwtRefreshSecret(), (err, decoded) => {
+    if (err) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'توکن تازه‌سازی نامعتبر است',
       });
     }
 
