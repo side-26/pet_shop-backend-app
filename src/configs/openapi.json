@@ -14,7 +14,9 @@
   "paths": {
     "/users": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Create a new user",
         "description": "",
         "responses": {
@@ -24,6 +26,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -51,9 +71,78 @@
         }
       }
     },
+    "/users/register": {
+      "post": {
+        "tags": [
+          "/users"
+        ],
+        "summary": "Register a customer account",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Customer account created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error or existing user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserBody"
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/login": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Login user",
         "description": "",
         "responses": {
@@ -69,6 +158,24 @@
           },
           "404": {
             "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -94,58 +201,160 @@
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/edit-info": {
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/addresses": {
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       },
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/addresses/{addressId}": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/cart/add": {
       "post": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Add an item to the authenticated user's cart",
         "description": "",
         "responses": {
@@ -164,6 +373,24 @@
           },
           "404": {
             "description": "Product or Pet not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation error"
@@ -188,7 +415,9 @@
     },
     "/cart/delete/{id}": {
       "delete": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Delete an item from the authenticated user's cart",
         "description": "",
         "parameters": [
@@ -218,6 +447,24 @@
           "404": {
             "description": "Cart item not found"
           },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Invalid cart item ID"
           }
@@ -231,7 +478,9 @@
     },
     "/cart/all": {
       "get": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Get the authenticated user's cart",
         "description": "",
         "responses": {
@@ -252,6 +501,24 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -263,12 +530,32 @@
     },
     "/cart/empty": {
       "delete": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Empty the authenticated user's cart",
         "description": "",
         "responses": {
           "200": {
             "description": "Cart emptied"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -282,38 +569,100 @@
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/wishlist/delete/{id}": {
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/wishlist/all": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/users/change-password": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Change user password",
         "description": "",
         "responses": {
@@ -329,6 +678,24 @@
           },
           "400": {
             "description": "Wrong old password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT"
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -352,7 +719,9 @@
     },
     "/users/disable/{id}": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Disable a user",
         "description": "",
         "parameters": [
@@ -375,13 +744,33 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/users/enable/{id}": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Enable a user",
         "description": "",
         "parameters": [
@@ -404,13 +793,33 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/users/all": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get all users",
         "description": "",
         "responses": {
@@ -423,13 +832,33 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/users/paginate": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get paginated users",
         "description": "",
         "parameters": [
@@ -478,13 +907,33 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
     },
     "/users/{id}": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get user by ID",
         "description": "",
         "parameters": [
@@ -517,6 +966,24 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -525,299 +992,897 @@
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/slug/{slug}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}/disable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}/enable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/categories": {
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/{id}": {
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/enable/{id}": {
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/disable/{id}": {
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/sub-categories": {
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       }
     },
     "/sub-categories/{id}": {
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       }
     },
     "/breeds/paginate": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "put": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}/enable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}/disable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/pets": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -837,40 +1902,102 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/customer/{id}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/get-full-info-paginate-list": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/manage/{id}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}": {
@@ -887,6 +2014,24 @@
           }
         ],
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -906,7 +2051,9 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "patch": {
         "description": "",
@@ -921,6 +2068,24 @@
           }
         ],
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -940,53 +2105,153 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}/enable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}/disable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/products": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "post": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -1006,40 +2271,102 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/customer/{id}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/get-full-info-paginate-list": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/manage/{id}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}": {
@@ -1056,6 +2383,24 @@
           }
         ],
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -1075,7 +2420,9 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "patch": {
         "description": "",
@@ -1090,6 +2437,24 @@
           }
         ],
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -1109,48 +2474,130 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "delete": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PUT, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}/enable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}/disable": {
       "patch": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/orders": {
       "post": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Create an order from the authenticated user's cart",
         "description": "",
         "responses": {
           "201": {
             "description": "Order created"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Cart or payment validation error"
@@ -1173,7 +2620,9 @@
         }
       },
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "List the authenticated user's orders",
         "description": "",
         "parameters": [
@@ -1234,6 +2683,24 @@
                 }
               }
             }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1245,7 +2712,9 @@
     },
     "/orders/all": {
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "List all orders for Admin or Seller",
         "description": "",
         "parameters": [
@@ -1307,7 +2776,12 @@
                 },
                 "enum": {
                   "type": "array",
-                  "example": [0, 1, 2, 3],
+                  "example": [
+                    0,
+                    1,
+                    2,
+                    3
+                  ],
                   "items": {
                     "type": "number"
                   }
@@ -1329,6 +2803,24 @@
           },
           "403": {
             "description": "Admin or Seller role required"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1340,7 +2832,9 @@
     },
     "/orders/{id}/delivery-state": {
       "patch": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Update order delivery state",
         "description": "",
         "parameters": [
@@ -1362,6 +2856,24 @@
           },
           "404": {
             "description": "Order not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1383,7 +2895,9 @@
     },
     "/orders/{id}/shipping-info": {
       "patch": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Update order shipping information",
         "description": "",
         "parameters": [
@@ -1405,6 +2919,24 @@
           },
           "404": {
             "description": "Order not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1426,7 +2958,9 @@
     },
     "/orders/{id}": {
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Get one of the authenticated user's orders",
         "description": "",
         "parameters": [
@@ -1460,6 +2994,24 @@
           },
           "404": {
             "description": "Order not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1473,44 +3025,124 @@
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/countries"]
+        "tags": [
+          "/countries"
+        ]
       }
     },
     "/provinces": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/provinces"]
+        "tags": [
+          "/provinces"
+        ]
       }
     },
     "/cities/{provinceId}": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/cities"]
+        "tags": [
+          "/cities"
+        ]
       }
     },
     "/reverse-geocode": {
       "get": {
         "description": "",
         "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
         },
-        "tags": ["/reverse-geocode"]
+        "tags": [
+          "/reverse-geocode"
+        ]
       }
     },
     "/otp-code": {
@@ -1544,6 +3176,24 @@
               }
             }
           },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation error"
           },
@@ -1557,7 +3207,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["to"],
+                "required": [
+                  "to"
+                ],
                 "properties": {
                   "to": {
                     "type": "string",
@@ -1568,7 +3220,9 @@
             }
           }
         },
-        "tags": ["/otp-code"]
+        "tags": [
+          "/otp-code"
+        ]
       }
     }
   },
@@ -1583,7 +3237,9 @@
     "schemas": {
       "MainImageCreateBody": {
         "type": "object",
-        "required": ["mainImage"],
+        "required": [
+          "mainImage"
+        ],
         "properties": {
           "mainImage": {
             "type": "string",
@@ -1749,7 +3405,11 @@
           "role": {
             "default": "customer",
             "type": "string",
-            "enum": ["admin", "customer", "seller"]
+            "enum": [
+              "admin",
+              "customer",
+              "seller"
+            ]
           },
           "age": {
             "anyOf": [
@@ -1770,13 +3430,38 @@
             "items": {}
           }
         },
-        "required": ["phoneNumber", "password", "role"],
+        "required": [
+          "phoneNumber",
+          "password",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "RegisterUserBody": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          }
+        },
+        "required": [
+          "phoneNumber",
+          "password"
+        ],
         "additionalProperties": false
       },
       "LoginUserBody": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["phoneNumber", "password"],
+        "required": [
+          "phoneNumber",
+          "password"
+        ],
         "properties": {
           "phoneNumber": {
             "type": "string",
@@ -1961,7 +3646,12 @@
             "type": "string"
           }
         },
-        "required": ["password", "oldPassword", "repeatPassword", "userId"],
+        "required": [
+          "password",
+          "oldPassword",
+          "repeatPassword",
+          "userId"
+        ],
         "additionalProperties": false
       },
       "AddCartItemBody": {
@@ -1973,7 +3663,10 @@
           },
           "itemType": {
             "type": "string",
-            "enum": ["product", "pet"]
+            "enum": [
+              "product",
+              "pet"
+            ]
           },
           "quantity": {
             "type": "integer",
@@ -1981,7 +3674,11 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["itemId", "itemType", "quantity"],
+        "required": [
+          "itemId",
+          "itemType",
+          "quantity"
+        ],
         "additionalProperties": false
       },
       "CreateOrderBody": {
@@ -1993,7 +3690,9 @@
             "maxLength": 200
           }
         },
-        "required": ["paymentTrackingId"],
+        "required": [
+          "paymentTrackingId"
+        ],
         "additionalProperties": false
       },
       "UpdateOrderDeliveryStateBody": {
@@ -2005,7 +3704,9 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["deliveryState"],
+        "required": [
+          "deliveryState"
+        ],
         "additionalProperties": false
       },
       "UpdateOrderShippingInfoBody": {
@@ -2080,7 +3781,10 @@
                 },
                 "itemType": {
                   "type": "string",
-                  "enum": ["product", "pet"]
+                  "enum": [
+                    "product",
+                    "pet"
+                  ]
                 },
                 "quantity": {
                   "type": "integer",
@@ -2122,7 +3826,10 @@
           },
           "paymentType": {
             "type": "integer",
-            "enum": [1, 2]
+            "enum": [
+              1,
+              2
+            ]
           },
           "instalmentCompany": {
             "type": "string",
@@ -2149,7 +3856,12 @@
           },
           "deliveryState": {
             "type": "integer",
-            "enum": [0, 1, 2, 3]
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
           },
           "paymentTrackingId": {
             "type": "string"
@@ -2165,7 +3877,10 @@
           },
           "paymentType": {
             "type": "integer",
-            "enum": [1, 2]
+            "enum": [
+              1,
+              2
+            ]
           },
           "items": {
             "type": "array",
@@ -2197,7 +3912,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "PaginatedResponse": {
         "type": "object",
@@ -2214,7 +3931,9 @@
             "$ref": "#/components/schemas/Pagination"
           }
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "ErrorResponse": {
         "type": "object",
@@ -2228,7 +3947,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       }
     }
   },

@@ -8,6 +8,7 @@ This folder owns cross-cutting Express request behavior: authentication, role ch
 
 - `auth.middleware.js` and `role.middleware.js` — verify JWT identity and allowed roles.
 - `security.middleware.js` and `header.middleware.js` — configure Helmet, rate limiting, and CORS-related headers.
+- `method.middleware.js` — checks the centralized API route registry before routers and rejects unsupported methods with HTTP 405 and an `Allow` header.
 - `logger.middleware.js` — records request completion and errors through the shared logger.
 - `upload.middleware.js` — applies configured Multer upload limits for avatars and Product/Pet main images.
 - `error.middleware.js` — converts propagated errors to the final HTTP response.
@@ -25,6 +26,6 @@ Global middleware is ordered in `src/app.js`; route-specific authentication, rol
 
 ## Summary
 
-- Global ordering is controlled by `src/app.js`.
+- Global ordering is controlled by `src/app.js`; API method checks run before entity and integration routers.
 - Authorization and upload middleware are composed at route level.
 - Errors flow to `error.middleware.js` through `next`.

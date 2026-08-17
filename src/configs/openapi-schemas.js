@@ -5,6 +5,7 @@ import {
   addUserAddressSchema,
   editUserAddressSchema,
   userChangePasswordFormBodyValidation,
+  userRegisterSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
 } from '../entities/users/users.schema.js';
@@ -68,6 +69,7 @@ export const schemas = {
   },
   // ── User request bodies ──────────────────────────────────────────────────
   CreateUserBody: toOpenApi(userZodSchema),
+  RegisterUserBody: toOpenApi(userRegisterSchema),
   LoginUserBody: {
     type: 'object',
     additionalProperties: false,

@@ -357,6 +357,41 @@ describe('UserService - Unit Tests', () => {
     ).rejects.toThrow('کاربری با این مشخصات وجود دارد');
   });
 
+  test('register creates a customer account with a hashed password', async () => {
+    const credentials = {
+      phoneNumber: '09111111111',
+      password: 'password123',
+    };
+    UserModel.findOne.mockResolvedValue(null);
+    bcrypt.genSalt.mockResolvedValue('salt');
+    bcrypt.hash.mockResolvedValue('hashed-password');
+    UserModel.create.mockResolvedValue({
+      ...credentials,
+      password: 'hashed-password',
+      role: ROLES.CUSTOMER,
+    });
+
+    await UserService.register(credentials);
+
+    expect(UserModel.create).toHaveBeenCalledWith({
+      phoneNumber: credentials.phoneNumber,
+      password: 'hashed-password',
+      role: ROLES.CUSTOMER,
+    });
+  });
+
+  test('register rejects an existing phone number', async () => {
+    UserModel.findOne.mockResolvedValue(mockUser);
+
+    await expect(
+      UserService.register({
+        phoneNumber: mockUser.phoneNumber,
+        password: 'password123',
+      }),
+    ).rejects.toThrow('کاربری با این مشخصات وجود دارد');
+    expect(UserModel.create).not.toHaveBeenCalled();
+  });
+
   // =========================================================
   // LOGIN
   // =========================================================

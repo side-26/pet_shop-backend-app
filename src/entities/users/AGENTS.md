@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Owns user accounts, login and token refresh, profile data, password changes, addresses, status administration, user listing, carts, and wishlists.
+Owns public customer registration, user accounts, login and token refresh, profile data, password changes, addresses, status administration, user listing, carts, and wishlists.
 
 ## Important Files
 
@@ -20,6 +20,8 @@ Uses `ObjectStorageService` and image helpers for profile images, separate acces
 ## Modification Rules
 
 - Keep passwords hashed and exclude sensitive fields from public formatting.
+- Public registration accepts only phone number and password and always assigns the customer role server-side.
+- The global API method middleware checks registration before overlapping dynamic user routes and returns 405 for methods other than POST.
 - Sign and verify access tokens with `JWT_SECRET_KEY`; sign and verify refresh tokens with `JWT_REFRESH_SECRET_KEY`.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.

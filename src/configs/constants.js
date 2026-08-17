@@ -60,11 +60,12 @@ export const STATUES = {
 };
 
 export const METHODS = {
-  // get: 'GET',
+  get: 'GET',
   post: 'POST',
-  // Put: 'PUT',
-  // patch: 'PATCH',
-  // delete: 'DELETE',
+  put: 'PUT',
+  patch: 'PATCH',
+  delete: 'DELETE',
+  head: 'HEAD',
 };
 
 export const ROLES = {
@@ -215,4 +216,8 @@ export const RATE_LIMIT = {
   API_WINDOW_MS: 15 * 60 * 1000,
   API_MAX_REQUESTS: 100,
   STANDARD_HEADERS: 'draft-8',
+};
+
+export const SERVER_LIFECYCLE = {
+  SHUTDOWN_TIMEOUT_MS: 10000,
 };

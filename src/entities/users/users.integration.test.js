@@ -162,11 +162,12 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 import sharp from 'sharp';
 
-import { ROLES, STATUES } from '#configs/constants.js';
+import { METHODS, ROLES, STATUES } from '#configs/constants.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
 
 import { errorHandler } from '#middlewares/error.middleware.js';
+import { apiMethodMiddleware } from '#middlewares/method.middleware.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import { UserModel } from './users.model.js';
@@ -226,6 +227,7 @@ describe('User API - Integration Tests', () => {
   beforeAll(() => {
     app = express();
 
+    app.use('/api', apiMethodMiddleware);
     app.use(express.json());
 
     app.use('/api', usersRoutes);
@@ -349,6 +351,75 @@ describe('User API - Integration Tests', () => {
 
       expect(res.body.message).toContain('کاربری با این مشخصات وجود دارد');
     });
+  });
+
+  // =========================================================
+  // POST /api/users/register
+  // =========================================================
+
+  describe('POST /api/users/register', () => {
+    test('should publicly create a customer account without returning data', async () => {
+      const credentials = {
+        phoneNumber: '09111111111',
+        password: 'password123',
+      };
+
+      const res = await request(app)
+        .post('/api/users/register')
+        .send(credentials);
+
+      expect(res.status).toBe(STATUES.CREATED);
+      expect(res.body).toEqual({
+        isSuccess: true,
+        message: 'حساب کاربری شما با موفقیت ساخته شد لطفا وارد اپلیکیشن شوید',
+      });
+
+      const user = await UserModel.findOne({
+        phoneNumber: credentials.phoneNumber,
+      });
+      expect(user.role).toBe(ROLES.CUSTOMER);
+      await expect(
+        bcrypt.compare(credentials.password, user.password),
+      ).resolves.toBe(true);
+    });
+
+    test.each([
+      [{ password: 'password123' }],
+      [{ phoneNumber: '09111111111', password: '123' }],
+      [{ phoneNumber: '123', password: 'password123' }],
+      [
+        {
+          phoneNumber: '09111111111',
+          password: 'password123',
+          role: ROLES.ADMIN,
+        },
+      ],
+    ])('should reject invalid registration body %p', async (body) => {
+      const res = await request(app).post('/api/users/register').send(body);
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    test('should reject an existing phone number', async () => {
+      const res = await request(app).post('/api/users/register').send({
+        phoneNumber: testUser.phoneNumber,
+        password: DEFAULT_PASSWORD,
+      });
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(res.body.message).toContain('کاربری با این مشخصات وجود دارد');
+    });
+
+    test.each(['get', 'put', 'patch', 'delete'])(
+      'should return 405 instead of matching another route for %s',
+      async (method) => {
+        const res = await request(app)[method]('/api/users/register');
+
+        expect(res.status).toBe(STATUES.METHOD_NOT_ALLOWED);
+        expect(res.headers.allow).toBe(METHODS.post);
+        expect(res.body.message).toBe('متد درخواست برای این مسیر مجاز نیست');
+      },
+    );
   });
 
   // =========================================================

@@ -7,8 +7,9 @@ This folder centralizes runtime environment access, MongoDB and object-storage c
 ## Important Files
 
 - `constants.js` — shared routes, statuses, roles, limits, error codes, integration settings, image settings, and rate-limit values.
+- `routeMethods.config.js` — centralized API path and allowed-method registry consumed before routers.
 - `env.config.js` — loads environment variables and exposes validated secret/API-key accessors.
-- `db.config.js` — opens the Mongoose connection used by `src/server.js`.
+- `db.config.js` — opens and closes the Mongoose connection used by `src/server.js`.
 - `zod.config.js` — maps Zod issues and schema field names to Persian messages.
 - `arvanCloud.config.js` and `upload.config.js` — configure S3-compatible storage and in-memory image uploads.
 - `logger.js` — shared structured logger used by startup, middleware, and services.

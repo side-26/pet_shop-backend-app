@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { schemas } from './openapi-schemas.js';
+import { API_ROUTE_METHODS } from './routeMethods.config.js';
 
 const configDirectory = path.dirname(fileURLToPath(import.meta.url));
 const httpMethods = [
@@ -37,6 +38,52 @@ const addCollectionTags = (openapiDocument) => {
     name,
     description: `Endpoints under /api${name}`,
   }));
+
+  return openapiDocument;
+};
+
+const routeSegmentsMatch = (configuredPath, openapiPath) => {
+  const configuredSegments = configuredPath.split('/').filter(Boolean);
+  const openapiSegments = openapiPath.split('/').filter(Boolean);
+
+  return (
+    configuredSegments.length === openapiSegments.length &&
+    configuredSegments.every(
+      (segment, index) =>
+        segment.startsWith(':') || segment === openapiSegments[index],
+    )
+  );
+};
+
+const addMethodNotAllowedResponses = (openapiDocument) => {
+  Object.entries(openapiDocument.paths ?? {}).forEach(([apiPath, pathItem]) => {
+    const configuredRoute = API_ROUTE_METHODS.find(({ path }) =>
+      routeSegmentsMatch(path, apiPath),
+    );
+
+    if (!configuredRoute) return;
+
+    const allowHeader = configuredRoute.methods.join(', ');
+    httpMethods.forEach((method) => {
+      if (!pathItem[method]) return;
+
+      pathItem[method].responses ??= {};
+      pathItem[method].responses['405'] = {
+        description: 'Method not allowed',
+        headers: {
+          Allow: {
+            schema: { type: 'string' },
+            example: allowHeader,
+          },
+        },
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/ErrorResponse' },
+          },
+        },
+      };
+    });
+  });
 
   return openapiDocument;
 };
@@ -84,7 +131,9 @@ const routes = [
 await swaggerAutogen({ openapi: '3.0.0' })(outputFile, routes, doc);
 
 const openapiDocument = JSON.parse(readFileSync(outputFile, 'utf8'));
-const taggedOpenapiDocument = addCollectionTags(openapiDocument);
+const taggedOpenapiDocument = addCollectionTags(
+  addMethodNotAllowedResponses(openapiDocument),
+);
 
 writeFileSync(
   outputFile,

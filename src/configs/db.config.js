@@ -1,25 +1,33 @@
 import mongoose from 'mongoose';
-const { connect, connection } = mongoose;
-export default async function connectDB(onSuccess) {
-  try {
-    // حذف options خالی - در mongoose 6+ دیگر نیازی نیست
-    const res = await connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/pet_shop_db',
-    );
 
-    console.log(`✅ MongoDB Connected: ${res.connection.host}`);
-    onSuccess?.(res);
-  } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error.message);
-    process.exit(1); // خروج از برنامه در صورت عدم اتصال
+import logger from '#configs/logger.js';
+
+export default async function connectDB() {
+  const mongooseInstance = await mongoose.connect(
+    process.env.MONGODB_URI || 'mongodb://localhost:27017/pet_shop_db',
+  );
+
+  logger.app.success('اتصال به MongoDB برقرار شد', {
+    host: mongooseInstance.connection.host,
+  });
+
+  return mongooseInstance;
+}
+
+export async function disconnectDB() {
+  if (mongoose.connection.readyState === 0) {
+    return;
   }
+
+  await mongoose.disconnect();
+  logger.app.info('اتصال MongoDB بسته شد');
 }
 
 // Handle connection events
-connection.on('disconnected', () => {
-  console.warn('⚠️ MongoDB Disconnected');
+mongoose.connection.on('disconnected', () => {
+  logger.app.warn('اتصال MongoDB قطع شد');
 });
 
-connection.on('error', (err) => {
-  console.error('❌ MongoDB Error:', err);
+mongoose.connection.on('error', (error) => {
+  logger.app.error('خطای اتصال MongoDB رخ داد', error);
 });

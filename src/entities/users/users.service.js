@@ -127,6 +127,13 @@ export class UserService {
     });
   }
 
+  static async register(credentials) {
+    return this.create({
+      ...credentials,
+      role: ROLES.CUSTOMER,
+    });
+  }
+
   // =========================================================
   // LOGIN
   // =========================================================

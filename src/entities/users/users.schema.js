@@ -22,6 +22,11 @@ const nationalCodeSchema = string().regex(/^\d{10}$/);
 const postalCodeSchema = string().regex(/^\d{10}$/);
 const mongoObjectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
 
+export const userRegisterSchema = object({
+  phoneNumber: iranianPhoneNumberSchema,
+  password: string().min(8),
+}).strict();
+
 const addressFields = {
   province: string().trim().min(2),
   city: string().trim().min(2),

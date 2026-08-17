@@ -24,6 +24,7 @@ import {
   getWishlistItemsController,
   loginUserController,
   refreshTokenController,
+  registerUserController,
   editUserAddressController,
   updateUserPersonalInfoController,
 } from './users.controller.js';
@@ -51,6 +52,32 @@ router.post(
     }
   */
   createUserController,
+);
+
+router.post(
+  '/users/register',
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Register a customer account'
+    #swagger.requestBody = {
+      required: true,
+      content: { "application/json": { schema: { $ref: '#/components/schemas/RegisterUserBody' } } }
+    }
+    #swagger.responses[201] = {
+      description: 'Customer account created',
+      content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, message: { type: 'string' } } } } }
+    }
+    #swagger.responses[422] = {
+      description: 'Validation error or existing user',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[405] = {
+      description: 'Method not allowed',
+      headers: { Allow: { schema: { type: 'string' }, example: 'POST' } },
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  registerUserController,
 );
 
 router.post(
@@ -84,6 +111,7 @@ router.put(
 );
 
 router.post('/users/addresses', authenticated, addUserAddressController);
+
 router.patch(
   '/users/addresses/:addressId',
   authenticated,

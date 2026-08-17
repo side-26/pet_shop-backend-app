@@ -1,88 +1,67 @@
-import app from './app.js';
+import { pathToFileURL } from 'node:url';
+
+import { STATUES } from '#configs/constants.js';
+import connectDB, { disconnectDB } from '#configs/db.config.js';
 import logger from '#configs/logger.js';
-import connectDB from '#configs/db.config.js';
+
+import app from './app.js';
+import {
+  createShutdownHandler,
+  registerProcessHandlers,
+} from './server.lifecycle.js';
 
 const PORT = process.env.PORT || 3000;
 
-// ============================================
-// SERVER STARTUP
-// ============================================
+const listen = (application, port) =>
+  new Promise((resolve, reject) => {
+    const server = application.listen(port);
 
-const startServer = () => {
-  connectDB(() => {
-    const server = app.listen(PORT, () => {
-      logger.app.info('Server started successfully', {
-        port: PORT,
-        environment: process.env.NODE_ENV || 'development',
-        url: `http://localhost:${PORT}`,
-        nodeVersion: process.version,
-        pid: process.pid,
-      });
-
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 URL: http://localhost:${PORT}`);
-    });
-
-    // ============================================
-    // GRACEFUL SHUTDOWN
-    // ============================================
-
-    const gracefulShutdown = (signal) => {
-      logger.app.warn('Received shutdown signal', { signal });
-      console.log(`\n🔄 Received ${signal}, shutting down gracefully...`);
-
-      server.close(() => {
-        logger.app.info('Server closed gracefully', {
-          uptime: process.uptime(),
-          connections: server._connections || 0,
-        });
-        console.log('👋 Server closed gracefully');
-        process.exit(0);
-      });
-
-      // Force shutdown after 10 seconds
-      setTimeout(() => {
-        logger.app.error('Force shutdown after timeout');
-        console.log('💥 Force shutdown');
-        process.exit(1);
-      }, 10000);
+    const handleError = (error) => {
+      server.off('listening', handleListening);
+      reject(error);
+    };
+    const handleListening = () => {
+      server.off('error', handleError);
+      resolve(server);
     };
 
-    // Listen for shutdown signals
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
-    // ============================================
-    // UNHANDLED EXCEPTIONS & REJECTIONS
-    // ============================================
-
-    process.on('uncaughtException', (error) => {
-      logger.app.error('Uncaught exception', error, {
-        type: 'uncaughtException',
-        stack: error.stack,
-      });
-      console.error('💥 Uncaught Exception:', error);
-      gracefulShutdown('uncaughtException');
-    });
-
-    process.on('unhandledRejection', (reason, promise) => {
-      const error =
-        reason instanceof Error ? reason : new Error(String(reason));
-      logger.app.error('Unhandled rejection', error, {
-        type: 'unhandledRejection',
-        promise: String(promise),
-      });
-      console.error('💥 Unhandled Rejection:', reason);
-      gracefulShutdown('unhandledRejection');
-    });
-
-    return server;
+    server.once('error', handleError);
+    server.once('listening', handleListening);
   });
+
+export const startServer = async () => {
+  await connectDB();
+
+  let server;
+  try {
+    server = await listen(app, PORT);
+  } catch (error) {
+    await disconnectDB();
+    throw error;
+  }
+
+  const shutdown = createShutdownHandler({ server });
+  registerProcessHandlers(shutdown);
+
+  logger.app.success('سرور با موفقیت راه‌اندازی شد', {
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development',
+    url: `http://localhost:${PORT}`,
+    nodeVersion: process.version,
+    pid: process.pid,
+  });
+
+  return server;
 };
 
-// ============================================
-// START THE APPLICATION
-// ============================================
+const isMainModule =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 
-startServer();
+if (isMainModule) {
+  startServer().catch((error) => {
+    logger.app.error('راه‌اندازی سرور ناموفق بود', error, {
+      statusCode: STATUES.INTERNAL_SERVER,
+    });
+    process.exitCode = 1;
+  });
+}

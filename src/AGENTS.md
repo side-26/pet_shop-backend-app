@@ -8,11 +8,15 @@
 
 ### `app.js`
 
-Builds the Express application, applies global security, header, logging, parsing, and rate-limit middleware, mounts all API routers, then installs error logging and handling.
+Builds the Express application, applies global security, header, logging, rate-limit, allowed-method, and parsing middleware, mounts all API routers, then installs error logging and handling.
 
 ### `server.js`
 
-Connects MongoDB, starts the HTTP server, and handles shutdown signals and unhandled process errors.
+Connects MongoDB, starts the HTTP server, drains HTTP connections during shutdown, disconnects MongoDB, and handles shutdown signals and unhandled process errors with a bounded deadline.
+
+### `server.lifecycle.js`
+
+Owns the testable, single-flight HTTP-draining and process-signal lifecycle used by `server.js`.
 
 ### API documentation
 

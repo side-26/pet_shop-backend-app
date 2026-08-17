@@ -15,6 +15,7 @@ import {
   editUserAddressSchema,
   userAddressIdSchema,
   userRefreshTokenSchema,
+  userRegisterSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
   wishlistEntryIdSchema,
@@ -37,6 +38,20 @@ export const createUserController = async (req, res, next) => {
     });
   } catch (err) {
     onCatchPromiseController(err, next);
+  }
+};
+
+export const registerUserController = async (req, res, next) => {
+  try {
+    const credentials = returnFormValidation(userRegisterSchema, req.body);
+
+    await UserService.register(credentials);
+
+    setSuccessResponse(res, STATUES.CREATED, {
+      message: 'حساب کاربری شما با موفقیت ساخته شد لطفا وارد اپلیکیشن شوید',
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
   }
 };
 

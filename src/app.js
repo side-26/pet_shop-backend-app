@@ -5,6 +5,7 @@ import { openapiDocument } from '#configs/openapi.config.js';
 import { logRequest, logError } from '#middlewares/logger.middleware.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { headerMiddleware } from '#middlewares/header.middleware.js';
+import { apiMethodMiddleware } from '#middlewares/method.middleware.js';
 import {
   rateLimiterMiddleware,
   scalarContentSecurityPolicy,
@@ -32,6 +33,7 @@ app.use(securityHeadersMiddleware);
 app.use(headerMiddleware);
 app.use(logRequest);
 app.use('/api', rateLimiterMiddleware);
+app.use('/api', apiMethodMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
