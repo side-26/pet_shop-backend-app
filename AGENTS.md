@@ -36,6 +36,8 @@ For every coding task or code change in this repository, read and apply the comp
 
 Treat `app-general-workflow` as mandatory repository policy even when the user does not explicitly name it. Apply its production-quality checks, entity architecture, test coverage, naming, and constant-usage rules before considering work complete.
 
+For every coding task or code review in this repository, also read and apply `.agents/skills/prevent-memory-leaks/SKILL.md`. Treat it as mandatory repository policy. Audit every changed or affected timer, listener, stream, socket, database resource, watcher, subscription, cache, and background task for explicit ownership and deterministic cleanup. Store and clear timer handles on every applicable completion, cancellation, error, and shutdown path; refactor lifecycle leaks in the affected scope before considering work complete.
+
 When adding or changing a Zod schema, inspect `src/configs/zod.config.js`. Add any missing Zod issue-code mapping and Persian field label in the same change.
 
 In every new or modified source file, group imports in this order: external packages, internal application imports, then relative imports. Separate each non-empty group with one blank line.

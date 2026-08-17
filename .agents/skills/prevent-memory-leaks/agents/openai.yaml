@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prevent Memory Leaks"
+  short_description: "Audit and prevent lifecycle resource leaks"
+  default_prompt: "Use $prevent-memory-leaks to audit this change for timer and resource lifecycle leaks."
