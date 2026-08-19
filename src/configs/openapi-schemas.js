@@ -13,6 +13,7 @@ import {
   createOrderSchema,
   updateDeliveryStateSchema,
 } from '../entities/orders/orders.schema.js';
+import { ROLES } from './constants.js';
 
 const { toJSONSchema } = z;
 
@@ -77,6 +78,43 @@ export const schemas = {
     properties: {
       phoneNumber: { type: 'string', pattern: '^09\\d{9}$' },
       password: { type: 'string', minLength: 8 },
+    },
+  },
+  LoginSuccessResponse: {
+    type: 'object',
+    required: ['isSuccess', 'message', 'data'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      message: { type: 'string' },
+      data: {
+        type: 'object',
+        required: [
+          'accessToken',
+          'refreshToken',
+          'sessionExp',
+          'userId',
+          'role',
+          'accessExp',
+        ],
+        properties: {
+          accessToken: { type: 'string' },
+          refreshToken: { type: 'string' },
+          sessionExp: {
+            type: 'integer',
+            format: 'int64',
+            description:
+              'Session expiration as a Unix timestamp in milliseconds',
+          },
+          userId: { type: 'string' },
+          role: { type: 'string', enum: Object.values(ROLES) },
+          accessExp: {
+            type: 'integer',
+            format: 'int64',
+            description:
+              'Access-token expiration as a Unix timestamp in milliseconds',
+          },
+        },
+      },
     },
   },
   UpdateUserPersonalInfoBody: toOpenApi(userUpdatePersonalInfoSchema),

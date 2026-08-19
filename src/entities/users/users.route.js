@@ -91,7 +91,7 @@ router.post(
     }
     #swagger.responses[200] = {
       description: 'User logged in successfully',
-      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
+      content: { "application/json": { schema: { $ref: '#/components/schemas/LoginSuccessResponse' } } }
     }
     #swagger.responses[404] = {
       description: 'User not found',

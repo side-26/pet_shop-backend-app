@@ -158,6 +158,7 @@ jest.mock('#utils/helpers.js', () => ({
 
 import bcrypt from 'bcryptjs';
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import request from 'supertest';
 import sharp from 'sharp';
@@ -441,6 +442,26 @@ describe('User API - Integration Tests', () => {
       expect(res.body.data.accessToken).toBeDefined();
 
       expect(res.body.data.refreshToken).toBeDefined();
+
+      expect(res.body.data.userId).toBe(testUser._id.toString());
+
+      expect(res.body.data.role).toBe(testUser.role);
+
+      expect(res.body.data.accessExp).toEqual(expect.any(Number));
+
+      expect(res.body.data.sessionExp).toEqual(expect.any(Number));
+
+      expect(res.body.data.accessExp).toBe(
+        jwt.decode(res.body.data.accessToken).exp * 1000,
+      );
+
+      expect(res.body.data.sessionExp).toBe(
+        jwt.decode(res.body.data.refreshToken).exp * 1000,
+      );
+
+      expect(res.body.data.accessExp).toBeGreaterThan(Date.now());
+
+      expect(res.body.data.sessionExp).toBeGreaterThan(res.body.data.accessExp);
     });
 
     test('should return 404 if user does not exist', async () => {

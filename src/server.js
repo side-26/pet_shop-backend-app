@@ -33,6 +33,7 @@ export const startServer = async () => {
   await connectDB();
 
   let server;
+
   try {
     server = await listen(app, PORT);
   } catch (error) {

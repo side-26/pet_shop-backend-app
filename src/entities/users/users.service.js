@@ -168,11 +168,17 @@ export class UserService {
     );
 
     const refreshToken = this.createRefreshToken(user._id);
+    const accessExp = jwt.decode(accessToken).exp * 1000;
+    const sessionExp = jwt.decode(refreshToken).exp * 1000;
 
     return {
       user,
+      userId: user._id.toString(),
+      role: user.role,
       accessToken,
       refreshToken,
+      accessExp,
+      sessionExp,
     };
   }
 

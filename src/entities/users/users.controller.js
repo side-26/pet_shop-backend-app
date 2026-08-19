@@ -63,7 +63,15 @@ export const loginUserController = async (req, res, next) => {
   try {
     const body = returnFormValidation(userZodSchema, req.body);
 
-    const { user, accessToken, refreshToken } = await UserService.login(body);
+    const {
+      user,
+      userId,
+      role,
+      accessToken,
+      refreshToken,
+      accessExp,
+      sessionExp,
+    } = await UserService.login(body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `کاربر با نام کاربری ${user.phoneNumber} با موفقیت وارد شد`,
@@ -71,6 +79,10 @@ export const loginUserController = async (req, res, next) => {
       data: {
         accessToken,
         refreshToken,
+        sessionExp,
+        userId,
+        role,
+        accessExp,
       },
     });
   } catch (err) {

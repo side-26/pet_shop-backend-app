@@ -6,6 +6,7 @@ jest.mock('bcryptjs', () => ({
 
 jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(),
+  decode: jest.fn(),
 }));
 
 jest.mock('sharp', () =>
@@ -397,6 +398,9 @@ describe('UserService - Unit Tests', () => {
   // =========================================================
 
   test('login returns user and tokens', async () => {
+    const accessExp = 1_800_000_000_000;
+    const sessionExp = 1_800_604_800_000;
+
     UserModel.findOne.mockResolvedValue(mockUser);
 
     bcrypt.compare.mockResolvedValue(true);
@@ -404,6 +408,9 @@ describe('UserService - Unit Tests', () => {
     jwt.sign
       .mockReturnValueOnce('access-token')
       .mockReturnValueOnce('refresh-token');
+    jwt.decode
+      .mockReturnValueOnce({ exp: accessExp / 1000 })
+      .mockReturnValueOnce({ exp: sessionExp / 1000 });
 
     const result = await UserService.login({
       phoneNumber: mockUser.phoneNumber,
@@ -412,9 +419,15 @@ describe('UserService - Unit Tests', () => {
 
     expect(result).toEqual({
       user: mockUser,
+      userId: mockUser._id,
+      role: mockUser.role,
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
+      accessExp,
+      sessionExp,
     });
+    expect(jwt.decode).toHaveBeenNthCalledWith(1, 'access-token');
+    expect(jwt.decode).toHaveBeenNthCalledWith(2, 'refresh-token');
   });
 
   test('login throws if user does not exist', async () => {
