@@ -1,13 +1,13 @@
 import { pathToFileURL } from 'node:url';
 
 import { STATUES } from '#configs/constants.js';
-import connectDB, { disconnectDB } from '#configs/db.config.js';
 import logger from '#configs/logger.js';
 
 import app from './app.js';
 import {
   createShutdownHandler,
   registerProcessHandlers,
+  startApplication,
 } from './server.lifecycle.js';
 
 const PORT = process.env.PORT || 3000;
@@ -30,16 +30,9 @@ const listen = (application, port) =>
   });
 
 export const startServer = async () => {
-  await connectDB();
-
-  let server;
-
-  try {
-    server = await listen(app, PORT);
-  } catch (error) {
-    await disconnectDB();
-    throw error;
-  }
+  const server = await startApplication({
+    startHttpServer: () => listen(app, PORT),
+  });
 
   const shutdown = createShutdownHandler({ server });
   registerProcessHandlers(shutdown);

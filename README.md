@@ -2,7 +2,7 @@
 
 ![Pet Shop Backend API banner](./docs/assets/pet-shop-backend-banner.png)
 
-A production-oriented REST API for a pet-commerce platform. It manages users, pets, products, taxonomy, carts, wishlists, orders, locations, image uploads, and external reference-data integrations through a layered Express and MongoDB architecture.
+A production-oriented REST API for a pet-commerce platform. It manages users, pets, products, taxonomy, carts, wishlists, orders, locations, image uploads, and external reference-data integrations through a layered Express, MongoDB, and Redis architecture.
 
 The project is useful as:
 
@@ -40,6 +40,7 @@ flowchart LR
     Controller --> Service["Domain service"]
     Service --> Model["Mongoose model"]
     Model --> MongoDB[(MongoDB)]
+    Server["Server lifecycle"] --> Redis[(Redis rate-limit counters)]
     Service --> Storage["S3-compatible object storage"]
     Service --> Integration["Countries or Neshan provider"]
 ```
@@ -94,10 +95,11 @@ pet_shop-backend-app/
 │   │   ├── locations/            MongoDB-backed provinces and cities
 │   │   └── reverseGeocoding/     Neshan coordinate-to-address adapter
 │   ├── middlewares/              Auth, roles, security, uploads, logging, errors
+│   ├── infrastructure/redis/     Redis lifecycle and atomic rate-limit storage
 │   ├── services/                 Shared object-storage and main-image workflows
 │   ├── utils/                    Responses, pagination, JWT, paths, image processing
 │   ├── app.js                    Express composition root
-│   └── server.js                 Database connection and HTTP lifecycle
+│   └── server.js                 MongoDB, Redis, and HTTP lifecycle
 ├── package.json
 └── README.md
 ```
@@ -122,6 +124,7 @@ Each business entity follows the same local structure:
 | Runtime          | Node.js, ECMAScript modules            | Application runtime and module system                         |
 | HTTP             | Express 5                              | REST routes and middleware composition                        |
 | Database         | MongoDB, Mongoose 9                    | Documents, relationships, indexes, and validation hooks       |
+| Cache/counters   | Redis, node-redis                      | Shared connection lifecycle and atomic rate-limit counters    |
 | Validation       | Zod 4                                  | Request and model-data validation with Persian error mapping  |
 | Authentication   | JSON Web Token, bcryptjs               | Access/refresh tokens and password hashing                    |
 | Object storage   | AWS SDK S3 client                      | Arvan S3-compatible image upload and cleanup                  |
@@ -136,6 +139,7 @@ Each business entity follows the same local structure:
 ### Important packages
 
 - `mongoose`: MongoDB schemas, queries, population, hooks, and indexes.
+- `redis`: shared Redis connection and atomic expiring rate-limit counters.
 - `zod`: input validation and Persian validation-message mapping.
 - `jsonwebtoken` and `bcryptjs`: authentication and password security.
 - `@aws-sdk/client-s3`: uploads, replacements, and deletions in object storage.
@@ -153,6 +157,7 @@ Each business entity follows the same local structure:
 - Node.js 20 or newer.
 - npm.
 - A MongoDB instance.
+- A Redis instance.
 - An S3-compatible Arvan Object Storage bucket for image features.
 - A Neshan API key if reverse geocoding is required.
 
@@ -173,6 +178,10 @@ PORT=3000
 MONGODB_URI=mongodb://localhost:27017/pet_shop_db
 MONGODB_TEST_URI=mongodb://localhost:27017/pet_shop_test_db
 
+# Use REDIS_URL, or configure REDIS_HOST and REDIS_PORT instead.
+REDIS_URL=redis://localhost:6379
+REDIS_TEST_URL=redis://localhost:6380/15
+
 JWT_SECRET_KEY=replace-with-a-long-random-secret
 JWT_REFRESH_SECRET_KEY=replace-with-a-different-long-random-secret
 
@@ -189,7 +198,7 @@ COUNTRIES_API_URL=https://www.apicountries.com/countries
 LOG_LEVEL=info
 ```
 
-`ARVAN_PUBLIC_BASE_URL` and `COUNTRIES_API_URL` are optional overrides. Keep secrets outside source control.
+`REDIS_TEST_URL` must point to an isolated test Redis database before real-Redis integration tests run. `ARVAN_PUBLIC_BASE_URL` and `COUNTRIES_API_URL` are optional overrides. Keep secrets outside source control.
 
 ### Run locally
 
@@ -264,6 +273,7 @@ Roles are applied at the route layer:
 - Service unit tests mock persistence and external providers.
 - Entity integration tests exercise routes, middleware, controllers, validation, and MongoDB behavior.
 - Storage tests mock the S3 client and never require live network access.
+- Redis unit tests mock the client; Redis integration tests run against the isolated `REDIS_TEST_URL` service and clean only their namespaced keys.
 - API documentation tests verify both `/openapi.json` and `/docs`.
 - Shared helper tests cover image conversion, Base64 placeholder limits, validation mapping, and middleware behavior.
 

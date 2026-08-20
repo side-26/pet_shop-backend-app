@@ -70,6 +70,7 @@
   },
   "imports": {
     "#configs/*": "./src/configs/*",
+    "#infrastructure/*": "./src/infrastructure/*",
     "#routes/*": "./src/routes/*",
     "#entities/*": "./src/entities/*",
     "#middlewares/*": "./src/middlewares/*",

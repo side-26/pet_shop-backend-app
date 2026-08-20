@@ -12,11 +12,11 @@ Builds the Express application, applies global security, header, logging, rate-l
 
 ### `server.js`
 
-Connects MongoDB, starts the HTTP server, drains HTTP connections during shutdown, disconnects MongoDB, and handles shutdown signals and unhandled process errors with a bounded deadline.
+Connects MongoDB and Redis before starting the HTTP server, drains HTTP connections during shutdown, disconnects MongoDB, disconnects Redis last, and handles shutdown signals and unhandled process errors with a bounded deadline.
 
 ### `server.lifecycle.js`
 
-Owns the testable, single-flight HTTP-draining and process-signal lifecycle used by `server.js`.
+Owns the testable startup/rollback sequence, single-flight HTTP draining, ordered resource cleanup, and process-signal lifecycle used by `server.js`.
 
 ### API documentation
 
@@ -24,7 +24,7 @@ Owns the testable, single-flight HTTP-draining and process-signal lifecycle used
 
 ## Flow
 
-`server.js -> database connection -> app.js -> middleware -> entity/integration route -> controller -> service -> model/client -> error middleware`
+`server.js -> MongoDB and Redis connections -> app.js -> middleware -> entity/integration route -> controller -> service -> model/client -> error middleware`
 
 ## Main Areas
 
@@ -35,6 +35,7 @@ Owns the testable, single-flight HTTP-draining and process-signal lifecycle used
 - [`services/AGENTS.md`](./services/AGENTS.md) — shared application services.
 - [`utils/AGENTS.md`](./utils/AGENTS.md) — shared helpers.
 - [`__tests__/AGENTS.md`](./__tests__/AGENTS.md) — integration-test environment setup.
+- [`infrastructure/redis/AGENTS.md`](./infrastructure/redis/AGENTS.md) — Redis connection lifecycle and rate-limit storage/middleware.
 
 ## Modification Rules
 
@@ -46,5 +47,5 @@ Owns the testable, single-flight HTTP-draining and process-signal lifecycle used
 ## Summary
 
 - `app.js` owns the HTTP composition root.
-- `server.js` owns database-backed process startup and shutdown.
+- `server.js` owns MongoDB-, Redis-, and HTTP-backed process startup and shutdown.
 - Domain behavior belongs below `entities`; external adapters belong below `integrations`.

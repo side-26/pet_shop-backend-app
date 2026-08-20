@@ -1,6 +1,46 @@
 import { SERVER_LIFECYCLE } from '#configs/constants.js';
-import { disconnectDB } from '#configs/db.config.js';
+import connectDB, { disconnectDB } from '#configs/db.config.js';
 import logger from '#configs/logger.js';
+
+import RedisClient from './infrastructure/redis/client.js';
+
+export const startApplication = async ({
+  startHttpServer,
+  connectDatabase = connectDB,
+  connectRedis = RedisClient.connect.bind(RedisClient),
+  disconnectDatabase = disconnectDB,
+  disconnectRedis = RedisClient.disconnect.bind(RedisClient),
+}) => {
+  await connectDatabase();
+
+  try {
+    await connectRedis();
+    return await startHttpServer();
+  } catch (error) {
+    const cleanupErrors = [];
+
+    try {
+      await disconnectDatabase();
+    } catch (cleanupError) {
+      cleanupErrors.push(cleanupError);
+    }
+
+    try {
+      await disconnectRedis();
+    } catch (cleanupError) {
+      cleanupErrors.push(cleanupError);
+    }
+
+    if (cleanupErrors.length > 0) {
+      logger.app.error(
+        'پاک‌سازی منابع پس از خطای راه‌اندازی ناموفق بود',
+        new AggregateError(cleanupErrors),
+      );
+    }
+
+    throw error;
+  }
+};
 
 const closeHttpServer = (server) =>
   new Promise((resolve, reject) => {
@@ -23,7 +63,7 @@ const closeHttpServer = (server) =>
     server.closeIdleConnections?.();
   });
 
-const closeResources = async (server, disconnectDatabase) => {
+const closeResources = async (server, disconnectDatabase, disconnectRedis) => {
   const errors = [];
 
   try {
@@ -38,6 +78,12 @@ const closeResources = async (server, disconnectDatabase) => {
     errors.push(error);
   }
 
+  try {
+    await disconnectRedis();
+  } catch (error) {
+    errors.push(error);
+  }
+
   if (errors.length > 0) {
     throw new AggregateError(errors, 'بستن منابع برنامه ناموفق بود');
   }
@@ -46,6 +92,7 @@ const closeResources = async (server, disconnectDatabase) => {
 export const createShutdownHandler = ({
   server,
   disconnectDatabase = disconnectDB,
+  disconnectRedis = RedisClient.disconnect.bind(RedisClient),
   timeoutMs = SERVER_LIFECYCLE.SHUTDOWN_TIMEOUT_MS,
   exit = process.exit.bind(process),
   setExitCode = (code) => {
@@ -80,7 +127,7 @@ export const createShutdownHandler = ({
 
       try {
         await Promise.race([
-          closeResources(server, disconnectDatabase),
+          closeResources(server, disconnectDatabase, disconnectRedis),
           timeout,
         ]);
         setExitCode(exitCode);
