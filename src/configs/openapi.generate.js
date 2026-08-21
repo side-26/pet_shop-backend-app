@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { schemas } from './openapi-schemas.js';
+import { RATE_LIMIT } from './constants.js';
 import { API_ROUTE_METHODS } from './routeMethods.config.js';
 
 const configDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -50,7 +51,9 @@ const routeSegmentsMatch = (configuredPath, openapiPath) => {
     configuredSegments.length === openapiSegments.length &&
     configuredSegments.every(
       (segment, index) =>
-        segment.startsWith(':') || segment === openapiSegments[index],
+        (segment.startsWith(':') &&
+          /^\{[^}]+\}$/.test(openapiSegments[index])) ||
+        segment === openapiSegments[index],
     )
   );
 };
@@ -82,6 +85,80 @@ const addMethodNotAllowedResponses = (openapiDocument) => {
           },
         },
       };
+    });
+  });
+
+  return openapiDocument;
+};
+
+const userRouterCollections = new Set(['users', 'cart', 'wishlist']);
+
+const getUserRouteRateLimitPolicy = (apiPath) => {
+  if (apiPath === '/users/login') {
+    return {
+      limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+      window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+    };
+  }
+
+  if (apiPath === '/users/paginate') {
+    return {
+      limit: RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS,
+      window: RATE_LIMIT.USER_PAGINATE_WINDOW_SECONDS,
+    };
+  }
+
+  return {
+    limit: RATE_LIMIT.USER_MAX_REQUESTS,
+    window: RATE_LIMIT.USER_WINDOW_SECONDS,
+  };
+};
+
+const createRateLimitResponse = ({ limit, window }) => ({
+  description: `More than ${limit} requests were sent from the same IP within ${window} seconds`,
+  headers: {
+    'RateLimit-Limit': {
+      schema: { type: 'integer' },
+      example: limit,
+    },
+    'RateLimit-Remaining': {
+      schema: { type: 'integer' },
+      example: 0,
+    },
+    'Retry-After': {
+      schema: { type: 'integer' },
+      description: 'Seconds until the current rate-limit window expires',
+      example: window,
+    },
+  },
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/ErrorResponse' },
+    },
+  },
+});
+
+const addUserRouteRateLimitResponses = (openapiDocument) => {
+  API_ROUTE_METHODS.forEach(({ path: configuredPath, methods }) => {
+    const [collection] = configuredPath.split('/').filter(Boolean);
+    if (!userRouterCollections.has(collection)) return;
+
+    const pathEntry = Object.entries(openapiDocument.paths ?? {}).find(
+      ([openapiPath]) => routeSegmentsMatch(configuredPath, openapiPath),
+    );
+    if (!pathEntry) return;
+
+    const [openapiPath, pathItem] = pathEntry;
+    const rateLimitResponse = createRateLimitResponse(
+      getUserRouteRateLimitPolicy(openapiPath),
+    );
+
+    methods.forEach((method) => {
+      const operation = pathItem[method.toLowerCase()];
+      if (!operation) return;
+
+      operation.responses ??= {};
+      operation.responses['429'] = rateLimitResponse;
     });
   });
 
@@ -132,7 +209,7 @@ await swaggerAutogen({ openapi: '3.0.0' })(outputFile, routes, doc);
 
 const openapiDocument = JSON.parse(readFileSync(outputFile, 'utf8'));
 const taggedOpenapiDocument = addCollectionTags(
-  addMethodNotAllowedResponses(openapiDocument),
+  addMethodNotAllowedResponses(addUserRouteRateLimitResponses(openapiDocument)),
 );
 
 writeFileSync(

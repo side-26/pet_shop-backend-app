@@ -322,9 +322,9 @@ describe('User API - Integration Tests', () => {
     mockRedisRateLimitConsume.mockReset().mockResolvedValue({
       allowed: true,
       current: 1,
-      remaining: RATE_LIMIT.LOGIN_MAX_REQUESTS - 1,
-      limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
-      retryAfter: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+      remaining: RATE_LIMIT.USER_MAX_REQUESTS - 1,
+      limit: RATE_LIMIT.USER_MAX_REQUESTS,
+      retryAfter: RATE_LIMIT.USER_WINDOW_SECONDS,
     });
     mockRedisOtpFind.mockReset().mockResolvedValue(null);
     mockRedisOtpReserve.mockReset().mockResolvedValue({
@@ -894,6 +894,52 @@ describe('User API - Integration Tests', () => {
 
       expect(res.status).toBe(STATUES.METHOD_NOT_ALLOWED);
       expect(res.headers.allow).toBe(METHODS.post.toUpperCase());
+    });
+  });
+
+  // =========================================================
+  // Users-router rate-limit policies
+  // =========================================================
+
+  describe('users-router Redis rate limits', () => {
+    test('should apply the standard three-request six-minute policy', async () => {
+      const res = await request(app)
+        .get('/api/users/all')
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(mockRedisRateLimitConsume).toHaveBeenCalledWith({
+        key: expect.stringContaining('rate-limit:users:GET:/api/users/all:'),
+        limit: RATE_LIMIT.USER_MAX_REQUESTS,
+        window: RATE_LIMIT.USER_WINDOW_SECONDS,
+      });
+      expect(res.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.USER_MAX_REQUESTS),
+      );
+      expect(res.headers['ratelimit-remaining']).toBe(
+        String(RATE_LIMIT.USER_MAX_REQUESTS - 1),
+      );
+    });
+
+    test('should stop a standard route when its Redis bucket is exhausted', async () => {
+      mockRedisRateLimitConsume.mockResolvedValueOnce({
+        allowed: false,
+        current: RATE_LIMIT.USER_MAX_REQUESTS + 1,
+        remaining: 0,
+        limit: RATE_LIMIT.USER_MAX_REQUESTS,
+        retryAfter: 75,
+      });
+
+      const res = await request(app)
+        .get('/api/users/all')
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.TOO_MANY_REQUESTS);
+      expect(res.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.USER_MAX_REQUESTS),
+      );
+      expect(res.headers['ratelimit-remaining']).toBe('0');
+      expect(res.headers['retry-after']).toBe('75');
     });
   });
 
@@ -1655,6 +1701,13 @@ describe('User API - Integration Tests', () => {
 
   describe('GET /api/users/paginate', () => {
     test('should return paginated users', async () => {
+      mockRedisRateLimitConsume.mockResolvedValueOnce({
+        allowed: true,
+        current: 1,
+        remaining: RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS - 1,
+        limit: RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS,
+        retryAfter: RATE_LIMIT.USER_PAGINATE_WINDOW_SECONDS,
+      });
       await createTestUser({
         phoneNumber: '09111111111',
 
@@ -1676,6 +1729,19 @@ describe('User API - Integration Tests', () => {
       expect(res.body.data.totalRecords).toBe(2);
 
       expect(res.body.data.data).toHaveLength(1);
+      expect(mockRedisRateLimitConsume).toHaveBeenCalledWith({
+        key: expect.stringContaining(
+          'rate-limit:users:GET:/api/users/paginate:',
+        ),
+        limit: RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS,
+        window: RATE_LIMIT.USER_PAGINATE_WINDOW_SECONDS,
+      });
+      expect(res.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS),
+      );
+      expect(res.headers['ratelimit-remaining']).toBe(
+        String(RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS - 1),
+      );
     });
   });
 

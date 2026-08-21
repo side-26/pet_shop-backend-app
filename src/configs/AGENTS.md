@@ -13,8 +13,9 @@ This folder centralizes runtime environment access, MongoDB and object-storage c
 - `zod.config.js` — maps Zod issues and schema field names to Persian messages.
 - `arvanCloud.config.js` and `upload.config.js` — configure S3-compatible storage and in-memory image uploads.
 - `logger.js` — shared structured logger used by startup, middleware, and services.
-- `openapi.generate.js` and `openapi-schemas.js` — generate the OpenAPI 3.0 contract from colocated route annotations and Zod-backed schemas.
+- `openapi.generate.js` and `openapi-schemas.js` — generate the OpenAPI 3.0 contract from colocated route annotations and Zod-backed schemas, then add collection tags, method-not-allowed responses, and users-router rate-limit responses.
 - `openapi.config.js` and `openapi.json` — load and store the single contract served to machines and Scalar.
+- `openapi.unit.test.js` — verifies generated users-router rate-limit coverage, including static, paginated, login, and dynamic paths.
 
 ## Dependencies
 

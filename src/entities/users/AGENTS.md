@@ -15,7 +15,7 @@ Owns public customer registration, OTP requests for existing phone numbers, user
 
 ## Dependencies
 
-Uses `ObjectStorageService` and image helpers for profile images, the Melipayamak OTP integration, the shared Redis OTP store, separate access-token and refresh-token secrets through shared JWT/environment helpers, roles/status constants, authentication/role/upload middleware, and the shared Redis rate limiter for login attempts.
+Uses `ObjectStorageService` and image helpers for profile images, the Melipayamak OTP integration, the shared Redis OTP store, separate access-token and refresh-token secrets through shared JWT/environment helpers, roles/status constants, authentication/role/upload middleware, and the shared Redis rate limiter for every users-router endpoint.
 
 ## Modification Rules
 
@@ -26,7 +26,9 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - Public OTP verification requires a valid phone number and six-digit `otp-code`, accepts optional `reset-password` (default `false`), reads the phone-and-requester-IP Redis key, and compares the bcrypt hash. A normal success returns the login token data without a message. Password-reset success signs a Nano ID and phone number with `TEMPORARY_TOKEN_SECRET_KEY`, atomically stores the token under the phone number for five minutes, and returns it with its remaining `expiry` and a Persian success message. Repeated successful requests return the current Redis token. Only three reset-token requests are allowed per phone and requester IP in the five-minute window; later requests return Persian 403 access denied. Expired OTP keys require requesting a new code.
 - The global API method middleware checks registration before overlapping dynamic user routes and returns 405 for methods other than POST.
 - Sign and verify access tokens with `JWT_SECRET_KEY`; sign and verify refresh tokens with `JWT_REFRESH_SECRET_KEY`.
-- Limit `/users/login` to three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.
+- Limit every users-router endpoint without a more specific policy to three requests per requester IP and route pattern in a fixed six-minute Redis window. This includes the user, cart, and wishlist paths owned by `users.route.js`.
+- Limit `/users/paginate` to nine requests per requester IP in a fixed three-minute Redis window.
+- Preserve the existing `/users/login` policy of three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.

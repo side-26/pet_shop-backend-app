@@ -55,6 +55,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -113,6 +144,37 @@
           },
           "422": {
             "description": "Validation error or existing user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -180,6 +242,37 @@
           },
           "422": {
             "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -264,6 +357,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -323,7 +447,7 @@
             }
           },
           "429": {
-            "description": "More than three login requests were sent from the same IP within two minutes",
+            "description": "More than 3 requests were sent from the same IP within 120 seconds",
             "headers": {
               "RateLimit-Limit": {
                 "schema": {
@@ -341,7 +465,8 @@
                 "schema": {
                   "type": "integer"
                 },
-                "description": "Seconds until the current rate-limit window expires"
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 120
               }
             },
             "content": {
@@ -418,6 +543,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -459,6 +615,37 @@
               }
             }
           },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -478,6 +665,37 @@
                   "type": "string"
                 },
                 "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -517,6 +735,37 @@
               }
             }
           },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -534,6 +783,37 @@
                   "type": "string"
                 },
                 "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -563,6 +843,37 @@
                   "type": "string"
                 },
                 "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -622,6 +933,37 @@
           },
           "422": {
             "description": "Validation error"
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -693,6 +1035,37 @@
           },
           "422": {
             "description": "Invalid cart item ID"
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -743,6 +1116,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -769,6 +1173,37 @@
                   "type": "string"
                 },
                 "example": "DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -809,6 +1244,37 @@
               }
             }
           },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -838,6 +1304,37 @@
               }
             }
           },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "default": {
             "description": ""
           }
@@ -857,6 +1354,37 @@
                   "type": "string"
                 },
                 "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -908,6 +1436,37 @@
                   "type": "string"
                 },
                 "example": "PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -974,6 +1533,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1021,6 +1611,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1049,6 +1670,37 @@
                   "type": "string"
                 },
                 "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {
@@ -1131,6 +1783,37 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 9 requests were sent from the same IP within 180 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 9
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 180
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1179,6 +1862,37 @@
                   "type": "string"
                 },
                 "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
               }
             },
             "content": {

@@ -35,9 +35,22 @@ import {
 
 const router = express.Router();
 const userRateLimiter = new RateLimiter('users');
+const standardUserRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.USER_MAX_REQUESTS,
+  window: RATE_LIMIT.USER_WINDOW_SECONDS,
+});
+const paginatedUserListRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS,
+  window: RATE_LIMIT.USER_PAGINATE_WINDOW_SECONDS,
+});
+const loginUserRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+  window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+});
 
 router.post(
   '/users',
+  standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*
@@ -61,6 +74,7 @@ router.post(
 
 router.post(
   '/users/register',
+  standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Register a customer account'
@@ -87,6 +101,7 @@ router.post(
 
 router.post(
   '/users/send-otp',
+  standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Send a six-digit OTP to an existing user'
@@ -116,6 +131,7 @@ router.post(
 
 router.post(
   '/users/verify',
+  standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Verify an OTP for the requester phone number and IP'
@@ -167,15 +183,13 @@ router.post(
       content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
     }
   */
-  userRateLimiter.limit({
-    limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
-    window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
-  }),
+  loginUserRateLimit,
   loginUserController,
 );
 
 router.post(
   '/users/reset-password',
+  standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
     #swagger.summary = 'Reset a user password with a temporary OTP token'
@@ -200,26 +214,43 @@ router.post(
   resetUserPasswordController,
 );
 
-router.post('/users/refresh-token', refreshTokenController);
+router.post(
+  '/users/refresh-token',
+  standardUserRateLimit,
+  refreshTokenController,
+);
 
 router.put(
   '/users/edit-info',
+  standardUserRateLimit,
   authenticated,
   uploadAvatar,
   updateUserPersonalInfoController,
 );
 
-router.post('/users/addresses', authenticated, addUserAddressController);
+router.post(
+  '/users/addresses',
+  standardUserRateLimit,
+  authenticated,
+  addUserAddressController,
+);
 
 router.patch(
   '/users/addresses/:addressId',
+  standardUserRateLimit,
   authenticated,
   editUserAddressController,
 );
-router.get('/users/addresses', authenticated, getUserAddressListController);
+router.get(
+  '/users/addresses',
+  standardUserRateLimit,
+  authenticated,
+  getUserAddressListController,
+);
 
 router.post(
   '/cart/add',
+  standardUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -235,6 +266,7 @@ router.post(
 );
 router.delete(
   '/cart/delete/:id',
+  standardUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -249,6 +281,7 @@ router.delete(
 );
 router.get(
   '/cart/all',
+  standardUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -260,6 +293,7 @@ router.get(
 );
 router.delete(
   '/cart/empty',
+  standardUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -270,16 +304,28 @@ router.delete(
   emptyCartController,
 );
 
-router.post('/wishlist/add', authenticated, addWishlistItemController);
+router.post(
+  '/wishlist/add',
+  standardUserRateLimit,
+  authenticated,
+  addWishlistItemController,
+);
 router.delete(
   '/wishlist/delete/:id',
+  standardUserRateLimit,
   authenticated,
   deleteWishlistItemController,
 );
-router.get('/wishlist/all', authenticated, getWishlistItemsController);
+router.get(
+  '/wishlist/all',
+  standardUserRateLimit,
+  authenticated,
+  getWishlistItemsController,
+);
 
 router.put(
   '/users/change-password',
+  standardUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Users']
@@ -302,6 +348,7 @@ router.put(
 
 router.put(
   '/users/disable/:id',
+  standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*
@@ -318,6 +365,7 @@ router.put(
 
 router.put(
   '/users/enable/:id',
+  standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*
@@ -334,6 +382,7 @@ router.put(
 
 router.get(
   '/users/all',
+  standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*
@@ -349,6 +398,7 @@ router.get(
 
 router.get(
   '/users/paginate',
+  paginatedUserListRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*
@@ -366,6 +416,7 @@ router.get(
 
 router.get(
   '/users/:id',
+  standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*
