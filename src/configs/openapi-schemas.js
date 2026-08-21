@@ -8,6 +8,7 @@ import {
   userRegisterSchema,
   userSendOtpSchema,
   userUpdatePersonalInfoSchema,
+  userResetPasswordSchema,
   userZodSchema,
 } from '../entities/users/users.schema.js';
 import {
@@ -138,6 +139,19 @@ export const schemas = {
         },
       },
     ],
+  },
+  ResetUserPasswordBody: toOpenApi(userResetPasswordSchema),
+  ResetUserPasswordSuccessResponse: {
+    type: 'object',
+    required: ['isSuccess', 'message', 'data'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      message: {
+        type: 'string',
+        example: 'کلمه عبور شما با موفقیت بازنشانی شد',
+      },
+      data: { type: 'boolean', example: true },
+    },
   },
   SendUserOtpSuccessResponse: {
     type: 'object',

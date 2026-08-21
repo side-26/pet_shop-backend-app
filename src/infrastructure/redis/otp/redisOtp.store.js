@@ -72,6 +72,14 @@ redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2], 'NX')
 return { redis.call('GET', KEYS[1]), redis.call('TTL', KEYS[1]) }
 `;
 
+const DELETE_MATCHING_TEMPORARY_TOKEN_SCRIPT = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+end
+
+return 0
+`;
+
 export const createUserOtpKey = ({ phoneNumber, ip }) => {
   const normalizedPhoneNumber = phoneNumber?.trim();
   const normalizedIp = ip?.trim().toLowerCase();
@@ -217,5 +225,31 @@ export class RedisOtpStore {
     }
 
     return { temporaryToken: storedToken, remainingSeconds };
+  }
+
+  async findTemporaryToken(key) {
+    const result = await this.#client.eval(FIND_OTP_SCRIPT, { keys: [key] });
+
+    if (!result) return null;
+
+    const [temporaryToken, remainingValue] = result;
+    const remainingSeconds = Number(remainingValue);
+
+    if (!temporaryToken || !Number.isInteger(remainingSeconds)) {
+      throw new Error('اطلاعات توکن موقت در Redis معتبر نیست');
+    }
+
+    return { temporaryToken, remainingSeconds };
+  }
+
+  async deleteTemporaryToken({ key, temporaryToken }) {
+    const deleted = Number(
+      await this.#client.eval(DELETE_MATCHING_TEMPORARY_TOKEN_SCRIPT, {
+        keys: [key],
+        arguments: [temporaryToken],
+      }),
+    );
+
+    return deleted === 1;
   }
 }

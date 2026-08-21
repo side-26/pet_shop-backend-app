@@ -37,6 +37,16 @@ export const userVerifyOtpSchema = object({
   'reset-password': boolean().optional().default(false),
 }).strict();
 
+export const userResetPasswordSchema = object({
+  newPassword: string().min(8),
+  confirmPassword: string().min(8),
+})
+  .strict()
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'کلمه عبور جدید و تکرار آن یکسان نیستند',
+    path: ['confirmPassword'],
+  });
+
 const addressFields = {
   province: string().trim().min(2),
   city: string().trim().min(2),

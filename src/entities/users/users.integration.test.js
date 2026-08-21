@@ -12,6 +12,8 @@ jest.mock(
 );
 
 jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
+  const findTemporaryToken = jest.fn();
+  const deleteTemporaryToken = jest.fn();
   const consumeTemporaryTokenRequest = jest.fn();
   const find = jest.fn();
   const getOrSaveTemporaryToken = jest.fn();
@@ -21,6 +23,8 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
 
   return {
     __mockRedisTemporaryTokenConsume: consumeTemporaryTokenRequest,
+    __mockRedisTemporaryTokenFind: findTemporaryToken,
+    __mockRedisTemporaryTokenDelete: deleteTemporaryToken,
     __mockRedisOtpFind: find,
     __mockRedisTemporaryTokenGetOrSave: getOrSaveTemporaryToken,
     __mockRedisOtpReleaseReservation: releaseReservation,
@@ -42,6 +46,8 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
       find,
       getOrSaveTemporaryToken,
       releaseReservation,
+      findTemporaryToken,
+      deleteTemporaryToken,
       reserve,
       save,
     })),
@@ -235,6 +241,8 @@ import { ObjectStorageService } from '#services/objectStorage.service.js';
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
   __mockRedisTemporaryTokenConsume as mockRedisTemporaryTokenConsume,
+  __mockRedisTemporaryTokenFind as mockRedisTemporaryTokenFind,
+  __mockRedisTemporaryTokenDelete as mockRedisTemporaryTokenDelete,
   __mockRedisOtpFind as mockRedisOtpFind,
   __mockRedisTemporaryTokenGetOrSave as mockRedisTemporaryTokenGetOrSave,
   __mockRedisOtpReleaseReservation as mockRedisOtpReleaseReservation,
@@ -340,6 +348,8 @@ describe('User API - Integration Tests', () => {
       status: '',
     });
 
+    mockRedisTemporaryTokenFind.mockReset().mockResolvedValue(null);
+    mockRedisTemporaryTokenDelete.mockReset().mockResolvedValue(true);
     await Promise.all([
       UserModel.deleteMany({}),
       ProductModel.deleteMany({}),
@@ -791,6 +801,102 @@ describe('User API - Integration Tests', () => {
       expect(mockRedisOtpFind).not.toHaveBeenCalled();
     });
   });
+  // =========================================================
+  // POST /api/users/reset-password
+  // =========================================================
+
+  describe('POST /api/users/reset-password', () => {
+    const issueTemporaryToken = async () => {
+      mockRedisOtpFind.mockResolvedValue({
+        hashedCode: await bcrypt.hash('123456', 4),
+        remainingSeconds: 75,
+      });
+      mockRedisTemporaryTokenGetOrSave.mockImplementation(
+        async ({ temporaryToken }) => ({
+          temporaryToken,
+          remainingSeconds: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+        }),
+      );
+
+      const verification = await request(app).post('/api/users/verify').send({
+        phoneNumber: testUser.phoneNumber,
+        'otp-code': '123456',
+        'reset-password': true,
+      });
+
+      return verification.body.data.temporaryToken;
+    };
+
+    test('should reset the password and invalidate the matching token', async () => {
+      const temporaryToken = await issueTemporaryToken();
+      mockRedisTemporaryTokenFind.mockResolvedValue({
+        temporaryToken,
+        remainingSeconds: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+      });
+
+      const res = await request(app)
+        .post('/api/users/reset-password')
+        .set('Authorization', `Bearer ${temporaryToken}`)
+        .send({
+          newPassword: 'new-password-123',
+          confirmPassword: 'new-password-123',
+        });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body).toEqual({
+        isSuccess: true,
+        message: 'کلمه عبور شما با موفقیت بازنشانی شد',
+        data: true,
+      });
+      const updatedUser = await UserModel.findById(testUser._id);
+      await expect(
+        bcrypt.compare('new-password-123', updatedUser.password),
+      ).resolves.toBe(true);
+      expect(mockRedisTemporaryTokenDelete).toHaveBeenCalledWith({
+        key: `temporary-token:users:${testUser.phoneNumber}`,
+        temporaryToken,
+      });
+    });
+
+    test.each([
+      {},
+      { newPassword: 'short', confirmPassword: 'short' },
+      {
+        newPassword: 'new-password-123',
+        confirmPassword: 'different-password',
+      },
+      {
+        newPassword: 'new-password-123',
+        confirmPassword: 'new-password-123',
+        unexpected: true,
+      },
+    ])('should reject invalid request body %p', async (body) => {
+      const res = await request(app)
+        .post('/api/users/reset-password')
+        .send(body);
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(mockRedisTemporaryTokenFind).not.toHaveBeenCalled();
+    });
+
+    test('should return 403 when the Bearer token is missing', async () => {
+      const res = await request(app).post('/api/users/reset-password').send({
+        newPassword: 'new-password-123',
+        confirmPassword: 'new-password-123',
+      });
+
+      expect(res.status).toBe(STATUES.NO_ACCESS);
+      expect(res.body.message).toBe('شما دسترسی لازم را ندارید');
+    });
+
+    test('should return 405 for unsupported methods', async () => {
+      const res = await request(app).put('/api/users/reset-password');
+
+      expect(res.status).toBe(STATUES.METHOD_NOT_ALLOWED);
+      expect(res.headers.allow).toBe(METHODS.post.toUpperCase());
+    });
+  });
+
   // =========================================================
   // POST /api/users/login
   // =========================================================

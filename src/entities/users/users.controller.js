@@ -16,6 +16,7 @@ import {
   userAddressIdSchema,
   userRefreshTokenSchema,
   userRegisterSchema,
+  userResetPasswordSchema,
   userSendOtpSchema,
   userVerifyOtpSchema,
   userUpdatePersonalInfoSchema,
@@ -91,6 +92,23 @@ export const verifyUserOtpController = async (req, res, next) => {
         message: 'کد تأیید شما معتبر است',
       }),
       data: result.data,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const resetUserPasswordController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(userResetPasswordSchema, req.body);
+    const data = await UserService.resetPassword({
+      authorization: req.headers.authorization,
+      newPassword: body.newPassword,
+    });
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'کلمه عبور شما با موفقیت بازنشانی شد',
+      data,
     });
   } catch (error) {
     onCatchPromiseController(error, next);

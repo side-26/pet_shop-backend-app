@@ -365,6 +365,78 @@
         }
       }
     },
+    "/users/reset-password": {
+      "post": {
+        "tags": ["/users"],
+        "summary": "Reset a user password with a temporary OTP token",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Password reset successfully and temporary token invalidated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetUserPasswordSuccessResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Temporary token is missing, malformed, expired, invalid, or does not match Redis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Password validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetUserPasswordBody"
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/refresh-token": {
       "post": {
         "description": "",
@@ -3553,6 +3625,39 @@
             }
           }
         ]
+      },
+      "ResetUserPasswordBody": {
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
+          },
+          "confirmPassword": {
+            "type": "string",
+            "minLength": 8
+          }
+        },
+        "required": ["newPassword", "confirmPassword"],
+        "additionalProperties": false
+      },
+      "ResetUserPasswordSuccessResponse": {
+        "type": "object",
+        "required": ["isSuccess", "message", "data"],
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "کلمه عبور شما با موفقیت بازنشانی شد"
+          },
+          "data": {
+            "type": "boolean",
+            "example": true
+          }
+        }
       },
       "SendUserOtpSuccessResponse": {
         "type": "object",

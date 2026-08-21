@@ -14,6 +14,8 @@ const persianFieldNames = {
   'reset-password': 'بازنشانی کلمه عبور',
   to: 'شماره تلفن مقصد',
   password: 'کلمه عبور',
+  newPassword: 'کلمه عبور جدید',
+  confirmPassword: 'تکرار کلمه عبور',
   role: 'نقش کاربر',
   nationalCode: 'کد ملی',
   address: 'آدرس',

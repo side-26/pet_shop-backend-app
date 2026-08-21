@@ -19,6 +19,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 
 ## Modification Rules
 
+- Public password reset requires `newPassword` and matching `confirmPassword` values of at least eight characters plus the exact temporary JWT in a Bearer authorization header. The service verifies the token with `TEMPORARY_TOKEN_SECRET_KEY`, matches it against the phone-scoped Redis value, hashes and updates the user's password, and conditionally deletes the matching Redis token after success to prevent replay. Invalid, expired, missing, or mismatched tokens return Persian 403 access denied.
 - Keep passwords hashed and exclude sensitive fields from public formatting.
 - Public registration accepts only phone number and password and always assigns the customer role server-side.
 - Public OTP requests require an existing phone number, atomically reserve the phone-and-IP Redis key before contacting the provider, replace only the owned reservation with a bcrypt hash for 120 seconds, never return the provider code, and return the active key's remaining TTL without requesting another code until it expires.

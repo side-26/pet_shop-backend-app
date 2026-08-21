@@ -9,7 +9,7 @@ This folder owns the shared Redis connection and Redis-backed infrastructure beh
 - `client.js` — creates one Redis client, owns its error listener, deduplicates concurrent connection work, and performs idempotent graceful disconnect cleanup.
 - `client.unit.test.js` — verifies configuration, singleton behavior, connection sharing, failure cleanup, and disconnect behavior without a Redis server.
 - `rateLimit/redisRateLimit.store.js` — atomically increments fixed-window counters, applies the first-request TTL, reads state, and resets keys.
-- `otp/redisOtp.store.js` — atomically reserves bounded phone-and-IP OTP keys, replaces owned reservations with hashes, reads hashes with their TTL for verification, reuses phone-owned five-minute password-reset tokens, applies their phone-and-IP request limit, and safely releases failed reservations.
+- `otp/redisOtp.store.js` — atomically reserves bounded phone-and-IP OTP keys, replaces owned reservations with hashes, reads hashes with their TTL for verification, reuses and reads phone-owned five-minute password-reset tokens, conditionally deletes only a matching reset token after use, applies their phone-and-IP request limit, and safely releases failed reservations.
 - `rateLimit/rateLimit.core.js` — maps Express route patterns, HTTP methods, namespaces, and requester IPs to rate-limit buckets and response headers.
 - `rateLimit/*.unit.test.js` — isolates the store from Redis and the middleware from its store.
 - `rateLimit/rateLimit.integration.test.js` — exercises Express and real Redis when `REDIS_TEST_URL` points to an isolated test Redis instance.

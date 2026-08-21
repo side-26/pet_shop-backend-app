@@ -261,6 +261,52 @@ describe('Redis OTP store', () => {
       }),
     ).rejects.toThrow('ذخیره یا بازیابی توکن موقت در Redis ناموفق بود');
   });
+
+  test('finds a temporary token with its remaining TTL', async () => {
+    client.eval.mockResolvedValue(['temporary-token', 241]);
+    const store = new RedisOtpStore();
+
+    await expect(
+      store.findTemporaryToken('temporary-token:users:09123456789'),
+    ).resolves.toEqual({
+      temporaryToken: 'temporary-token',
+      remainingSeconds: 241,
+    });
+    expect(client.eval).toHaveBeenCalledWith(expect.any(String), {
+      keys: ['temporary-token:users:09123456789'],
+    });
+  });
+
+  test('returns null when a temporary token has expired', async () => {
+    client.eval.mockResolvedValue(false);
+    const store = new RedisOtpStore();
+
+    await expect(
+      store.findTemporaryToken('temporary-token:users:09123456789'),
+    ).resolves.toBeNull();
+  });
+
+  test.each([
+    { redisResult: 1, expected: true },
+    { redisResult: 0, expected: false },
+  ])(
+    'conditionally deletes only the matching temporary token ($redisResult)',
+    async ({ redisResult, expected }) => {
+      client.eval.mockResolvedValue(redisResult);
+      const store = new RedisOtpStore();
+
+      await expect(
+        store.deleteTemporaryToken({
+          key: 'temporary-token:users:09123456789',
+          temporaryToken: 'temporary-token',
+        }),
+      ).resolves.toBe(expected);
+      expect(client.eval).toHaveBeenCalledWith(expect.any(String), {
+        keys: ['temporary-token:users:09123456789'],
+        arguments: ['temporary-token'],
+      });
+    },
+  );
   test.each([
     { redisResult: 1, expected: true },
     { redisResult: 0, expected: false },

@@ -114,6 +114,34 @@ export class UserService {
     return jwt.sign({ userId }, getJwtRefreshSecret(), { expiresIn });
   }
 
+  static verifyTemporaryToken(authorization) {
+    const [scheme, temporaryToken, extraPart] =
+      authorization?.trim().split(/\s+/) ?? [];
+
+    if (scheme?.toLowerCase() !== 'bearer' || !temporaryToken || extraPart) {
+      setErrorResponse(STATUES.NO_ACCESS, {
+        message: 'شما دسترسی لازم را ندارید',
+      });
+    }
+
+    try {
+      const payload = jwt.verify(temporaryToken, getTemporaryTokenSecret());
+
+      if (
+        typeof payload !== 'object' ||
+        typeof payload.phoneNumber !== 'string' ||
+        typeof payload.tokenId !== 'string'
+      ) {
+        throw new Error('Invalid temporary token payload');
+      }
+
+      return { payload, temporaryToken };
+    } catch {
+      setErrorResponse(STATUES.NO_ACCESS, {
+        message: 'شما دسترسی لازم را ندارید',
+      });
+    }
+  }
   static createTemporaryToken(tokenId, phoneNumber) {
     return jwt.sign({ tokenId, phoneNumber }, getTemporaryTokenSecret(), {
       expiresIn: USER_TEMPORARY_TOKEN.TTL_SECONDS,
@@ -296,6 +324,36 @@ export class UserService {
     void ignoredUser;
 
     return { resetPassword: false, data };
+  }
+
+  static async resetPassword({ authorization, newPassword }) {
+    const { payload, temporaryToken } =
+      this.verifyTemporaryToken(authorization);
+    const key = createUserTemporaryTokenKey(payload.phoneNumber);
+    const storedToken = await redisOtpStore.findTemporaryToken(key);
+
+    if (!storedToken || storedToken.temporaryToken !== temporaryToken) {
+      setErrorResponse(STATUES.NO_ACCESS, {
+        message: 'شما دسترسی لازم را ندارید',
+      });
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+    const user = await UserModel.findOneAndUpdate(
+      { phoneNumber: payload.phoneNumber },
+      { $set: { password: hashedPassword } },
+      { returnDocument: 'after', runValidators: true },
+    );
+
+    if (!user) {
+      setErrorResponse(STATUES.NO_ACCESS, {
+        message: 'شما دسترسی لازم را ندارید',
+      });
+    }
+
+    await redisOtpStore.deleteTemporaryToken({ key, temporaryToken });
+
+    return true;
   }
 
   // =========================================================

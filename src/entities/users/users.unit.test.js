@@ -15,6 +15,7 @@ jest.mock('bcryptjs', () => ({
 jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(),
   decode: jest.fn(),
+  verify: jest.fn(),
 }));
 
 jest.mock('sharp', () =>
@@ -61,12 +62,16 @@ jest.mock('../../integrations/otpCode/otpCode.service.js', () => ({
 jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
   const consumeTemporaryTokenRequest = jest.fn();
   const find = jest.fn();
+  const findTemporaryToken = jest.fn();
   const getOrSaveTemporaryToken = jest.fn();
+  const deleteTemporaryToken = jest.fn();
   const releaseReservation = jest.fn();
   const reserve = jest.fn();
   const save = jest.fn();
 
   return {
+    __mockRedisTemporaryTokenFind: findTemporaryToken,
+    __mockRedisTemporaryTokenDelete: deleteTemporaryToken,
     __mockRedisTemporaryTokenConsume: consumeTemporaryTokenRequest,
     __mockRedisOtpFind: find,
     __mockRedisTemporaryTokenGetOrSave: getOrSaveTemporaryToken,
@@ -86,6 +91,8 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
     RedisOtpStore: jest.fn(() => ({
       consumeTemporaryTokenRequest,
       find,
+      findTemporaryToken,
+      deleteTemporaryToken,
       getOrSaveTemporaryToken,
       releaseReservation,
       reserve,
@@ -155,6 +162,8 @@ import { formatImageFile } from '#utils/image.helpers.js';
 
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
+  __mockRedisTemporaryTokenFind as mockRedisTemporaryTokenFind,
+  __mockRedisTemporaryTokenDelete as mockRedisTemporaryTokenDelete,
   __mockRedisTemporaryTokenConsume as mockRedisTemporaryTokenConsume,
   __mockRedisOtpFind as mockRedisOtpFind,
   __mockRedisTemporaryTokenGetOrSave as mockRedisTemporaryTokenGetOrSave,
@@ -236,6 +245,8 @@ describe('UserService - Unit Tests', () => {
       temporaryToken: 'temporary-token',
       remainingSeconds: USER_TEMPORARY_TOKEN.TTL_SECONDS,
     });
+    mockRedisTemporaryTokenFind.mockResolvedValue(null);
+    mockRedisTemporaryTokenDelete.mockResolvedValue(true);
     mockRedisOtpReleaseReservation.mockResolvedValue(true);
   });
 
@@ -768,10 +779,82 @@ describe('UserService - Unit Tests', () => {
   // =========================================================
   // LOGIN
   // =========================================================
+  test('resetPassword verifies, matches, hashes, updates, and deletes the token', async () => {
+    jwt.verify.mockReturnValue({
+      tokenId: 'temporary-id',
+      phoneNumber: mockUser.phoneNumber,
+    });
+    mockRedisTemporaryTokenFind.mockResolvedValue({
+      temporaryToken: 'temporary-token',
+      remainingSeconds: 240,
+    });
+    bcrypt.genSalt.mockResolvedValue('salt');
+    bcrypt.hash.mockResolvedValue('new-hashed-password');
+    UserModel.findOneAndUpdate.mockResolvedValue(mockUser);
+
+    await expect(
+      UserService.resetPassword({
+        authorization: 'Bearer temporary-token',
+        newPassword: 'new-password-123',
+      }),
+    ).resolves.toBe(true);
+
+    expect(jwt.verify).toHaveBeenCalledWith(
+      'temporary-token',
+      expect.any(String),
+    );
+    expect(mockRedisTemporaryTokenFind).toHaveBeenCalledWith(
+      `temporary-token:users:${mockUser.phoneNumber}`,
+    );
+    expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+      { phoneNumber: mockUser.phoneNumber },
+      { $set: { password: 'new-hashed-password' } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    expect(mockRedisTemporaryTokenDelete).toHaveBeenCalledWith({
+      key: `temporary-token:users:${mockUser.phoneNumber}`,
+      temporaryToken: 'temporary-token',
+    });
+  });
+
+  test.each([undefined, '', 'temporary-token', 'Basic temporary-token'])(
+    'resetPassword rejects invalid authorization %p',
+    async (authorization) => {
+      await expect(
+        UserService.resetPassword({
+          authorization,
+          newPassword: 'new-password-123',
+        }),
+      ).rejects.toMatchObject({ statusCode: STATUES.NO_ACCESS });
+      expect(jwt.verify).not.toHaveBeenCalled();
+      expect(UserModel.findOneAndUpdate).not.toHaveBeenCalled();
+    },
+  );
+
+  test('resetPassword rejects a token that does not match Redis', async () => {
+    jwt.verify.mockReturnValue({
+      tokenId: 'temporary-id',
+      phoneNumber: mockUser.phoneNumber,
+    });
+    mockRedisTemporaryTokenFind.mockResolvedValue({
+      temporaryToken: 'different-token',
+      remainingSeconds: 240,
+    });
+
+    await expect(
+      UserService.resetPassword({
+        authorization: 'Bearer temporary-token',
+        newPassword: 'new-password-123',
+      }),
+    ).rejects.toMatchObject({ statusCode: STATUES.NO_ACCESS });
+    expect(UserModel.findOneAndUpdate).not.toHaveBeenCalled();
+    expect(mockRedisTemporaryTokenDelete).not.toHaveBeenCalled();
+  });
+
+  const sessionExp = 1_800_604_800_000;
 
   test('login returns user and tokens', async () => {
     const accessExp = 1_800_000_000_000;
-    const sessionExp = 1_800_604_800_000;
 
     UserModel.findOne.mockResolvedValue(mockUser);
 

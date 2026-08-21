@@ -27,6 +27,7 @@ import {
   refreshTokenController,
   registerUserController,
   sendUserOtpController,
+  resetUserPasswordController,
   editUserAddressController,
   updateUserPersonalInfoController,
   verifyUserOtpController,
@@ -171,6 +172,32 @@ router.post(
     window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
   }),
   loginUserController,
+);
+
+router.post(
+  '/users/reset-password',
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Reset a user password with a temporary OTP token'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = {
+      required: true,
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ResetUserPasswordBody' } } }
+    }
+    #swagger.responses[200] = {
+      description: 'Password reset successfully and temporary token invalidated',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ResetUserPasswordSuccessResponse' } } }
+    }
+    #swagger.responses[403] = {
+      description: 'Temporary token is missing, malformed, expired, invalid, or does not match Redis',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[422] = {
+      description: 'Password validation error',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  resetUserPasswordController,
 );
 
 router.post('/users/refresh-token', refreshTokenController);

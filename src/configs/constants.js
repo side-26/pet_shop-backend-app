@@ -12,6 +12,7 @@ export const ROUTES = {
     disableUser: '/users/disable/:id',
     enableUser: '/users/enable/:id',
     login: '/users/login',
+    resetPassword: '/users/reset-password',
     sendOtp: '/users/send-otp',
     verifyOtp: '/users/verify',
     register: '/users/register',
