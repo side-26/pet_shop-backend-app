@@ -87,12 +87,57 @@ export const schemas = {
     },
   },
   VerifyUserOtpSuccessResponse: {
-    type: 'object',
-    required: ['isSuccess', 'data'],
-    properties: {
-      isSuccess: { type: 'boolean', example: true },
-      data: { type: 'boolean', example: true },
-    },
+    oneOf: [
+      {
+        type: 'object',
+        required: ['isSuccess', 'data'],
+        properties: {
+          isSuccess: { type: 'boolean', example: true },
+          data: {
+            type: 'object',
+            required: [
+              'accessToken',
+              'refreshToken',
+              'sessionExp',
+              'userId',
+              'role',
+              'accessExp',
+            ],
+            properties: {
+              accessToken: { type: 'string' },
+              refreshToken: { type: 'string' },
+              sessionExp: { type: 'integer', format: 'int64' },
+              userId: { type: 'string' },
+              role: { type: 'string' },
+              accessExp: { type: 'integer', format: 'int64' },
+            },
+          },
+        },
+      },
+      {
+        type: 'object',
+        required: ['isSuccess', 'message', 'data'],
+        properties: {
+          isSuccess: { type: 'boolean', example: true },
+          message: {
+            type: 'string',
+            example: 'کد تأیید شما معتبر است',
+          },
+          data: {
+            type: 'object',
+            required: ['temporaryToken', 'expiry'],
+            properties: {
+              temporaryToken: { type: 'string' },
+              expiry: {
+                type: 'integer',
+                description: 'Temporary-token lifetime in seconds',
+                example: 300,
+              },
+            },
+          },
+        },
+      },
+    ],
   },
   SendUserOtpSuccessResponse: {
     type: 'object',

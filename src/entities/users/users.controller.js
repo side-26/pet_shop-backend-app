@@ -79,13 +79,19 @@ export const sendUserOtpController = async (req, res, next) => {
 export const verifyUserOtpController = async (req, res, next) => {
   try {
     const body = returnFormValidation(userVerifyOtpSchema, req.body);
-    const isVerified = await UserService.verifyOtp({
+    const result = await UserService.verifyOtp({
       phoneNumber: body.phoneNumber,
       otpCode: body['otp-code'],
       ip: req.ip,
+      resetPassword: body['reset-password'],
     });
 
-    setSuccessResponse(res, STATUES.SUCCESS, { data: isVerified });
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      ...(result.resetPassword && {
+        message: 'کد تأیید شما معتبر است',
+      }),
+      data: result.data,
+    });
   } catch (error) {
     onCatchPromiseController(error, next);
   }

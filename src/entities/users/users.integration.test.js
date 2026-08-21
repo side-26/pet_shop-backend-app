@@ -1,3 +1,7 @@
+jest.mock('nanoid', () => ({
+  nanoid: jest.fn(() => 'temporary-id'),
+}));
+
 jest.mock(
   '../../infrastructure/redis/rateLimit/redisRateLimit.store.js',
   () => ({
@@ -8,13 +12,17 @@ jest.mock(
 );
 
 jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
+  const consumeTemporaryTokenRequest = jest.fn();
   const find = jest.fn();
+  const getOrSaveTemporaryToken = jest.fn();
   const releaseReservation = jest.fn();
   const reserve = jest.fn();
   const save = jest.fn();
 
   return {
+    __mockRedisTemporaryTokenConsume: consumeTemporaryTokenRequest,
     __mockRedisOtpFind: find,
+    __mockRedisTemporaryTokenGetOrSave: getOrSaveTemporaryToken,
     __mockRedisOtpReleaseReservation: releaseReservation,
     __mockRedisOtpReserve: reserve,
     __mockRedisOtpSave: save,
@@ -22,7 +30,21 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
       ({ phoneNumber, ip }) =>
         `otp:users:${phoneNumber}:${encodeURIComponent(ip.toLowerCase())}`,
     ),
-    RedisOtpStore: jest.fn(() => ({ find, releaseReservation, reserve, save })),
+    createUserTemporaryTokenKey: jest.fn(
+      (phoneNumber) => `temporary-token:users:${phoneNumber}`,
+    ),
+    createUserTemporaryTokenRateLimitKey: jest.fn(
+      ({ phoneNumber, ip }) =>
+        `rate-limit:temporary-token:users:${phoneNumber}:${encodeURIComponent(ip.toLowerCase())}`,
+    ),
+    RedisOtpStore: jest.fn(() => ({
+      consumeTemporaryTokenRequest,
+      find,
+      getOrSaveTemporaryToken,
+      releaseReservation,
+      reserve,
+      save,
+    })),
   };
 });
 
@@ -201,6 +223,7 @@ import {
   ROLES,
   STATUES,
   USER_OTP,
+  USER_TEMPORARY_TOKEN,
 } from '#configs/constants.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
@@ -211,7 +234,9 @@ import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
+  __mockRedisTemporaryTokenConsume as mockRedisTemporaryTokenConsume,
   __mockRedisOtpFind as mockRedisOtpFind,
+  __mockRedisTemporaryTokenGetOrSave as mockRedisTemporaryTokenGetOrSave,
   __mockRedisOtpReleaseReservation as mockRedisOtpReleaseReservation,
   __mockRedisOtpReserve as mockRedisOtpReserve,
   __mockRedisOtpSave as mockRedisOtpSave,
@@ -300,6 +325,16 @@ describe('User API - Integration Tests', () => {
     });
     mockRedisOtpReleaseReservation.mockReset().mockResolvedValue(true);
     mockRedisOtpSave.mockReset().mockResolvedValue(USER_OTP.TTL_SECONDS);
+    mockRedisTemporaryTokenConsume.mockReset().mockResolvedValue({
+      allowed: true,
+      current: 1,
+      remaining: USER_TEMPORARY_TOKEN.MAX_REQUESTS - 1,
+      retryAfter: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+    });
+    mockRedisTemporaryTokenGetOrSave.mockReset().mockResolvedValue({
+      temporaryToken: 'temporary-token',
+      remainingSeconds: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+    });
     OtpCodeService.send.mockReset().mockResolvedValue({
       code: '123456',
       status: '',
@@ -622,7 +657,7 @@ describe('User API - Integration Tests', () => {
   // =========================================================
 
   describe('POST /api/users/verify', () => {
-    test('should verify the OTP stored for the phone number and requester IP', async () => {
+    test('should return login data without a success message', async () => {
       mockRedisOtpFind.mockResolvedValue({
         hashedCode: await bcrypt.hash('123456', 4),
         remainingSeconds: 75,
@@ -634,7 +669,18 @@ describe('User API - Integration Tests', () => {
       });
 
       expect(res.status).toBe(STATUES.SUCCESS);
-      expect(res.body).toEqual({ isSuccess: true, data: true });
+      expect(res.body).toMatchObject({
+        isSuccess: true,
+        data: {
+          userId: testUser._id.toString(),
+          role: testUser.role,
+          accessToken: expect.any(String),
+          refreshToken: expect.any(String),
+          accessExp: expect.any(Number),
+          sessionExp: expect.any(Number),
+        },
+      });
+      expect(res.body).not.toHaveProperty('message');
       expect(mockRedisOtpFind).toHaveBeenCalledWith(
         expect.stringMatching(
           new RegExp(`^otp:users:${testUser.phoneNumber}:`),
@@ -642,7 +688,7 @@ describe('User API - Integration Tests', () => {
       );
     });
 
-    test('should accept the optional reset-password flag', async () => {
+    test('should return and cache a five-minute reset token', async () => {
       mockRedisOtpFind.mockResolvedValue({
         hashedCode: await bcrypt.hash('123456', 4),
         remainingSeconds: 75,
@@ -655,7 +701,65 @@ describe('User API - Integration Tests', () => {
       });
 
       expect(res.status).toBe(STATUES.SUCCESS);
-      expect(res.body.data).toBe(true);
+      expect(res.body).toMatchObject({
+        isSuccess: true,
+        message: 'کد تأیید شما معتبر است',
+        data: {
+          temporaryToken: expect.any(String),
+          expiry: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+        },
+      });
+      expect(mockRedisTemporaryTokenGetOrSave).toHaveBeenCalledWith({
+        key: `temporary-token:users:${testUser.phoneNumber}`,
+        temporaryToken: expect.any(String),
+        ttlSeconds: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+      });
+    });
+
+    test('should return the current Redis token on a repeated request', async () => {
+      mockRedisOtpFind.mockResolvedValue({
+        hashedCode: await bcrypt.hash('123456', 4),
+        remainingSeconds: 75,
+      });
+      mockRedisTemporaryTokenGetOrSave.mockResolvedValue({
+        temporaryToken: 'current-temporary-token',
+        remainingSeconds: 241,
+      });
+
+      const res = await request(app).post('/api/users/verify').send({
+        phoneNumber: testUser.phoneNumber,
+        'otp-code': '123456',
+        'reset-password': true,
+      });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data).toEqual({
+        temporaryToken: 'current-temporary-token',
+        expiry: 241,
+      });
+    });
+
+    test('should return 403 after three reset-token requests', async () => {
+      mockRedisOtpFind.mockResolvedValue({
+        hashedCode: await bcrypt.hash('123456', 4),
+        remainingSeconds: 75,
+      });
+      mockRedisTemporaryTokenConsume.mockResolvedValue({
+        allowed: false,
+        current: 4,
+        remaining: 0,
+        retryAfter: 238,
+      });
+
+      const res = await request(app).post('/api/users/verify').send({
+        phoneNumber: testUser.phoneNumber,
+        'otp-code': '123456',
+        'reset-password': true,
+      });
+
+      expect(res.status).toBe(STATUES.NO_ACCESS);
+      expect(res.body.message).toBe('شما دسترسی لازم را ندارید');
+      expect(mockRedisTemporaryTokenGetOrSave).not.toHaveBeenCalled();
     });
 
     test('should ask for a new code when the Redis key expired', async () => {

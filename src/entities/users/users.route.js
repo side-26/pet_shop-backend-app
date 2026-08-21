@@ -123,9 +123,14 @@ router.post(
       content: { "application/json": { schema: { $ref: '#/components/schemas/VerifyUserOtpBody' } } }
     }
     #swagger.responses[200] = {
-      description: 'OTP verified successfully',
+      description: 'OTP verified; returns login data or a five-minute password-reset token',
       content: { "application/json": { schema: { $ref: '#/components/schemas/VerifyUserOtpSuccessResponse' } } }
     }
+    #swagger.responses[403] = {
+      description: 'More than three password-reset token requests were made for the phone and requester IP within five minutes',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+
     #swagger.responses[422] = {
       description: 'Validation error, expired OTP, or incorrect OTP',
       content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { nanoid } from 'nanoid';
 
 import {
   ERROR_CODES,
@@ -10,8 +11,13 @@ import {
   USER_ADDRESS_LIMITS,
   USER_ITEM_TYPES,
   USER_OTP,
+  USER_TEMPORARY_TOKEN,
 } from '#configs/constants.js';
-import { getJwtRefreshSecret, getJwtSecret } from '#configs/env.config.js';
+import {
+  getJwtRefreshSecret,
+  getJwtSecret,
+  getTemporaryTokenSecret,
+} from '#configs/env.config.js';
 import logger from '#configs/logger.js';
 import { PetService } from '#entities/pets/pets.service.js';
 import { ProductService } from '#entities/products/products.service.js';
@@ -28,6 +34,8 @@ import { formatImageFile } from '#utils/image.helpers.js';
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
   createUserOtpKey,
+  createUserTemporaryTokenKey,
+  createUserTemporaryTokenRateLimitKey,
   RedisOtpStore,
 } from '../../infrastructure/redis/otp/redisOtp.store.js';
 import { UserModel } from './users.model.js';
@@ -103,15 +111,35 @@ export class UserService {
   }
 
   static createRefreshToken(userId, expiresIn = '7d') {
-    return jwt.sign(
-      {
-        userId,
-      },
-      getJwtRefreshSecret(),
-      {
-        expiresIn,
-      },
+    return jwt.sign({ userId }, getJwtRefreshSecret(), { expiresIn });
+  }
+
+  static createTemporaryToken(tokenId, phoneNumber) {
+    return jwt.sign({ tokenId, phoneNumber }, getTemporaryTokenSecret(), {
+      expiresIn: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+    });
+  }
+
+  static createLoginData(user) {
+    const accessToken = this.createAccessToken(
+      user._id,
+      user.phoneNumber,
+      user.role,
+      '7h',
     );
+    const refreshToken = this.createRefreshToken(user._id);
+    const accessExp = jwt.decode(accessToken).exp * 1000;
+    const sessionExp = jwt.decode(refreshToken).exp * 1000;
+
+    return {
+      user,
+      userId: user._id.toString(),
+      role: user.role,
+      accessToken,
+      refreshToken,
+      accessExp,
+      sessionExp,
+    };
   }
 
   // =========================================================
@@ -204,7 +232,7 @@ export class UserService {
     }
   }
 
-  static async verifyOtp({ phoneNumber, otpCode, ip }) {
+  static async verifyOtp({ phoneNumber, otpCode, ip, resetPassword = false }) {
     const key = createUserOtpKey({ phoneNumber, ip });
     const otp = await redisOtpStore.find(key);
     if (!otp) {
@@ -222,7 +250,52 @@ export class UserService {
       });
     }
 
-    return true;
+    const user = await this.findOne({ phoneNumber });
+
+    if (!user) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'کاربری با این شماره تلفن یافت نشد',
+      });
+    }
+
+    if (resetPassword) {
+      const rateLimitKey = createUserTemporaryTokenRateLimitKey({
+        phoneNumber,
+        ip,
+      });
+      const rateLimit = await redisOtpStore.consumeTemporaryTokenRequest({
+        key: rateLimitKey,
+        limit: USER_TEMPORARY_TOKEN.MAX_REQUESTS,
+        window: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+      });
+
+      if (!rateLimit.allowed) {
+        setErrorResponse(STATUES.NO_ACCESS, {
+          message: 'شما دسترسی لازم را ندارید',
+        });
+      }
+
+      const tokenId = nanoid();
+      const candidateToken = this.createTemporaryToken(tokenId, phoneNumber);
+      const key = createUserTemporaryTokenKey(phoneNumber);
+      const { temporaryToken, remainingSeconds } =
+        await redisOtpStore.getOrSaveTemporaryToken({
+          key,
+          temporaryToken: candidateToken,
+          ttlSeconds: USER_TEMPORARY_TOKEN.TTL_SECONDS,
+        });
+
+      return {
+        resetPassword: true,
+        data: { temporaryToken, expiry: remainingSeconds },
+      };
+    }
+
+    const { user: ignoredUser, ...data } = this.createLoginData(user);
+
+    void ignoredUser;
+
+    return { resetPassword: false, data };
   }
 
   // =========================================================
@@ -251,26 +324,7 @@ export class UserService {
       });
     }
 
-    const accessToken = this.createAccessToken(
-      user._id,
-      user.phoneNumber,
-      user.role,
-      '7h',
-    );
-
-    const refreshToken = this.createRefreshToken(user._id);
-    const accessExp = jwt.decode(accessToken).exp * 1000;
-    const sessionExp = jwt.decode(refreshToken).exp * 1000;
-
-    return {
-      user,
-      userId: user._id.toString(),
-      role: user.role,
-      accessToken,
-      refreshToken,
-      accessExp,
-      sessionExp,
-    };
+    return this.createLoginData(user);
   }
 
   // =========================================================

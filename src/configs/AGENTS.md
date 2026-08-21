@@ -22,6 +22,8 @@ All source layers depend on values from this folder; configuration files should 
 
 ## Modification Rules
 
+- Sign password-reset temporary tokens only with the validated `TEMPORARY_TOKEN_SECRET_KEY` accessor.
+
 - Add stable shared vocabulary to `constants.js` instead of duplicating literals.
 - Access required secrets through `env.config.js` helpers.
 - For every added or changed Zod field or issue code, update `zod.config.js` and its unit tests when coverage changes.
