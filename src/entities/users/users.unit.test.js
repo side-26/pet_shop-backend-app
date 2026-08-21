@@ -55,18 +55,20 @@ jest.mock('../../integrations/otpCode/otpCode.service.js', () => ({
 }));
 
 jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
+  const find = jest.fn();
   const releaseReservation = jest.fn();
   const reserve = jest.fn();
   const save = jest.fn();
 
   return {
+    __mockRedisOtpFind: find,
     __mockRedisOtpReleaseReservation: releaseReservation,
     __mockRedisOtpReserve: reserve,
     __mockRedisOtpSave: save,
     createUserOtpKey: jest.fn(
       ({ phoneNumber, ip }) => `otp:users:${phoneNumber}:${ip}`,
     ),
-    RedisOtpStore: jest.fn(() => ({ releaseReservation, reserve, save })),
+    RedisOtpStore: jest.fn(() => ({ find, releaseReservation, reserve, save })),
   };
 });
 
@@ -124,6 +126,7 @@ import { formatImageFile } from '#utils/image.helpers.js';
 
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
+  __mockRedisOtpFind as mockRedisOtpFind,
   __mockRedisOtpReleaseReservation as mockRedisOtpReleaseReservation,
   __mockRedisOtpReserve as mockRedisOtpReserve,
   __mockRedisOtpSave as mockRedisOtpSave,
@@ -189,6 +192,7 @@ describe('UserService - Unit Tests', () => {
       acquired: true,
       remainingSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
     });
+    mockRedisOtpFind.mockResolvedValue(null);
     mockRedisOtpReleaseReservation.mockResolvedValue(true);
   });
 
@@ -528,6 +532,60 @@ describe('UserService - Unit Tests', () => {
       'آزادسازی رزرو ناموفق کد تأیید در Redis با خطا مواجه شد',
       cleanupError,
     );
+  });
+
+  test('verifyOtp compares the submitted code with the phone-and-IP hash', async () => {
+    mockRedisOtpFind.mockResolvedValue({
+      hashedCode: 'hashed-code',
+      remainingSeconds: 75,
+    });
+    bcrypt.compare.mockResolvedValue(true);
+
+    await expect(
+      UserService.verifyOtp({
+        phoneNumber: mockUser.phoneNumber,
+        otpCode: '123456',
+        ip: '127.0.0.1',
+      }),
+    ).resolves.toBe(true);
+    expect(mockRedisOtpFind).toHaveBeenCalledWith(
+      `otp:users:${mockUser.phoneNumber}:127.0.0.1`,
+    );
+    expect(bcrypt.compare).toHaveBeenCalledWith('123456', 'hashed-code');
+  });
+
+  test('verifyOtp asks the caller to resend when the OTP expired', async () => {
+    await expect(
+      UserService.verifyOtp({
+        phoneNumber: mockUser.phoneNumber,
+        otpCode: '123456',
+        ip: '127.0.0.1',
+      }),
+    ).rejects.toMatchObject({
+      statusCode: STATUES.BAD_FORM_VALIDATION,
+      message:
+        'کد تأیید منقضی شده است؛ لطفاً کد را دوباره ارسال کرده و سپس تلاش کنید',
+    });
+    expect(bcrypt.compare).not.toHaveBeenCalled();
+  });
+
+  test('verifyOtp rejects an incorrect code', async () => {
+    mockRedisOtpFind.mockResolvedValue({
+      hashedCode: 'hashed-code',
+      remainingSeconds: 75,
+    });
+    bcrypt.compare.mockResolvedValue(false);
+
+    await expect(
+      UserService.verifyOtp({
+        phoneNumber: mockUser.phoneNumber,
+        otpCode: '654321',
+        ip: '127.0.0.1',
+      }),
+    ).rejects.toMatchObject({
+      statusCode: STATUES.BAD_FORM_VALIDATION,
+      message: 'کد تأیید وارد شده معتبر نیست',
+    });
   });
 
   test('register creates a customer account with a hashed password', async () => {

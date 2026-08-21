@@ -204,6 +204,27 @@ export class UserService {
     }
   }
 
+  static async verifyOtp({ phoneNumber, otpCode, ip }) {
+    const key = createUserOtpKey({ phoneNumber, ip });
+    const otp = await redisOtpStore.find(key);
+    if (!otp) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message:
+          'کد تأیید منقضی شده است؛ لطفاً کد را دوباره ارسال کرده و سپس تلاش کنید',
+      });
+    }
+
+    const isOtpValid = await this.comparePassword(otp.hashedCode, otpCode);
+
+    if (!isOtpValid) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'کد تأیید وارد شده معتبر نیست',
+      });
+    }
+
+    return true;
+  }
+
   // =========================================================
   // LOGIN
   // =========================================================

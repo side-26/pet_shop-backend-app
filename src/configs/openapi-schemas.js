@@ -73,6 +73,27 @@ export const schemas = {
   CreateUserBody: toOpenApi(userZodSchema),
   RegisterUserBody: toOpenApi(userRegisterSchema),
   SendUserOtpBody: toOpenApi(userSendOtpSchema),
+  VerifyUserOtpBody: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['phoneNumber', 'otp-code'],
+    properties: {
+      phoneNumber: { type: 'string', pattern: '^09\\d{9}$' },
+      'otp-code': { type: 'string', pattern: '^\\d{6}$' },
+      'reset-password': {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
+  VerifyUserOtpSuccessResponse: {
+    type: 'object',
+    required: ['isSuccess', 'data'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      data: { type: 'boolean', example: true },
+    },
+  },
   SendUserOtpSuccessResponse: {
     type: 'object',
     required: ['isSuccess', 'message', 'data'],

@@ -22,6 +22,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - Keep passwords hashed and exclude sensitive fields from public formatting.
 - Public registration accepts only phone number and password and always assigns the customer role server-side.
 - Public OTP requests require an existing phone number, atomically reserve the phone-and-IP Redis key before contacting the provider, replace only the owned reservation with a bcrypt hash for 120 seconds, never return the provider code, and return the active key's remaining TTL without requesting another code until it expires.
+- Public OTP verification requires a valid phone number and six-digit `otp-code`, accepts optional `reset-password` (default `false`), reads the phone-and-requester-IP Redis key, compares the bcrypt hash, and returns `data: true` on success. Expired keys require requesting a new code.
 - The global API method middleware checks registration before overlapping dynamic user routes and returns 405 for methods other than POST.
 - Sign and verify access tokens with `JWT_SECRET_KEY`; sign and verify refresh tokens with `JWT_REFRESH_SECRET_KEY`.
 - Limit `/users/login` to three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.

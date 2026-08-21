@@ -143,6 +143,35 @@ describe('Redis OTP store', () => {
     ).rejects.toBe(redisError);
   });
 
+  test('atomically finds the OTP hash with its remaining TTL', async () => {
+    client.eval.mockResolvedValue(['hashed-code', '75']);
+    const store = new RedisOtpStore();
+
+    await expect(
+      store.find('otp:users:09123456789:127.0.0.1'),
+    ).resolves.toEqual({ hashedCode: 'hashed-code', remainingSeconds: 75 });
+    expect(client.eval).toHaveBeenCalledWith(expect.any(String), {
+      keys: ['otp:users:09123456789:127.0.0.1'],
+    });
+  });
+
+  test('returns null when the OTP key does not exist or has expired', async () => {
+    client.eval.mockResolvedValue(null);
+    const store = new RedisOtpStore();
+
+    await expect(
+      store.find('otp:users:09123456789:127.0.0.1'),
+    ).resolves.toBeNull();
+  });
+
+  test('rejects malformed OTP lookup data', async () => {
+    client.eval.mockResolvedValue(['hashed-code', 'invalid']);
+    const store = new RedisOtpStore();
+
+    await expect(store.find('otp:users:key')).rejects.toThrow(
+      'اطلاعات کد تأیید در Redis معتبر نیست',
+    );
+  });
   test.each([
     { redisResult: 1, expected: true },
     { redisResult: 0, expected: false },

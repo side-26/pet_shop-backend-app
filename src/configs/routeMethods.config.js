@@ -6,6 +6,7 @@ export const API_ROUTE_METHODS = [
   { path: '/users', methods: [post] },
   { path: '/users/register', methods: [post] },
   { path: '/users/send-otp', methods: [post] },
+  { path: '/users/verify', methods: [post] },
   { path: '/users/login', methods: [post] },
   { path: '/users/refresh-token', methods: [post] },
   { path: '/users/edit-info', methods: [put] },

@@ -8,11 +8,13 @@ jest.mock(
 );
 
 jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
+  const find = jest.fn();
   const releaseReservation = jest.fn();
   const reserve = jest.fn();
   const save = jest.fn();
 
   return {
+    __mockRedisOtpFind: find,
     __mockRedisOtpReleaseReservation: releaseReservation,
     __mockRedisOtpReserve: reserve,
     __mockRedisOtpSave: save,
@@ -20,7 +22,7 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
       ({ phoneNumber, ip }) =>
         `otp:users:${phoneNumber}:${encodeURIComponent(ip.toLowerCase())}`,
     ),
-    RedisOtpStore: jest.fn(() => ({ releaseReservation, reserve, save })),
+    RedisOtpStore: jest.fn(() => ({ find, releaseReservation, reserve, save })),
   };
 });
 
@@ -209,6 +211,7 @@ import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
+  __mockRedisOtpFind as mockRedisOtpFind,
   __mockRedisOtpReleaseReservation as mockRedisOtpReleaseReservation,
   __mockRedisOtpReserve as mockRedisOtpReserve,
   __mockRedisOtpSave as mockRedisOtpSave,
@@ -290,6 +293,7 @@ describe('User API - Integration Tests', () => {
       limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
       retryAfter: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
     });
+    mockRedisOtpFind.mockReset().mockResolvedValue(null);
     mockRedisOtpReserve.mockReset().mockResolvedValue({
       acquired: true,
       remainingSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
@@ -613,6 +617,76 @@ describe('User API - Integration Tests', () => {
     );
   });
 
+  // =========================================================
+  // POST /api/users/verify
+  // =========================================================
+
+  describe('POST /api/users/verify', () => {
+    test('should verify the OTP stored for the phone number and requester IP', async () => {
+      mockRedisOtpFind.mockResolvedValue({
+        hashedCode: await bcrypt.hash('123456', 4),
+        remainingSeconds: 75,
+      });
+
+      const res = await request(app).post('/api/users/verify').send({
+        phoneNumber: testUser.phoneNumber,
+        'otp-code': '123456',
+      });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body).toEqual({ isSuccess: true, data: true });
+      expect(mockRedisOtpFind).toHaveBeenCalledWith(
+        expect.stringMatching(
+          new RegExp(`^otp:users:${testUser.phoneNumber}:`),
+        ),
+      );
+    });
+
+    test('should accept the optional reset-password flag', async () => {
+      mockRedisOtpFind.mockResolvedValue({
+        hashedCode: await bcrypt.hash('123456', 4),
+        remainingSeconds: 75,
+      });
+
+      const res = await request(app).post('/api/users/verify').send({
+        phoneNumber: testUser.phoneNumber,
+        'otp-code': '123456',
+        'reset-password': true,
+      });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data).toBe(true);
+    });
+
+    test('should ask for a new code when the Redis key expired', async () => {
+      const res = await request(app).post('/api/users/verify').send({
+        phoneNumber: testUser.phoneNumber,
+        'otp-code': '123456',
+      });
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(res.body.message).toBe(
+        'کد تأیید منقضی شده است؛ لطفاً کد را دوباره ارسال کرده و سپس تلاش کنید',
+      );
+    });
+
+    test.each([
+      {},
+      { phoneNumber: '123', 'otp-code': '123456' },
+      { phoneNumber: '09123456789' },
+      { phoneNumber: '09123456789', 'otp-code': '12345' },
+      {
+        phoneNumber: '09123456789',
+        'otp-code': '123456',
+        'reset-password': 'true',
+      },
+    ])('should reject invalid request body %p', async (body) => {
+      const res = await request(app).post('/api/users/verify').send(body);
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(mockRedisOtpFind).not.toHaveBeenCalled();
+    });
+  });
   // =========================================================
   // POST /api/users/login
   // =========================================================

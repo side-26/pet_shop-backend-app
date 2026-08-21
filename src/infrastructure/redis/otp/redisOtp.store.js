@@ -35,6 +35,22 @@ end
 return 0
 `;
 
+const FIND_OTP_SCRIPT = `
+local value = redis.call('GET', KEYS[1])
+
+if not value then
+  return false
+end
+
+local remainingSeconds = redis.call('TTL', KEYS[1])
+
+if remainingSeconds < 0 then
+  return false
+end
+
+return { value, remainingSeconds }
+`;
+
 export const createUserOtpKey = ({ phoneNumber, ip }) => {
   const normalizedPhoneNumber = phoneNumber?.trim();
   const normalizedIp = ip?.trim().toLowerCase();
@@ -88,6 +104,21 @@ export class RedisOtpStore {
     }
 
     return remainingSeconds;
+  }
+
+  async find(key) {
+    const result = await this.#client.eval(FIND_OTP_SCRIPT, { keys: [key] });
+
+    if (!result) return null;
+
+    const [hashedCode, remainingValue] = result;
+    const remainingSeconds = Number(remainingValue);
+
+    if (!hashedCode || !Number.isInteger(remainingSeconds)) {
+      throw new Error('اطلاعات کد تأیید در Redis معتبر نیست');
+    }
+
+    return { hashedCode, remainingSeconds };
   }
 
   async releaseReservation({ key, reservationId }) {

@@ -31,6 +31,12 @@ export const userSendOtpSchema = object({
   phoneNumber: iranianPhoneNumberSchema,
 }).strict();
 
+export const userVerifyOtpSchema = object({
+  phoneNumber: iranianPhoneNumberSchema,
+  'otp-code': string().regex(/^\d{6}$/),
+  'reset-password': boolean().optional().default(false),
+}).strict();
+
 const addressFields = {
   province: string().trim().min(2),
   city: string().trim().min(2),

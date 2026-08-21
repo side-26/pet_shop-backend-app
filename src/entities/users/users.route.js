@@ -29,6 +29,7 @@ import {
   sendUserOtpController,
   editUserAddressController,
   updateUserPersonalInfoController,
+  verifyUserOtpController,
 } from './users.controller.js';
 
 const router = express.Router();
@@ -110,6 +111,27 @@ router.post(
     }
   */
   sendUserOtpController,
+);
+
+router.post(
+  '/users/verify',
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Verify an OTP for the requester phone number and IP'
+    #swagger.requestBody = {
+      required: true,
+      content: { "application/json": { schema: { $ref: '#/components/schemas/VerifyUserOtpBody' } } }
+    }
+    #swagger.responses[200] = {
+      description: 'OTP verified successfully',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/VerifyUserOtpSuccessResponse' } } }
+    }
+    #swagger.responses[422] = {
+      description: 'Validation error, expired OTP, or incorrect OTP',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  verifyUserOtpController,
 );
 
 router.post(

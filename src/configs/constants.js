@@ -13,6 +13,7 @@ export const ROUTES = {
     enableUser: '/users/enable/:id',
     login: '/users/login',
     sendOtp: '/users/send-otp',
+    verifyOtp: '/users/verify',
     register: '/users/register',
     changePassword: '/users/changePassword',
     userCart: '/users/profile/cart',

@@ -211,6 +211,63 @@
         }
       }
     },
+    "/users/verify": {
+      "post": {
+        "tags": ["/users"],
+        "summary": "Verify an OTP for the requester phone number and IP",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OTP verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyUserOtpSuccessResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error, expired OTP, or incorrect OTP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyUserOtpBody"
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/login": {
       "post": {
         "tags": ["/users"],
@@ -3392,6 +3449,39 @@
         },
         "required": ["phoneNumber"],
         "additionalProperties": false
+      },
+      "VerifyUserOtpBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phoneNumber", "otp-code"],
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          },
+          "otp-code": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          },
+          "reset-password": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "VerifyUserOtpSuccessResponse": {
+        "type": "object",
+        "required": ["isSuccess", "data"],
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "boolean",
+            "example": true
+          }
+        }
       },
       "SendUserOtpSuccessResponse": {
         "type": "object",

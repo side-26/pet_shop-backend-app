@@ -17,6 +17,7 @@ import {
   userRefreshTokenSchema,
   userRegisterSchema,
   userSendOtpSchema,
+  userVerifyOtpSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
   wishlistEntryIdSchema,
@@ -70,6 +71,21 @@ export const sendUserOtpController = async (req, res, next) => {
         : `کد تأیید در حال ارسال است یا قبلاً ارسال شده است؛ لطفاً پس از ${remainingSeconds} ثانیه دوباره تلاش کنید`,
       data: { remainingSeconds },
     });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const verifyUserOtpController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(userVerifyOtpSchema, req.body);
+    const isVerified = await UserService.verifyOtp({
+      phoneNumber: body.phoneNumber,
+      otpCode: body['otp-code'],
+      ip: req.ip,
+    });
+
+    setSuccessResponse(res, STATUES.SUCCESS, { data: isVerified });
   } catch (error) {
     onCatchPromiseController(error, next);
   }

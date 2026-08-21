@@ -10,6 +10,8 @@ const persianFieldNames = {
   lastName: 'نام خانوادگی',
   email: 'ایمیل',
   phoneNumber: 'شماره تلفن',
+  'otp-code': 'کد تأیید',
+  'reset-password': 'بازنشانی کلمه عبور',
   to: 'شماره تلفن مقصد',
   password: 'کلمه عبور',
   role: 'نقش کاربر',
