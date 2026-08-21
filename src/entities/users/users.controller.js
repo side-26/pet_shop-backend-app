@@ -16,6 +16,7 @@ import {
   userAddressIdSchema,
   userRefreshTokenSchema,
   userRegisterSchema,
+  userSendOtpSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
   wishlistEntryIdSchema,
@@ -49,6 +50,25 @@ export const registerUserController = async (req, res, next) => {
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: 'حساب کاربری شما با موفقیت ساخته شد لطفا وارد اپلیکیشن شوید',
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const sendUserOtpController = async (req, res, next) => {
+  try {
+    const { phoneNumber } = returnFormValidation(userSendOtpSchema, req.body);
+    const { remainingSeconds, sent } = await UserService.sendOtp({
+      phoneNumber,
+      ip: req.ip,
+    });
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: sent
+        ? 'کد تأیید با موفقیت ارسال شد'
+        : `کد تأیید در حال ارسال است یا قبلاً ارسال شده است؛ لطفاً پس از ${remainingSeconds} ثانیه دوباره تلاش کنید`,
+      data: { remainingSeconds },
     });
   } catch (error) {
     onCatchPromiseController(error, next);

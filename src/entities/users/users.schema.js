@@ -27,6 +27,10 @@ export const userRegisterSchema = object({
   password: string().min(8),
 }).strict();
 
+export const userSendOtpSchema = object({
+  phoneNumber: iranianPhoneNumberSchema,
+}).strict();
+
 const addressFields = {
   province: string().trim().min(2),
   city: string().trim().min(2),

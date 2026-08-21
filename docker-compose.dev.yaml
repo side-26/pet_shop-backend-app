@@ -10,7 +10,23 @@ services:
       - mongo_data:/data/db
 
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.10.0-alpine
+    container_name: redis
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -33,10 +49,13 @@ services:
     depends_on:
       mongoDB:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
     volumes:
       - ./src:/app/src
-    cpu_count: 4
+    
+    cpus: 4
     mem_limit: 4g
     mem_reservation: 2g
 
@@ -59,3 +78,4 @@ services:
 
 volumes:
   mongo_data:
+  redis_data:

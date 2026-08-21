@@ -115,6 +115,7 @@ const persianMessages = {
   // Enum
   invalidEnum: (field, values) =>
     `${field} باید یکی از مقادیر (${values}) باشد`,
+  unrecognizedKeys: 'ارسال فیلدهای اضافی مجاز نیست',
 
   // Custom
   invalid: (field) => `${field} معتبر نیست`,
@@ -208,6 +209,11 @@ const persianErrorMap = (issue) => {
         message: persianMessages.invalidEnum(fieldName, validValues),
       };
     }
+
+    case 'unrecognized_keys':
+      return {
+        message: persianMessages.unrecognizedKeys,
+      };
 
     case 'custom':
       return {

@@ -82,6 +82,17 @@ describe('OTP-code integration', () => {
     },
   );
 
+  test('returns a normalized response when the provider status is non-empty', async () => {
+    global.fetch.mockResolvedValue(
+      mockResponse({ body: { code: 53, status: 'درخواست رد شد' } }),
+    );
+
+    await expect(OtpCodeService.send({ to: '09123456789' })).resolves.toEqual({
+      code: '53',
+      status: 'درخواست رد شد',
+    });
+  });
+
   test('missing token fails before making a provider request', async () => {
     delete process.env.MELIPAYAMAK_OTP_TOKEN;
 

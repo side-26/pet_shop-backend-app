@@ -134,6 +134,83 @@
         }
       }
     },
+    "/users/send-otp": {
+      "post": {
+        "tags": ["/users"],
+        "summary": "Send a six-digit OTP to an existing user",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OTP sent and cached for two minutes, or active cache TTL returned without resending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendUserOtpSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "OTP provider unavailable, rejected the request, or returned an invalid code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendUserOtpBody"
+              }
+            }
+          }
+        }
+      }
+    },
     "/users/login": {
       "post": {
         "tags": ["/users"],
@@ -168,6 +245,36 @@
                   "type": "string"
                 },
                 "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "More than three login requests were sent from the same IP within two minutes",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires"
               }
             },
             "content": {
@@ -3035,7 +3142,7 @@
             "description": "Validation error"
           },
           "503": {
-            "description": "Provider unavailable"
+            "description": "Provider unavailable, rejected the request, or returned an invalid response"
           }
         },
         "requestBody": {
@@ -3274,6 +3381,44 @@
         },
         "required": ["phoneNumber", "password"],
         "additionalProperties": false
+      },
+      "SendUserOtpBody": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^09\\d{9}$"
+          }
+        },
+        "required": ["phoneNumber"],
+        "additionalProperties": false
+      },
+      "SendUserOtpSuccessResponse": {
+        "type": "object",
+        "required": ["isSuccess", "message", "data"],
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Confirms a new OTP or warns that the active OTP must expire before resending",
+            "example": "کد تأیید با موفقیت ارسال شد"
+          },
+          "data": {
+            "type": "object",
+            "required": ["remainingSeconds"],
+            "properties": {
+              "remainingSeconds": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 120,
+                "example": 120
+              }
+            }
+          }
+        }
       },
       "LoginUserBody": {
         "type": "object",

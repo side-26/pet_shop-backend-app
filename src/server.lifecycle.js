@@ -2,7 +2,7 @@ import { SERVER_LIFECYCLE } from '#configs/constants.js';
 import connectDB, { disconnectDB } from '#configs/db.config.js';
 import logger from '#configs/logger.js';
 
-import RedisClient from './infrastructure/redis/client.js';
+import RedisClient from '#infrastructure/redis/client.js';
 
 export const startApplication = async ({
   startHttpServer,

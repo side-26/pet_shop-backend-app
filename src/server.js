@@ -36,7 +36,6 @@ export const startServer = async () => {
 
   const shutdown = createShutdownHandler({ server });
   registerProcessHandlers(shutdown);
-
   logger.app.success('سرور با موفقیت راه‌اندازی شد', {
     port: PORT,
     environment: process.env.NODE_ENV || 'development',

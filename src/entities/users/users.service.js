@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -8,6 +9,7 @@ import {
   STATUES,
   USER_ADDRESS_LIMITS,
   USER_ITEM_TYPES,
+  USER_OTP,
 } from '#configs/constants.js';
 import { getJwtRefreshSecret, getJwtSecret } from '#configs/env.config.js';
 import logger from '#configs/logger.js';
@@ -23,9 +25,17 @@ import {
 } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
+import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
+import {
+  createUserOtpKey,
+  RedisOtpStore,
+} from '../../infrastructure/redis/otp/redisOtp.store.js';
 import { UserModel } from './users.model.js';
 import { calculateCartPrices, formatUserFullName } from './users.helpers.js';
 import { userAddressSchema } from './users.schema.js';
+
+const redisOtpStore = new RedisOtpStore();
+const sixDigitOtpPattern = new RegExp(`^\\d{${USER_OTP.CODE_LENGTH}}$`);
 
 export class UserService {
   // =========================================================
@@ -132,6 +142,66 @@ export class UserService {
       ...credentials,
       role: ROLES.CUSTOMER,
     });
+  }
+
+  static async sendOtp({ phoneNumber, ip }) {
+    const user = await this.findOne({ phoneNumber });
+
+    if (!user) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'کاربری با این شماره تلفن یافت نشد',
+      });
+    }
+
+    const key = createUserOtpKey({ phoneNumber, ip });
+    const reservationId = `pending:${randomUUID()}`;
+    const reservation = await redisOtpStore.reserve({
+      key,
+      reservationId,
+      ttlSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+    });
+
+    if (!reservation.acquired) {
+      return {
+        remainingSeconds: reservation.remainingSeconds,
+        sent: false,
+      };
+    }
+
+    try {
+      const { code } = await OtpCodeService.send({ to: phoneNumber });
+
+      if (!sixDigitOtpPattern.test(code)) {
+        setErrorResponse(STATUES.OTHER_PROBLEM, {
+          message: 'کد دریافتی از سرویس پیامک معتبر نیست',
+          code: ERROR_CODES.INVALID_MELIPAYAMAK_PROVIDER_RESPONSE,
+        });
+      }
+
+      const hashedCode = await this.hashPassword(code);
+      const remainingSeconds = await redisOtpStore.save({
+        key,
+        reservationId,
+        hashedCode,
+        ttlSeconds: USER_OTP.TTL_SECONDS,
+      });
+
+      return {
+        remainingSeconds,
+        sent: true,
+      };
+    } catch (error) {
+      try {
+        await redisOtpStore.releaseReservation({ key, reservationId });
+      } catch (cleanupError) {
+        logger.app.error(
+          'آزادسازی رزرو ناموفق کد تأیید در Redis با خطا مواجه شد',
+          cleanupError,
+        );
+      }
+
+      throw error;
+    }
   }
 
   // =========================================================

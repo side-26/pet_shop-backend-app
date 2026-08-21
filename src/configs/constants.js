@@ -12,6 +12,7 @@ export const ROUTES = {
     disableUser: '/users/disable/:id',
     enableUser: '/users/enable/:id',
     login: '/users/login',
+    sendOtp: '/users/send-otp',
     register: '/users/register',
     changePassword: '/users/changePassword',
     userCart: '/users/profile/cart',
@@ -126,6 +127,7 @@ export const ERROR_CODES = {
   INVALID_NESHAN_PROVIDER_RESPONSE: 'INVALID_NESHAN_PROVIDER_RESPONSE',
   MELIPAYAMAK_OTP_TOKEN_NOT_CONFIGURED: 'MELIPAYAMAK_OTP_TOKEN_NOT_CONFIGURED',
   MELIPAYAMAK_PROVIDER_UNAVAILABLE: 'MELIPAYAMAK_PROVIDER_UNAVAILABLE',
+  MELIPAYAMAK_PROVIDER_REJECTED: 'MELIPAYAMAK_PROVIDER_REJECTED',
   INVALID_MELIPAYAMAK_PROVIDER_RESPONSE:
     'INVALID_MELIPAYAMAK_PROVIDER_RESPONSE',
   BREED_NOT_FOUND: 'BREED_NOT_FOUND',
@@ -216,6 +218,15 @@ export const RATE_LIMIT = {
   API_WINDOW_MS: 15 * 60 * 1000,
   API_MAX_REQUESTS: 100,
   STANDARD_HEADERS: 'draft-8',
+  LOGIN_MAX_REQUESTS: 3,
+  LOGIN_WINDOW_SECONDS: 2 * 60,
+};
+
+export const USER_OTP = {
+  CODE_LENGTH: 6,
+  KEY_NAMESPACE: 'otp:users',
+  RESERVATION_TTL_SECONDS: 30,
+  TTL_SECONDS: 2 * 60,
 };
 
 export const SERVER_LIFECYCLE = {

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Owns public customer registration, user accounts, login and token refresh, profile data, password changes, addresses, status administration, user listing, carts, and wishlists.
+Owns public customer registration, OTP requests for existing phone numbers, user accounts, login and token refresh, profile data, password changes, addresses, status administration, user listing, carts, and wishlists.
 
 ## Important Files
 
@@ -15,14 +15,16 @@ Owns public customer registration, user accounts, login and token refresh, profi
 
 ## Dependencies
 
-Uses `ObjectStorageService` and image helpers for profile images, separate access-token and refresh-token secrets through shared JWT/environment helpers, roles/status constants, and authentication/role/upload middleware.
+Uses `ObjectStorageService` and image helpers for profile images, the Melipayamak OTP integration, the shared Redis OTP store, separate access-token and refresh-token secrets through shared JWT/environment helpers, roles/status constants, authentication/role/upload middleware, and the shared Redis rate limiter for login attempts.
 
 ## Modification Rules
 
 - Keep passwords hashed and exclude sensitive fields from public formatting.
 - Public registration accepts only phone number and password and always assigns the customer role server-side.
+- Public OTP requests require an existing phone number, atomically reserve the phone-and-IP Redis key before contacting the provider, replace only the owned reservation with a bcrypt hash for 120 seconds, never return the provider code, and return the active key's remaining TTL without requesting another code until it expires.
 - The global API method middleware checks registration before overlapping dynamic user routes and returns 405 for methods other than POST.
 - Sign and verify access tokens with `JWT_SECRET_KEY`; sign and verify refresh tokens with `JWT_REFRESH_SECRET_KEY`.
+- Limit `/users/login` to three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.

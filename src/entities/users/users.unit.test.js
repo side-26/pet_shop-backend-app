@@ -1,3 +1,7 @@
+jest.mock('node:crypto', () => ({
+  randomUUID: jest.fn(() => 'request-id'),
+}));
+
 jest.mock('bcryptjs', () => ({
   genSalt: jest.fn(),
   hash: jest.fn(),
@@ -46,6 +50,26 @@ jest.mock('#entities/pets/pets.service.js', () => ({
   PetService: { findById: jest.fn(), findCustomerById: jest.fn() },
 }));
 
+jest.mock('../../integrations/otpCode/otpCode.service.js', () => ({
+  OtpCodeService: { send: jest.fn() },
+}));
+
+jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
+  const releaseReservation = jest.fn();
+  const reserve = jest.fn();
+  const save = jest.fn();
+
+  return {
+    __mockRedisOtpReleaseReservation: releaseReservation,
+    __mockRedisOtpReserve: reserve,
+    __mockRedisOtpSave: save,
+    createUserOtpKey: jest.fn(
+      ({ phoneNumber, ip }) => `otp:users:${phoneNumber}:${ip}`,
+    ),
+    RedisOtpStore: jest.fn(() => ({ releaseReservation, reserve, save })),
+  };
+});
+
 jest.mock('#utils/helpers.js', () => ({
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
@@ -90,13 +114,21 @@ jest.mock('./users.model.js', () => ({
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-import { ROLES } from '#configs/constants.js';
+import { ERROR_CODES, ROLES, STATUES, USER_OTP } from '#configs/constants.js';
+import logger from '#configs/logger.js';
 import { PetService } from '#entities/pets/pets.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
 import { getPaginationData, verifyRefreshToken } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
+import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
+import {
+  __mockRedisOtpReleaseReservation as mockRedisOtpReleaseReservation,
+  __mockRedisOtpReserve as mockRedisOtpReserve,
+  __mockRedisOtpSave as mockRedisOtpSave,
+  createUserOtpKey,
+} from '../../infrastructure/redis/otp/redisOtp.store.js';
 import { UserModel } from './users.model.js';
 
 import { UserService } from './users.service.js';
@@ -153,6 +185,11 @@ describe('UserService - Unit Tests', () => {
     };
 
     jest.clearAllMocks();
+    mockRedisOtpReserve.mockResolvedValue({
+      acquired: true,
+      remainingSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+    });
+    mockRedisOtpReleaseReservation.mockResolvedValue(true);
   });
 
   // =========================================================
@@ -356,6 +393,141 @@ describe('UserService - Unit Tests', () => {
         password: 'password123',
       }),
     ).rejects.toThrow('کاربری با این مشخصات وجود دارد');
+  });
+
+  // =========================================================
+  // SEND OTP
+  // =========================================================
+
+  test('sendOtp sends, hashes, and stores a six-digit code for an existing user', async () => {
+    UserModel.findOne.mockResolvedValue(mockUser);
+    OtpCodeService.send.mockResolvedValue({ code: '123456', status: '' });
+    bcrypt.genSalt.mockResolvedValue('salt');
+    bcrypt.hash.mockResolvedValue('hashed-code');
+    mockRedisOtpSave.mockResolvedValue(119);
+
+    await expect(
+      UserService.sendOtp({
+        phoneNumber: mockUser.phoneNumber,
+        ip: '127.0.0.1',
+      }),
+    ).resolves.toEqual({ remainingSeconds: 119, sent: true });
+    expect(UserModel.findOne).toHaveBeenCalledWith({
+      phoneNumber: mockUser.phoneNumber,
+    });
+    expect(OtpCodeService.send).toHaveBeenCalledWith({
+      to: mockUser.phoneNumber,
+    });
+    expect(bcrypt.hash).toHaveBeenCalledWith('123456', 'salt');
+    expect(createUserOtpKey).toHaveBeenCalledWith({
+      phoneNumber: mockUser.phoneNumber,
+      ip: '127.0.0.1',
+    });
+    expect(mockRedisOtpReserve).toHaveBeenCalledWith({
+      key: `otp:users:${mockUser.phoneNumber}:127.0.0.1`,
+      reservationId: 'pending:request-id',
+      ttlSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+    });
+    expect(mockRedisOtpSave).toHaveBeenCalledWith({
+      key: `otp:users:${mockUser.phoneNumber}:127.0.0.1`,
+      reservationId: 'pending:request-id',
+      hashedCode: 'hashed-code',
+      ttlSeconds: USER_OTP.TTL_SECONDS,
+    });
+    expect(mockRedisOtpReleaseReservation).not.toHaveBeenCalled();
+  });
+
+  test('sendOtp returns the active reservation TTL without requesting or hashing another code', async () => {
+    UserModel.findOne.mockResolvedValue(mockUser);
+    mockRedisOtpReserve.mockResolvedValue({
+      acquired: false,
+      remainingSeconds: 73,
+    });
+
+    await expect(
+      UserService.sendOtp({
+        phoneNumber: mockUser.phoneNumber,
+        ip: '127.0.0.1',
+      }),
+    ).resolves.toEqual({ remainingSeconds: 73, sent: false });
+    expect(OtpCodeService.send).not.toHaveBeenCalled();
+    expect(bcrypt.hash).not.toHaveBeenCalled();
+    expect(mockRedisOtpSave).not.toHaveBeenCalled();
+    expect(mockRedisOtpReleaseReservation).not.toHaveBeenCalled();
+  });
+
+  test('sendOtp rejects an unknown phone number before requesting a code', async () => {
+    UserModel.findOne.mockResolvedValue(null);
+
+    await expect(
+      UserService.sendOtp({ phoneNumber: '09999999999', ip: '127.0.0.1' }),
+    ).rejects.toMatchObject({
+      statusCode: STATUES.NOT_FOUND,
+      message: 'کاربری با این شماره تلفن یافت نشد',
+    });
+    expect(OtpCodeService.send).not.toHaveBeenCalled();
+    expect(mockRedisOtpReserve).not.toHaveBeenCalled();
+    expect(mockRedisOtpSave).not.toHaveBeenCalled();
+  });
+
+  test.each(['12345', '1234567', 'abcdef'])(
+    'sendOtp rejects invalid provider code %s without storing it',
+    async (code) => {
+      UserModel.findOne.mockResolvedValue(mockUser);
+      OtpCodeService.send.mockResolvedValue({ code, status: '' });
+
+      await expect(
+        UserService.sendOtp({
+          phoneNumber: mockUser.phoneNumber,
+          ip: '127.0.0.1',
+        }),
+      ).rejects.toMatchObject({
+        statusCode: STATUES.OTHER_PROBLEM,
+        code: ERROR_CODES.INVALID_MELIPAYAMAK_PROVIDER_RESPONSE,
+      });
+      expect(bcrypt.hash).not.toHaveBeenCalled();
+      expect(mockRedisOtpSave).not.toHaveBeenCalled();
+      expect(mockRedisOtpReleaseReservation).toHaveBeenCalledWith({
+        key: `otp:users:${mockUser.phoneNumber}:127.0.0.1`,
+        reservationId: 'pending:request-id',
+      });
+    },
+  );
+
+  test('sendOtp releases its reservation and preserves a provider failure', async () => {
+    const providerError = new Error('provider rejected');
+    UserModel.findOne.mockResolvedValue(mockUser);
+    OtpCodeService.send.mockRejectedValue(providerError);
+
+    await expect(
+      UserService.sendOtp({
+        phoneNumber: mockUser.phoneNumber,
+        ip: '127.0.0.1',
+      }),
+    ).rejects.toBe(providerError);
+    expect(mockRedisOtpReleaseReservation).toHaveBeenCalledWith({
+      key: `otp:users:${mockUser.phoneNumber}:127.0.0.1`,
+      reservationId: 'pending:request-id',
+    });
+  });
+
+  test('sendOtp preserves the provider failure when reservation cleanup also fails', async () => {
+    const providerError = new Error('provider rejected');
+    const cleanupError = new Error('redis cleanup failed');
+    UserModel.findOne.mockResolvedValue(mockUser);
+    OtpCodeService.send.mockRejectedValue(providerError);
+    mockRedisOtpReleaseReservation.mockRejectedValue(cleanupError);
+
+    await expect(
+      UserService.sendOtp({
+        phoneNumber: mockUser.phoneNumber,
+        ip: '127.0.0.1',
+      }),
+    ).rejects.toBe(providerError);
+    expect(logger.app.error).toHaveBeenCalledWith(
+      'آزادسازی رزرو ناموفق کد تأیید در Redis با خطا مواجه شد',
+      cleanupError,
+    );
   });
 
   test('register creates a customer account with a hashed password', async () => {

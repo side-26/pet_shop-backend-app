@@ -6,6 +6,7 @@ import {
   editUserAddressSchema,
   userChangePasswordFormBodyValidation,
   userRegisterSchema,
+  userSendOtpSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
 } from '../entities/users/users.schema.js';
@@ -71,6 +72,32 @@ export const schemas = {
   // ── User request bodies ──────────────────────────────────────────────────
   CreateUserBody: toOpenApi(userZodSchema),
   RegisterUserBody: toOpenApi(userRegisterSchema),
+  SendUserOtpBody: toOpenApi(userSendOtpSchema),
+  SendUserOtpSuccessResponse: {
+    type: 'object',
+    required: ['isSuccess', 'message', 'data'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      message: {
+        type: 'string',
+        description:
+          'Confirms a new OTP or warns that the active OTP must expire before resending',
+        example: 'کد تأیید با موفقیت ارسال شد',
+      },
+      data: {
+        type: 'object',
+        required: ['remainingSeconds'],
+        properties: {
+          remainingSeconds: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 120,
+            example: 120,
+          },
+        },
+      },
+    },
+  },
   LoginUserBody: {
     type: 'object',
     additionalProperties: false,

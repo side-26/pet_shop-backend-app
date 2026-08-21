@@ -1,10 +1,11 @@
 import express from 'express';
 
-import { ROLES } from '#configs/constants.js';
+import { RATE_LIMIT, ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadAvatar } from '#middlewares/upload.middleware.js';
 
+import { RateLimiter } from '../../infrastructure/redis/rateLimit/rateLimit.core.js';
 import {
   addCartItemController,
   addUserAddressController,
@@ -25,11 +26,13 @@ import {
   loginUserController,
   refreshTokenController,
   registerUserController,
+  sendUserOtpController,
   editUserAddressController,
   updateUserPersonalInfoController,
 } from './users.controller.js';
 
 const router = express.Router();
+const userRateLimiter = new RateLimiter('users');
 
 router.post(
   '/users',
@@ -81,6 +84,35 @@ router.post(
 );
 
 router.post(
+  '/users/send-otp',
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Send a six-digit OTP to an existing user'
+    #swagger.requestBody = {
+      required: true,
+      content: { "application/json": { schema: { $ref: '#/components/schemas/SendUserOtpBody' } } }
+    }
+    #swagger.responses[200] = {
+      description: 'OTP sent and cached for two minutes, or active cache TTL returned without resending',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/SendUserOtpSuccessResponse' } } }
+    }
+    #swagger.responses[404] = {
+      description: 'User not found',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[422] = {
+      description: 'Validation error',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[503] = {
+      description: 'OTP provider unavailable, rejected the request, or returned an invalid code',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  sendUserOtpController,
+);
+
+router.post(
   '/users/login',
   /*
     #swagger.tags = ['Users']
@@ -97,7 +129,20 @@ router.post(
       description: 'User not found',
       content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
     }
+    #swagger.responses[429] = {
+      description: 'More than three login requests were sent from the same IP within two minutes',
+      headers: {
+        'RateLimit-Limit': { schema: { type: 'integer' }, example: 3 },
+        'RateLimit-Remaining': { schema: { type: 'integer' }, example: 0 },
+        'Retry-After': { schema: { type: 'integer' }, description: 'Seconds until the current rate-limit window expires' }
+      },
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
   */
+  userRateLimiter.limit({
+    limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+    window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+  }),
   loginUserController,
 );
 

@@ -36,6 +36,16 @@ describe('Persian Zod error map', () => {
     ).not.toThrow();
   });
 
+  it('translates strict-object extra keys to Persian', () => {
+    const result = persianErrorMap({
+      code: 'unrecognized_keys',
+      path: [],
+      keys: ['unexpected'],
+    });
+
+    expect(result.message).toBe('ارسال فیلدهای اضافی مجاز نیست');
+  });
+
   it('translates URL format errors using the Persian field label', () => {
     const result = persianErrorMap({
       code: 'invalid_format',

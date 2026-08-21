@@ -29,6 +29,8 @@ export class OtpCodeClient {
       throw error;
     }
 
+    console.log(response, 'error response');
+
     return response.json();
   }
 }

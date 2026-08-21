@@ -1,3 +1,33 @@
+jest.mock(
+  '../../infrastructure/redis/rateLimit/redisRateLimit.store.js',
+  () => ({
+    RedisRateLimitStore: jest.fn().mockImplementation(() => ({
+      consume: jest.fn(),
+    })),
+  }),
+);
+
+jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
+  const releaseReservation = jest.fn();
+  const reserve = jest.fn();
+  const save = jest.fn();
+
+  return {
+    __mockRedisOtpReleaseReservation: releaseReservation,
+    __mockRedisOtpReserve: reserve,
+    __mockRedisOtpSave: save,
+    createUserOtpKey: jest.fn(
+      ({ phoneNumber, ip }) =>
+        `otp:users:${phoneNumber}:${encodeURIComponent(ip.toLowerCase())}`,
+    ),
+    RedisOtpStore: jest.fn(() => ({ releaseReservation, reserve, save })),
+  };
+});
+
+jest.mock('../../integrations/otpCode/otpCode.service.js', () => ({
+  OtpCodeService: { send: jest.fn() },
+}));
+
 jest.mock('#middlewares/auth.middleware.js', () => ({
   authenticated: (req, res, next) => {
     if (global.__TEST_UNAUTHENTICATED__) {
@@ -163,7 +193,13 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 import sharp from 'sharp';
 
-import { METHODS, ROLES, STATUES } from '#configs/constants.js';
+import {
+  METHODS,
+  RATE_LIMIT,
+  ROLES,
+  STATUES,
+  USER_OTP,
+} from '#configs/constants.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
 
@@ -171,12 +207,20 @@ import { errorHandler } from '#middlewares/error.middleware.js';
 import { apiMethodMiddleware } from '#middlewares/method.middleware.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
 
+import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
+import {
+  __mockRedisOtpReleaseReservation as mockRedisOtpReleaseReservation,
+  __mockRedisOtpReserve as mockRedisOtpReserve,
+  __mockRedisOtpSave as mockRedisOtpSave,
+} from '../../infrastructure/redis/otp/redisOtp.store.js';
+import { RedisRateLimitStore } from '../../infrastructure/redis/rateLimit/redisRateLimit.store.js';
 import { UserModel } from './users.model.js';
 
 import usersRoutes from './users.route.js';
 
 describe('User API - Integration Tests', () => {
   let app;
+  let mockRedisRateLimitConsume;
   let testUser;
 
   const DEFAULT_PASSWORD = 'password123';
@@ -237,6 +281,26 @@ describe('User API - Integration Tests', () => {
   });
 
   beforeEach(async () => {
+    mockRedisRateLimitConsume =
+      RedisRateLimitStore.mock.results[0].value.consume;
+    mockRedisRateLimitConsume.mockReset().mockResolvedValue({
+      allowed: true,
+      current: 1,
+      remaining: RATE_LIMIT.LOGIN_MAX_REQUESTS - 1,
+      limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+      retryAfter: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+    });
+    mockRedisOtpReserve.mockReset().mockResolvedValue({
+      acquired: true,
+      remainingSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+    });
+    mockRedisOtpReleaseReservation.mockReset().mockResolvedValue(true);
+    mockRedisOtpSave.mockReset().mockResolvedValue(USER_OTP.TTL_SECONDS);
+    OtpCodeService.send.mockReset().mockResolvedValue({
+      code: '123456',
+      status: '',
+    });
+
     await Promise.all([
       UserModel.deleteMany({}),
       ProductModel.deleteMany({}),
@@ -424,10 +488,210 @@ describe('User API - Integration Tests', () => {
   });
 
   // =========================================================
+  // POST /api/users/send-otp
+  // =========================================================
+
+  describe('POST /api/users/send-otp', () => {
+    test('should send and store a hashed OTP for an existing phone and requester IP', async () => {
+      const res = await request(app).post('/api/users/send-otp').send({
+        phoneNumber: testUser.phoneNumber,
+      });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body).toEqual({
+        isSuccess: true,
+        message: 'کد تأیید با موفقیت ارسال شد',
+        data: { remainingSeconds: USER_OTP.TTL_SECONDS },
+      });
+      expect(OtpCodeService.send).toHaveBeenCalledWith({
+        to: testUser.phoneNumber,
+      });
+      expect(mockRedisOtpReserve).toHaveBeenCalledWith({
+        key: expect.stringMatching(
+          new RegExp(`^otp:users:${testUser.phoneNumber}:`),
+        ),
+        reservationId: expect.stringMatching(/^pending:/),
+        ttlSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+      });
+      expect(mockRedisOtpSave).toHaveBeenCalledWith({
+        key: expect.stringMatching(
+          new RegExp(`^otp:users:${testUser.phoneNumber}:`),
+        ),
+        reservationId: expect.stringMatching(/^pending:/),
+        hashedCode: expect.any(String),
+        ttlSeconds: USER_OTP.TTL_SECONDS,
+      });
+
+      const [{ hashedCode }] = mockRedisOtpSave.mock.calls[0];
+      await expect(bcrypt.compare('123456', hashedCode)).resolves.toBe(true);
+      expect(res.body).not.toHaveProperty('code');
+      expect(res.body.data).not.toHaveProperty('code');
+    });
+
+    test('should return the active reservation TTL and warning without sending another OTP', async () => {
+      mockRedisOtpReserve.mockResolvedValue({
+        acquired: false,
+        remainingSeconds: 73,
+      });
+
+      const res = await request(app).post('/api/users/send-otp').send({
+        phoneNumber: testUser.phoneNumber,
+      });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body).toEqual({
+        isSuccess: true,
+        message:
+          'کد تأیید در حال ارسال است یا قبلاً ارسال شده است؛ لطفاً پس از 73 ثانیه دوباره تلاش کنید',
+        data: { remainingSeconds: 73 },
+      });
+      expect(OtpCodeService.send).not.toHaveBeenCalled();
+      expect(mockRedisOtpSave).not.toHaveBeenCalled();
+    });
+
+    test('should allow only one provider call for concurrent OTP requests', async () => {
+      mockRedisOtpReserve
+        .mockResolvedValueOnce({
+          acquired: true,
+          remainingSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+        })
+        .mockResolvedValueOnce({
+          acquired: false,
+          remainingSeconds: USER_OTP.RESERVATION_TTL_SECONDS,
+        });
+
+      const sendRequest = () =>
+        request(app).post('/api/users/send-otp').send({
+          phoneNumber: testUser.phoneNumber,
+        });
+      const responses = await Promise.all([sendRequest(), sendRequest()]);
+
+      expect(responses.map(({ status }) => status)).toEqual([
+        STATUES.SUCCESS,
+        STATUES.SUCCESS,
+      ]);
+      expect(OtpCodeService.send).toHaveBeenCalledTimes(1);
+      expect(mockRedisOtpSave).toHaveBeenCalledTimes(1);
+      expect(
+        responses.some(({ body }) => body.message.includes('دوباره تلاش کنید')),
+      ).toBe(true);
+    });
+
+    test('should return 404 without sending an OTP for an unknown phone', async () => {
+      const res = await request(app).post('/api/users/send-otp').send({
+        phoneNumber: '09999999999',
+      });
+
+      expect(res.status).toBe(STATUES.NOT_FOUND);
+      expect(res.body.message).toBe('کاربری با این شماره تلفن یافت نشد');
+      expect(OtpCodeService.send).not.toHaveBeenCalled();
+      expect(mockRedisOtpReserve).not.toHaveBeenCalled();
+      expect(mockRedisOtpSave).not.toHaveBeenCalled();
+    });
+
+    test.each([
+      {},
+      { phoneNumber: '123' },
+      { phoneNumber: '09123456789', unexpected: true },
+    ])('should reject invalid request body %p', async (body) => {
+      const res = await request(app).post('/api/users/send-otp').send(body);
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(OtpCodeService.send).not.toHaveBeenCalled();
+      expect(mockRedisOtpSave).not.toHaveBeenCalled();
+    });
+
+    test.each(['get', 'put', 'patch', 'delete'])(
+      'should return 405 for the unsupported %s method',
+      async (method) => {
+        const res = await request(app)[method]('/api/users/send-otp');
+
+        expect(res.status).toBe(STATUES.METHOD_NOT_ALLOWED);
+        expect(res.headers.allow).toBe(METHODS.post);
+        expect(res.body.message).toBe('متد درخواست برای این مسیر مجاز نیست');
+      },
+    );
+  });
+
+  // =========================================================
   // POST /api/users/login
   // =========================================================
 
   describe('POST /api/users/login', () => {
+    test('should apply the three-request two-minute Redis policy', async () => {
+      const res = await request(app).post('/api/users/login').send({
+        phoneNumber: testUser.phoneNumber,
+        password: DEFAULT_PASSWORD,
+      });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(mockRedisRateLimitConsume).toHaveBeenCalledWith({
+        key: expect.stringContaining('rate-limit:users:POST:/api/users/login:'),
+        limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+        window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+      });
+      expect(res.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.LOGIN_MAX_REQUESTS),
+      );
+      expect(res.headers['ratelimit-remaining']).toBe(
+        String(RATE_LIMIT.LOGIN_MAX_REQUESTS - 1),
+      );
+    });
+
+    test('should return 429 after three login requests in the same window', async () => {
+      mockRedisRateLimitConsume
+        .mockResolvedValueOnce({
+          allowed: true,
+          current: 1,
+          remaining: 2,
+          limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+          retryAfter: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+        })
+        .mockResolvedValueOnce({
+          allowed: true,
+          current: 2,
+          remaining: 1,
+          limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+          retryAfter: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+        })
+        .mockResolvedValueOnce({
+          allowed: true,
+          current: 3,
+          remaining: 0,
+          limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+          retryAfter: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+        })
+        .mockResolvedValueOnce({
+          allowed: false,
+          current: 4,
+          remaining: 0,
+          limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+          retryAfter: 90,
+        });
+
+      const sendLoginRequest = () =>
+        request(app).post('/api/users/login').send({
+          phoneNumber: testUser.phoneNumber,
+          password: DEFAULT_PASSWORD,
+        });
+
+      const responses = [];
+
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        responses.push(await sendLoginRequest());
+      }
+
+      expect(responses.map(({ status }) => status)).toEqual([
+        STATUES.SUCCESS,
+        STATUES.SUCCESS,
+        STATUES.SUCCESS,
+        STATUES.TOO_MANY_REQUESTS,
+      ]);
+      expect(responses[3].headers['ratelimit-limit']).toBe('3');
+      expect(responses[3].headers['ratelimit-remaining']).toBe('0');
+      expect(responses[3].headers['retry-after']).toBe('90');
+    });
+
     test('should login user', async () => {
       const res = await request(app).post('/api/users/login').send({
         phoneNumber: testUser.phoneNumber,
