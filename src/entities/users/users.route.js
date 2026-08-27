@@ -405,7 +405,8 @@ router.get(
     #swagger.tags = ['Users']
     #swagger.summary = 'Get paginated users'
     #swagger.parameters['page'] = { in: 'query', schema: { type: 'integer', default: 1 } }
-    #swagger.parameters['pageSize'] = { in: 'query', schema: { type: 'integer', default: 10 } }
+    #swagger.parameters['limit'] = { in: 'query', schema: { type: 'integer', default: 10 } }
+    #swagger.parameters['isEnable'] = { in: 'query', schema: { type: 'boolean' }, description: 'Filter users by enabled status' }
     #swagger.responses[200] = {
       description: 'Paginated user list',
       content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } }

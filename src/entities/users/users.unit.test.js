@@ -1356,6 +1356,16 @@ describe('UserService - Unit Tests', () => {
     });
   });
 
+  test('buildPaginatedUsersFilter converts isEnable query strings to booleans', () => {
+    expect(UserService.buildPaginatedUsersFilter({ isEnable: 'true' })).toEqual(
+      { isEnable: true },
+    );
+
+    expect(
+      UserService.buildPaginatedUsersFilter({ isEnable: 'false' }),
+    ).toEqual({ isEnable: false });
+  });
+
   // =========================================================
   // FIND ALL
   // =========================================================

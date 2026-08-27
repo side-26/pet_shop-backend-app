@@ -1743,6 +1743,27 @@ describe('User API - Integration Tests', () => {
         String(RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS - 1),
       );
     });
+
+    test('should filter paginated users by isEnable query string', async () => {
+      await createTestUser({
+        phoneNumber: '09111111111',
+        isEnable: false,
+      });
+
+      const res = await request(app)
+        .get('/api/users/paginate')
+        .query({
+          page: 1,
+          limit: 20,
+          isEnable: 'true',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data.totalRecords).toBe(1);
+      expect(res.body.data.data).toHaveLength(1);
+      expect(res.body.data.data[0].isEnable).toBe(true);
+    });
   });
 
   // =========================================================

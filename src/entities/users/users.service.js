@@ -1024,6 +1024,17 @@ export class UserService {
         return;
       }
 
+      if (key === 'isEnable') {
+        query[key] =
+          value === 'true' || value === true
+            ? true
+            : value === 'false' || value === false
+              ? false
+              : value;
+
+        return;
+      }
+
       query[key] =
         typeof value === 'string'
           ? {
