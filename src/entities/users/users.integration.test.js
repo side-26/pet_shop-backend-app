@@ -75,15 +75,6 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
   },
 }));
 
-jest.mock('#middlewares/role.middleware.js', () => ({
-  roleMiddleware: () => (req, res, next) => {
-    void req;
-    void res;
-
-    next();
-  },
-}));
-
 jest.mock('#configs/logger.js', () => ({
   app: {
     info: jest.fn(),
@@ -1791,6 +1782,73 @@ describe('User API - Integration Tests', () => {
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
+    });
+  });
+
+  // =========================================================
+  // DELETE /api/users/:id
+  // =========================================================
+
+  describe('DELETE /api/users/:id', () => {
+    test('should let an admin delete a user and clean up the avatar', async () => {
+      const targetUser = await createTestUser({
+        phoneNumber: '09111111111',
+        avatar: 'https://cdn.example.test/users/target/avatar.webp',
+      });
+
+      const res = await request(app)
+        .delete(`/api/users/${targetUser._id}`)
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      await expect(UserModel.findById(targetUser._id)).resolves.toBeNull();
+      expect(ObjectStorageService.getObjectKeyFromUrl).toHaveBeenCalledWith(
+        targetUser.avatar,
+      );
+      expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+        'users/target/avatar.webp',
+      );
+    });
+
+    test('should reject a customer deleting a user', async () => {
+      const targetUser = await createTestUser({
+        phoneNumber: '09111111111',
+      });
+      global.__TEST_USER_ROLE__ = ROLES.CUSTOMER;
+
+      const res = await request(app)
+        .delete(`/api/users/${targetUser._id}`)
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.NO_ACCESS);
+      await expect(UserModel.findById(targetUser._id)).resolves.not.toBeNull();
+    });
+
+    test('should reject an unauthenticated deletion', async () => {
+      global.__TEST_UNAUTHENTICATED__ = true;
+
+      const res = await request(app).delete(`/api/users/${testUser._id}`);
+
+      expect(res.status).toBe(STATUES.UN_AUTHORIZED);
+      await expect(UserModel.findById(testUser._id)).resolves.not.toBeNull();
+    });
+
+    test('should return 404 when the user does not exist', async () => {
+      const id = new mongoose.Types.ObjectId();
+
+      const res = await request(app)
+        .delete(`/api/users/${id}`)
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.NOT_FOUND);
+    });
+
+    test('should return 422 for an invalid user ID', async () => {
+      const res = await request(app)
+        .delete('/api/users/invalid-id')
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
   });
 

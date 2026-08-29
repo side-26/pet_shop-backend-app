@@ -18,6 +18,7 @@ import {
   userRegisterSchema,
   userResetPasswordSchema,
   userSendOtpSchema,
+  userIdSchema,
   userVerifyOtpSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
@@ -411,5 +412,22 @@ export const getUserByIdController = async (req, res, next) => {
     });
   } catch (err) {
     onCatchPromiseController(err, next);
+  }
+};
+
+// =========================================================
+// DELETE USER BY ID
+// =========================================================
+
+export const deleteUserByIdController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(userIdSchema, req.params);
+    const user = await UserService.deleteById(id);
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: `${UserService.getFullName(user)} با موفقیت حذف شد.`,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
   }
 };

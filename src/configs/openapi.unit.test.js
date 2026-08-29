@@ -28,7 +28,7 @@ const getOperation = (apiPath, method) =>
 
 describe('users-router OpenAPI rate-limit contracts', () => {
   test('documents a 429 response for every users-router operation', () => {
-    expect(userRouterOperations).toHaveLength(24);
+    expect(userRouterOperations).toHaveLength(25);
 
     userRouterOperations.forEach(({ operation }) => {
       expect(operation.responses['429']).toBeDefined();
@@ -61,6 +61,23 @@ describe('users-router OpenAPI rate-limit contracts', () => {
     );
     expect(loginResponse.headers['Retry-After'].example).toBe(
       RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+    );
+  });
+
+  test('documents the admin-only user deletion contract', () => {
+    const operation = getOperation('/users/{id}', 'delete');
+
+    expect(operation.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation.responses).toEqual(
+      expect.objectContaining({
+        200: expect.any(Object),
+        401: expect.any(Object),
+        403: expect.any(Object),
+        404: expect.any(Object),
+        405: expect.any(Object),
+        422: expect.any(Object),
+        429: expect.any(Object),
+      }),
     );
   });
 });

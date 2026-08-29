@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Owns public customer registration, OTP requests for existing phone numbers, user accounts, login and token refresh, profile data, password changes, addresses, status administration, user listing, carts, and wishlists.
+Owns public customer registration, OTP requests for existing phone numbers, user accounts, login and token refresh, profile data, password changes, addresses, status administration, admin-only user deletion, user listing, carts, and wishlists.
 
 ## Important Files
 
@@ -32,6 +32,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.
+- Only authenticated admins may permanently delete a user through `DELETE /api/users/:id`; successful deletion also attempts to remove the user's stored avatar without reversing the database deletion when storage cleanup fails.
 - Cart and wishlist operations always derive ownership from the authenticated actor. See [`docs/cart.md`](./docs/cart.md) and [`docs/cart-and-wishlist.md`](./docs/cart-and-wishlist.md).
 
 ## Summary

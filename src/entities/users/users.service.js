@@ -72,6 +72,38 @@ export class UserService {
     return user;
   }
 
+  static async deleteById(userId) {
+    if (!userId) {
+      setErrorResponse(STATUES.BAD_REQUEST, {
+        message: 'ورودی معتبر نیست',
+      });
+    }
+
+    const deletedUser = await UserModel.findByIdAndDelete(userId.toString());
+
+    if (!deletedUser) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'کاربری با این مشخصات یافت نشد',
+      });
+    }
+
+    if (deletedUser.avatar) {
+      try {
+        const avatarKey = ObjectStorageService.getObjectKeyFromUrl(
+          deletedUser.avatar,
+        );
+        await ObjectStorageService.deleteObject(avatarKey);
+      } catch (error) {
+        logger.app.error('حذف آواتار کاربر حذف‌شده ناموفق بود', error, {
+          userId: deletedUser._id,
+          avatar: deletedUser.avatar,
+        });
+      }
+    }
+
+    return deletedUser;
+  }
+
   // =========================================================
   // PASSWORD
   // =========================================================

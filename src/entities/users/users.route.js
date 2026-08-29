@@ -14,6 +14,7 @@ import {
   createUserController,
   disableUserController,
   deleteCartItemController,
+  deleteUserByIdController,
   deleteWishlistItemController,
   emptyCartController,
   enableUserController,
@@ -434,6 +435,40 @@ router.get(
     }
   */
   getUserByIdController,
+);
+
+router.delete(
+  '/users/:id',
+  standardUserRateLimit,
+  authenticated,
+  roleMiddleware(ROLES.ADMIN),
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Delete a user by ID'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' } }
+    #swagger.responses[200] = {
+      description: 'User deleted successfully',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
+    }
+    #swagger.responses[401] = {
+      description: 'Authentication required',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[403] = {
+      description: 'Admin role required',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[404] = {
+      description: 'User not found',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+    #swagger.responses[422] = {
+      description: 'Invalid user ID',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  deleteUserByIdController,
 );
 
 export default router;

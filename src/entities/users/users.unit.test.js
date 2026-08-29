@@ -133,6 +133,7 @@ jest.mock('./users.model.js', () => ({
   UserModel: {
     findOne: jest.fn(),
     findById: jest.fn(),
+    findByIdAndDelete: jest.fn(),
     find: jest.fn(),
     create: jest.fn(),
     findByIdAndUpdate: jest.fn(),
@@ -310,6 +311,66 @@ describe('UserService - Unit Tests', () => {
     const result = await UserService.findById(mockUser._id, false);
 
     expect(result).toBeNull();
+  });
+
+  test('deleteById deletes the user and removes the stored avatar', async () => {
+    const deletedUser = {
+      ...mockUser,
+      avatar: 'https://cdn.test/users/avatar.webp',
+    };
+    UserModel.findByIdAndDelete.mockResolvedValue(deletedUser);
+    ObjectStorageService.getObjectKeyFromUrl.mockReturnValue(
+      'users/avatar.webp',
+    );
+    ObjectStorageService.deleteObject.mockResolvedValue();
+
+    await expect(UserService.deleteById(mockUser._id)).resolves.toEqual(
+      deletedUser,
+    );
+
+    expect(UserModel.findByIdAndDelete).toHaveBeenCalledWith(mockUser._id);
+    expect(ObjectStorageService.getObjectKeyFromUrl).toHaveBeenCalledWith(
+      deletedUser.avatar,
+    );
+    expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+      'users/avatar.webp',
+    );
+  });
+
+  test('deleteById returns not found when the user does not exist', async () => {
+    UserModel.findByIdAndDelete.mockResolvedValue(null);
+
+    await expect(UserService.deleteById(mockUser._id)).rejects.toThrow(
+      'کاربری با این مشخصات یافت نشد',
+    );
+
+    expect(ObjectStorageService.deleteObject).not.toHaveBeenCalled();
+  });
+
+  test('deleteById preserves deletion when avatar cleanup fails', async () => {
+    const deletedUser = {
+      ...mockUser,
+      avatar: 'https://cdn.test/users/avatar.webp',
+    };
+    const cleanupError = new Error('storage unavailable');
+    UserModel.findByIdAndDelete.mockResolvedValue(deletedUser);
+    ObjectStorageService.getObjectKeyFromUrl.mockReturnValue(
+      'users/avatar.webp',
+    );
+    ObjectStorageService.deleteObject.mockRejectedValue(cleanupError);
+
+    await expect(UserService.deleteById(mockUser._id)).resolves.toEqual(
+      deletedUser,
+    );
+
+    expect(logger.app.error).toHaveBeenCalledWith(
+      'حذف آواتار کاربر حذف‌شده ناموفق بود',
+      cleanupError,
+      {
+        userId: deletedUser._id,
+        avatar: deletedUser.avatar,
+      },
+    );
   });
 
   // =========================================================

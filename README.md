@@ -174,6 +174,7 @@ Create a `.env` file in the repository root:
 ```dotenv
 NODE_ENV=development
 PORT=3000
+CORS_ORIGIN=http://localhost:3000
 
 MONGODB_URI=mongodb://localhost:27017/pet_shop_db
 MONGODB_TEST_URI=mongodb://localhost:27017/pet_shop_test_db
@@ -224,18 +225,18 @@ npm run openapi
 
 ## API domains
 
-| Domain                       | Responsibility                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------- |
-| Users                        | Registration, login, token refresh, profiles, passwords, addresses, administration |
-| Cart and wishlist            | Product/Pet selection, quantities, calculated totals, checkout metadata            |
-| Orders                       | Historical cart snapshots, user history, management delivery workflow              |
-| Products                     | Customer and management catalog views, stock, pricing, taxonomy, images            |
-| Pets                         | Customer and management catalog views, breed/type relations, pricing, images       |
-| Categories and subcategories | Product taxonomy                                                                   |
-| Pet types and breeds         | Pet taxonomy                                                                       |
-| Countries                    | Normalized and cached remote country data                                          |
-| Locations                    | Iranian province and city reference data                                           |
-| Reverse geocoding            | Authenticated Neshan coordinate lookup                                             |
+| Domain                       | Responsibility                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Users                        | Registration, login, token refresh, profiles, passwords, addresses, administration, and admin-only deletion |
+| Cart and wishlist            | Product/Pet selection, quantities, calculated totals, checkout metadata                                     |
+| Orders                       | Historical cart snapshots, user history, management delivery workflow                                       |
+| Products                     | Customer and management catalog views, stock, pricing, taxonomy, images                                     |
+| Pets                         | Customer and management catalog views, breed/type relations, pricing, images                                |
+| Categories and subcategories | Product taxonomy                                                                                            |
+| Pet types and breeds         | Pet taxonomy                                                                                                |
+| Countries                    | Normalized and cached remote country data                                                                   |
+| Locations                    | Iranian province and city reference data                                                                    |
+| Reverse geocoding            | Authenticated Neshan coordinate lookup                                                                      |
 
 Consult `/docs` for the authoritative routes, request bodies, authentication requirements, statuses, and response schemas.
 

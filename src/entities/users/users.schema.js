@@ -101,6 +101,8 @@ export const cartEntryIdSchema = object({ id: mongoObjectIdSchema });
 
 export const wishlistEntryIdSchema = cartEntryIdSchema;
 
+export const userIdSchema = cartEntryIdSchema;
+
 export const userZodSchema = object({
   firstName: string().optional(),
   lastName: string().optional(),

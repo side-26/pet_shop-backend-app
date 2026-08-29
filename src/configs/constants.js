@@ -8,7 +8,7 @@ export const ROUTES = {
     addAddress: '/users/addresses',
     editAddress: '/users/addresses/:addressId',
     getAddresses: '/users/addresses',
-    deleteUser: '/users/delete/:id',
+    deleteUser: '/users/:id',
     disableUser: '/users/disable/:id',
     enableUser: '/users/enable/:id',
     login: '/users/login',
