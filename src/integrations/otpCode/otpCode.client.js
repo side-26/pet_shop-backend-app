@@ -28,9 +28,6 @@ export class OtpCodeClient {
       error.providerStatus = response.status;
       throw error;
     }
-
-    console.log(response, 'error response');
-
     return response.json();
   }
 }

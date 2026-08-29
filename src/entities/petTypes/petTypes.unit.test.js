@@ -36,7 +36,38 @@ jest.mock('./petTypes.model.js', () => {
   };
 });
 
+jest.mock('./petTypes.cache.store.js', () => {
+  const getOrLoad = jest.fn((label, loader) => loader());
+  const invalidate = jest.fn();
+
+  return {
+    PetTypeCacheStore: class PetTypeCacheStore {
+      static getAllLabel(includeDisabled) {
+        return includeDisabled ? 'all:with-disabled' : 'all:enabled';
+      }
+
+      static getByIdLabel(id) {
+        return `id:${id}`;
+      }
+
+      static getBySlugLabel(slug) {
+        return `slug:${slug}`;
+      }
+
+      getOrLoad = getOrLoad;
+
+      invalidate = invalidate;
+    },
+    __mockPetTypeCacheGetOrLoad: getOrLoad,
+    __mockPetTypeCacheInvalidate: invalidate,
+  };
+});
+
 import { PetTypeModel } from './petTypes.model.js';
+import {
+  __mockPetTypeCacheGetOrLoad as mockPetTypeCacheGetOrLoad,
+  __mockPetTypeCacheInvalidate as mockPetTypeCacheInvalidate,
+} from './petTypes.cache.store.js';
 
 import { PetTypeService } from './petTypes.service.js';
 
@@ -63,6 +94,9 @@ describe('PetTypeService - Unit Tests', () => {
     };
 
     jest.clearAllMocks();
+
+    mockPetTypeCacheGetOrLoad.mockImplementation((label, loader) => loader());
+    mockPetTypeCacheInvalidate.mockResolvedValue(undefined);
   });
 
   // =========================================================
@@ -137,6 +171,10 @@ describe('PetTypeService - Unit Tests', () => {
     expect(result).toEqual(mockPetType);
 
     expect(PetTypeModel.findById).toHaveBeenCalledWith(mockPetType._id);
+    expect(mockPetTypeCacheGetOrLoad).toHaveBeenCalledWith(
+      `id:${mockPetType._id}`,
+      expect.any(Function),
+    );
   });
 
   test('findById throws if not found', async () => {
@@ -170,6 +208,10 @@ describe('PetTypeService - Unit Tests', () => {
     expect(result).toEqual(mockPetType);
 
     expect(PetTypeModel.findBySlug).toHaveBeenCalledWith('dog');
+    expect(mockPetTypeCacheGetOrLoad).toHaveBeenCalledWith(
+      'slug:dog',
+      expect.any(Function),
+    );
   });
 
   test('findBySlug throws if not found', async () => {
@@ -213,6 +255,10 @@ describe('PetTypeService - Unit Tests', () => {
     expect(sortMock).toHaveBeenCalledWith({
       createdAt: 1,
     });
+    expect(mockPetTypeCacheGetOrLoad).toHaveBeenCalledWith(
+      'all:enabled',
+      expect.any(Function),
+    );
   });
 
   test('findAll returns all when includeDisabled true', async () => {
@@ -238,6 +284,10 @@ describe('PetTypeService - Unit Tests', () => {
     expect(result).toEqual(list);
 
     expect(PetTypeModel.find).toHaveBeenCalledWith({});
+    expect(mockPetTypeCacheGetOrLoad).toHaveBeenCalledWith(
+      'all:with-disabled',
+      expect.any(Function),
+    );
   });
 
   // =========================================================
@@ -293,6 +343,11 @@ describe('PetTypeService - Unit Tests', () => {
         $options: 'i',
       },
     });
+    expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Cat',
+      }),
+    );
   });
 
   test('create throws if title already exists', async () => {
@@ -362,6 +417,11 @@ describe('PetTypeService - Unit Tests', () => {
     expect(mockPetType.updatedBy).toBe(userId);
 
     expect(mockPetType.save).toHaveBeenCalled();
+    expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Canine',
+      }),
+    );
   });
 
   test('update throws if pet type not found', async () => {
@@ -418,6 +478,7 @@ describe('PetTypeService - Unit Tests', () => {
     expect(result).toEqual(mockPetType);
 
     expect(mockPetType.save).toHaveBeenCalled();
+    expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(mockPetType);
   });
 
   // =========================================================
@@ -438,6 +499,7 @@ describe('PetTypeService - Unit Tests', () => {
     expect(result.updatedBy).toBe(userId);
 
     expect(mockPetType.save).toHaveBeenCalled();
+    expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(mockPetType);
   });
 
   test('disable throws if pet type not found', async () => {
@@ -498,6 +560,7 @@ describe('PetTypeService - Unit Tests', () => {
     expect(PetTypeModel.findByIdAndDelete).toHaveBeenCalledWith(
       mockPetType._id,
     );
+    expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(mockPetType);
   });
 
   test('delete throws if pet type not found', async () => {

@@ -77,6 +77,30 @@ jest.mock('#configs/logger.js', () => ({
   },
 }));
 
+jest.mock('./petTypes.cache.store.js', () => {
+  const getOrLoad = jest.fn((label, loader) => loader());
+
+  return {
+    PetTypeCacheStore: class PetTypeCacheStore {
+      static getAllLabel(includeDisabled) {
+        return includeDisabled ? 'all:with-disabled' : 'all:enabled';
+      }
+
+      static getByIdLabel(id) {
+        return `id:${id}`;
+      }
+
+      static getBySlugLabel(slug) {
+        return `slug:${slug}`;
+      }
+
+      getOrLoad = getOrLoad;
+
+      invalidate = jest.fn();
+    },
+  };
+});
+
 import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';

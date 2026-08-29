@@ -2,6 +2,9 @@ import { STATUES } from '#configs/constants.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
 import { PetTypeModel } from './petTypes.model.js';
+import { PetTypeCacheStore } from './petTypes.cache.store.js';
+
+const petTypeCacheStore = new PetTypeCacheStore();
 
 export class PetTypeService {
   static escapeRegex(value = '') {
@@ -24,7 +27,10 @@ export class PetTypeService {
   }
 
   static async findById(id, throwOnNotFound = true) {
-    const petType = await PetTypeModel.findById(id);
+    const petType = await petTypeCacheStore.getOrLoad(
+      PetTypeCacheStore.getByIdLabel(id),
+      () => PetTypeModel.findById(id),
+    );
 
     if (!petType && throwOnNotFound) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -37,7 +43,10 @@ export class PetTypeService {
   }
 
   static async findBySlug(slug, throwOnNotFound = true) {
-    const petType = await PetTypeModel.findBySlug(slug);
+    const petType = await petTypeCacheStore.getOrLoad(
+      PetTypeCacheStore.getBySlugLabel(slug),
+      () => PetTypeModel.findBySlug(slug),
+    );
 
     if (!petType && throwOnNotFound) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -56,9 +65,13 @@ export class PetTypeService {
           isEnabled: true,
         };
 
-    return PetTypeModel.find(query).sort({
-      createdAt: 1,
-    });
+    return petTypeCacheStore.getOrLoad(
+      PetTypeCacheStore.getAllLabel(includeDisabled),
+      () =>
+        PetTypeModel.find(query).sort({
+          createdAt: 1,
+        }),
+    );
   }
 
   static async create(data, userId) {
@@ -78,11 +91,22 @@ export class PetTypeService {
       createdBy: userId,
     });
 
-    return petType.save();
+    const createdPetType = await petType.save();
+
+    await petTypeCacheStore.invalidate(createdPetType);
+
+    return createdPetType;
   }
 
   static async update(id, data, userId) {
-    const petType = await this.findById(id);
+    const petType = await PetTypeModel.findById(id);
+
+    if (!petType) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نوع حیوان یافت نشد',
+        code: 'PET_TYPE_NOT_FOUND',
+      });
+    }
 
     if (data.title) {
       const existingPetType = await this.findOne({
@@ -101,25 +125,51 @@ export class PetTypeService {
 
     petType.updatedBy = userId;
 
-    return petType.save();
+    const updatedPetType = await petType.save();
+
+    await petTypeCacheStore.invalidate(updatedPetType);
+
+    return updatedPetType;
   }
 
   static async disable(id, userId) {
-    const petType = await this.findById(id);
+    const petType = await PetTypeModel.findById(id);
+
+    if (!petType) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نوع حیوان یافت نشد',
+        code: 'PET_TYPE_NOT_FOUND',
+      });
+    }
 
     petType.isEnabled = false;
     petType.updatedBy = userId;
 
-    return petType.save();
+    const disabledPetType = await petType.save();
+
+    await petTypeCacheStore.invalidate(disabledPetType);
+
+    return disabledPetType;
   }
 
   static async enable(id, userId) {
-    const petType = await this.findById(id);
+    const petType = await PetTypeModel.findById(id);
+
+    if (!petType) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نوع حیوان یافت نشد',
+        code: 'PET_TYPE_NOT_FOUND',
+      });
+    }
 
     petType.isEnabled = true;
     petType.updatedBy = userId;
 
-    return petType.save();
+    const enabledPetType = await petType.save();
+
+    await petTypeCacheStore.invalidate(enabledPetType);
+
+    return enabledPetType;
   }
 
   static async delete(id) {
@@ -131,6 +181,8 @@ export class PetTypeService {
         code: 'PET_TYPE_NOT_FOUND',
       });
     }
+
+    await petTypeCacheStore.invalidate(petType);
 
     return petType;
   }
