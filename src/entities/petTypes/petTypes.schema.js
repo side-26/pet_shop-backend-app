@@ -87,7 +87,7 @@ export const petTypeSlugSchema = object({
   slug: string()
     .min(1)
     .max(50)
-    .regex(/^[a-z0-9-]+$/),
+    .regex(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u),
 });
 
 export const petTypeQuerySchema = object({

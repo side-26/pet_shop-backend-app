@@ -119,13 +119,16 @@ petTypeSchema.virtual('displayName').get(function () {
 petTypeSchema.pre('save', function () {
   // Auto-generate slug from title
   if (!this.slug && this.title) {
-    this.slug = this.title
+    const generatedSlug = this.title
+      .normalize('NFKC')
       .toLowerCase()
-      .replace(/[^\w\s]/g, '')
-      .replace(/\s+/g, '-')
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
+      .trim()
+      .replace(/[\s-]+/g, '-')
       .substring(0, 20);
+
+    this.slug = generatedSlug || `pet-type-${this._id.toString().slice(-8)}`;
   }
-  // next();
 });
 
 // ============================================

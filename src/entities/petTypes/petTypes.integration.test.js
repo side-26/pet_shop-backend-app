@@ -213,6 +213,34 @@ describe('PetType API - Integration Tests', () => {
       );
     });
 
+    it('should create a non-empty Unicode slug for a Persian title', async () => {
+      const res = await attachMainImage(
+        request(app)
+          .post('/api/pet-types')
+          .field('title', 'پرنده')
+          .set('Authorization', 'Bearer token'),
+      );
+
+      expect(res.status).toBe(STATUES.CREATED);
+      expect(res.body.data.slug).toBe('پرنده');
+
+      const bySlug = await request(app).get(
+        `/api/pet-types/slug/${encodeURIComponent('پرنده')}`,
+      );
+
+      expect(bySlug.status).toBe(STATUES.SUCCESS);
+      expect(bySlug.body.data.title).toBe('پرنده');
+    });
+
+    it('should never create an empty slug for a symbol-only title', async () => {
+      const petType = await PetTypeModel.create({
+        ...storedImageFields,
+        title: '!!',
+      });
+
+      expect(petType.slug).toMatch(/^pet-type-[0-9a-f]{8}$/);
+    });
+
     it('should return 422 if title is missing', async () => {
       const res = await request(app)
         .post('/api/pet-types')

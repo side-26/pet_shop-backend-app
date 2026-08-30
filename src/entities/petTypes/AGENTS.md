@@ -21,6 +21,7 @@ Breeds, pets, and categories reference pet types.
 
 - Treat schema/property changes as dependent contracts for breeds, pets, and categories.
 - Preserve slug/index behavior and enabled-only public behavior.
+- Auto-generated slugs preserve Unicode letters and numbers (including Persian titles) and use an ID-based non-empty fallback when a title contains only symbols.
 - Create and update accept a required JPEG/JPG, PNG, or WebP `mainImage` multipart file smaller than 1 MB; the service generates the required sub-10 KB `thumbnail` in parallel and persists the full public bucket URL.
 - Cache only public read results. Mutations must load a Mongoose document from MongoDB, then invalidate enabled/all list keys and the affected ID and slug keys after persistence. Redis failures are logged and must not override MongoDB reads or writes; cache entries have a five-minute TTL.
 
