@@ -26,6 +26,24 @@ function toOpenApi(zodSchema) {
 }
 
 export const schemas = {
+  PetTypePropertyDefinitionsBody: {
+    type: 'object',
+    required: ['id', 'propertyDefinitions'],
+    properties: {
+      id: { type: 'string' },
+      propertyDefinitions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['label', 'value'],
+          properties: {
+            label: { type: 'string' },
+            value: {},
+          },
+        },
+      },
+    },
+  },
   PetTypeMultipartBody: {
     type: 'object',
     required: ['mainImage'],

@@ -8,7 +8,9 @@ import {
 
 import {
   createPetTypeZodSchema,
+  petTypeIdSchema,
   petTypeMainImageZodSchema,
+  replacePetTypePropertyDefinitionsZodSchema,
   updatePetTypeZodSchema,
 } from './petTypes.schema.js';
 
@@ -113,6 +115,53 @@ export const updatePetTypeController = async (req, res, next) => {
       message: `نوع حیوان "${petType.title}" با موفقیت ویرایش شد`,
 
       data: PetTypeService.format(petType),
+    });
+  } catch (err) {
+    onCatchPromiseController(err, next);
+  }
+};
+
+export const replacePetTypePropertyDefinitionsController = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const { id, propertyDefinitions } = returnFormValidation(
+      replacePetTypePropertyDefinitionsZodSchema,
+      req.body,
+    );
+    const petType = await PetTypeService.replacePropertyDefinitions(
+      id,
+      propertyDefinitions,
+      req.user?.id,
+    );
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'ویژگی‌های نوع حیوان با موفقیت ویرایش شد',
+      data: {
+        id: petType._id,
+        propertyDefinitions: PetTypeService.formatPropertyDefinitions(petType),
+      },
+    });
+  } catch (err) {
+    onCatchPromiseController(err, next);
+  }
+};
+
+export const getPetTypePropertyDefinitionsController = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const { id } = returnFormValidation(petTypeIdSchema, req.params);
+    const petType = await PetTypeService.findById(id);
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: {
+        result: PetTypeService.formatPropertyDefinitions(petType),
+      },
     });
   } catch (err) {
     onCatchPromiseController(err, next);

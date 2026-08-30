@@ -9,10 +9,12 @@ import { uploadPetTypeMainImage } from '#middlewares/upload.middleware.js';
 
 import {
   createPetTypeController,
+  getPetTypePropertyDefinitionsController,
   getAllPetTypesController,
   getPetTypeByIdController,
   getPetTypeBySlugController,
   updatePetTypeController,
+  replacePetTypePropertyDefinitionsController,
   disablePetTypeController,
   enablePetTypeController,
   deletePetTypeController,
@@ -22,10 +24,23 @@ const router = express.Router();
 
 // Public routes
 router.get('/pet-types', getAllPetTypesController);
+router.get(
+  '/pet-types/property-definitions/:id',
+  /* #swagger.description = 'Return a pet type property definition list.' */
+  getPetTypePropertyDefinitionsController,
+);
 router.get('/pet-types/:id', getPetTypeByIdController);
 router.get('/pet-types/slug/:slug', getPetTypeBySlugController);
 
 // Admin routes
+router.put(
+  '/pet-types/range',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetTypePropertyDefinitionsBody' } } } } */
+  authenticated,
+  roleMiddleware(ROLES.ADMIN),
+  replacePetTypePropertyDefinitionsController,
+);
 router.post(
   '/pet-types',
   /* #swagger.security = [{ "bearerAuth": [] }]

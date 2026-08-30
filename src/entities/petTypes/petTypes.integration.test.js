@@ -520,6 +520,55 @@ describe('PetType API - Integration Tests', () => {
   });
 
   // =========================================================
+  // PROPERTY DEFINITIONS
+  // =========================================================
+
+  describe('PUT /api/pet-types/range', () => {
+    it('should replace property definitions with label and value entries', async () => {
+      const propertyDefinitions = [
+        { label: 'رنگ', value: 'قهوه‌ای' },
+        { label: 'وزن', value: 12 },
+      ];
+
+      const res = await request(app)
+        .put('/api/pet-types/range')
+        .send({ id: testPetType._id.toString(), propertyDefinitions })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data.propertyDefinitions).toEqual(propertyDefinitions);
+
+      const saved = await PetTypeModel.findById(testPetType._id);
+      expect(saved.propertyDefinitions.toObject()).toEqual([
+        { label: 'رنگ', value: 'قهوه‌ای', required: false },
+        { label: 'وزن', value: 12, required: false },
+      ]);
+    });
+  });
+
+  describe('GET /api/pet-types/property-definitions/:id', () => {
+    it('should return property definitions as result entries', async () => {
+      testPetType.propertyDefinitions = [
+        { label: 'رنگ', value: 'قهوه‌ای' },
+        { label: 'وزن', value: 12 },
+      ];
+      await testPetType.save();
+
+      const res = await request(app).get(
+        `/api/pet-types/property-definitions/${testPetType._id}`,
+      );
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data).toEqual({
+        result: [
+          { label: 'رنگ', value: 'قهوه‌ای' },
+          { label: 'وزن', value: 12 },
+        ],
+      });
+    });
+  });
+
+  // =========================================================
   // PATCH /api/pet-types/:id/disable
   // =========================================================
 

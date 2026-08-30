@@ -55,6 +55,18 @@ const propertyDefinitionsZodSchema = array(propertyDefinitionZodSchema)
     });
   });
 
+const propertyDefinitionValueZodSchema = object({
+  label: string().trim().min(1).max(80),
+  value: unknown().refine((value) => value !== undefined),
+});
+
+export const replacePetTypePropertyDefinitionsZodSchema = object({
+  id: string()
+    .min(1)
+    .regex(/^[0-9a-fA-F]{24}$/),
+  propertyDefinitions: array(propertyDefinitionValueZodSchema).max(50),
+});
+
 export const petTypeMainImageZodSchema = object({
   mimetype: zodEnum(IMAGE_UPLOAD.PET_TYPE_ALLOWED_MIME_TYPES),
   imageFileSize: number()
@@ -123,6 +135,7 @@ export default {
   createPetTypeZodSchema,
   updatePetTypeZodSchema,
   petTypeMainImageZodSchema,
+  replacePetTypePropertyDefinitionsZodSchema,
   petTypeIdSchema,
   petTypeSlugSchema,
   petTypeQuerySchema,

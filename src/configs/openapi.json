@@ -2170,6 +2170,29 @@
         ]
       }
     },
+    "/pet-types/property-definitions/{id}": {
+      "get": {
+        "description": "Return a pet type property definition list.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
     "/pet-types/{id}": {
       "get": {
         "description": "",
@@ -2308,6 +2331,34 @@
           },
           "default": {
             "description": ""
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
+      }
+    },
+    "/pet-types/range": {
+      "put": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PetTypePropertyDefinitionsBody"
+              }
+            }
           }
         },
         "tags": [
@@ -4382,6 +4433,34 @@
       }
     },
     "schemas": {
+      "PetTypePropertyDefinitionsBody": {
+        "type": "object",
+        "required": [
+          "id",
+          "propertyDefinitions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "propertyDefinitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "value"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {}
+              }
+            }
+          }
+        }
+      },
       "PetTypeMultipartBody": {
         "type": "object",
         "required": [

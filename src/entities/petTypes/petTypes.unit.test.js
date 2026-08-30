@@ -510,6 +510,51 @@ describe('PetTypeService - Unit Tests', () => {
   });
 
   // =========================================================
+  // PROPERTY DEFINITIONS
+  // =========================================================
+
+  test('replacePropertyDefinitions replaces all property definitions', async () => {
+    const propertyDefinitions = [
+      { label: 'رنگ', value: 'قهوه‌ای' },
+      { label: 'وزن', value: 12 },
+    ];
+    const userId = '65a4de97aff1fbb38c437111';
+
+    PetTypeModel.findById.mockResolvedValue(mockPetType);
+    mockPetType.save.mockResolvedValue(mockPetType);
+
+    const result = await PetTypeService.replacePropertyDefinitions(
+      mockPetType._id,
+      propertyDefinitions,
+      userId,
+    );
+
+    expect(result).toBe(mockPetType);
+    expect(mockPetType.propertyDefinitions).toEqual(propertyDefinitions);
+    expect(mockPetType.updatedBy).toBe(userId);
+    expect(mockPetType.save).toHaveBeenCalled();
+    expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(mockPetType);
+  });
+
+  test('replacePropertyDefinitions throws when pet type does not exist', async () => {
+    PetTypeModel.findById.mockResolvedValue(null);
+
+    await expect(
+      PetTypeService.replacePropertyDefinitions('65a4de97aff1fbb38c437111', []),
+    ).rejects.toThrow('نوع حیوان یافت نشد');
+  });
+
+  test('formatPropertyDefinitions returns only label and value', () => {
+    const result = PetTypeService.formatPropertyDefinitions({
+      propertyDefinitions: [
+        { key: 'weight', label: 'وزن', value: 12, valueType: 'number' },
+      ],
+    });
+
+    expect(result).toEqual([{ label: 'وزن', value: 12 }]);
+  });
+
+  // =========================================================
   // DISABLE
   // =========================================================
 

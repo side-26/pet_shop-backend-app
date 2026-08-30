@@ -164,6 +164,33 @@ export class PetTypeService {
     return updatedPetType;
   }
 
+  static async replacePropertyDefinitions(id, propertyDefinitions, userId) {
+    const petType = await PetTypeModel.findById(id);
+
+    if (!petType) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نوع حیوان یافت نشد',
+        code: 'PET_TYPE_NOT_FOUND',
+      });
+    }
+
+    petType.propertyDefinitions = propertyDefinitions;
+    petType.updatedBy = userId;
+
+    const updatedPetType = await petType.save();
+
+    await petTypeCacheStore.invalidate(updatedPetType);
+
+    return updatedPetType;
+  }
+
+  static formatPropertyDefinitions(petType) {
+    return (petType.propertyDefinitions || []).map(({ label, value }) => ({
+      label,
+      value,
+    }));
+  }
+
   static async disable(id, userId) {
     const petType = await PetTypeModel.findById(id);
 
