@@ -42,6 +42,10 @@ export const uploadPetTypeMainImage = handleUpload(
   petTypeImageUpload.single(IMAGE_UPLOAD.MAIN_IMAGE_FIELD),
 );
 
+export const uploadBreedMainImage = handleUpload(
+  petTypeImageUpload.single(IMAGE_UPLOAD.MAIN_IMAGE_FIELD),
+);
+
 export const uploadPetImages = handleUpload(
   imageUpload.array(IMAGE_UPLOAD.PET_IMAGES_FIELD, IMAGE_UPLOAD.MAX_PET_IMAGES),
 );

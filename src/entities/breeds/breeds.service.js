@@ -1,6 +1,7 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
-import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
+import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
   buildBreedFilter,
@@ -49,7 +50,18 @@ export class BreedService {
     return breed;
   }
 
-  static async create(data, userId) {
+  static async findBySlug(slug, throwOnNotFound = true) {
+    const breed = await BreedModel.findBySlug(slug);
+    if (!breed && throwOnNotFound) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نژاد یافت نشد',
+        code: ERROR_CODES.BREED_NOT_FOUND,
+      });
+    }
+    return breed;
+  }
+
+  static async create(data, userId, imageFile) {
     await this.ensurePetTypeExists(data.petType);
     const existingBreed = await this.findOne({
       title: data.title,
@@ -61,11 +73,25 @@ export class BreedService {
         code: ERROR_CODES.BREED_ALREADY_EXISTS,
       });
     }
-    return BreedModel.create({ ...data, createdBy: userId });
+    const uploadedImage = await MainImageService.upload(
+      imageFile,
+      'breeds/main',
+    );
+    try {
+      return await BreedModel.create({
+        ...data,
+        mainImage: uploadedImage.mainImage,
+        thumbnailImage: uploadedImage.mainImageThumbnail,
+        createdBy: userId,
+      });
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage.key, { userId });
+      throw error;
+    }
   }
 
-  static async update(id, data, userId) {
-    await this.findById(id);
+  static async update(id, data, userId, imageFile) {
+    const currentBreed = await this.findById(id);
     await this.ensurePetTypeExists(data.petType);
     const existingBreed = await this.findOne({
       title: data.title,
@@ -78,17 +104,42 @@ export class BreedService {
         code: ERROR_CODES.BREED_ALREADY_EXISTS,
       });
     }
-    const breed = await BreedModel.findByIdAndUpdate(
-      id,
-      { $set: { ...data, updatedBy: userId } },
-      { returnDocument: 'after', runValidators: true },
+    const uploadedImage = await MainImageService.upload(
+      imageFile,
+      'breeds/main',
     );
+    const previousKey = MainImageService.getStoredKey(currentBreed.mainImage, {
+      id,
+      userId,
+    });
+    let breed;
+    try {
+      breed = await BreedModel.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            ...data,
+            mainImage: uploadedImage.mainImage,
+            thumbnailImage: uploadedImage.mainImageThumbnail,
+            updatedBy: userId,
+          },
+        },
+        { returnDocument: 'after', runValidators: true },
+      );
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage.key, { id, userId });
+      throw error;
+    }
+
     if (!breed) {
+      await MainImageService.cleanup(uploadedImage.key, { id, userId });
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'نژاد یافت نشد',
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
+
+    await MainImageService.cleanup(previousKey, { id, userId });
     return breed;
   }
 
@@ -106,6 +157,20 @@ export class BreedService {
       });
     }
     return breed;
+  }
+
+  static async replacePropertyDefinitions(id, propertyDefinitions, userId) {
+    const breed = await this.findById(id);
+    breed.propertyDefinitions = propertyDefinitions;
+    breed.updatedBy = userId;
+    return breed.save();
+  }
+
+  static formatPropertyDefinitions(breed) {
+    return (breed.propertyDefinitions || []).map(({ label, value }) => ({
+      label,
+      value,
+    }));
   }
 
   static enable(id, userId) {

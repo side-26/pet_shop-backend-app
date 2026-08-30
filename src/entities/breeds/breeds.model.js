@@ -7,6 +7,30 @@ import {
   createBreedZodSchema,
 } from './breeds.schema.js';
 
+const propertyDefinitionSchema = new mongoose.Schema(
+  {
+    key: {
+      type: String,
+      trim: true,
+      match: /^[a-z][a-zA-Z0-9]*$/,
+      default: undefined,
+    },
+    label: { type: String, required: true, trim: true, maxlength: 80 },
+    valueType: {
+      type: String,
+      enum: ['string', 'number', 'boolean', 'date', 'enum'],
+      default: undefined,
+    },
+    required: { type: Boolean, default: false },
+    options: { type: [String], default: undefined },
+    min: { type: Number, default: undefined },
+    max: { type: Number, default: undefined },
+    defaultValue: { type: mongoose.Schema.Types.Mixed, default: undefined },
+    value: { type: mongoose.Schema.Types.Mixed, default: undefined },
+  },
+  { _id: false },
+);
+
 const breedSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 100 },
@@ -23,6 +47,37 @@ const breedSchema = new mongoose.Schema(
       type: Number,
       enum: BREED_LEVELS,
       default: undefined,
+    },
+    mainImage: { type: String, required: true, trim: true, maxlength: 2048 },
+    thumbnailImage: {
+      type: String,
+      required: true,
+      validate: {
+        validator(value) {
+          return Buffer.byteLength(value, 'utf8') < 10 * 1024;
+        },
+        message: 'حجم تصویر بندانگشتی باید کمتر از ۱۰ کیلوبایت باشد',
+      },
+    },
+    propertyDefinitions: {
+      type: [propertyDefinitionSchema],
+      default: [],
+      validate: {
+        validator(definitions) {
+          const keys = definitions
+            .filter(({ key }) => key)
+            .map(({ key }) => key);
+          return new Set(keys).size === keys.length;
+        },
+        message: 'کلید ویژگی‌ها باید یکتا باشد',
+      },
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
     },
     enable: { type: Boolean, required: true, index: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
@@ -56,9 +111,26 @@ breedSchema.pre('save', function () {
       size: this.size,
       activityLevel: this.activityLevel,
       enable: this.enable,
+      ...(this.propertyDefinitions.every(({ key }) => key)
+        ? { propertyDefinitions: this.propertyDefinitions }
+        : {}),
     },
     'اعتبارسنجی نژاد ناموفق بود',
   );
+});
+
+breedSchema.pre('save', function () {
+  if (!this.slug && this.title) {
+    const generatedSlug = this.title
+      .normalize('NFKC')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
+      .trim()
+      .replace(/[\s-]+/g, '-')
+      .substring(0, 50);
+
+    this.slug = generatedSlug || `breed-${this._id.toString().slice(-8)}`;
+  }
 });
 
 breedSchema.pre('findOneAndUpdate', function () {
@@ -71,5 +143,8 @@ breedSchema.pre('findOneAndUpdate', function () {
 });
 
 breedSchema.index({ title: 1, petType: 1 }, { unique: true });
+breedSchema.statics.findBySlug = function (slug) {
+  return this.findOne({ slug, enable: true });
+};
 
 export const BreedModel = mongoose.model('Breeds', breedSchema);

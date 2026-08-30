@@ -26,6 +26,21 @@ function toOpenApi(zodSchema) {
 }
 
 export const schemas = {
+  BreedPropertyDefinitionsBody: {
+    type: 'object',
+    required: ['id', 'propertyDefinitions'],
+    properties: {
+      id: { type: 'string' },
+      propertyDefinitions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['label', 'value'],
+          properties: { label: { type: 'string' }, value: {} },
+        },
+      },
+    },
+  },
   PetTypePropertyDefinitionsBody: {
     type: 'object',
     required: ['id', 'propertyDefinitions'],
@@ -56,6 +71,44 @@ export const schemas = {
       title: { type: 'string', minLength: 2, maxLength: 20 },
       description: { type: 'string', maxLength: 150 },
       isEnabled: { type: 'boolean' },
+      propertyDefinitions: { type: 'array', items: { type: 'object' } },
+    },
+  },
+  BreedMultipartBody: {
+    type: 'object',
+    required: [
+      'mainImage',
+      'title',
+      'petType',
+      'country',
+      'ageAverage',
+      'size',
+      'activityLevel',
+      'enable',
+    ],
+    properties: {
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Required image smaller than 1 MB; regenerates thumbnailImage',
+      },
+      title: { type: 'string', minLength: 2, maxLength: 100 },
+      petType: { type: 'string' },
+      country: {
+        type: 'string',
+        nullable: true,
+        minLength: 2,
+        maxLength: 100,
+      },
+      ageAverage: { type: 'string', minLength: 1, maxLength: 50 },
+      size: { type: 'integer', enum: [0, 1, 2, 3, 4] },
+      activityLevel: {
+        type: 'integer',
+        nullable: true,
+        enum: [0, 1, 2, 3, 4],
+      },
+      enable: { type: 'boolean' },
       propertyDefinitions: { type: 'array', items: { type: 'object' } },
     },
   },

@@ -47,6 +47,11 @@ const basePetData = {
   slug: 'persian-kitten',
 };
 
+const breedImageFields = {
+  mainImage: 'https://cdn.example.com/breeds/main/fixture.webp',
+  thumbnailImage: 'data:image/webp;base64,AAAA',
+};
+
 describe('Pet API', () => {
   let app;
   let catType;
@@ -113,6 +118,7 @@ describe('Pet API', () => {
     ]);
     [catBreed, dogBreed] = await BreedModel.create([
       {
+        ...breedImageFields,
         title: 'Persian',
         petType: catType._id,
         country: 'Iran',
@@ -122,6 +128,7 @@ describe('Pet API', () => {
         enable: true,
       },
       {
+        ...breedImageFields,
         title: 'Shepherd',
         petType: dogType._id,
         country: 'Germany',

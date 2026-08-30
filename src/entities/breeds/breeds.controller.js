@@ -7,8 +7,11 @@ import {
 
 import {
   breedIdSchema,
+  breedMainImageZodSchema,
   breedQuerySchema,
+  breedSlugSchema,
   createBreedZodSchema,
+  replaceBreedPropertyDefinitionsZodSchema,
   updateBreedZodSchema,
 } from './breeds.schema.js';
 import { BreedService } from './breeds.service.js';
@@ -22,7 +25,15 @@ const getListQuery = (query, user) => ({
 export const createBreedController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createBreedZodSchema, req.body);
-    const breed = await BreedService.create(body, getUserId(req.user));
+    returnFormValidation(breedMainImageZodSchema, {
+      mimetype: req.file?.mimetype,
+      imageFileSize: req.file?.size,
+    });
+    const breed = await BreedService.create(
+      body,
+      getUserId(req.user),
+      req.file,
+    );
     setSuccessResponse(res, STATUES.CREATED, {
       data: BreedService.format(breed),
     });
@@ -35,7 +46,16 @@ export const updateBreedController = async (req, res, next) => {
   try {
     const { id } = returnFormValidation(breedIdSchema, req.params);
     const body = returnFormValidation(updateBreedZodSchema, req.body);
-    const breed = await BreedService.update(id, body, getUserId(req.user));
+    returnFormValidation(breedMainImageZodSchema, {
+      mimetype: req.file?.mimetype,
+      imageFileSize: req.file?.size,
+    });
+    const breed = await BreedService.update(
+      id,
+      body,
+      getUserId(req.user),
+      req.file,
+    );
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: BreedService.format(breed),
     });
@@ -84,6 +104,57 @@ export const getBreedController = async (req, res, next) => {
     const breed = await BreedService.findById(id);
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: BreedService.format(breed),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getBreedBySlugController = async (req, res, next) => {
+  try {
+    const { slug } = returnFormValidation(breedSlugSchema, req.params);
+    const breed = await BreedService.findBySlug(slug);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: BreedService.format(breed),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const replaceBreedPropertyDefinitionsController = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const { id, propertyDefinitions } = returnFormValidation(
+      replaceBreedPropertyDefinitionsZodSchema,
+      req.body,
+    );
+    const breed = await BreedService.replacePropertyDefinitions(
+      id,
+      propertyDefinitions,
+      getUserId(req.user),
+    );
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'ویژگی‌های نژاد با موفقیت ویرایش شد',
+      data: {
+        id: breed._id,
+        propertyDefinitions: BreedService.formatPropertyDefinitions(breed),
+      },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getBreedPropertyDefinitionsController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(breedIdSchema, req.params);
+    const breed = await BreedService.findById(id);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: { result: BreedService.formatPropertyDefinitions(breed) },
     });
   } catch (error) {
     onCatchPromiseController(error, next);
