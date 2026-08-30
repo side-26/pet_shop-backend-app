@@ -1,7 +1,7 @@
 import multer from 'multer';
 
 import { IMAGE_UPLOAD, STATUES } from '#configs/constants.js';
-import { imageUpload } from '#configs/upload.config.js';
+import { imageUpload, petTypeImageUpload } from '#configs/upload.config.js';
 
 const MULTER_ERROR_MESSAGES = {
   LIMIT_FILE_SIZE: 'حجم فایل بیشتر از حد مجاز است',
@@ -36,6 +36,10 @@ export const uploadAvatar = handleUpload(
 
 export const uploadMainImage = handleUpload(
   imageUpload.single(IMAGE_UPLOAD.MAIN_IMAGE_FIELD),
+);
+
+export const uploadPetTypeMainImage = handleUpload(
+  petTypeImageUpload.single(IMAGE_UPLOAD.MAIN_IMAGE_FIELD),
 );
 
 export const uploadPetImages = handleUpload(

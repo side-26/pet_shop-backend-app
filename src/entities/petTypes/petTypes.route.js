@@ -1,6 +1,12 @@
 // src/entities/petTypes/petTypes.route.js
 
 import express from 'express';
+
+import { ROLES } from '#configs/constants.js';
+import { authenticated } from '#middlewares/auth.middleware.js';
+import { roleMiddleware } from '#middlewares/role.middleware.js';
+import { uploadPetTypeMainImage } from '#middlewares/upload.middleware.js';
+
 import {
   createPetTypeController,
   getAllPetTypesController,
@@ -11,9 +17,6 @@ import {
   enablePetTypeController,
   deletePetTypeController,
 } from './petTypes.controller.js';
-import { authenticated } from '#middlewares/auth.middleware.js';
-import { roleMiddleware } from '#middlewares/role.middleware.js';
-import { ROLES } from '#configs/constants.js';
 
 const router = express.Router();
 
@@ -25,14 +28,20 @@ router.get('/pet-types/slug/:slug', getPetTypeBySlugController);
 // Admin routes
 router.post(
   '/pet-types',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetTypeMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
+  uploadPetTypeMainImage,
   createPetTypeController,
 );
 router.put(
   '/pet-types/:id',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetTypeMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
+  uploadPetTypeMainImage,
   updatePetTypeController,
 );
 router.patch(

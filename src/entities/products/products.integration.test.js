@@ -101,7 +101,11 @@ describe('Product API', () => {
       CategoryModel.deleteMany({}),
       PetTypeModel.deleteMany({}),
     ]);
-    const petType = await PetTypeModel.create({ title: 'Cat' });
+    const petType = await PetTypeModel.create({
+      title: 'Cat',
+      mainImage: 'https://cdn.example.com/pet-types/cat.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
     [category, otherCategory] = await CategoryModel.create([
       { title: 'Food', petType: petType._id, enable: true },
       { title: 'Accessories', petType: petType._id, enable: true },

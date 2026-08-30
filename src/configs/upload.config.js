@@ -27,3 +27,13 @@ export const imageUpload = multer({
     fields: IMAGE_UPLOAD.MAX_MULTIPART_FIELDS,
   },
 });
+
+export const petTypeImageUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: IMAGE_UPLOAD.MAX_PET_TYPE_IMAGE_SIZE_BYTES,
+    files: 1,
+    fields: IMAGE_UPLOAD.MAX_MULTIPART_FIELDS,
+  },
+});

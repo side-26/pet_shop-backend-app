@@ -121,12 +121,16 @@ describe('Category API - Integration Tests', () => {
       description: 'Loyal pets',
 
       isEnabled: true,
+      mainImage: 'https://cdn.example.com/pet-types/dog.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
     });
 
     secondPetType = await PetTypeModel.create({
       title: 'Cat',
 
       description: 'Affectionate pets',
+      mainImage: 'https://cdn.example.com/pet-types/cat.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
 
       isEnabled: true,
     });

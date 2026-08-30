@@ -100,8 +100,16 @@ describe('Pet API', () => {
       PetTypeModel.deleteMany({}),
     ]);
     [catType, dogType] = await PetTypeModel.create([
-      { title: 'Cat' },
-      { title: 'Dog' },
+      {
+        title: 'Cat',
+        mainImage: 'https://cdn.example.com/pet-types/cat.webp',
+        thumbnail: 'data:image/webp;base64,AAAA',
+      },
+      {
+        title: 'Dog',
+        mainImage: 'https://cdn.example.com/pet-types/dog.webp',
+        thumbnail: 'data:image/webp;base64,AAAA',
+      },
     ]);
     [catBreed, dogBreed] = await BreedModel.create([
       {

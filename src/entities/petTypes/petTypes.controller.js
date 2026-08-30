@@ -21,7 +21,7 @@ export const createPetTypeController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createPetTypeZodSchema, req.body);
 
-    const petType = await PetTypeService.create(body, req.user?.id);
+    const petType = await PetTypeService.create(body, req.user?.id, req.file);
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: `نوع حیوان "${petType.title}" با موفقیت ایجاد شد`,
@@ -97,6 +97,7 @@ export const updatePetTypeController = async (req, res, next) => {
       req.params.id,
       body,
       req.user?.id,
+      req.file,
     );
 
     setSuccessResponse(res, STATUES.SUCCESS, {

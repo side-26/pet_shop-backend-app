@@ -74,6 +74,7 @@ const persianFieldNames = {
   summary: 'خلاصه',
   mainImage: 'تصویر اصلی',
   mainImageThumbnail: 'تصویر بندانگشتی اصلی',
+  thumbnail: 'تصویر بندانگشتی',
   images: 'تصاویر',
 
   // Status

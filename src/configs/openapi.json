@@ -14,7 +14,9 @@
   "paths": {
     "/users": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Create a new user",
         "description": "",
         "responses": {
@@ -102,7 +104,9 @@
     },
     "/users/register": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Register a customer account",
         "description": "",
         "responses": {
@@ -198,7 +202,9 @@
     },
     "/users/send-otp": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Send a six-digit OTP to an existing user",
         "description": "",
         "responses": {
@@ -306,7 +312,9 @@
     },
     "/users/verify": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Verify an OTP for the requester phone number and IP",
         "description": "",
         "responses": {
@@ -404,7 +412,9 @@
     },
     "/users/login": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Login user",
         "description": "",
         "responses": {
@@ -492,18 +502,11 @@
     },
     "/users/reset-password": {
       "post": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Reset a user password with a temporary OTP token",
         "description": "",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Password reset successfully and temporary token invalidated",
@@ -659,7 +662,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/edit-info": {
@@ -719,7 +724,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/addresses": {
@@ -779,7 +786,9 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       },
       "get": {
         "description": "",
@@ -837,22 +846,14 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/users/addresses/{addressId}": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "addressId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -907,12 +908,16 @@
             "description": ""
           }
         },
-        "tags": ["/users"]
+        "tags": [
+          "/users"
+        ]
       }
     },
     "/cart/add": {
       "post": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Add an item to the authenticated user's cart",
         "description": "",
         "responses": {
@@ -1004,7 +1009,9 @@
     },
     "/cart/delete/{id}": {
       "delete": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Delete an item from the authenticated user's cart",
         "description": "",
         "parameters": [
@@ -1096,7 +1103,9 @@
     },
     "/cart/all": {
       "get": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Get the authenticated user's cart",
         "description": "",
         "responses": {
@@ -1177,7 +1186,9 @@
     },
     "/cart/empty": {
       "delete": {
-        "tags": ["/cart"],
+        "tags": [
+          "/cart"
+        ],
         "summary": "Empty the authenticated user's cart",
         "description": "",
         "responses": {
@@ -1298,22 +1309,14 @@
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/wishlist/delete/{id}": {
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -1368,7 +1371,9 @@
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/wishlist/all": {
@@ -1428,12 +1433,16 @@
             "description": ""
           }
         },
-        "tags": ["/wishlist"]
+        "tags": [
+          "/wishlist"
+        ]
       }
     },
     "/users/change-password": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Change user password",
         "description": "",
         "responses": {
@@ -1521,7 +1530,9 @@
     },
     "/users/disable/{id}": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Disable a user",
         "description": "",
         "parameters": [
@@ -1599,7 +1610,9 @@
     },
     "/users/enable/{id}": {
       "put": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Enable a user",
         "description": "",
         "parameters": [
@@ -1677,7 +1690,9 @@
     },
     "/users/all": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get all users",
         "description": "",
         "responses": {
@@ -1745,7 +1760,9 @@
     },
     "/users/paginate": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get paginated users",
         "description": "",
         "parameters": [
@@ -1857,7 +1874,9 @@
     },
     "/users/{id}": {
       "get": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Get user by ID",
         "description": "",
         "parameters": [
@@ -1943,7 +1962,9 @@
         }
       },
       "delete": {
-        "tags": ["/users"],
+        "tags": [
+          "/users"
+        ],
         "summary": "Delete a user by ID",
         "description": "",
         "parameters": [
@@ -2077,15 +2098,6 @@
     "/pet-types": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "includeDisabled",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2109,7 +2121,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "post": {
         "description": "",
@@ -2136,22 +2150,29 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PetTypeMultipartBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2175,7 +2196,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       },
       "put": {
         "description": "",
@@ -2212,20 +2235,27 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PetTypeMultipartBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pet-types"
+        ]
       },
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2249,22 +2279,14 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/slug/{slug}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2288,22 +2310,14 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}/disable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2327,22 +2341,14 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/pet-types/{id}/enable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2366,7 +2372,9 @@
             "description": ""
           }
         },
-        "tags": ["/pet-types"]
+        "tags": [
+          "/pet-types"
+        ]
       }
     },
     "/categories": {
@@ -2395,7 +2403,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "get": {
         "description": "",
@@ -2422,22 +2432,14 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/{id}": {
       "put": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2461,20 +2463,12 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2498,20 +2492,12 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       },
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2535,22 +2521,14 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/enable/{id}": {
       "put": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2574,22 +2552,14 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/categories/disable/{id}": {
       "put": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2613,7 +2583,9 @@
             "description": ""
           }
         },
-        "tags": ["/categories"]
+        "tags": [
+          "/categories"
+        ]
       }
     },
     "/sub-categories": {
@@ -2642,7 +2614,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "get": {
         "description": "",
@@ -2669,22 +2643,14 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       }
     },
     "/sub-categories/{id}": {
       "put": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2708,20 +2674,12 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2745,20 +2703,12 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       },
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2782,7 +2732,9 @@
             "description": ""
           }
         },
-        "tags": ["/sub-categories"]
+        "tags": [
+          "/sub-categories"
+        ]
       }
     },
     "/breeds/paginate": {
@@ -2811,7 +2763,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds": {
@@ -2840,7 +2794,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "post": {
         "description": "",
@@ -2867,22 +2823,14 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2906,20 +2854,12 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "put": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2943,20 +2883,12 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       },
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2980,22 +2912,14 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}/enable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3019,22 +2943,14 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/breeds/{id}/disable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3058,7 +2974,9 @@
             "description": ""
           }
         },
-        "tags": ["/breeds"]
+        "tags": [
+          "/breeds"
+        ]
       }
     },
     "/pets": {
@@ -3087,7 +3005,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "post": {
         "description": "",
@@ -3129,22 +3049,14 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/customer/{id}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3168,7 +3080,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/get-full-info-paginate-list": {
@@ -3197,22 +3111,14 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/manage/{id}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3236,7 +3142,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}": {
@@ -3290,7 +3198,9 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "patch": {
         "description": "",
@@ -3342,20 +3252,12 @@
             }
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       },
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3379,22 +3281,14 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}/enable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3418,22 +3312,14 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/pets/{id}/disable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3457,7 +3343,9 @@
             "description": ""
           }
         },
-        "tags": ["/pets"]
+        "tags": [
+          "/pets"
+        ]
       }
     },
     "/products": {
@@ -3486,7 +3374,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "post": {
         "description": "",
@@ -3528,22 +3418,14 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/customer/{id}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3567,7 +3449,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/get-full-info-paginate-list": {
@@ -3596,22 +3480,14 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/manage/{id}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3635,7 +3511,9 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}": {
@@ -3689,7 +3567,9 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "patch": {
         "description": "",
@@ -3741,20 +3621,12 @@
             }
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       },
       "delete": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3778,22 +3650,14 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}/enable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3817,22 +3681,14 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/products/{id}/disable": {
       "patch": {
         "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3856,12 +3712,16 @@
             "description": ""
           }
         },
-        "tags": ["/products"]
+        "tags": [
+          "/products"
+        ]
       }
     },
     "/orders": {
       "post": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Create an order from the authenticated user's cart",
         "description": "",
         "responses": {
@@ -3907,7 +3767,9 @@
         }
       },
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "List the authenticated user's orders",
         "description": "",
         "parameters": [
@@ -3997,7 +3859,9 @@
     },
     "/orders/all": {
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "List all orders for Admin or Seller",
         "description": "",
         "parameters": [
@@ -4059,7 +3923,12 @@
                 },
                 "enum": {
                   "type": "array",
-                  "example": [0, 1, 2, 3],
+                  "example": [
+                    0,
+                    1,
+                    2,
+                    3
+                  ],
                   "items": {
                     "type": "number"
                   }
@@ -4110,7 +3979,9 @@
     },
     "/orders/{id}/delivery-state": {
       "patch": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Update order delivery state",
         "description": "",
         "parameters": [
@@ -4171,7 +4042,9 @@
     },
     "/orders/{id}/shipping-info": {
       "patch": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Update order shipping information",
         "description": "",
         "parameters": [
@@ -4232,7 +4105,9 @@
     },
     "/orders/{id}": {
       "get": {
-        "tags": ["/orders"],
+        "tags": [
+          "/orders"
+        ],
         "summary": "Get one of the authenticated user's orders",
         "description": "",
         "parameters": [
@@ -4319,7 +4194,9 @@
             "description": ""
           }
         },
-        "tags": ["/countries"]
+        "tags": [
+          "/countries"
+        ]
       }
     },
     "/provinces": {
@@ -4348,22 +4225,14 @@
             "description": ""
           }
         },
-        "tags": ["/provinces"]
+        "tags": [
+          "/provinces"
+        ]
       }
     },
     "/cities/{provinceId}": {
       "get": {
         "description": "",
-        "parameters": [
-          {
-            "name": "provinceId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -4387,7 +4256,9 @@
             "description": ""
           }
         },
-        "tags": ["/cities"]
+        "tags": [
+          "/cities"
+        ]
       }
     },
     "/reverse-geocode": {
@@ -4416,7 +4287,9 @@
             "description": ""
           }
         },
-        "tags": ["/reverse-geocode"]
+        "tags": [
+          "/reverse-geocode"
+        ]
       }
     },
     "/otp-code": {
@@ -4481,7 +4354,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["to"],
+                "required": [
+                  "to"
+                ],
                 "properties": {
                   "to": {
                     "type": "string",
@@ -4492,7 +4367,9 @@
             }
           }
         },
-        "tags": ["/otp-code"]
+        "tags": [
+          "/otp-code"
+        ]
       }
     }
   },
@@ -4505,9 +4382,42 @@
       }
     },
     "schemas": {
+      "PetTypeMultipartBody": {
+        "type": "object",
+        "required": [
+          "mainImage"
+        ],
+        "properties": {
+          "mainImage": {
+            "type": "string",
+            "format": "binary",
+            "description": "Required image smaller than 1 MB; regenerates thumbnail"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "propertyDefinitions": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
       "MainImageCreateBody": {
         "type": "object",
-        "required": ["mainImage"],
+        "required": [
+          "mainImage"
+        ],
         "properties": {
           "mainImage": {
             "type": "string",
@@ -4673,7 +4583,11 @@
           "role": {
             "default": "customer",
             "type": "string",
-            "enum": ["admin", "customer", "seller"]
+            "enum": [
+              "admin",
+              "customer",
+              "seller"
+            ]
           },
           "age": {
             "anyOf": [
@@ -4694,7 +4608,11 @@
             "items": {}
           }
         },
-        "required": ["phoneNumber", "password", "role"],
+        "required": [
+          "phoneNumber",
+          "password",
+          "role"
+        ],
         "additionalProperties": false
       },
       "RegisterUserBody": {
@@ -4709,7 +4627,10 @@
             "minLength": 8
           }
         },
-        "required": ["phoneNumber", "password"],
+        "required": [
+          "phoneNumber",
+          "password"
+        ],
         "additionalProperties": false
       },
       "SendUserOtpBody": {
@@ -4720,13 +4641,18 @@
             "pattern": "^09\\d{9}$"
           }
         },
-        "required": ["phoneNumber"],
+        "required": [
+          "phoneNumber"
+        ],
         "additionalProperties": false
       },
       "VerifyUserOtpBody": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["phoneNumber", "otp-code"],
+        "required": [
+          "phoneNumber",
+          "otp-code"
+        ],
         "properties": {
           "phoneNumber": {
             "type": "string",
@@ -4746,7 +4672,10 @@
         "oneOf": [
           {
             "type": "object",
-            "required": ["isSuccess", "data"],
+            "required": [
+              "isSuccess",
+              "data"
+            ],
             "properties": {
               "isSuccess": {
                 "type": "boolean",
@@ -4789,7 +4718,11 @@
           },
           {
             "type": "object",
-            "required": ["isSuccess", "message", "data"],
+            "required": [
+              "isSuccess",
+              "message",
+              "data"
+            ],
             "properties": {
               "isSuccess": {
                 "type": "boolean",
@@ -4801,7 +4734,10 @@
               },
               "data": {
                 "type": "object",
-                "required": ["temporaryToken", "expiry"],
+                "required": [
+                  "temporaryToken",
+                  "expiry"
+                ],
                 "properties": {
                   "temporaryToken": {
                     "type": "string"
@@ -4829,12 +4765,19 @@
             "minLength": 8
           }
         },
-        "required": ["newPassword", "confirmPassword"],
+        "required": [
+          "newPassword",
+          "confirmPassword"
+        ],
         "additionalProperties": false
       },
       "ResetUserPasswordSuccessResponse": {
         "type": "object",
-        "required": ["isSuccess", "message", "data"],
+        "required": [
+          "isSuccess",
+          "message",
+          "data"
+        ],
         "properties": {
           "isSuccess": {
             "type": "boolean",
@@ -4852,7 +4795,11 @@
       },
       "SendUserOtpSuccessResponse": {
         "type": "object",
-        "required": ["isSuccess", "message", "data"],
+        "required": [
+          "isSuccess",
+          "message",
+          "data"
+        ],
         "properties": {
           "isSuccess": {
             "type": "boolean",
@@ -4865,7 +4812,9 @@
           },
           "data": {
             "type": "object",
-            "required": ["remainingSeconds"],
+            "required": [
+              "remainingSeconds"
+            ],
             "properties": {
               "remainingSeconds": {
                 "type": "integer",
@@ -4880,7 +4829,10 @@
       "LoginUserBody": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["phoneNumber", "password"],
+        "required": [
+          "phoneNumber",
+          "password"
+        ],
         "properties": {
           "phoneNumber": {
             "type": "string",
@@ -4894,7 +4846,11 @@
       },
       "LoginSuccessResponse": {
         "type": "object",
-        "required": ["isSuccess", "message", "data"],
+        "required": [
+          "isSuccess",
+          "message",
+          "data"
+        ],
         "properties": {
           "isSuccess": {
             "type": "boolean",
@@ -4930,7 +4886,11 @@
               },
               "role": {
                 "type": "string",
-                "enum": ["admin", "customer", "seller"]
+                "enum": [
+                  "admin",
+                  "customer",
+                  "seller"
+                ]
               },
               "accessExp": {
                 "type": "integer",
@@ -5114,7 +5074,12 @@
             "type": "string"
           }
         },
-        "required": ["password", "oldPassword", "repeatPassword", "userId"],
+        "required": [
+          "password",
+          "oldPassword",
+          "repeatPassword",
+          "userId"
+        ],
         "additionalProperties": false
       },
       "AddCartItemBody": {
@@ -5126,7 +5091,10 @@
           },
           "itemType": {
             "type": "string",
-            "enum": ["product", "pet"]
+            "enum": [
+              "product",
+              "pet"
+            ]
           },
           "quantity": {
             "type": "integer",
@@ -5134,7 +5102,11 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["itemId", "itemType", "quantity"],
+        "required": [
+          "itemId",
+          "itemType",
+          "quantity"
+        ],
         "additionalProperties": false
       },
       "CreateOrderBody": {
@@ -5146,7 +5118,9 @@
             "maxLength": 200
           }
         },
-        "required": ["paymentTrackingId"],
+        "required": [
+          "paymentTrackingId"
+        ],
         "additionalProperties": false
       },
       "UpdateOrderDeliveryStateBody": {
@@ -5158,7 +5132,9 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["deliveryState"],
+        "required": [
+          "deliveryState"
+        ],
         "additionalProperties": false
       },
       "UpdateOrderShippingInfoBody": {
@@ -5233,7 +5209,10 @@
                 },
                 "itemType": {
                   "type": "string",
-                  "enum": ["product", "pet"]
+                  "enum": [
+                    "product",
+                    "pet"
+                  ]
                 },
                 "quantity": {
                   "type": "integer",
@@ -5275,7 +5254,10 @@
           },
           "paymentType": {
             "type": "integer",
-            "enum": [1, 2]
+            "enum": [
+              1,
+              2
+            ]
           },
           "instalmentCompany": {
             "type": "string",
@@ -5302,7 +5284,12 @@
           },
           "deliveryState": {
             "type": "integer",
-            "enum": [0, 1, 2, 3]
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
           },
           "paymentTrackingId": {
             "type": "string"
@@ -5318,7 +5305,10 @@
           },
           "paymentType": {
             "type": "integer",
-            "enum": [1, 2]
+            "enum": [
+              1,
+              2
+            ]
           },
           "items": {
             "type": "array",
@@ -5350,7 +5340,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "PaginatedResponse": {
         "type": "object",
@@ -5367,7 +5359,9 @@
             "$ref": "#/components/schemas/Pagination"
           }
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       },
       "ErrorResponse": {
         "type": "object",
@@ -5381,7 +5375,9 @@
           },
           "data": {}
         },
-        "required": ["isSuccess"]
+        "required": [
+          "isSuccess"
+        ]
       }
     }
   },

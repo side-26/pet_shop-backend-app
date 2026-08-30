@@ -43,7 +43,11 @@ describe('Breed API', () => {
 
   beforeEach(async () => {
     await Promise.all([BreedModel.deleteMany({}), PetTypeModel.deleteMany({})]);
-    petType = await PetTypeModel.create({ title: 'Cat' });
+    petType = await PetTypeModel.create({
+      title: 'Cat',
+      mainImage: 'https://cdn.example.com/pet-types/cat.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
     breedData.petType = petType._id.toString();
   });
 

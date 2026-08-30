@@ -44,6 +44,19 @@ const petTypeSchema = new mongoose.Schema(
       default: '',
     },
 
+    mainImage: { type: String, required: true, trim: true, maxlength: 2048 },
+
+    thumbnail: {
+      type: String,
+      required: true,
+      validate: {
+        validator(value) {
+          return Buffer.byteLength(value, 'utf8') < 10 * 1024;
+        },
+        message: 'حجم تصویر بندانگشتی باید کمتر از ۱۰ کیلوبایت باشد',
+      },
+    },
+
     // Enable/Disable
     isEnabled: {
       type: Boolean,

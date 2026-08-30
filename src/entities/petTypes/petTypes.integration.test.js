@@ -77,6 +77,16 @@ jest.mock('#configs/logger.js', () => ({
   },
 }));
 
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    createObjectKey: jest.fn(() => 'pet-types/main/generated.webp'),
+    uploadObject: jest.fn(async ({ key }) => key),
+    buildPublicUrl: jest.fn((key) => `https://cdn.example.com/${key}`),
+    deleteObject: jest.fn(async () => undefined),
+    getObjectKeyFromUrl: jest.fn(() => 'pet-types/main/previous.webp'),
+  },
+}));
+
 jest.mock('./petTypes.cache.store.js', () => {
   const getOrLoad = jest.fn((label, loader) => loader());
 
@@ -104,6 +114,7 @@ jest.mock('./petTypes.cache.store.js', () => {
 import request from 'supertest';
 import express from 'express';
 import mongoose from 'mongoose';
+import sharp from 'sharp';
 
 import { PetTypeModel } from './petTypes.model.js';
 import petTypeRoutes from './petTypes.route.js';
@@ -114,8 +125,9 @@ import { errorHandler } from '#middlewares/error.middleware.js';
 describe('PetType API - Integration Tests', () => {
   let app;
   let testPetType;
+  let imageBuffer;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     app = express();
 
     app.use(express.json());
@@ -124,7 +136,28 @@ describe('PetType API - Integration Tests', () => {
 
     // Use the real application error handler
     app.use(errorHandler);
+    imageBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 80,
+        channels: 3,
+        background: '#336699',
+      },
+    })
+      .png()
+      .toBuffer();
   });
+
+  const attachMainImage = (requestBuilder) =>
+    requestBuilder.attach('mainImage', imageBuffer, {
+      filename: 'pet-type.png',
+      contentType: 'image/png',
+    });
+
+  const storedImageFields = {
+    mainImage: 'https://cdn.example.com/pet-types/main/fixture.webp',
+    thumbnail: 'data:image/webp;base64,AAAA',
+  };
 
   beforeEach(async () => {
     // Clean PetType collection before every test
@@ -134,6 +167,8 @@ describe('PetType API - Integration Tests', () => {
       title: 'Dog',
       description: 'Loyal pets',
       isEnabled: true,
+      mainImage: 'https://cdn.example.com/pet-types/main/dog.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
     });
   });
 
@@ -143,13 +178,13 @@ describe('PetType API - Integration Tests', () => {
 
   describe('POST /api/pet-types', () => {
     it('should create a new pet type', async () => {
-      const res = await request(app)
-        .post('/api/pet-types')
-        .send({
-          title: 'Cat',
-          description: 'Affectionate pets',
-        })
-        .set('Authorization', 'Bearer token');
+      const res = await attachMainImage(
+        request(app)
+          .post('/api/pet-types')
+          .field('title', 'Cat')
+          .field('description', 'Affectionate pets')
+          .set('Authorization', 'Bearer token'),
+      );
 
       expect(res.status).toBe(STATUES.CREATED);
 
@@ -170,6 +205,12 @@ describe('PetType API - Integration Tests', () => {
 
       expect(createdPetType).not.toBeNull();
       expect(createdPetType.slug).toBe('cat');
+      expect(createdPetType.mainImage).toMatch(
+        /^https:\/\/cdn\.example\.com\//,
+      );
+      expect(Buffer.byteLength(createdPetType.thumbnail)).toBeLessThan(
+        10 * 1024,
+      );
     });
 
     it('should return 422 if title is missing', async () => {
@@ -186,6 +227,29 @@ describe('PetType API - Integration Tests', () => {
         isSuccess: false,
         message: 'اطلاعات وارد شده معتبر نیست',
       });
+    });
+
+    it('should require mainImage when creating a pet type', async () => {
+      const res = await request(app)
+        .post('/api/pet-types')
+        .field('title', 'Rabbit')
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(res.body.message).toBe('تصویر اصلی باید ارسال شود');
+    });
+
+    it('should reject a mainImage that is 1 MB or larger', async () => {
+      const res = await request(app)
+        .post('/api/pet-types')
+        .field('title', 'Rabbit')
+        .attach('mainImage', Buffer.alloc(1024 * 1024), {
+          filename: 'large.png',
+          contentType: 'image/png',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
     it('should return 422 if title already exists', async () => {
@@ -213,6 +277,7 @@ describe('PetType API - Integration Tests', () => {
   describe('GET /api/pet-types', () => {
     it('should get all enabled pet types', async () => {
       await PetTypeModel.create({
+        ...storedImageFields,
         title: 'Cat',
         isEnabled: true,
       });
@@ -231,6 +296,7 @@ describe('PetType API - Integration Tests', () => {
 
     it('should include disabled when includeDisabled=true', async () => {
       await PetTypeModel.create({
+        ...storedImageFields,
         title: 'Bird',
         isEnabled: false,
       });
@@ -246,6 +312,7 @@ describe('PetType API - Integration Tests', () => {
 
     it('should return only enabled by default', async () => {
       await PetTypeModel.create({
+        ...storedImageFields,
         title: 'Bird',
         isEnabled: false,
       });
@@ -339,13 +406,23 @@ describe('PetType API - Integration Tests', () => {
   // =========================================================
 
   describe('PUT /api/pet-types/:id', () => {
-    it('should update pet type', async () => {
+    it('should require mainImage when updating a pet type', async () => {
       const res = await request(app)
         .put(`/api/pet-types/${testPetType._id}`)
-        .send({
-          title: 'Canine',
-        })
+        .field('title', 'Canine')
         .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(res.body.message).toBe('تصویر اصلی باید ارسال شود');
+    });
+
+    it('should update pet type', async () => {
+      const res = await attachMainImage(
+        request(app)
+          .put(`/api/pet-types/${testPetType._id}`)
+          .field('title', 'Canine')
+          .set('Authorization', 'Bearer token'),
+      );
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
@@ -380,6 +457,7 @@ describe('PetType API - Integration Tests', () => {
 
     it('should return 422 if title already exists', async () => {
       await PetTypeModel.create({
+        ...storedImageFields,
         title: 'Cat',
       });
 

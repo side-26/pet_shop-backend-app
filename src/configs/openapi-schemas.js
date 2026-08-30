@@ -26,6 +26,21 @@ function toOpenApi(zodSchema) {
 }
 
 export const schemas = {
+  PetTypeMultipartBody: {
+    type: 'object',
+    required: ['mainImage'],
+    properties: {
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description: 'Required image smaller than 1 MB; regenerates thumbnail',
+      },
+      title: { type: 'string', minLength: 2, maxLength: 20 },
+      description: { type: 'string', maxLength: 150 },
+      isEnabled: { type: 'boolean' },
+      propertyDefinitions: { type: 'array', items: { type: 'object' } },
+    },
+  },
   MainImageCreateBody: {
     type: 'object',
     required: ['mainImage'],

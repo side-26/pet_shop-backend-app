@@ -12,6 +12,14 @@ jest.mock('#utils/helpers.js', () => ({
   }),
 }));
 
+jest.mock('#services/mainImage.service.js', () => ({
+  MainImageService: {
+    upload: jest.fn(),
+    cleanup: jest.fn(),
+    getStoredKey: jest.fn(),
+  },
+}));
+
 jest.mock('./petTypes.model.js', () => {
   const MockModel = jest.fn().mockImplementation(function (data) {
     Object.assign(this, data);
@@ -64,6 +72,7 @@ jest.mock('./petTypes.cache.store.js', () => {
 });
 
 import { PetTypeModel } from './petTypes.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
 import {
   __mockPetTypeCacheGetOrLoad as mockPetTypeCacheGetOrLoad,
   __mockPetTypeCacheInvalidate as mockPetTypeCacheInvalidate,
@@ -82,6 +91,10 @@ describe('PetTypeService - Unit Tests', () => {
 
       description: 'Loyal pets',
 
+      mainImage: 'https://cdn.example.com/pet-types/main/dog.webp',
+
+      thumbnail: 'data:image/webp;base64,AAAA',
+
       isEnabled: true,
 
       slug: 'dog',
@@ -97,6 +110,13 @@ describe('PetTypeService - Unit Tests', () => {
 
     mockPetTypeCacheGetOrLoad.mockImplementation((label, loader) => loader());
     mockPetTypeCacheInvalidate.mockResolvedValue(undefined);
+    MainImageService.upload.mockResolvedValue({
+      key: 'pet-types/main/new.webp',
+      mainImage: 'https://cdn.example.com/pet-types/main/new.webp',
+      mainImageThumbnail: 'data:image/webp;base64,BBBB',
+    });
+    MainImageService.cleanup.mockResolvedValue(undefined);
+    MainImageService.getStoredKey.mockReturnValue('pet-types/main/dog.webp');
   });
 
   // =========================================================
@@ -348,6 +368,10 @@ describe('PetTypeService - Unit Tests', () => {
         title: 'Cat',
       }),
     );
+    expect(MainImageService.upload).toHaveBeenCalledWith(
+      undefined,
+      'pet-types/main',
+    );
   });
 
   test('create throws if title already exists', async () => {
@@ -417,6 +441,10 @@ describe('PetTypeService - Unit Tests', () => {
     expect(mockPetType.updatedBy).toBe(userId);
 
     expect(mockPetType.save).toHaveBeenCalled();
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'pet-types/main/dog.webp',
+      { id: mockPetType._id, userId },
+    );
     expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Canine',
@@ -584,6 +612,10 @@ describe('PetTypeService - Unit Tests', () => {
       title: mockPetType.title,
 
       description: mockPetType.description,
+
+      mainImage: mockPetType.mainImage,
+
+      thumbnail: mockPetType.thumbnail,
 
       isEnabled: mockPetType.isEnabled,
 
