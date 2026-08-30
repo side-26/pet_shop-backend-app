@@ -73,6 +73,8 @@ const persianFieldNames = {
   slug: 'نامک',
   summary: 'خلاصه',
   mainImage: 'تصویر اصلی',
+  mimetype: 'فرمت تصویر اصلی',
+  imageFileSize: 'حجم تصویر اصلی',
   mainImageThumbnail: 'تصویر بندانگشتی اصلی',
   thumbnail: 'تصویر بندانگشتی',
   images: 'تصاویر',

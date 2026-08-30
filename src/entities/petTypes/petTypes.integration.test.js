@@ -236,7 +236,7 @@ describe('PetType API - Integration Tests', () => {
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-      expect(res.body.message).toBe('تصویر اصلی باید ارسال شود');
+      expect(res.body.message).toBe('اطلاعات وارد شده معتبر نیست');
     });
 
     it('should reject a mainImage that is 1 MB or larger', async () => {
@@ -252,13 +252,26 @@ describe('PetType API - Integration Tests', () => {
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    it('should return 422 if title already exists', async () => {
+    it('should reject an unsupported mainImage format', async () => {
       const res = await request(app)
         .post('/api/pet-types')
-        .send({
-          title: 'Dog',
+        .field('title', 'Rabbit')
+        .attach('mainImage', imageBuffer, {
+          filename: 'rabbit.avif',
+          contentType: 'image/avif',
         })
         .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    it('should return 422 if title already exists', async () => {
+      const res = await attachMainImage(
+        request(app)
+          .post('/api/pet-types')
+          .field('title', 'Dog')
+          .set('Authorization', 'Bearer token'),
+      );
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
@@ -413,7 +426,7 @@ describe('PetType API - Integration Tests', () => {
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-      expect(res.body.message).toBe('تصویر اصلی باید ارسال شود');
+      expect(res.body.message).toBe('اطلاعات وارد شده معتبر نیست');
     });
 
     it('should update pet type', async () => {
@@ -440,12 +453,12 @@ describe('PetType API - Integration Tests', () => {
     it('should return 404 if not found', async () => {
       const nonExistentId = new mongoose.Types.ObjectId();
 
-      const res = await request(app)
-        .put(`/api/pet-types/${nonExistentId}`)
-        .send({
-          title: 'Test',
-        })
-        .set('Authorization', 'Bearer token');
+      const res = await attachMainImage(
+        request(app)
+          .put(`/api/pet-types/${nonExistentId}`)
+          .field('title', 'Test')
+          .set('Authorization', 'Bearer token'),
+      );
 
       expect(res.status).toBe(STATUES.NOT_FOUND);
 
@@ -461,12 +474,12 @@ describe('PetType API - Integration Tests', () => {
         title: 'Cat',
       });
 
-      const res = await request(app)
-        .put(`/api/pet-types/${testPetType._id}`)
-        .send({
-          title: 'Cat',
-        })
-        .set('Authorization', 'Bearer token');
+      const res = await attachMainImage(
+        request(app)
+          .put(`/api/pet-types/${testPetType._id}`)
+          .field('title', 'Cat')
+          .set('Authorization', 'Bearer token'),
+      );
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
 

@@ -8,6 +8,7 @@ import {
 
 import {
   createPetTypeZodSchema,
+  petTypeMainImageZodSchema,
   updatePetTypeZodSchema,
 } from './petTypes.schema.js';
 
@@ -20,6 +21,10 @@ import { PetTypeService } from './petTypes.service.js';
 export const createPetTypeController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createPetTypeZodSchema, req.body);
+    returnFormValidation(petTypeMainImageZodSchema, {
+      mimetype: req.file?.mimetype,
+      imageFileSize: req.file?.size,
+    });
 
     const petType = await PetTypeService.create(body, req.user?.id, req.file);
 
@@ -92,6 +97,10 @@ export const getPetTypeBySlugController = async (req, res, next) => {
 export const updatePetTypeController = async (req, res, next) => {
   try {
     const body = returnFormValidation(updatePetTypeZodSchema, req.body);
+    returnFormValidation(petTypeMainImageZodSchema, {
+      mimetype: req.file?.mimetype,
+      imageFileSize: req.file?.size,
+    });
 
     const petType = await PetTypeService.update(
       req.params.id,

@@ -212,6 +212,7 @@ export const IMAGE_UPLOAD = {
   MAIN_IMAGE_FIELD: 'mainImage',
   PET_IMAGES_FIELD: 'images',
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+  PET_TYPE_ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 };
 
 export const OBJECT_STORAGE = {

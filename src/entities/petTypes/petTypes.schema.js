@@ -1,45 +1,44 @@
 import { z } from 'zod';
 
+import { IMAGE_UPLOAD } from '#configs/constants.js';
 import '#configs/zod.config.js';
 
-const propertyDefinitionZodSchema = z
-  .object({
-    key: z
-      .string()
-      .trim()
-      .regex(/^[a-z][a-zA-Z0-9]*$/),
-    label: z.string().trim().min(1).max(80),
-    valueType: z.enum(['string', 'number', 'boolean', 'date', 'enum']),
-    required: z.boolean().optional().default(false),
-    options: z.array(z.string().trim().min(1)).min(1).optional(),
-    min: z.number().optional(),
-    max: z.number().optional(),
-    defaultValue: z.unknown().optional(),
-  })
-  .superRefine((definition, context) => {
-    if (definition.valueType === 'enum' && !definition.options?.length) {
-      context.addIssue({
-        code: 'custom',
-        path: ['options'],
-        message: 'Enum properties require at least one option',
-      });
-    }
+const { array, boolean, enum: zodEnum, number, object, string, unknown } = z;
 
-    if (
-      definition.min !== undefined &&
-      definition.max !== undefined &&
-      definition.min > definition.max
-    ) {
-      context.addIssue({
-        code: 'custom',
-        path: ['min'],
-        message: 'Minimum cannot be greater than maximum',
-      });
-    }
-  });
+const propertyDefinitionZodSchema = object({
+  key: string()
+    .trim()
+    .regex(/^[a-z][a-zA-Z0-9]*$/),
+  label: string().trim().min(1).max(80),
+  valueType: zodEnum(['string', 'number', 'boolean', 'date', 'enum']),
+  required: boolean().optional().default(false),
+  options: array(string().trim().min(1)).min(1).optional(),
+  min: number().optional(),
+  max: number().optional(),
+  defaultValue: unknown().optional(),
+}).superRefine((definition, context) => {
+  if (definition.valueType === 'enum' && !definition.options?.length) {
+    context.addIssue({
+      code: 'custom',
+      path: ['options'],
+      message: 'ویژگی‌های انتخابی باید حداقل یک گزینه داشته باشند',
+    });
+  }
 
-const propertyDefinitionsZodSchema = z
-  .array(propertyDefinitionZodSchema)
+  if (
+    definition.min !== undefined &&
+    definition.max !== undefined &&
+    definition.min > definition.max
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['min'],
+      message: 'حداقل مقدار نمی‌تواند از حداکثر مقدار بیشتر باشد',
+    });
+  }
+});
+
+const propertyDefinitionsZodSchema = array(propertyDefinitionZodSchema)
   .max(50)
   .superRefine((definitions, context) => {
     const seenKeys = new Set();
@@ -49,109 +48,81 @@ const propertyDefinitionsZodSchema = z
         context.addIssue({
           code: 'custom',
           path: [index, 'key'],
-          message: 'Property definition keys must be unique',
+          message: 'کلید ویژگی‌ها باید یکتا باشد',
         });
       }
       seenKeys.add(definition.key);
     });
   });
 
-// ============================================
-// CREATE PET TYPE SCHEMA
-// ============================================
-export const createPetTypeZodSchema = z.object({
-  title: z.string().min(2).max(20).trim(),
+export const petTypeMainImageZodSchema = object({
+  mimetype: zodEnum(IMAGE_UPLOAD.PET_TYPE_ALLOWED_MIME_TYPES),
+  imageFileSize: number()
+    .int()
+    .positive()
+    .max(IMAGE_UPLOAD.MAX_PET_TYPE_IMAGE_SIZE_BYTES),
+});
 
-  description: z.string().max(150).optional().default(''),
-
-  isEnabled: z.boolean().optional().default(true),
-
+export const createPetTypeZodSchema = object({
+  title: string().min(2).max(20).trim(),
+  description: string().max(150).optional().default(''),
+  isEnabled: boolean().optional().default(true),
   propertyDefinitions: propertyDefinitionsZodSchema.optional().default([]),
 });
 
-// ============================================
-// UPDATE PET TYPE SCHEMA (All fields optional)
-// ============================================
-export const updatePetTypeZodSchema = z.object({
-  title: z.string().min(2).max(20).trim().optional(),
-
-  description: z.string().max(150).optional(),
-
-  isEnabled: z.boolean().optional(),
-
+export const updatePetTypeZodSchema = object({
+  title: string().min(2).max(20).trim().optional(),
+  description: string().max(150).optional(),
+  isEnabled: boolean().optional(),
   propertyDefinitions: propertyDefinitionsZodSchema.optional(),
 });
 
-// ============================================
-// PET TYPE ID SCHEMA (For params validation)
-// ============================================
-export const petTypeIdSchema = z.object({
-  id: z
-    .string()
+export const petTypeIdSchema = object({
+  id: string()
     .min(1)
     .regex(/^[0-9a-fA-F]{24}$/),
 });
 
-// ============================================
-// PET TYPE SLUG SCHEMA (For params validation)
-// ============================================
-export const petTypeSlugSchema = z.object({
-  slug: z
-    .string()
+export const petTypeSlugSchema = object({
+  slug: string()
     .min(1)
     .max(50)
     .regex(/^[a-z0-9-]+$/),
 });
 
-// ============================================
-// PET TYPE QUERY SCHEMA (For query params)
-// ============================================
-export const petTypeQuerySchema = z.object({
-  includeDisabled: z
-    .string()
+export const petTypeQuerySchema = object({
+  includeDisabled: string()
     .optional()
-    .transform((val) => val === 'true'),
-  search: z.string().max(50).optional(), // ✅ fixed: .max() before .optional()
-  page: z
-    .string()
+    .transform((value) => value === 'true'),
+  search: string().max(50).optional(),
+  page: string()
     .optional()
-    .transform((val) => parseInt(val) || 1),
-  limit: z
-    .string()
+    .transform((value) => parseInt(value) || 1),
+  limit: string()
     .optional()
-    .transform((val) => parseInt(val) || 10),
-  sortBy: z.string().optional().default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+    .transform((value) => parseInt(value) || 10),
+  sortBy: string().optional().default('createdAt'),
+  sortOrder: zodEnum(['asc', 'desc']).optional().default('asc'),
 });
 
-// ============================================
-// BULK PET TYPE SCHEMA (For bulk operations)
-// ============================================
-export const bulkPetTypeSchema = z.object({
-  types: z
-    .array(
-      z.object({
-        title: z.string().min(2).max(20).trim(),
-        description: z.string().max(150).optional().default(''),
-        isEnabled: z.boolean().optional().default(true),
-      }),
-    )
-    .min(1),
+export const bulkPetTypeSchema = object({
+  types: array(
+    object({
+      title: string().min(2).max(20).trim(),
+      description: string().max(150).optional().default(''),
+      isEnabled: boolean().optional().default(true),
+    }),
+  ).min(1),
 });
 
-// ============================================
-// PET TYPE STATUS SCHEMA (For status update)
-// ============================================
-export const petTypeStatusSchema = z.object({
-  isEnabled: z.boolean(),
+export const petTypeStatusSchema = object({
+  isEnabled: boolean(),
 });
 
-// ============================================
-// EXPORT ALL SCHEMAS
-// ============================================
 export default {
   createPetTypeZodSchema,
   updatePetTypeZodSchema,
+  petTypeMainImageZodSchema,
   petTypeIdSchema,
   petTypeSlugSchema,
   petTypeQuerySchema,
