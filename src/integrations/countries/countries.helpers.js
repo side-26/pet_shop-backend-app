@@ -1,17 +1,20 @@
 import { COUNTRIES_API } from '#configs/constants.js';
 
-const getFlagpediaLogo = (alpha2Code) => {
-  if (typeof alpha2Code !== 'string' || !/^[a-z]{2}$/i.test(alpha2Code)) {
+export function buildCountryFlagUrl(countryCode) {
+  if (typeof countryCode !== 'string' || !/^[a-z]{2}$/i.test(countryCode)) {
     return null;
   }
 
-  return `${COUNTRIES_API.FLAGPEDIA_BASE_URL}/h${COUNTRIES_API.FLAG_HEIGHT}/${alpha2Code.toLowerCase()}.png`;
-};
+  return [
+    COUNTRIES_API.FLAG.BASE_URL,
+    `${countryCode.toLowerCase()}.${COUNTRIES_API.FLAG.FORMAT}`,
+  ].join('/');
+}
 
 export const mapCountry = (country) => {
   const title = country?.name;
   const titleFa = country?.translations?.fa;
-  const logo = getFlagpediaLogo(country?.alpha2Code);
+  const logo = buildCountryFlagUrl(country?.alpha2Code);
 
   if (![title, titleFa, logo].every((value) => typeof value === 'string')) {
     return null;

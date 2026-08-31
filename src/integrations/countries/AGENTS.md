@@ -8,7 +8,7 @@ Provides `GET /api/countries` using a remote countries provider with service-lev
 
 - `countries.client.js` — performs the provider request using `COUNTRIES_API` settings.
 - `countries.service.js` — caches responses, maps provider failures to application errors, and exposes cache clearing.
-- `countries.helpers.js` — converts provider records to the public country shape.
+- `countries.helpers.js` — converts provider records to the public country shape and builds flag URLs from `COUNTRIES_API.FLAG`.
 - `countries.controller.js` and `countries.route.js` — return the integration through Express.
 - `countries.unit.test.js` and `countries.integration.test.js` — cover service/client behavior and the HTTP contract.
 

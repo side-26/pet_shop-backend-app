@@ -27,7 +27,7 @@ describe('Countries wrapper API', () => {
       {
         title: 'Iran',
         titleFa: 'ایران',
-        logo: 'https://flagpedia.net/data/flags/h80/ir.png',
+        logo: 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/ir.svg',
       },
     ]);
 
@@ -40,7 +40,7 @@ describe('Countries wrapper API', () => {
         {
           title: 'Iran',
           titleFa: 'ایران',
-          logo: 'https://flagpedia.net/data/flags/h80/ir.png',
+          logo: 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/ir.svg',
         },
       ],
       totalRecords: 1,

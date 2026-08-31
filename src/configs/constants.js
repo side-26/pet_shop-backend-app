@@ -166,10 +166,14 @@ export const CART_PAYMENT_TYPES = {
 
 export const COUNTRIES_API = {
   DEFAULT_URL: 'https://www.apicountries.com/countries',
+
   TIMEOUT_MS: 5000,
   CACHE_TTL_MS: 60 * 60 * 1000,
-  FLAGPEDIA_BASE_URL: 'https://flagpedia.net/data/flags',
-  FLAG_HEIGHT: 80,
+
+  FLAG: {
+    BASE_URL: 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3',
+    FORMAT: 'svg',
+  },
 };
 
 export const NESHAN_API = {

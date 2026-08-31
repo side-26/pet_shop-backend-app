@@ -1,6 +1,7 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 
 import { CountriesClient } from './countries.client.js';
+import { buildCountryFlagUrl } from './countries.helpers.js';
 import { CountriesService } from './countries.service.js';
 
 const upstreamCountries = [
@@ -44,6 +45,13 @@ describe('Countries API wrapper', () => {
     );
   });
 
+  test('buildCountryFlagUrl uses the configured SVG source', () => {
+    expect(buildCountryFlagUrl('IR')).toBe(
+      'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/ir.svg',
+    );
+    expect(buildCountryFlagUrl('invalid')).toBeNull();
+  });
+
   test('CountriesClient rejects unsuccessful and malformed responses', async () => {
     global.fetch
       .mockResolvedValueOnce(
@@ -76,12 +84,12 @@ describe('Countries API wrapper', () => {
       {
         title: 'Canada',
         titleFa: 'کانادا',
-        logo: 'https://flagpedia.net/data/flags/h80/ca.png',
+        logo: 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/ca.svg',
       },
       {
         title: 'Iran',
         titleFa: 'ایران',
-        logo: 'https://flagpedia.net/data/flags/h80/ir.png',
+        logo: 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/ir.svg',
       },
     ]);
     expect(second).toBe(first);
