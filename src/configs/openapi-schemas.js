@@ -419,10 +419,16 @@ export const schemas = {
     type: 'object',
     properties: {
       isSuccess: { type: 'boolean', example: true },
-      data: { type: 'array', items: {} },
-      pagination: { $ref: '#/components/schemas/Pagination' },
+      data: {
+        type: 'object',
+        properties: {
+          result: { type: 'array', items: {} },
+          pagination: { $ref: '#/components/schemas/Pagination' },
+        },
+        required: ['result', 'pagination'],
+      },
     },
-    required: ['isSuccess'],
+    required: ['isSuccess', 'data'],
   },
   ErrorResponse: {
     type: 'object',

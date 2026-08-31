@@ -2976,6 +2976,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Paginated breed list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
           "405": {
             "description": "Method not allowed",
             "headers": {
@@ -2993,9 +3003,6 @@
                 }
               }
             }
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -5712,14 +5719,20 @@
             "example": true
           },
           "data": {
-            "type": "array",
-            "items": {}
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/Pagination"
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "array",
+                "items": {}
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            },
+            "required": ["result", "pagination"]
           }
         },
-        "required": ["isSuccess"]
+        "required": ["isSuccess", "data"]
       },
       "ErrorResponse": {
         "type": "object",

@@ -185,8 +185,10 @@ export const getAllBreedsWithPaginationController = async (req, res, next) => {
     );
     const result = await BreedService.findAllWithPagination(query);
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: BreedService.formatMany(result.result),
-      pagination: result.pagination,
+      data: {
+        result: BreedService.formatMany(result.result),
+        pagination: result.pagination,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);

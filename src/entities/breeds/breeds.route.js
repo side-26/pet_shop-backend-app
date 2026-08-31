@@ -42,7 +42,8 @@ router.get(
      #swagger.parameters['petType'] = { in: 'query', description: 'Pet type identifier', type: 'string' }
      #swagger.parameters['country'] = { in: 'query', description: 'Case-insensitive country filter', type: 'string' }
      #swagger.parameters['size'] = { in: 'query', description: 'Breed size level (0 to 4)', type: 'integer' }
-     #swagger.parameters['activityLevel'] = { in: 'query', description: 'Breed activity level (0 to 4)', type: 'integer' } */
+     #swagger.parameters['activityLevel'] = { in: 'query', description: 'Breed activity level (0 to 4)', type: 'integer' }
+     #swagger.responses[200] = { description: 'Paginated breed list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   authenticated,
   roleMiddleware([ROLES.ADMIN, ROLES.SELLER]),
   getAllBreedsWithPaginationController,

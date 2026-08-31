@@ -198,7 +198,24 @@ describe('Breed API', () => {
     });
 
     expect(response.status).toBe(STATUES.SUCCESS);
-    expect(response.body.data).toEqual([
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        isSuccess: true,
+        data: expect.objectContaining({
+          pagination: expect.objectContaining({
+            currentPage: 1,
+            hasNextPage: false,
+            hasPrevPage: false,
+            itemsPerPage: 10,
+            nextPage: null,
+            prevPage: null,
+            totalItems: 1,
+            totalPages: 1,
+          }),
+        }),
+      }),
+    );
+    expect(response.body.data.result).toEqual([
       expect.objectContaining({ id: matchingBreed._id.toString() }),
     ]);
   });
