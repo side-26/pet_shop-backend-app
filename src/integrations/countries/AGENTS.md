@@ -2,26 +2,26 @@
 
 ## Purpose
 
-Provides `GET /api/countries` using a remote countries provider with service-level mapping and caching.
+Provides `GET /api/countries` from the local `db.json` reference dataset.
 
 ## Important Files
 
-- `countries.client.js` — performs the provider request using `COUNTRIES_API` settings.
-- `countries.service.js` — caches responses, maps provider failures to application errors, and exposes cache clearing.
-- `countries.helpers.js` — converts provider records to the public country shape and builds flag URLs from `COUNTRIES_API.FLAG`.
+- `db.json` — bundled country records containing English and Persian names plus ISO country codes.
+- `countries.service.js` — maps the local dataset into the public response shape.
+- `countries.helpers.js` — converts local records to the public country shape and builds flag-logo URLs from `COUNTRY_FLAGS`.
 - `countries.controller.js` and `countries.route.js` — return the integration through Express.
-- `countries.unit.test.js` and `countries.integration.test.js` — cover service/client behavior and the HTTP contract.
+- `countries.unit.test.js` and `countries.integration.test.js` — cover local-data mapping and the HTTP contract.
 
 ## Flow
 
-`GET /api/countries -> controller -> service -> cache or client -> mapping helper`
+`GET /api/countries -> controller -> service -> local data -> mapping helper`
 
 ## Modification Rules
 
-- Keep provider response shape out of controllers.
-- Update caching and mapped response tests if provider behavior changes.
+- Keep local data shape out of controllers.
+- Update mapped-response tests when the local dataset schema changes.
 
 ## Summary
 
-- Public country data is normalized and cached by the service.
-- Remote transport belongs only in the client.
+- Public country data is normalized from the bundled reference dataset.
+- Each country includes an SVG flag-logo URL derived from its ISO code.

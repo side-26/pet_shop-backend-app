@@ -345,6 +345,20 @@ export const schemas = {
       prevPage: { type: 'integer', nullable: true },
     },
   },
+  Country: {
+    type: 'object',
+    required: ['title', 'titleFa', 'logo'],
+    properties: {
+      title: { type: 'string', example: 'Iran' },
+      titleFa: { type: 'string', example: 'ایران' },
+      logo: {
+        type: 'string',
+        format: 'uri',
+        example:
+          'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3/ir.svg',
+      },
+    },
+  },
   Cart: {
     type: 'object',
     properties: {
@@ -414,6 +428,18 @@ export const schemas = {
       data: {},
     },
     required: ['isSuccess'],
+  },
+  CountriesResponse: {
+    type: 'object',
+    required: ['isSuccess', 'data', 'totalRecords'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      data: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/Country' },
+      },
+      totalRecords: { type: 'integer', example: 249 },
+    },
   },
   PaginatedResponse: {
     type: 'object',

@@ -1,4 +1,4 @@
-import { COUNTRIES_API } from '#configs/constants.js';
+import { COUNTRY_FLAGS } from '#configs/constants.js';
 
 export function buildCountryFlagUrl(countryCode) {
   if (typeof countryCode !== 'string' || !/^[a-z]{2}$/i.test(countryCode)) {
@@ -6,15 +6,15 @@ export function buildCountryFlagUrl(countryCode) {
   }
 
   return [
-    COUNTRIES_API.FLAG.BASE_URL,
-    `${countryCode.toLowerCase()}.${COUNTRIES_API.FLAG.FORMAT}`,
+    COUNTRY_FLAGS.BASE_URL,
+    `${countryCode.toLowerCase()}.${COUNTRY_FLAGS.FORMAT}`,
   ].join('/');
 }
 
 export const mapCountry = (country) => {
   const title = country?.name;
-  const titleFa = country?.translations?.fa;
-  const logo = buildCountryFlagUrl(country?.alpha2Code);
+  const titleFa = country?.name_fa;
+  const logo = buildCountryFlagUrl(country?.code);
 
   if (![title, titleFa, logo].every((value) => typeof value === 'string')) {
     return null;
