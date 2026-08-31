@@ -38,6 +38,7 @@ import { MainImageService } from '#services/mainImage.service.js';
 import { BreedModel } from './breeds.model.js';
 import {
   createBreedZodSchema,
+  breedQuerySchema,
   replaceBreedPropertyDefinitionsZodSchema,
 } from './breeds.schema.js';
 import { BreedService } from './breeds.service.js';
@@ -105,6 +106,28 @@ describe('BreedService', () => {
         propertyDefinitions: [{ label: 'رنگ پوشش', value: 'سفید' }],
       }).success,
     ).toBe(true);
+  });
+
+  test('validates and coerces paginated-list filters', () => {
+    expect(
+      breedQuerySchema.parse({
+        activityLevel: '3',
+        country: 'Iran',
+        petType: id,
+        size: '2',
+        title: 'Persian',
+      }),
+    ).toMatchObject({
+      activityLevel: 3,
+      country: 'Iran',
+      petType: id,
+      size: 2,
+      title: 'Persian',
+    });
+    expect(breedQuerySchema.safeParse({ size: '5' }).success).toBe(false);
+    expect(breedQuerySchema.safeParse({ activityLevel: '-1' }).success).toBe(
+      false,
+    );
   });
 
   test('findOne builds a case-insensitive title query', async () => {
@@ -248,6 +271,32 @@ describe('BreedService', () => {
     expect(getPaginationData).toHaveBeenCalledWith(
       BreedModel,
       expect.objectContaining({ enable: true, page: 2, limit: 5 }),
+      '',
+      expect.any(Function),
+    );
+  });
+
+  test('findAllWithPagination applies title, pet type, country, size, and activity level filters', () => {
+    getPaginationData.mockReturnValue('paginated');
+
+    BreedService.findAllWithPagination({
+      activityLevel: 3,
+      country: 'Iran',
+      petType: id,
+      size: 2,
+      title: 'Persian',
+    });
+
+    expect(getPaginationData).toHaveBeenCalledWith(
+      BreedModel,
+      expect.objectContaining({
+        activityLevel: 3,
+        country: { $regex: 'Iran', $options: 'i' },
+        enable: true,
+        petType: id,
+        size: 2,
+        title: { $regex: 'Persian', $options: 'i' },
+      }),
       '',
       expect.any(Function),
     );

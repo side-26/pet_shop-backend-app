@@ -122,7 +122,11 @@ export const replaceBreedPropertyDefinitionsZodSchema = object({
 });
 
 export const breedQuerySchema = object({
+  title: string().trim().min(1).max(100).optional(),
   petType: mongoObjectIdSchema.optional(),
+  country: string().trim().min(1).max(100).optional(),
+  size: breedLevelSchema.optional(),
+  activityLevel: breedLevelSchema.optional(),
   includeDisabled: string()
     .optional()
     .transform((value) => value === 'true'),

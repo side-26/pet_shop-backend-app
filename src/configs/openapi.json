@@ -495,6 +495,15 @@
         "tags": ["/users"],
         "summary": "Reset a user password with a temporary OTP token",
         "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Password reset successfully and temporary token invalidated",
@@ -834,6 +843,16 @@
     "/users/addresses/{addressId}": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -1285,6 +1304,16 @@
     "/wishlist/delete/{id}": {
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2048,6 +2077,15 @@
     "/pet-types": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "includeDisabled",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2140,6 +2178,16 @@
     "/pet-types/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2219,6 +2267,16 @@
       },
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2248,6 +2306,16 @@
     "/pet-types/slug/{slug}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2303,6 +2371,16 @@
     "/pet-types/{id}/disable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2332,6 +2410,16 @@
     "/pet-types/{id}/enable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2417,6 +2505,16 @@
     "/categories/{id}": {
       "put": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2444,6 +2542,16 @@
       },
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2471,6 +2579,16 @@
       },
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2500,6 +2618,16 @@
     "/categories/enable/{id}": {
       "put": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2529,6 +2657,16 @@
     "/categories/disable/{id}": {
       "put": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2614,6 +2752,16 @@
     "/sub-categories/{id}": {
       "put": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2641,6 +2789,16 @@
       },
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2668,6 +2826,16 @@
       },
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2697,6 +2865,16 @@
     "/breeds/property-definitions/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "default": {
             "description": ""
@@ -2708,6 +2886,16 @@
     "/breeds/slug/{slug}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "default": {
             "description": ""
@@ -2745,6 +2933,48 @@
     "/breeds/paginate": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "description": "Case-insensitive breed title filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "petType",
+            "in": "query",
+            "description": "Pet type identifier",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "description": "Case-insensitive country filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Breed size level (0 to 4)",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "activityLevel",
+            "in": "query",
+            "description": "Breed activity level (0 to 4)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2768,6 +2998,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": ["/breeds"]
       }
     },
@@ -2845,6 +3080,16 @@
     "/breeds/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2924,6 +3169,16 @@
       },
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2953,6 +3208,16 @@
     "/breeds/{id}/enable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -2982,6 +3247,16 @@
     "/breeds/{id}/disable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3082,6 +3357,16 @@
     "/pets/customer/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3140,6 +3425,16 @@
     "/pets/manage/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3273,6 +3568,16 @@
       },
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3302,6 +3607,16 @@
     "/pets/{id}/enable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3331,6 +3646,16 @@
     "/pets/{id}/disable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3431,6 +3756,16 @@
     "/products/customer/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3489,6 +3824,16 @@
     "/products/manage/{id}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3622,6 +3967,16 @@
       },
       "delete": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3651,6 +4006,16 @@
     "/products/{id}/enable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -3680,6 +4045,16 @@
     "/products/{id}/disable": {
       "patch": {
         "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",
@@ -4201,6 +4576,16 @@
     "/cities/{provinceId}": {
       "get": {
         "description": "",
+        "parameters": [
+          {
+            "name": "provinceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",

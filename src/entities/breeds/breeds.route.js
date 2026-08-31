@@ -37,6 +37,12 @@ router.put(
 
 router.get(
   '/breeds/paginate',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.parameters['title'] = { in: 'query', description: 'Case-insensitive breed title filter', type: 'string' }
+     #swagger.parameters['petType'] = { in: 'query', description: 'Pet type identifier', type: 'string' }
+     #swagger.parameters['country'] = { in: 'query', description: 'Case-insensitive country filter', type: 'string' }
+     #swagger.parameters['size'] = { in: 'query', description: 'Breed size level (0 to 4)', type: 'integer' }
+     #swagger.parameters['activityLevel'] = { in: 'query', description: 'Breed activity level (0 to 4)', type: 'integer' } */
   authenticated,
   roleMiddleware([ROLES.ADMIN, ROLES.SELLER]),
   getAllBreedsWithPaginationController,

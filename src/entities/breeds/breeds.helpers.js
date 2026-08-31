@@ -23,12 +23,31 @@ export const formatBreed = (breed) => {
   };
 };
 
-export const buildBreedFilter = ({ includeDisabled, search, petType } = {}) => {
+export const buildBreedFilter = ({
+  activityLevel,
+  country,
+  includeDisabled,
+  petType,
+  search,
+  size,
+  title,
+} = {}) => {
   const filter = {};
   if (!includeDisabled) filter.enable = true;
   if (petType) filter.petType = petType;
-  if (search) {
-    filter.title = { $regex: escapeBreedRegex(search), $options: 'i' };
+  if (country) {
+    filter.country = { $regex: escapeBreedRegex(country), $options: 'i' };
+  }
+  if (size !== undefined) filter.size = size;
+  if (activityLevel !== undefined) filter.activityLevel = activityLevel;
+
+  const titleQueries = [title, search].filter(Boolean).map((value) => ({
+    title: { $regex: escapeBreedRegex(value), $options: 'i' },
+  }));
+  if (titleQueries.length === 1) {
+    Object.assign(filter, titleQueries[0]);
+  } else if (titleQueries.length > 1) {
+    filter.$and = titleQueries;
   }
   return filter;
 };

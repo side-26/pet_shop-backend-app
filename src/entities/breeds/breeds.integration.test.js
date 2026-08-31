@@ -173,6 +173,36 @@ describe('Breed API', () => {
     expect(nullable.status).toBe(STATUES.CREATED);
   });
 
+  test('paginates breeds using title, pet type, country, size, and activity level filters', async () => {
+    const matchingBreed = await BreedModel.create({
+      ...breedData,
+      ...storedImageFields,
+      activityLevel: 3,
+      title: 'Persian Cat',
+    });
+    await BreedModel.create({
+      ...breedData,
+      ...storedImageFields,
+      activityLevel: 1,
+      country: 'Turkey',
+      size: 1,
+      title: 'Turkish Angora',
+    });
+
+    const response = await request(app).get('/api/breeds/paginate').query({
+      activityLevel: 3,
+      country: 'iran',
+      petType: petType._id.toString(),
+      size: 2,
+      title: 'persian',
+    });
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data).toEqual([
+      expect.objectContaining({ id: matchingBreed._id.toString() }),
+    ]);
+  });
+
   test('rejects unsupported and oversized main images', async () => {
     const unsupported = await request(app)
       .post('/api/breeds')

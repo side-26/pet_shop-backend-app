@@ -59,6 +59,7 @@ const persianFieldNames = {
   subCategory: 'زیر دسته‌بندی',
 
   breed: 'نژاد',
+  activityLevel: 'سطح فعالیت',
   age: 'سن',
   gender: 'جنسیت',
   size: 'اندازه',
