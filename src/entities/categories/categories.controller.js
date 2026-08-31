@@ -10,6 +10,7 @@ import {
 
 import {
   categoryIdSchema,
+  categoryMainImageZodSchema,
   categoryQuerySchema,
   createCategoryZodSchema,
   updateCategoryZodSchema,
@@ -24,8 +25,12 @@ import { CategoryService } from './categories.service.js';
 export const createCategoryController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createCategoryZodSchema, req.body);
+    returnFormValidation(categoryMainImageZodSchema, {
+      mimetype: req.file?.mimetype,
+      imageFileSize: req.file?.size,
+    });
 
-    const category = await CategoryService.create(body, req.user?.id);
+    const category = await CategoryService.create(body, req.user?.id, req.file);
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: `دسته‌بندی "${category.title}" با موفقیت ایجاد شد`,
@@ -45,11 +50,16 @@ export const updateCategoryController = async (req, res, next) => {
     const params = returnFormValidation(categoryIdSchema, req.params);
 
     const body = returnFormValidation(updateCategoryZodSchema, req.body);
+    returnFormValidation(categoryMainImageZodSchema, {
+      mimetype: req.file?.mimetype,
+      imageFileSize: req.file?.size,
+    });
 
     const category = await CategoryService.update(
       params.id,
       body,
       req.user?.id,
+      req.file,
     );
 
     setSuccessResponse(res, STATUES.SUCCESS, {

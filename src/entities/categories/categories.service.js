@@ -1,6 +1,6 @@
 import { STATUES } from '#configs/constants.js';
+import { MainImageService } from '#services/mainImage.service.js';
 import { setErrorResponse } from '#utils/helpers.js';
-
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
 import { CategoryModel } from './categories.model.js';
@@ -71,7 +71,7 @@ export class CategoryService {
     return category;
   }
 
-  static async create(data, userId) {
+  static async create(data, userId, imageFile) {
     await this.ensurePetTypeExists(data.petType);
 
     const existingCategory = await this.findOne({
@@ -89,18 +89,26 @@ export class CategoryService {
       });
     }
 
-    const category = new CategoryModel({
-      ...data,
-
-      enable: data.enable ?? true,
-
-      createdBy: userId,
-    });
-
-    return category.save();
+    const uploadedImage = await MainImageService.upload(
+      imageFile,
+      'categories/main',
+    );
+    try {
+      const category = new CategoryModel({
+        ...data,
+        mainImage: uploadedImage.mainImage,
+        mainThumbnailImage: uploadedImage.mainImageThumbnail,
+        isEnable: data.isEnable ?? true,
+        createdBy: userId,
+      });
+      return await category.save();
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage.key, { userId });
+      throw error;
+    }
   }
 
-  static async update(categoryId, data, userId) {
+  static async update(categoryId, data, userId, imageFile) {
     const currentCategory = await this.findById(categoryId);
 
     await this.ensurePetTypeExists(data.petType);
@@ -122,25 +130,51 @@ export class CategoryService {
       });
     }
 
-    const updatedCategory = await CategoryModel.findByIdAndUpdate(
-      currentCategory._id,
-
+    const uploadedImage = await MainImageService.upload(
+      imageFile,
+      'categories/main',
+    );
+    const previousKey = MainImageService.getStoredKey(
+      currentCategory.mainImage,
       {
-        $set: {
-          ...data,
-
-          updatedBy: userId,
-        },
-      },
-
-      {
-        returnDocument: 'after',
-
-        runValidators: true,
+        id: categoryId,
+        userId,
       },
     );
+    let updatedCategory;
+    try {
+      updatedCategory = await CategoryModel.findByIdAndUpdate(
+        currentCategory._id,
+
+        {
+          $set: {
+            ...data,
+            mainImage: uploadedImage.mainImage,
+            mainThumbnailImage: uploadedImage.mainImageThumbnail,
+
+            updatedBy: userId,
+          },
+        },
+
+        {
+          returnDocument: 'after',
+
+          runValidators: true,
+        },
+      );
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage.key, {
+        id: categoryId,
+        userId,
+      });
+      throw error;
+    }
 
     if (!updatedCategory) {
+      await MainImageService.cleanup(uploadedImage.key, {
+        id: categoryId,
+        userId,
+      });
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'دسته‌بندی یافت نشد',
 
@@ -148,10 +182,12 @@ export class CategoryService {
       });
     }
 
+    await MainImageService.cleanup(previousKey, { id: categoryId, userId });
+
     return updatedCategory;
   }
 
-  static async setEnableStatus(categoryId, enable, userId) {
+  static async setEnableStatus(categoryId, isEnable, userId) {
     await this.findById(categoryId);
 
     const category = await CategoryModel.findByIdAndUpdate(
@@ -159,7 +195,7 @@ export class CategoryService {
 
       {
         $set: {
-          enable,
+          isEnable,
 
           updatedBy: userId,
         },
@@ -209,7 +245,7 @@ export class CategoryService {
     const query = {};
 
     if (!includeDisabled) {
-      query.enable = true;
+      query.isEnable = true;
     }
 
     if (petType) {
@@ -236,7 +272,10 @@ export class CategoryService {
 
       petType: value.petType,
 
-      enable: value.enable,
+      mainImage: value.mainImage,
+      mainThumbnailImage: value.mainThumbnailImage,
+      slug: value.slug,
+      isEnable: value.isEnable,
 
       createdBy: value.createdBy,
 

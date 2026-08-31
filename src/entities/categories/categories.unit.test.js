@@ -18,6 +18,18 @@ jest.mock('#entities/petTypes/petTypes.model.js', () => ({
   },
 }));
 
+jest.mock('#services/mainImage.service.js', () => ({
+  MainImageService: {
+    upload: jest.fn().mockResolvedValue({
+      key: 'categories/main/image.webp',
+      mainImage: 'https://cdn.example.com/categories/main/image.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+    }),
+    cleanup: jest.fn(),
+    getStoredKey: jest.fn(),
+  },
+}));
+
 jest.mock('./categories.model.js', () => {
   const MockModel = jest.fn().mockImplementation(function (data) {
     Object.assign(this, data);
@@ -64,7 +76,7 @@ describe('CategoryService - Unit Tests', () => {
       _id: '65a4de97aff1fbb38c437222',
       title: 'Food',
       petType: mockPetType._id,
-      enable: true,
+      isEnable: true,
       createdBy: '65a4de97aff1fbb38c437952',
       updatedBy: null,
       createdAt: new Date(),
@@ -419,12 +431,14 @@ describe('CategoryService - Unit Tests', () => {
     expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
       mockCategory._id,
 
-      {
-        $set: {
+      expect.objectContaining({
+        $set: expect.objectContaining({
           ...update,
+          mainImage: expect.any(String),
+          mainThumbnailImage: expect.any(String),
           updatedBy: userId,
-        },
-      },
+        }),
+      }),
 
       {
         returnDocument: 'after',
@@ -538,7 +552,7 @@ describe('CategoryService - Unit Tests', () => {
 
     CategoryModel.findByIdAndUpdate.mockResolvedValue({
       ...mockCategory,
-      enable: false,
+      isEnable: false,
       updatedBy: userId,
     });
 
@@ -548,14 +562,14 @@ describe('CategoryService - Unit Tests', () => {
       userId,
     );
 
-    expect(result.enable).toBe(false);
+    expect(result.isEnable).toBe(false);
 
     expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
       mockCategory._id,
 
       {
         $set: {
-          enable: false,
+          isEnable: false,
           updatedBy: userId,
         },
       },
@@ -572,12 +586,12 @@ describe('CategoryService - Unit Tests', () => {
 
     CategoryModel.findById.mockResolvedValue({
       ...mockCategory,
-      enable: false,
+      isEnable: false,
     });
 
     CategoryModel.findByIdAndUpdate.mockResolvedValue({
       ...mockCategory,
-      enable: true,
+      isEnable: true,
       updatedBy: userId,
     });
 
@@ -587,7 +601,7 @@ describe('CategoryService - Unit Tests', () => {
       userId,
     );
 
-    expect(result.enable).toBe(true);
+    expect(result.isEnable).toBe(true);
   });
 
   test('setEnableStatus throws if category does not exist', async () => {
@@ -611,25 +625,25 @@ describe('CategoryService - Unit Tests', () => {
 
     CategoryModel.findById.mockResolvedValue({
       ...mockCategory,
-      enable: false,
+      isEnable: false,
     });
 
     CategoryModel.findByIdAndUpdate.mockResolvedValue({
       ...mockCategory,
-      enable: true,
+      isEnable: true,
       updatedBy: userId,
     });
 
     const result = await CategoryService.enable(mockCategory._id, userId);
 
-    expect(result.enable).toBe(true);
+    expect(result.isEnable).toBe(true);
 
     expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
       mockCategory._id,
 
       {
         $set: {
-          enable: true,
+          isEnable: true,
           updatedBy: userId,
         },
       },
@@ -652,20 +666,20 @@ describe('CategoryService - Unit Tests', () => {
 
     CategoryModel.findByIdAndUpdate.mockResolvedValue({
       ...mockCategory,
-      enable: false,
+      isEnable: false,
       updatedBy: userId,
     });
 
     const result = await CategoryService.disable(mockCategory._id, userId);
 
-    expect(result.enable).toBe(false);
+    expect(result.isEnable).toBe(false);
 
     expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
       mockCategory._id,
 
       {
         $set: {
-          enable: false,
+          isEnable: false,
           updatedBy: userId,
         },
       },
@@ -727,7 +741,7 @@ describe('CategoryService - Unit Tests', () => {
     expect(result).toEqual(list);
 
     expect(CategoryModel.find).toHaveBeenCalledWith({
-      enable: true,
+      isEnable: true,
     });
 
     expect(sortMock).toHaveBeenCalledWith({
@@ -743,7 +757,7 @@ describe('CategoryService - Unit Tests', () => {
         ...mockCategory,
         _id: '65a4de97aff1fbb38c437333',
         title: 'Toys',
-        enable: false,
+        isEnable: false,
       },
     ];
 
@@ -778,7 +792,7 @@ describe('CategoryService - Unit Tests', () => {
     expect(result).toEqual(list);
 
     expect(CategoryModel.find).toHaveBeenCalledWith({
-      enable: true,
+      isEnable: true,
       petType: mockPetType._id,
     });
   });
@@ -794,7 +808,7 @@ describe('CategoryService - Unit Tests', () => {
       id: mockCategory._id,
       title: mockCategory.title,
       petType: mockCategory.petType,
-      enable: mockCategory.enable,
+      isEnable: mockCategory.isEnable,
     });
 
     expect(formatted).toHaveProperty('createdAt');

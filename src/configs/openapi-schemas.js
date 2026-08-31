@@ -112,6 +112,16 @@ export const schemas = {
       propertyDefinitions: { type: 'array', items: { type: 'object' } },
     },
   },
+  CategoryMultipartBody: {
+    type: 'object',
+    required: ['mainImage', 'title', 'petType'],
+    properties: {
+      mainImage: { type: 'string', format: 'binary' },
+      title: { type: 'string', minLength: 2, maxLength: 50 },
+      petType: { type: 'string' },
+      isEnable: { type: 'boolean' },
+    },
+  },
   MainImageCreateBody: {
     type: 'object',
     required: ['mainImage'],

@@ -4,6 +4,7 @@ import { ROLES } from '#configs/constants.js';
 
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
+import { uploadMainImage } from '#middlewares/upload.middleware.js';
 
 import {
   createCategoryController,
@@ -23,8 +24,11 @@ const router = express.Router();
 
 router.post(
   '/categories',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/CategoryMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
+  uploadMainImage,
   createCategoryController,
 );
 
@@ -34,8 +38,11 @@ router.post(
 
 router.put(
   '/categories/:id',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/CategoryMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
+  uploadMainImage,
   updateCategoryController,
 );
 

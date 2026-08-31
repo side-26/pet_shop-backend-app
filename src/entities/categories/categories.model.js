@@ -1,11 +1,19 @@
-// src/entities/categories/categories.model.js
-
 import mongoose from 'mongoose';
 
 import {
-  createCategoryZodSchema,
   categoryModelUpdateZodSchema,
+  createCategoryZodSchema,
 } from './categories.schema.js';
+
+const validateCategoryData = (schema, data, message) => {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const details = result.error.issues
+      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+      .join('، ');
+    throw new Error(`${message}: ${details}`);
+  }
+};
 
 const categorySchema = new mongoose.Schema(
   {
@@ -16,118 +24,80 @@ const categorySchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 50,
     },
-
     petType: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PetType',
       required: true,
       index: true,
     },
-
-    enable: {
-      type: Boolean,
-      default: true,
+    mainImage: { type: String, required: true, trim: true, maxlength: 2048 },
+    mainThumbnailImage: {
+      type: String,
+      required: true,
+      validate: {
+        validator(value) {
+          return Buffer.byteLength(value, 'utf8') < 10 * 1024;
+        },
+        message: 'حجم تصویر بندانگشتی باید کمتر از ۱۰ کیلوبایت باشد',
+      },
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
       index: true,
     },
-
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
+    isEnable: { type: Boolean, required: true, default: true, index: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   {
     timestamps: true,
-
-    toJSON: {
-      transform: (doc, ret) => {
-        delete ret.__v;
-        return ret;
-      },
-    },
-
-    toObject: {
-      transform: (doc, ret) => {
-        delete ret.__v;
-        return ret;
-      },
-    },
+    toJSON: { transform: (_document, value) => (delete value.__v, value) },
+    toObject: { transform: (_document, value) => (delete value.__v, value) },
   },
 );
 
-// ============================================
-// CREATE VALIDATION
-// ============================================
-
 categorySchema.pre('save', function () {
-  const categoryData = {
-    title: this.title,
-
-    // Convert Mongo ObjectId to string for Zod
-    petType: this.petType?.toString(),
-
-    enable: this.enable,
-  };
-
-  const result = createCategoryZodSchema.safeParse(categoryData);
-
-  if (!result.success) {
-    const errorMessages = result.error.issues
-      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join(', ');
-
-    throw new Error(`Validation failed: ${errorMessages}`);
-  }
+  validateCategoryData(
+    createCategoryZodSchema,
+    {
+      title: this.title,
+      petType: this.petType?.toString(),
+      isEnable: this.isEnable,
+    },
+    'اعتبارسنجی دسته‌بندی ناموفق بود',
+  );
 });
 
-// ============================================
-// UPDATE VALIDATION
-// ============================================
+categorySchema.pre('save', function () {
+  if (!this.slug && this.title) {
+    const generatedSlug = this.title
+      .normalize('NFKC')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
+      .trim()
+      .replace(/[\s-]+/g, '-')
+      .substring(0, 50);
+    this.slug = generatedSlug || `category-${this._id.toString().slice(-8)}`;
+  }
+});
 
 categorySchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
-
-  const updateData = update?.$set || update;
-
-  if (!updateData) {
-    return;
-  }
-
-  const validationData = {
-    ...updateData,
-  };
-
-  if (validationData.petType) {
-    validationData.petType = validationData.petType.toString();
-  }
-
-  const result = categoryModelUpdateZodSchema.safeParse(validationData);
-
-  if (!result.success) {
-    const errorMessages = result.error.issues
-      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join(', ');
-
-    throw new Error(`Update validation failed: ${errorMessages}`);
-  }
+  const data = { ...(update?.$set || update || {}) };
+  if (data.petType) data.petType = data.petType.toString();
+  validateCategoryData(
+    categoryModelUpdateZodSchema,
+    data,
+    'اعتبارسنجی ویرایش دسته‌بندی ناموفق بود',
+  );
 });
 
-// ============================================
-// INDEXES
-// ============================================
-
-categorySchema.index(
-  {
-    title: 1,
-    petType: 1,
-  },
-  {
-    unique: true,
-  },
-);
+categorySchema.index({ title: 1, petType: 1 }, { unique: true });
+categorySchema.statics.findBySlug = function (slug) {
+  return this.findOne({ slug, isEnable: true });
+};
 
 export const CategoryModel = mongoose.model('Categories', categorySchema);

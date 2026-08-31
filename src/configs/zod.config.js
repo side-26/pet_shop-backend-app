@@ -87,12 +87,14 @@ const persianFieldNames = {
   mimetype: 'فرمت تصویر اصلی',
   imageFileSize: 'حجم تصویر اصلی',
   mainImageThumbnail: 'تصویر بندانگشتی اصلی',
+  mainThumbnailImage: 'تصویر بندانگشتی اصلی',
   thumbnailImage: 'تصویر بندانگشتی',
   thumbnail: 'تصویر بندانگشتی',
   images: 'تصاویر',
 
   // Status
   isEnabled: 'وضعیت فعال',
+  isEnable: 'وضعیت فعال',
   enable: 'وضعیت فعال',
 
   // Common
