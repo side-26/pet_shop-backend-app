@@ -3440,6 +3440,16 @@
       "get": {
         "description": "",
         "responses": {
+          "200": {
+            "description": "Paginated customer pet list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
           "405": {
             "description": "Method not allowed",
             "headers": {
@@ -3457,9 +3467,6 @@
                 }
               }
             }
-          },
-          "default": {
-            "description": ""
           }
         },
         "tags": [
@@ -3502,6 +3509,76 @@
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/PetMainImageCreateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/customer/paginate": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "petType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "breed",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priceRange",
+            "in": "query",
+            "pattern": "^\\d+(?:\\.\\d+)?-\\d+(?:\\.\\d+)?$",
+            "description": "Inclusive MIN-MAX price range",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated customer pet list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           }
@@ -3594,6 +3671,54 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Paginated management pet list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/manage/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
           "405": {
             "description": "Method not allowed",
             "headers": {
@@ -3621,7 +3746,197 @@
         ]
       }
     },
-    "/pets/manage/{id}": {
+    "/pets/{id}/images": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PetImagesUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/{id}/price": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET, PUT"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PetPriceUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": [
+          "/pets"
+        ]
+      }
+    },
+    "/pets/{id}/base-info": {
       "get": {
         "description": "",
         "parameters": [
@@ -3683,7 +3998,7 @@
                 "schema": {
                   "type": "string"
                 },
-                "example": "PUT, PATCH, DELETE"
+                "example": "PUT, DELETE"
               }
             },
             "content": {
@@ -3706,63 +4021,9 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PetMainImageUpdateBody"
-              }
-            }
-          }
-        },
-        "tags": [
-          "/pets"
-        ]
-      },
-      "patch": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "405": {
-            "description": "Method not allowed",
-            "headers": {
-              "Allow": {
-                "schema": {
-                  "type": "string"
-                },
-                "example": "PUT, PATCH, DELETE"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/PetMainImageUpdateBody"
+                "$ref": "#/components/schemas/PetBaseInfoUpdateBody"
               }
             }
           }
@@ -3791,7 +4052,7 @@
                 "schema": {
                   "type": "string"
                 },
-                "example": "PUT, PATCH, DELETE"
+                "example": "PUT, DELETE"
               }
             },
             "content": {
@@ -5454,7 +5715,7 @@
           }
         }
       },
-      "PetMainImageUpdateBody": {
+      "PetImagesUpdateBody": {
         "type": "object",
         "properties": {
           "mainImage": {
@@ -5462,15 +5723,36 @@
             "format": "binary",
             "description": "Optional replacement image; regenerates mainImageThumbnail"
           },
-          "title": {
-            "type": "string"
-          },
           "images": {
             "type": "array",
             "items": {
               "type": "string",
               "format": "uri"
             }
+          }
+        }
+      },
+      "PetPriceUpdateBody": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "number",
+            "minimum": 0
+          },
+          "discountPercentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      },
+      "PetBaseInfoUpdateBody": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150
           },
           "summary": {
             "type": "string"
@@ -5485,19 +5767,8 @@
             "type": "string"
           },
           "quantity": {
-            "type": "number"
-          },
-          "price": {
-            "type": "number"
-          },
-          "discountPercentage": {
-            "type": "number"
-          },
-          "inEnable": {
-            "type": "boolean"
-          },
-          "slug": {
-            "type": "string"
+            "type": "integer",
+            "minimum": 0
           }
         }
       },

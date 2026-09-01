@@ -9,19 +9,37 @@ import {
   createPetController,
   deletePetController,
   disablePetController,
-  editPetController,
   enablePetController,
+  getCustomerPetPaginateController,
   getCustomerPetController,
   getCustomerPetListController,
   getManagementPetController,
   getManagementPetListController,
+  getPetBaseInfoController,
+  getPetImagesController,
+  getPetPriceController,
+  updatePetImagesController,
+  updatePetPriceController,
   updatePetController,
 } from './pets.controller.js';
 
 const router = express.Router();
 const managementRoles = [ROLES.ADMIN, ROLES.SELLER];
 
-router.get('/pets', getCustomerPetListController);
+router.get(
+  '/pets',
+  /* #swagger.responses[200] = { description: 'Paginated customer pet list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
+  getCustomerPetListController,
+);
+router.get(
+  '/pets/customer/paginate',
+  /* #swagger.parameters['title'] = { in: 'query', type: 'string' }
+     #swagger.parameters['petType'] = { in: 'query', type: 'string' }
+     #swagger.parameters['breed'] = { in: 'query', type: 'string' }
+     #swagger.parameters['priceRange'] = { in: 'query', type: 'string', pattern: '^\\d+(?:\\.\\d+)?-\\d+(?:\\.\\d+)?$', description: 'Inclusive MIN-MAX price range' }
+     #swagger.responses[200] = { description: 'Paginated customer pet list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
+  getCustomerPetPaginateController,
+);
 router.get('/pets/customer/:id', getCustomerPetController);
 router.get(
   '/pets/paginate',
@@ -29,7 +47,8 @@ router.get(
      #swagger.parameters['petType'] = { in: 'query', type: 'string' }
      #swagger.parameters['breed'] = { in: 'query', type: 'string' }
      #swagger.parameters['quantity'] = { in: 'query', type: 'integer', minimum: 0 }
-     #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' } */
+     #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' }
+     #swagger.responses[200] = { description: 'Paginated management pet list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
   getManagementPetListController,
@@ -39,6 +58,24 @@ router.get(
   authenticated,
   roleMiddleware(managementRoles),
   getManagementPetController,
+);
+router.get(
+  '/pets/:id/images',
+  authenticated,
+  roleMiddleware(managementRoles),
+  getPetImagesController,
+);
+router.get(
+  '/pets/:id/price',
+  authenticated,
+  roleMiddleware(managementRoles),
+  getPetPriceController,
+);
+router.get(
+  '/pets/:id/base-info',
+  authenticated,
+  roleMiddleware(managementRoles),
+  getPetBaseInfoController,
 );
 router.post(
   '/pets',
@@ -52,20 +89,27 @@ router.post(
 router.put(
   '/pets/:id',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageUpdateBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetBaseInfoUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
-  uploadMainImage,
   updatePetController,
 );
-router.patch(
-  '/pets/:id',
+router.put(
+  '/pets/:id/images',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageUpdateBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetImagesUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
   uploadMainImage,
-  editPetController,
+  updatePetImagesController,
+);
+router.put(
+  '/pets/:id/price',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetPriceUpdateBody' } } } } */
+  authenticated,
+  roleMiddleware(managementRoles),
+  updatePetPriceController,
 );
 router.patch(
   '/pets/:id/enable',

@@ -196,7 +196,7 @@ describe('Pet API', () => {
     expect(mismatch.body.message).toContain('متعلق');
   });
 
-  test('seller can update, edit, enable, disable, read, and paginate', async () => {
+  test('seller can update pet sections, toggle status, read, and paginate', async () => {
     const pet = await PetModel.create(petData);
     const seller = { 'x-test-role': ROLES.SELLER };
 
@@ -205,13 +205,13 @@ describe('Pet API', () => {
       .set(seller)
       .send({ title: 'Updated kitten' });
     expect(updated.status).toBe(STATUES.SUCCESS);
-    expect(updated.body.data.mainImageThumbnail).toBe(
-      petData.mainImageThumbnail,
-    );
+    expect(updated.body.data.title).toBe('Updated kitten');
+    expect(updated.body.data).not.toHaveProperty('price');
 
     const imageUpdated = await request(app)
-      .patch(`/api/pets/${pet._id}`)
+      .put(`/api/pets/${pet._id}/images`)
       .set(seller)
+      .field('images', 'https://cdn.example.com/pets/two.webp')
       .attach('mainImage', imageBuffer, {
         filename: 'replacement.png',
         contentType: 'image/png',
@@ -223,13 +223,47 @@ describe('Pet API', () => {
     expect(imageUpdated.body.data.mainImageThumbnail).not.toBe(
       petData.mainImageThumbnail,
     );
+    expect(imageUpdated.body.data.imagesList).toEqual([
+      'https://cdn.example.com/pets/two.webp',
+    ]);
 
-    const edited = await request(app)
-      .patch(`/api/pets/${pet._id}`)
+    const priceUpdated = await request(app)
+      .put(`/api/pets/${pet._id}/price`)
       .set(seller)
-      .send({ price: 14000000 });
-    expect(edited.status).toBe(STATUES.SUCCESS);
-    expect(edited.body.data.price).toBe(14000000);
+      .send({ price: 14000000, discountPercentage: 15 });
+    expect(priceUpdated.status).toBe(STATUES.SUCCESS);
+    expect(priceUpdated.body.data).toEqual({
+      price: 14000000,
+      discountPercentage: 15,
+    });
+
+    const images = await request(app)
+      .get(`/api/pets/${pet._id}/images`)
+      .set(seller);
+    expect(images.status).toBe(STATUES.SUCCESS);
+    expect(images.body.data.imagesList).toEqual([
+      'https://cdn.example.com/pets/two.webp',
+    ]);
+
+    const price = await request(app)
+      .get(`/api/pets/${pet._id}/price`)
+      .set(seller);
+    expect(price.status).toBe(STATUES.SUCCESS);
+    expect(price.body.data).toEqual({
+      price: 14000000,
+      discountPercentage: 15,
+    });
+
+    const baseInfo = await request(app)
+      .get(`/api/pets/${pet._id}/base-info`)
+      .set(seller);
+    expect(baseInfo.status).toBe(STATUES.SUCCESS);
+    expect(baseInfo.body.data).toMatchObject({
+      title: 'Updated kitten',
+      quantity: petData.quantity,
+      petType: { title: 'Cat' },
+      breed: { title: 'Persian' },
+    });
 
     expect(
       (await request(app).patch(`/api/pets/${pet._id}/disable`).set(seller))
@@ -245,8 +279,17 @@ describe('Pet API', () => {
     ).toBe(STATUES.SUCCESS);
     const list = await request(app).get('/api/pets/paginate').set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);
-    expect(list.body.pagination.totalItems).toBe(1);
-    expect(list.body.data[0].images).toEqual(basePetData.images);
+    expect(list.body).toMatchObject({
+      isSuccess: true,
+      data: {
+        result: expect.any(Array),
+        pagination: expect.objectContaining({ totalItems: 1 }),
+      },
+    });
+    expect(list.body).not.toHaveProperty('pagination');
+    expect(list.body.data.result[0].images).toEqual([
+      'https://cdn.example.com/pets/two.webp',
+    ]);
 
     await PetModel.create({
       ...petData,
@@ -266,8 +309,8 @@ describe('Pet API', () => {
       })
       .set(seller);
     expect(filteredList.status).toBe(STATUES.SUCCESS);
-    expect(filteredList.body.pagination.totalItems).toBe(1);
-    expect(filteredList.body.data[0]).toMatchObject({
+    expect(filteredList.body.data.pagination.totalItems).toBe(1);
+    expect(filteredList.body.data.result[0]).toMatchObject({
       title: 'Persian adult',
       quantity: 7,
       inEnable: false,
@@ -276,12 +319,16 @@ describe('Pet API', () => {
     expect(
       (await request(app).get('/api/pets/get-full-info-paginate-list')).status,
     ).toBe(STATUES.NOT_FOUND);
+    expect(
+      (await request(app).patch(`/api/pets/${pet._id}`).send({ quantity: 1 }))
+        .status,
+    ).toBe(STATUES.NOT_FOUND);
   });
 
   test('validates breed/type compatibility during partial updates', async () => {
     const pet = await PetModel.create(petData);
     const response = await request(app)
-      .patch(`/api/pets/${pet._id}`)
+      .put(`/api/pets/${pet._id}`)
       .send({ breed: dogBreed._id.toString() });
     expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
     expect(response.body.message).toContain('متعلق');
@@ -311,10 +358,47 @@ describe('Pet API', () => {
 
     const response = await request(app).get('/api/pets');
     expect(response.status).toBe(STATUES.SUCCESS);
-    expect(response.body.data).toHaveLength(1);
-    expect(response.body.data[0]).not.toHaveProperty('images');
-    expect(response.body.data[0].petType).toBe('Cat');
-    expect(response.body.data[0].breed).toBe('Persian');
+    expect(response.body.data.result).toHaveLength(1);
+    expect(response.body.data.pagination.totalItems).toBe(1);
+    expect(response.body.data.result[0]).not.toHaveProperty('images');
+    expect(response.body.data.result[0].petType).toBe('Cat');
+    expect(response.body.data.result[0].breed).toBe('Persian');
+  });
+
+  test('customer pagination returns full enabled pet data with public filters', async () => {
+    await PetModel.create(petData);
+    await PetModel.create({
+      ...petData,
+      title: 'Budget Persian',
+      price: 500,
+      slug: 'budget-persian',
+    });
+    await PetModel.create({
+      ...petData,
+      title: 'Hidden Persian',
+      price: 500,
+      inEnable: false,
+      slug: 'hidden-persian',
+    });
+
+    const response = await request(app)
+      .get('/api/pets/customer/paginate')
+      .query({
+        title: 'budget',
+        petType: catType._id.toString(),
+        breed: catBreed._id.toString(),
+        priceRange: '400-600',
+      });
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data.pagination.totalItems).toBe(1);
+    expect(response.body.data.result[0]).toMatchObject({
+      title: 'Budget Persian',
+      price: 500,
+      images: basePetData.images,
+      inEnable: true,
+      petType: { title: 'Cat' },
+      breed: { title: 'Persian' },
+    });
   });
 
   test('customer detail expands relations and includes images', async () => {

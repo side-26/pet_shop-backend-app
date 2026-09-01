@@ -68,6 +68,7 @@ const persianFieldNames = {
   healthStatus: 'وضعیت سلامت',
   availability: 'در دسترس بودن',
   price: 'قیمت',
+  priceRange: 'بازه قیمت',
 
   quantity: 'تعداد',
   discountPercentage: 'درصد تخفیف',

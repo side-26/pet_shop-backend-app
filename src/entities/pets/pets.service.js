@@ -10,6 +10,9 @@ import {
   formatCustomerPetDetail,
   formatCustomerPetListItem,
   formatManagementPet,
+  formatPetBaseInfo,
+  formatPetImages,
+  formatPetPrice,
 } from './pets.helpers.js';
 import { PetModel } from './pets.model.js';
 
@@ -94,14 +97,32 @@ export class PetService {
     }
   }
 
-  static async update(id, data, userId, imageFile) {
+  static async updateBaseInfo(id, data, userId) {
     const currentPet = await this.findById(id);
     const petTypeId = data.petType || currentPet.petType;
     const breedId = data.breed || currentPet.breed;
-    const validations = [this.validateRelations(petTypeId, breedId)];
-    if (data.slug) validations.push(this.ensureUniqueSlug(data.slug, id));
-    await Promise.all(validations);
+    await this.validateRelations(petTypeId, breedId);
+    const pet = await PetModel.findByIdAndUpdate(
+      id,
+      { $set: { ...data, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return pet;
+  }
 
+  static async updateImages(id, data, userId, imageFile) {
+    if (!imageFile && !Object.prototype.hasOwnProperty.call(data, 'images')) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'حداقل یک تصویر باید ارسال شود',
+      });
+    }
+    const currentPet = await this.findById(id);
     const uploadedImage = imageFile
       ? await MainImageService.upload(imageFile, 'pets/main')
       : null;
@@ -111,7 +132,6 @@ export class PetService {
           mainImageThumbnail: uploadedImage.mainImageThumbnail,
         }
       : {};
-
     let pet;
     try {
       pet = await PetModel.findByIdAndUpdate(
@@ -140,8 +160,20 @@ export class PetService {
     return pet;
   }
 
-  static edit(id, data, userId, imageFile) {
-    return this.update(id, data, userId, imageFile);
+  static async updatePrice(id, data, userId) {
+    await this.findById(id);
+    const pet = await PetModel.findByIdAndUpdate(
+      id,
+      { $set: { ...data, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return pet;
   }
 
   static async setEnableStatus(id, inEnable, userId) {
@@ -180,6 +212,19 @@ export class PetService {
   }
 
   static async findManagementById(id) {
+    const pet = await this.findById(id);
+    return populateRelations(pet);
+  }
+
+  static findImagesById(id) {
+    return this.findById(id);
+  }
+
+  static findPriceById(id) {
+    return this.findById(id);
+  }
+
+  static async findBaseInfoById(id) {
     const pet = await this.findById(id);
     return populateRelations(pet);
   }
@@ -243,5 +288,21 @@ export class PetService {
 
   static formatCustomerDetail(pet) {
     return formatCustomerPetDetail(pet);
+  }
+
+  static formatCustomerDetails(pets) {
+    return pets.map(formatCustomerPetDetail);
+  }
+
+  static formatImages(pet) {
+    return formatPetImages(pet);
+  }
+
+  static formatPrice(pet) {
+    return formatPetPrice(pet);
+  }
+
+  static formatBaseInfo(pet) {
+    return formatPetBaseInfo(pet);
   }
 }

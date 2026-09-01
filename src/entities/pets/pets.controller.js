@@ -6,26 +6,37 @@ import {
 } from '#utils/helpers.js';
 
 import {
+  customerPetQuerySchema,
   createPetZodSchema,
   petIdSchema,
   petQuerySchema,
-  updatePetZodSchema,
+  updatePetBaseInfoZodSchema,
+  updatePetImagesZodSchema,
+  updatePetPriceZodSchema,
 } from './pets.schema.js';
 import { PetService } from './pets.service.js';
 
 const getUserId = (user) => user?.userId || user?.id;
-const updatePet = async (req, res, next, method) => {
+const updatePetSection = async (
+  req,
+  res,
+  next,
+  schema,
+  method,
+  formatter,
+  imageFile,
+) => {
   try {
     const { id } = returnFormValidation(petIdSchema, req.params);
-    const body = returnFormValidation(updatePetZodSchema, req.body);
+    const body = returnFormValidation(schema, req.body);
     const pet = await PetService[method](
       id,
       body,
       getUserId(req.user),
-      req.file,
+      imageFile,
     );
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: PetService.formatManagement(pet),
+      data: PetService[formatter](pet),
       message: 'اطلاعات حیوان با موفقیت ویرایش شد',
     });
   } catch (error) {
@@ -47,9 +58,35 @@ export const createPetController = async (req, res, next) => {
 };
 
 export const updatePetController = (req, res, next) =>
-  updatePet(req, res, next, 'update');
-export const editPetController = (req, res, next) =>
-  updatePet(req, res, next, 'edit');
+  updatePetSection(
+    req,
+    res,
+    next,
+    updatePetBaseInfoZodSchema,
+    'updateBaseInfo',
+    'formatBaseInfo',
+  );
+
+export const updatePetImagesController = (req, res, next) =>
+  updatePetSection(
+    req,
+    res,
+    next,
+    updatePetImagesZodSchema,
+    'updateImages',
+    'formatImages',
+    req.file,
+  );
+
+export const updatePetPriceController = (req, res, next) =>
+  updatePetSection(
+    req,
+    res,
+    next,
+    updatePetPriceZodSchema,
+    'updatePrice',
+    'formatPrice',
+  );
 
 export const getManagementPetController = async (req, res, next) => {
   try {
@@ -68,13 +105,36 @@ export const getManagementPetListController = async (req, res, next) => {
     const query = returnFormValidation(petQuerySchema, req.query);
     const result = await PetService.findManagementList(query);
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: PetService.formatManagementMany(result.result),
-      pagination: result.pagination,
+      data: {
+        result: PetService.formatManagementMany(result.result),
+        pagination: result.pagination,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
 };
+
+const getPetSection = async (req, res, next, method, formatter) => {
+  try {
+    const { id } = returnFormValidation(petIdSchema, req.params);
+    const pet = await PetService[method](id);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: PetService[formatter](pet),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getPetImagesController = (req, res, next) =>
+  getPetSection(req, res, next, 'findImagesById', 'formatImages');
+
+export const getPetPriceController = (req, res, next) =>
+  getPetSection(req, res, next, 'findPriceById', 'formatPrice');
+
+export const getPetBaseInfoController = (req, res, next) =>
+  getPetSection(req, res, next, 'findBaseInfoById', 'formatBaseInfo');
 
 const changePetStatus = async (req, res, next, method, message) => {
   try {
@@ -112,8 +172,25 @@ export const getCustomerPetListController = async (req, res, next) => {
     const query = returnFormValidation(petQuerySchema, req.query);
     const result = await PetService.findCustomerList(query);
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: PetService.formatCustomerList(result.result),
-      pagination: result.pagination,
+      data: {
+        result: PetService.formatCustomerList(result.result),
+        pagination: result.pagination,
+      },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getCustomerPetPaginateController = async (req, res, next) => {
+  try {
+    const query = returnFormValidation(customerPetQuerySchema, req.query);
+    const result = await PetService.findCustomerList(query);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: {
+        result: PetService.formatCustomerDetails(result.result),
+        pagination: result.pagination,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);

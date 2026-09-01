@@ -71,7 +71,7 @@ const data = {
   quantity: 0,
   price: 0,
   discountPercentage: 0,
-  enable: true,
+  inEnable: true,
   slug: 'persian-kitten',
 };
 const pet = { _id: id, ...data };
@@ -145,25 +145,69 @@ describe('PetService', () => {
     });
   });
 
-  test('update and edit perform partial updates against current relations', async () => {
+  test('updateBaseInfo updates only base fields and validates relations', async () => {
     PetModel.findById.mockResolvedValue(pet);
     PetModel.findByIdAndUpdate.mockResolvedValue({ ...pet, title: 'Edited' });
     await expect(
-      PetService.update(id, { title: 'Edited' }, userId),
+      PetService.updateBaseInfo(id, { title: 'Edited' }, userId),
     ).resolves.toMatchObject({ title: 'Edited' });
     expect(PetModel.findByIdAndUpdate).toHaveBeenCalledWith(
       id,
       { $set: { title: 'Edited', updatedBy: userId } },
       { returnDocument: 'after', runValidators: true },
     );
+  });
 
-    jest.spyOn(PetService, 'update').mockResolvedValue(pet);
-    await PetService.edit(id, { price: 1 }, userId);
-    expect(PetService.update).toHaveBeenCalledWith(
+  test('updateImages replaces image data and cleans up the previous main image', async () => {
+    const imageFile = { buffer: Buffer.from('replacement') };
+    const images = ['https://cdn.example.com/two.webp'];
+    PetModel.findById.mockResolvedValue(pet);
+    PetModel.findByIdAndUpdate.mockResolvedValue({ ...pet, images });
+    MainImageService.getStoredKey.mockReturnValue('pets/main/previous.webp');
+
+    await expect(
+      PetService.updateImages(id, { images }, userId, imageFile),
+    ).resolves.toMatchObject({ images });
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'pets/main/previous.webp',
+      { id, userId },
+    );
+  });
+
+  test('updateImages cleans a newly uploaded image when persistence fails', async () => {
+    const persistenceError = new Error('database failed');
+    PetModel.findById.mockResolvedValue(pet);
+    PetModel.findByIdAndUpdate.mockRejectedValue(persistenceError);
+
+    await expect(
+      PetService.updateImages(id, {}, userId, {
+        buffer: Buffer.from('replacement'),
+      }),
+    ).rejects.toBe(persistenceError);
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'pets/main/new.webp',
+      { id, userId },
+    );
+  });
+
+  test('updatePrice changes only price fields', async () => {
+    PetModel.findById.mockResolvedValue(pet);
+    PetModel.findByIdAndUpdate.mockResolvedValue({
+      ...pet,
+      price: 100,
+      discountPercentage: 5,
+    });
+    await PetService.updatePrice(
       id,
-      { price: 1 },
+      { price: 100, discountPercentage: 5 },
       userId,
-      undefined,
+    );
+    expect(PetModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      id,
+      {
+        $set: { price: 100, discountPercentage: 5, updatedBy: userId },
+      },
+      { returnDocument: 'after', runValidators: true },
     );
   });
 
@@ -194,6 +238,17 @@ describe('PetService', () => {
   test('management detail populates both relations', async () => {
     PetModel.findById.mockResolvedValue(pet);
     await expect(PetService.findManagementById(id)).resolves.toBe(pet);
+    expect(PetModel.populate).toHaveBeenCalledWith(pet, [
+      { path: 'petType' },
+      { path: 'breed' },
+    ]);
+  });
+
+  test('section getters return image, price, and populated base information', async () => {
+    PetModel.findById.mockResolvedValue(pet);
+    await expect(PetService.findImagesById(id)).resolves.toBe(pet);
+    await expect(PetService.findPriceById(id)).resolves.toBe(pet);
+    await expect(PetService.findBaseInfoById(id)).resolves.toBe(pet);
     expect(PetModel.populate).toHaveBeenCalledWith(pet, [
       { path: 'petType' },
       { path: 'breed' },
@@ -239,6 +294,21 @@ describe('PetService', () => {
       '',
       expect.any(Function),
     );
+
+    await PetService.findCustomerList({
+      page: 1,
+      limit: 10,
+      priceRange: { minimum: 10, maximum: 100 },
+    });
+    expect(getPaginationData).toHaveBeenLastCalledWith(
+      PetModel,
+      expect.objectContaining({
+        inEnable: true,
+        price: { $gte: 10, $lte: 100 },
+      }),
+      '',
+      expect.any(Function),
+    );
   });
 
   test('customer detail returns enabled records and rejects hidden records', async () => {
@@ -266,5 +336,21 @@ describe('PetService', () => {
     expect(detail.images).toEqual(data.images);
     expect(detail.petType).toMatchObject({ title: 'Cat' });
     expect(detail.breed).toMatchObject({ title: 'Persian' });
+    expect(PetService.formatCustomerDetails([populatedPet])).toEqual([detail]);
+    expect(PetService.formatImages(populatedPet)).toEqual({
+      mainImage: data.mainImage,
+      mainImageThumbnail: data.mainImageThumbnail,
+      imagesList: data.images,
+    });
+    expect(PetService.formatPrice(populatedPet)).toEqual({
+      price: data.price,
+      discountPercentage: data.discountPercentage,
+    });
+    expect(PetService.formatBaseInfo(populatedPet)).toMatchObject({
+      title: data.title,
+      quantity: data.quantity,
+      petType: expect.objectContaining({ title: 'Cat' }),
+      breed: expect.objectContaining({ title: 'Persian' }),
+    });
   });
 });

@@ -5,7 +5,7 @@ export const escapePetRegex = (value = '') =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const buildPetFilter = (
-  { title, petType, breed, quantity, isEnable } = {},
+  { title, petType, breed, quantity, isEnable, priceRange } = {},
   enabledOnly = false,
 ) => {
   const filter = {};
@@ -14,6 +14,9 @@ export const buildPetFilter = (
   if (petType) filter.petType = petType;
   if (breed) filter.breed = breed;
   if (quantity !== undefined) filter.quantity = quantity;
+  if (priceRange) {
+    filter.price = { $gte: priceRange.minimum, $lte: priceRange.maximum };
+  }
   if (title) {
     filter.title = { $regex: escapePetRegex(title), $options: 'i' };
   }
@@ -90,5 +93,38 @@ export const formatCustomerPetDetail = (pet) => {
     slug: value.slug,
     petType: PetTypeService.format(value.petType),
     breed: BreedService.format(value.breed),
+  };
+};
+
+export const formatPetImages = (pet) => {
+  const value = valueOf(pet);
+  return {
+    mainImage: value.mainImage,
+    mainImageThumbnail: value.mainImageThumbnail,
+    imagesList: value.images || [],
+  };
+};
+
+export const formatPetPrice = (pet) => {
+  const value = valueOf(pet);
+  return {
+    price: value.price,
+    discountPercentage: value.discountPercentage,
+  };
+};
+
+export const formatPetBaseInfo = (pet) => {
+  const value = valueOf(pet);
+  return {
+    title: value.title,
+    summary: value.summary,
+    description: value.description,
+    petType: value.petType?.title
+      ? PetTypeService.format(value.petType)
+      : relationId(value.petType),
+    breed: value.breed?.title
+      ? BreedService.format(value.breed)
+      : relationId(value.breed),
+    quantity: value.quantity,
   };
 };

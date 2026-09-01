@@ -41,6 +41,16 @@ const booleanSchema = preprocess(
   (value) => (value === 'true' ? true : value === 'false' ? false : value),
   boolean(),
 );
+const priceRangeSchema = string()
+  .trim()
+  .regex(/^\d+(?:\.\d+)?-\d+(?:\.\d+)?$/)
+  .transform((value) => {
+    const [minimum, maximum] = value.split('-').map(Number);
+    return { minimum, maximum };
+  })
+  .refine(({ minimum, maximum }) => minimum <= maximum, {
+    message: 'حداقل قیمت نباید بیشتر از حداکثر قیمت باشد',
+  });
 
 const petFields = {
   title: titleSchema,
@@ -77,7 +87,29 @@ export const createPetZodSchema = object({
   price: priceSchema.optional().default(0),
   discountPercentage: discountPercentageSchema.optional().default(0),
 });
-export const updatePetZodSchema = object(petRequestFields).partial();
+export const updatePetBaseInfoZodSchema = object({
+  title: titleSchema,
+  summary: summarySchema,
+  description: descriptionSchema,
+  petType: objectIdSchema,
+  breed: objectIdSchema,
+  quantity: quantitySchema,
+})
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'حداقل یک فیلد باید ارسال شود',
+  });
+export const updatePetImagesZodSchema = object({
+  images: imageListSchema,
+}).partial();
+export const updatePetPriceZodSchema = object({
+  price: priceSchema,
+  discountPercentage: discountPercentageSchema,
+})
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'حداقل یک فیلد باید ارسال شود',
+  });
 export const petModelUpdateZodSchema = object(petFields).partial();
 export const petIdSchema = object({ id: objectIdSchema });
 
@@ -87,6 +119,18 @@ export const petQuerySchema = object({
   breed: objectIdSchema.optional(),
   quantity: quantitySchema.optional(),
   isEnable: booleanSchema.optional(),
+  page: coerce.number().int().min(1).optional().default(1),
+  limit: coerce.number().int().min(1).max(100).optional().default(10),
+  sort: enumValue(['title', 'createdAt', 'updatedAt', 'price', 'quantity'])
+    .optional()
+    .default('createdAt'),
+});
+
+export const customerPetQuerySchema = object({
+  title: string().trim().max(150).optional(),
+  petType: objectIdSchema.optional(),
+  breed: objectIdSchema.optional(),
+  priceRange: priceRangeSchema.optional(),
   page: coerce.number().int().min(1).optional().default(1),
   limit: coerce.number().int().min(1).max(100).optional().default(10),
   sort: enumValue(['title', 'createdAt', 'updatedAt', 'price', 'quantity'])

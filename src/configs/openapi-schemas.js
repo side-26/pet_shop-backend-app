@@ -246,7 +246,7 @@ export const schemas = {
       slug: { type: 'string' },
     },
   },
-  PetMainImageUpdateBody: {
+  PetImagesUpdateBody: {
     type: 'object',
     properties: {
       mainImage: {
@@ -255,17 +255,25 @@ export const schemas = {
         description:
           'Optional replacement image; regenerates mainImageThumbnail',
       },
-      title: { type: 'string' },
       images: { type: 'array', items: { type: 'string', format: 'uri' } },
+    },
+  },
+  PetPriceUpdateBody: {
+    type: 'object',
+    properties: {
+      price: { type: 'number', minimum: 0 },
+      discountPercentage: { type: 'number', minimum: 0, maximum: 100 },
+    },
+  },
+  PetBaseInfoUpdateBody: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 150 },
       summary: { type: 'string' },
       description: { type: 'string' },
       petType: { type: 'string' },
       breed: { type: 'string' },
-      quantity: { type: 'number' },
-      price: { type: 'number' },
-      discountPercentage: { type: 'number' },
-      inEnable: { type: 'boolean' },
-      slug: { type: 'string' },
+      quantity: { type: 'integer', minimum: 0 },
     },
   },
   // ── User request bodies ──────────────────────────────────────────────────
