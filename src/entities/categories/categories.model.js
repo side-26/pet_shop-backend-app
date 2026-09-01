@@ -80,7 +80,10 @@ categorySchema.pre('save', function () {
       .trim()
       .replace(/[\s-]+/g, '-')
       .substring(0, 50);
-    this.slug = generatedSlug || `category-${this._id.toString().slice(-8)}`;
+    const categorySuffix = this.petType?.toString().slice(-8);
+    this.slug = generatedSlug
+      ? `${generatedSlug}-${categorySuffix}`
+      : `category-${this._id.toString().slice(-8)}`;
   }
 });
 

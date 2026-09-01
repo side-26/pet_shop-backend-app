@@ -130,17 +130,15 @@ export class CategoryService {
       });
     }
 
-    const uploadedImage = await MainImageService.upload(
-      imageFile,
-      'categories/main',
-    );
-    const previousKey = MainImageService.getStoredKey(
-      currentCategory.mainImage,
-      {
-        id: categoryId,
-        userId,
-      },
-    );
+    const uploadedImage = imageFile
+      ? await MainImageService.upload(imageFile, 'categories/main')
+      : null;
+    const imageUpdate = uploadedImage
+      ? {
+          mainImage: uploadedImage.mainImage,
+          mainThumbnailImage: uploadedImage.mainImageThumbnail,
+        }
+      : {};
     let updatedCategory;
     try {
       updatedCategory = await CategoryModel.findByIdAndUpdate(
@@ -149,9 +147,7 @@ export class CategoryService {
         {
           $set: {
             ...data,
-            mainImage: uploadedImage.mainImage,
-            mainThumbnailImage: uploadedImage.mainImageThumbnail,
-
+            ...imageUpdate,
             updatedBy: userId,
           },
         },
@@ -163,7 +159,7 @@ export class CategoryService {
         },
       );
     } catch (error) {
-      await MainImageService.cleanup(uploadedImage.key, {
+      await MainImageService.cleanup(uploadedImage?.key, {
         id: categoryId,
         userId,
       });
@@ -171,7 +167,7 @@ export class CategoryService {
     }
 
     if (!updatedCategory) {
-      await MainImageService.cleanup(uploadedImage.key, {
+      await MainImageService.cleanup(uploadedImage?.key, {
         id: categoryId,
         userId,
       });
@@ -182,7 +178,16 @@ export class CategoryService {
       });
     }
 
-    await MainImageService.cleanup(previousKey, { id: categoryId, userId });
+    if (uploadedImage) {
+      const previousKey = MainImageService.getStoredKey(
+        currentCategory.mainImage,
+        {
+          id: categoryId,
+          userId,
+        },
+      );
+      await MainImageService.cleanup(previousKey, { id: categoryId, userId });
+    }
 
     return updatedCategory;
   }

@@ -47,6 +47,10 @@ const baseProductData = {
   enable: true,
   slug: 'premium-cat-food',
 };
+const categoryImageFields = {
+  mainImage: 'https://cdn.example.com/categories/main.webp',
+  mainThumbnailImage: 'data:image/webp;base64,AAAA',
+};
 
 describe('Product API', () => {
   let app;
@@ -107,8 +111,18 @@ describe('Product API', () => {
       thumbnail: 'data:image/webp;base64,AAAA',
     });
     [category, otherCategory] = await CategoryModel.create([
-      { title: 'Food', petType: petType._id, enable: true },
-      { title: 'Accessories', petType: petType._id, enable: true },
+      {
+        ...categoryImageFields,
+        title: 'Food',
+        petType: petType._id,
+        isEnable: true,
+      },
+      {
+        ...categoryImageFields,
+        title: 'Accessories',
+        petType: petType._id,
+        isEnable: true,
+      },
     ]);
     [subCategory, otherSubCategory] = await SubCategoryModel.create([
       { title: 'Dry Food', category: category._id },

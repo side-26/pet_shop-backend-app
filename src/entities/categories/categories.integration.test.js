@@ -78,8 +78,19 @@ jest.mock('#configs/logger.js', () => ({
   },
 }));
 
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    createObjectKey: jest.fn(() => 'categories/main/generated.webp'),
+    uploadObject: jest.fn(async ({ key }) => key),
+    buildPublicUrl: jest.fn((key) => `https://cdn.example.com/${key}`),
+    deleteObject: jest.fn(async () => undefined),
+    getObjectKeyFromUrl: jest.fn(() => 'categories/main/previous.webp'),
+  },
+}));
+
 import express from 'express';
 import mongoose from 'mongoose';
+import sharp from 'sharp';
 import request from 'supertest';
 
 import { STATUES } from '#configs/constants.js';
@@ -99,8 +110,9 @@ describe('Category API - Integration Tests', () => {
   let secondPetType;
 
   let testCategory;
+  let imageBuffer;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     app = express();
 
     app.use(express.json());
@@ -108,7 +120,29 @@ describe('Category API - Integration Tests', () => {
     app.use('/api', categoryRoutes);
 
     app.use(errorHandler);
+
+    imageBuffer = await sharp({
+      create: {
+        width: 100,
+        height: 80,
+        channels: 3,
+        background: '#336699',
+      },
+    })
+      .png()
+      .toBuffer();
   });
+
+  const multipartCategory = (requestBuilder, values) => {
+    let form = requestBuilder;
+    for (const [field, value] of Object.entries(values)) {
+      form = form.field(field, String(value));
+    }
+    return form.attach('mainImage', imageBuffer, {
+      filename: 'category.png',
+      contentType: 'image/png',
+    });
+  };
 
   beforeEach(async () => {
     await CategoryModel.deleteMany({});
@@ -140,7 +174,10 @@ describe('Category API - Integration Tests', () => {
 
       petType: testPetType._id,
 
-      enable: true,
+      mainImage: 'https://cdn.example.com/categories/main/food.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
+      slug: 'food',
+      isEnable: true,
 
       createdAt: new Date(),
 
@@ -156,14 +193,13 @@ describe('Category API - Integration Tests', () => {
 
   describe('POST /api/categories', () => {
     test('should create a new category', async () => {
-      const res = await request(app)
-        .post('/api/categories')
-        .send({
+      const res = await multipartCategory(
+        request(app).post('/api/categories'),
+        {
           title: 'Toys',
-
           petType: testPetType._id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
+        },
+      ).set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.CREATED);
 
@@ -174,7 +210,7 @@ describe('Category API - Integration Tests', () => {
       expect(res.body.data).toMatchObject({
         title: 'Toys',
 
-        enable: true,
+        isEnable: true,
       });
 
       expect(res.body.data.petType.toString()).toBe(testPetType._id.toString());
@@ -185,27 +221,25 @@ describe('Category API - Integration Tests', () => {
 
       expect(created).not.toBeNull();
 
-      expect(created.enable).toBe(true);
+      expect(created.isEnable).toBe(true);
     });
 
-    test('should create category with enable=false', async () => {
-      const res = await request(app)
-        .post('/api/categories')
-        .send({
+    test('should create category with isEnable=false', async () => {
+      const res = await multipartCategory(
+        request(app).post('/api/categories'),
+        {
           title: 'Medicine',
-
           petType: testPetType._id.toString(),
-
-          enable: false,
-        })
-        .set('Authorization', 'Bearer token');
+          isEnable: false,
+        },
+      ).set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.CREATED);
 
       expect(res.body.data).toMatchObject({
         title: 'Medicine',
 
-        enable: false,
+        isEnable: false,
       });
     });
 
@@ -247,14 +281,13 @@ describe('Category API - Integration Tests', () => {
     test('should return 422 if petType does not exist', async () => {
       const id = new mongoose.Types.ObjectId();
 
-      const res = await request(app)
-        .post('/api/categories')
-        .send({
+      const res = await multipartCategory(
+        request(app).post('/api/categories'),
+        {
           title: 'Toys',
-
           petType: id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
+        },
+      ).set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
@@ -262,14 +295,13 @@ describe('Category API - Integration Tests', () => {
     });
 
     test('should return 422 if title already exists for same petType', async () => {
-      const res = await request(app)
-        .post('/api/categories')
-        .send({
+      const res = await multipartCategory(
+        request(app).post('/api/categories'),
+        {
           title: 'Food',
-
           petType: testPetType._id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
+        },
+      ).set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
@@ -277,29 +309,28 @@ describe('Category API - Integration Tests', () => {
     });
 
     test('should detect duplicate title case-insensitively', async () => {
-      const res = await request(app)
-        .post('/api/categories')
-        .send({
+      const res = await multipartCategory(
+        request(app).post('/api/categories'),
+        {
           title: 'food',
-
           petType: testPetType._id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
+        },
+      ).set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
     test('should allow same title for another petType', async () => {
-      const res = await request(app)
-        .post('/api/categories')
-        .send({
+      const res = await multipartCategory(
+        request(app).post('/api/categories'),
+        {
           title: 'Food',
-
           petType: secondPetType._id.toString(),
-        })
-        .set('Authorization', 'Bearer token');
+        },
+      ).set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.CREATED);
+      expect(res.body.data.slug).not.toBe(testCategory.slug);
     });
   });
 
@@ -314,7 +345,10 @@ describe('Category API - Integration Tests', () => {
 
         petType: testPetType._id,
 
-        enable: true,
+        mainImage: 'https://cdn.example.com/categories/main/toys.webp',
+        mainThumbnailImage: 'data:image/webp;base64,AAAA',
+        slug: 'toys',
+        isEnable: true,
 
         createdAt: new Date(),
 
@@ -338,7 +372,10 @@ describe('Category API - Integration Tests', () => {
 
         petType: testPetType._id,
 
-        enable: false,
+        mainImage: 'https://cdn.example.com/categories/main/medicine.webp',
+        mainThumbnailImage: 'data:image/webp;base64,AAAA',
+        slug: 'medicine',
+        isEnable: false,
 
         createdAt: new Date(),
 
@@ -363,7 +400,10 @@ describe('Category API - Integration Tests', () => {
 
         petType: testPetType._id,
 
-        enable: false,
+        mainImage: 'https://cdn.example.com/categories/main/medicine.webp',
+        mainThumbnailImage: 'data:image/webp;base64,AAAA',
+        slug: 'medicine',
+        isEnable: false,
 
         createdAt: new Date(),
 
@@ -381,7 +421,7 @@ describe('Category API - Integration Tests', () => {
       expect(res.body.data[0]).toMatchObject({
         title: 'Food',
 
-        enable: true,
+        isEnable: true,
       });
     });
 
@@ -391,7 +431,10 @@ describe('Category API - Integration Tests', () => {
 
         petType: secondPetType._id,
 
-        enable: true,
+        mainImage: 'https://cdn.example.com/categories/main/cat-food.webp',
+        mainThumbnailImage: 'data:image/webp;base64,AAAA',
+        slug: 'cat-food',
+        isEnable: true,
 
         createdAt: new Date(),
 
@@ -439,7 +482,7 @@ describe('Category API - Integration Tests', () => {
       expect(res.body.data).toMatchObject({
         title: 'Food',
 
-        enable: true,
+        isEnable: true,
       });
 
       expect(res.body.data.id.toString()).toBe(testCategory._id.toString());
@@ -471,7 +514,7 @@ describe('Category API - Integration Tests', () => {
   // =========================================================
 
   describe('PUT /api/categories/:id', () => {
-    test('should update category', async () => {
+    test('should update category without requiring a replacement image', async () => {
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}`)
         .send({
@@ -567,7 +610,10 @@ describe('Category API - Integration Tests', () => {
 
         petType: testPetType._id,
 
-        enable: true,
+        mainImage: 'https://cdn.example.com/categories/main/toys.webp',
+        mainThumbnailImage: 'data:image/webp;base64,AAAA',
+        slug: 'toys',
+        isEnable: true,
 
         createdAt: new Date(),
 
@@ -612,11 +658,11 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body.data.enable).toBe(false);
+      expect(res.body.data.isEnable).toBe(false);
 
       const updated = await CategoryModel.findById(testCategory._id);
 
-      expect(updated.enable).toBe(false);
+      expect(updated.isEnable).toBe(false);
     });
 
     test('should return 404 if category does not exist', async () => {
@@ -651,7 +697,7 @@ describe('Category API - Integration Tests', () => {
 
         {
           $set: {
-            enable: false,
+            isEnable: false,
           },
         },
       );
@@ -662,11 +708,11 @@ describe('Category API - Integration Tests', () => {
 
       expect(res.status).toBe(STATUES.SUCCESS);
 
-      expect(res.body.data.enable).toBe(true);
+      expect(res.body.data.isEnable).toBe(true);
 
       const updated = await CategoryModel.findById(testCategory._id);
 
-      expect(updated.enable).toBe(true);
+      expect(updated.isEnable).toBe(true);
     });
 
     test('should return 404 if category does not exist', async () => {

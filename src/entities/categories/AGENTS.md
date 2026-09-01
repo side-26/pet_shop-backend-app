@@ -19,8 +19,8 @@ References `PetTypeModel`; subcategories and products reference categories.
 ## Modification Rules
 
 - Validate pet-type relationships in the service.
-- Create and update require a `mainImage` multipart upload; persist its public URL as `mainImage` and its generated data URL as `mainThumbnailImage`.
-- Use `isEnable` for category status and generate the category `slug` from its title.
+- Create requires a `mainImage` multipart upload. Update accepts an optional replacement image and preserves the current image when it is omitted. Persist uploaded images as a public URL in `mainImage` and their generated data URL in `mainThumbnailImage`.
+- Use `isEnable` for category status. Generate new category slugs from the title with a pet-type suffix so equal titles under different pet types remain unique.
 - Treat public category contract changes as potential impacts on subcategories and products.
 
 ## Summary

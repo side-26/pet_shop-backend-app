@@ -127,9 +127,23 @@ describe('Breed API', () => {
     expect(bySlug.status).toBe(STATUES.SUCCESS);
     expect(bySlug.body.data.slug).toBe('persian-cat');
 
+    const editedWithoutImage = await multipartBreed(
+      request(app).put(`/api/breeds/${id}`),
+      {
+        ...breedData,
+        title: 'British Shorthair',
+        activityLevel: 1,
+      },
+      false,
+    );
+    expect(editedWithoutImage.status).toBe(STATUES.SUCCESS);
+    expect(editedWithoutImage.body.data.mainImage).toBe(
+      created.body.data.mainImage,
+    );
+
     const edited = await multipartBreed(request(app).put(`/api/breeds/${id}`), {
       ...breedData,
-      title: 'British Shorthair',
+      title: 'British Longhair',
       activityLevel: 1,
     });
     expect(edited.status).toBe(STATUES.SUCCESS);

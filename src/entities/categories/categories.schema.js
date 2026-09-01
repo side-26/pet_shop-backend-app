@@ -3,14 +3,18 @@ import { z } from 'zod';
 import { IMAGE_UPLOAD } from '#configs/constants.js';
 import '#configs/zod.config.js';
 
-const { boolean, enum: zodEnum, number, object, string } = z;
+const { boolean, enum: zodEnum, number, object, preprocess, string } = z;
 
 const mongoObjectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
+const booleanSchema = preprocess(
+  (value) => (value === 'true' ? true : value === 'false' ? false : value),
+  boolean(),
+);
 
 const categoryFields = {
   title: string().trim().min(2).max(50),
   petType: mongoObjectIdSchema,
-  isEnable: boolean().optional().default(true),
+  isEnable: booleanSchema.optional(),
 };
 
 export const categoryMainImageZodSchema = object({
@@ -21,7 +25,10 @@ export const categoryMainImageZodSchema = object({
     .max(IMAGE_UPLOAD.MAX_FILE_SIZE_BYTES),
 });
 
-export const createCategoryZodSchema = object(categoryFields);
+export const createCategoryZodSchema = object({
+  ...categoryFields,
+  isEnable: booleanSchema.optional().default(true),
+});
 export const updateCategoryZodSchema = object(categoryFields);
 export const categoryModelUpdateZodSchema = object(categoryFields).partial();
 export const categoryIdSchema = object({ id: mongoObjectIdSchema });

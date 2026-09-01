@@ -56,10 +56,48 @@ jest.mock('./categories.model.js', () => {
 });
 
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
 
 import { CategoryModel } from './categories.model.js';
-
+import {
+  createCategoryZodSchema,
+  updateCategoryZodSchema,
+} from './categories.schema.js';
 import { CategoryService } from './categories.service.js';
+
+describe('Category validation', () => {
+  const validCategory = {
+    title: 'Food',
+    petType: '65a4de97aff1fbb38c437111',
+  };
+
+  test.each([
+    ['true', true],
+    ['false', false],
+  ])('converts multipart isEnable=%s to %s', (isEnable, expected) => {
+    const result = createCategoryZodSchema.parse({
+      ...validCategory,
+      isEnable,
+    });
+
+    expect(result.isEnable).toBe(expected);
+  });
+
+  test('rejects an invalid multipart isEnable value', () => {
+    expect(() =>
+      createCategoryZodSchema.parse({
+        ...validCategory,
+        isEnable: 'yes',
+      }),
+    ).toThrow();
+  });
+
+  test('does not enable a category when update omits isEnable', () => {
+    const result = updateCategoryZodSchema.parse(validCategory);
+
+    expect(result).not.toHaveProperty('isEnable');
+  });
+});
 
 describe('CategoryService - Unit Tests', () => {
   let mockCategory;
@@ -396,7 +434,7 @@ describe('CategoryService - Unit Tests', () => {
   // UPDATE
   // =========================================================
 
-  test('update updates category', async () => {
+  test('update preserves the current image when no replacement is provided', async () => {
     const update = {
       title: 'Premium Food',
       petType: mockPetType._id,
@@ -434,8 +472,6 @@ describe('CategoryService - Unit Tests', () => {
       expect.objectContaining({
         $set: expect.objectContaining({
           ...update,
-          mainImage: expect.any(String),
-          mainThumbnailImage: expect.any(String),
           updatedBy: userId,
         }),
       }),
@@ -443,6 +479,58 @@ describe('CategoryService - Unit Tests', () => {
       {
         returnDocument: 'after',
         runValidators: true,
+      },
+    );
+
+    expect(MainImageService.upload).not.toHaveBeenCalled();
+    expect(MainImageService.cleanup).not.toHaveBeenCalled();
+  });
+
+  test('update replaces the current image when a new file is provided', async () => {
+    const update = {
+      title: 'Premium Food',
+      petType: mockPetType._id,
+    };
+    const userId = '65a4de97aff1fbb38c437952';
+    const imageFile = { buffer: Buffer.from('new image') };
+
+    CategoryModel.findById.mockResolvedValue(mockCategory);
+    PetTypeModel.findById.mockResolvedValue(mockPetType);
+    CategoryModel.findOne.mockResolvedValue(null);
+    CategoryModel.findByIdAndUpdate.mockResolvedValue({
+      ...mockCategory,
+      ...update,
+    });
+    MainImageService.getStoredKey.mockReturnValue(
+      'categories/main/previous.webp',
+    );
+
+    await CategoryService.update(mockCategory._id, update, userId, imageFile);
+
+    expect(MainImageService.upload).toHaveBeenCalledWith(
+      imageFile,
+      'categories/main',
+    );
+    expect(CategoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      mockCategory._id,
+      {
+        $set: {
+          ...update,
+          mainImage: 'https://cdn.example.com/categories/main/image.webp',
+          mainThumbnailImage: 'data:image/webp;base64,AAAA',
+          updatedBy: userId,
+        },
+      },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+      },
+    );
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'categories/main/previous.webp',
+      {
+        id: mockCategory._id,
+        userId,
       },
     );
   });

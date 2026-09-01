@@ -39,7 +39,7 @@ router.post(
 router.put(
   '/categories/:id',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/CategoryMultipartBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/CategoryUpdateMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   uploadMainImage,

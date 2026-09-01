@@ -143,35 +143,25 @@ describe('SubCategory API - Integration Tests', () => {
       isEnabled: true,
     });
 
-    const categoryResult = await CategoryModel.collection.insertOne({
+    testCategory = await CategoryModel.create({
       title: 'Food',
 
       petType: testPetType._id,
 
-      enable: true,
-
-      createdAt: new Date(),
-
-      updatedAt: new Date(),
+      mainImage: 'https://cdn.example.com/categories/main/food.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
+      isEnable: true,
     });
 
-    testCategory = await CategoryModel.findById(categoryResult.insertedId);
-
-    const secondCategoryResult = await CategoryModel.collection.insertOne({
+    secondCategory = await CategoryModel.create({
       title: 'Accessories',
 
       petType: secondPetType._id,
 
-      enable: true,
-
-      createdAt: new Date(),
-
-      updatedAt: new Date(),
+      mainImage: 'https://cdn.example.com/categories/main/accessories.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
+      isEnable: true,
     });
-
-    secondCategory = await CategoryModel.findById(
-      secondCategoryResult.insertedId,
-    );
 
     const result = await SubCategoryModel.collection.insertOne({
       title: 'Dry Food',

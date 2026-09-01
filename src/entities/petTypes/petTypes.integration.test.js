@@ -447,14 +447,15 @@ describe('PetType API - Integration Tests', () => {
   // =========================================================
 
   describe('PUT /api/pet-types/:id', () => {
-    it('should require mainImage when updating a pet type', async () => {
+    it('should preserve mainImage when updating without a replacement', async () => {
+      const previousMainImage = testPetType.mainImage;
       const res = await request(app)
         .put(`/api/pet-types/${testPetType._id}`)
         .field('title', 'Canine')
         .set('Authorization', 'Bearer token');
 
-      expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
-      expect(res.body.message).toBe('اطلاعات وارد شده معتبر نیست');
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data.mainImage).toBe(previousMainImage);
     });
 
     it('should update pet type', async () => {

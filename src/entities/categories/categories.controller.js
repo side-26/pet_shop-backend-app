@@ -50,10 +50,12 @@ export const updateCategoryController = async (req, res, next) => {
     const params = returnFormValidation(categoryIdSchema, req.params);
 
     const body = returnFormValidation(updateCategoryZodSchema, req.body);
-    returnFormValidation(categoryMainImageZodSchema, {
-      mimetype: req.file?.mimetype,
-      imageFileSize: req.file?.size,
-    });
+    if (req.file) {
+      returnFormValidation(categoryMainImageZodSchema, {
+        mimetype: req.file.mimetype,
+        imageFileSize: req.file.size,
+      });
+    }
 
     const category = await CategoryService.update(
       params.id,

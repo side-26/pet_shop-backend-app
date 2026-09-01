@@ -46,10 +46,12 @@ export const updateBreedController = async (req, res, next) => {
   try {
     const { id } = returnFormValidation(breedIdSchema, req.params);
     const body = returnFormValidation(updateBreedZodSchema, req.body);
-    returnFormValidation(breedMainImageZodSchema, {
-      mimetype: req.file?.mimetype,
-      imageFileSize: req.file?.size,
-    });
+    if (req.file) {
+      returnFormValidation(breedMainImageZodSchema, {
+        mimetype: req.file.mimetype,
+        imageFileSize: req.file.size,
+      });
+    }
     const breed = await BreedService.update(
       id,
       body,

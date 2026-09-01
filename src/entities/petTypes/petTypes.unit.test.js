@@ -71,14 +71,33 @@ jest.mock('./petTypes.cache.store.js', () => {
   };
 });
 
-import { PetTypeModel } from './petTypes.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
+
 import {
   __mockPetTypeCacheGetOrLoad as mockPetTypeCacheGetOrLoad,
   __mockPetTypeCacheInvalidate as mockPetTypeCacheInvalidate,
 } from './petTypes.cache.store.js';
-
+import { PetTypeModel } from './petTypes.model.js';
+import {
+  createPetTypeZodSchema,
+  updatePetTypeZodSchema,
+} from './petTypes.schema.js';
 import { PetTypeService } from './petTypes.service.js';
+
+describe('Pet type validation', () => {
+  test.each([
+    ['true', true],
+    ['false', false],
+  ])('converts multipart isEnabled=%s to %s', (isEnabled, expected) => {
+    expect(updatePetTypeZodSchema.parse({ isEnabled }).isEnabled).toBe(
+      expected,
+    );
+  });
+
+  test('keeps the create default when isEnabled is omitted', () => {
+    expect(createPetTypeZodSchema.parse({ title: 'Dog' }).isEnabled).toBe(true);
+  });
+});
 
 describe('PetTypeService - Unit Tests', () => {
   let mockPetType;
@@ -411,7 +430,7 @@ describe('PetTypeService - Unit Tests', () => {
   // UPDATE
   // =========================================================
 
-  test('update updates pet type', async () => {
+  test('update preserves the current image when no replacement is provided', async () => {
     const userId = '65a4de97aff1fbb38c437111';
 
     const update = {
@@ -441,14 +460,39 @@ describe('PetTypeService - Unit Tests', () => {
     expect(mockPetType.updatedBy).toBe(userId);
 
     expect(mockPetType.save).toHaveBeenCalled();
-    expect(MainImageService.cleanup).toHaveBeenCalledWith(
-      'pet-types/main/dog.webp',
-      { id: mockPetType._id, userId },
-    );
+    expect(MainImageService.upload).not.toHaveBeenCalled();
+    expect(MainImageService.cleanup).not.toHaveBeenCalled();
     expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Canine',
       }),
+    );
+  });
+
+  test('update replaces the current image when a new file is provided', async () => {
+    const userId = '65a4de97aff1fbb38c437111';
+    const imageFile = { buffer: Buffer.from('new image') };
+
+    PetTypeModel.findById.mockResolvedValue(mockPetType);
+    mockPetType.save.mockResolvedValue(mockPetType);
+
+    await PetTypeService.update(
+      mockPetType._id,
+      { description: 'Updated' },
+      userId,
+      imageFile,
+    );
+
+    expect(MainImageService.upload).toHaveBeenCalledWith(
+      imageFile,
+      'pet-types/main',
+    );
+    expect(mockPetType.mainImage).toBe(
+      'https://cdn.example.com/pet-types/main/new.webp',
+    );
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'pet-types/main/dog.webp',
+      { id: mockPetType._id, userId },
     );
   });
 

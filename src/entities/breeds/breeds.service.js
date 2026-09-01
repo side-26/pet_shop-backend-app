@@ -104,14 +104,15 @@ export class BreedService {
         code: ERROR_CODES.BREED_ALREADY_EXISTS,
       });
     }
-    const uploadedImage = await MainImageService.upload(
-      imageFile,
-      'breeds/main',
-    );
-    const previousKey = MainImageService.getStoredKey(currentBreed.mainImage, {
-      id,
-      userId,
-    });
+    const uploadedImage = imageFile
+      ? await MainImageService.upload(imageFile, 'breeds/main')
+      : null;
+    const imageUpdate = uploadedImage
+      ? {
+          mainImage: uploadedImage.mainImage,
+          thumbnailImage: uploadedImage.mainImageThumbnail,
+        }
+      : {};
     let breed;
     try {
       breed = await BreedModel.findByIdAndUpdate(
@@ -119,27 +120,32 @@ export class BreedService {
         {
           $set: {
             ...data,
-            mainImage: uploadedImage.mainImage,
-            thumbnailImage: uploadedImage.mainImageThumbnail,
+            ...imageUpdate,
             updatedBy: userId,
           },
         },
         { returnDocument: 'after', runValidators: true },
       );
     } catch (error) {
-      await MainImageService.cleanup(uploadedImage.key, { id, userId });
+      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
       throw error;
     }
 
     if (!breed) {
-      await MainImageService.cleanup(uploadedImage.key, { id, userId });
+      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'نژاد یافت نشد',
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
 
-    await MainImageService.cleanup(previousKey, { id, userId });
+    if (uploadedImage) {
+      const previousKey = MainImageService.getStoredKey(
+        currentBreed.mainImage,
+        { id, userId },
+      );
+      await MainImageService.cleanup(previousKey, { id, userId });
+    }
     return breed;
   }
 

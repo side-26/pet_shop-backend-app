@@ -133,19 +133,20 @@ export class PetTypeService {
       }
     }
 
-    const uploadedImage = await MainImageService.upload(
-      imageFile,
-      'pet-types/main',
-    );
-    const previousKey = MainImageService.getStoredKey(petType.mainImage, {
-      id,
-      userId,
-    });
+    const uploadedImage = imageFile
+      ? await MainImageService.upload(imageFile, 'pet-types/main')
+      : null;
+    const imageUpdate = uploadedImage
+      ? {
+          mainImage: uploadedImage.mainImage,
+          thumbnail: uploadedImage.mainImageThumbnail,
+        }
+      : {};
+    const previousKey = uploadedImage
+      ? MainImageService.getStoredKey(petType.mainImage, { id, userId })
+      : undefined;
 
-    Object.assign(petType, data, {
-      mainImage: uploadedImage.mainImage,
-      thumbnail: uploadedImage.mainImageThumbnail,
-    });
+    Object.assign(petType, data, imageUpdate);
 
     petType.updatedBy = userId;
 
@@ -153,11 +154,13 @@ export class PetTypeService {
     try {
       updatedPetType = await petType.save();
     } catch (error) {
-      await MainImageService.cleanup(uploadedImage.key, { id, userId });
+      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
       throw error;
     }
 
-    await MainImageService.cleanup(previousKey, { id, userId });
+    if (uploadedImage) {
+      await MainImageService.cleanup(previousKey, { id, userId });
+    }
 
     await petTypeCacheStore.invalidate(updatedPetType);
 

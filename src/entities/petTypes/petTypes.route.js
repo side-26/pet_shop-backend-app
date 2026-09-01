@@ -53,7 +53,7 @@ router.post(
 router.put(
   '/pet-types/:id',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetTypeMultipartBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetTypeUpdateMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   uploadPetTypeMainImage,

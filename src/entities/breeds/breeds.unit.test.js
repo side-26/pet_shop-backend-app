@@ -201,6 +201,27 @@ describe('BreedService', () => {
     );
   });
 
+  test('update preserves the current image when no replacement is provided', async () => {
+    BreedModel.findById.mockResolvedValue(breed);
+    BreedModel.findOne.mockResolvedValue(null);
+    BreedModel.findByIdAndUpdate.mockResolvedValue(breed);
+
+    await BreedService.update(id, data, id);
+
+    expect(MainImageService.upload).not.toHaveBeenCalled();
+    expect(MainImageService.cleanup).not.toHaveBeenCalled();
+    expect(BreedModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      id,
+      {
+        $set: {
+          ...data,
+          updatedBy: id,
+        },
+      },
+      { returnDocument: 'after', runValidators: true },
+    );
+  });
+
   test('create cleans up a new upload when persistence fails', async () => {
     BreedModel.findOne.mockResolvedValue(null);
     BreedModel.create.mockRejectedValue(new Error('database failed'));

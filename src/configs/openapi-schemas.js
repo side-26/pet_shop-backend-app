@@ -74,6 +74,21 @@ export const schemas = {
       propertyDefinitions: { type: 'array', items: { type: 'object' } },
     },
   },
+  PetTypeUpdateMultipartBody: {
+    type: 'object',
+    properties: {
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Optional replacement image smaller than 1 MB; regenerates thumbnail',
+      },
+      title: { type: 'string', minLength: 2, maxLength: 20 },
+      description: { type: 'string', maxLength: 150 },
+      isEnabled: { type: 'boolean' },
+      propertyDefinitions: { type: 'array', items: { type: 'object' } },
+    },
+  },
   BreedMultipartBody: {
     type: 'object',
     required: [
@@ -112,9 +127,56 @@ export const schemas = {
       propertyDefinitions: { type: 'array', items: { type: 'object' } },
     },
   },
+  BreedUpdateMultipartBody: {
+    type: 'object',
+    required: [
+      'title',
+      'petType',
+      'country',
+      'ageAverage',
+      'size',
+      'activityLevel',
+      'enable',
+    ],
+    properties: {
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Optional replacement image smaller than 1 MB; regenerates thumbnailImage',
+      },
+      title: { type: 'string', minLength: 2, maxLength: 100 },
+      petType: { type: 'string' },
+      country: {
+        type: 'string',
+        nullable: true,
+        minLength: 2,
+        maxLength: 100,
+      },
+      ageAverage: { type: 'string', minLength: 1, maxLength: 50 },
+      size: { type: 'integer', enum: [0, 1, 2, 3, 4] },
+      activityLevel: {
+        type: 'integer',
+        nullable: true,
+        enum: [0, 1, 2, 3, 4],
+      },
+      enable: { type: 'boolean' },
+      propertyDefinitions: { type: 'array', items: { type: 'object' } },
+    },
+  },
   CategoryMultipartBody: {
     type: 'object',
     required: ['mainImage', 'title', 'petType'],
+    properties: {
+      mainImage: { type: 'string', format: 'binary' },
+      title: { type: 'string', minLength: 2, maxLength: 50 },
+      petType: { type: 'string' },
+      isEnable: { type: 'boolean' },
+    },
+  },
+  CategoryUpdateMultipartBody: {
+    type: 'object',
+    required: ['title', 'petType'],
     properties: {
       mainImage: { type: 'string', format: 'binary' },
       title: { type: 'string', minLength: 2, maxLength: 50 },

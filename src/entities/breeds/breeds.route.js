@@ -72,7 +72,7 @@ router.post(
 router.put(
   '/breeds/:id',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BreedMultipartBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BreedUpdateMultipartBody' } } } } */
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   uploadBreedMainImage,

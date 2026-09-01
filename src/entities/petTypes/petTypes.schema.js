@@ -3,7 +3,21 @@ import { z } from 'zod';
 import { IMAGE_UPLOAD } from '#configs/constants.js';
 import '#configs/zod.config.js';
 
-const { array, boolean, enum: zodEnum, number, object, string, unknown } = z;
+const {
+  array,
+  boolean,
+  enum: zodEnum,
+  number,
+  object,
+  preprocess,
+  string,
+  unknown,
+} = z;
+
+const booleanSchema = preprocess(
+  (value) => (value === 'true' ? true : value === 'false' ? false : value),
+  boolean(),
+);
 
 const propertyDefinitionZodSchema = object({
   key: string()
@@ -78,14 +92,14 @@ export const petTypeMainImageZodSchema = object({
 export const createPetTypeZodSchema = object({
   title: string().min(2).max(20).trim(),
   description: string().max(150).optional().default(''),
-  isEnabled: boolean().optional().default(true),
+  isEnabled: booleanSchema.optional().default(true),
   propertyDefinitions: propertyDefinitionsZodSchema.optional().default([]),
 });
 
 export const updatePetTypeZodSchema = object({
   title: string().min(2).max(20).trim().optional(),
   description: string().max(150).optional(),
-  isEnabled: boolean().optional(),
+  isEnabled: booleanSchema.optional(),
   propertyDefinitions: propertyDefinitionsZodSchema.optional(),
 });
 

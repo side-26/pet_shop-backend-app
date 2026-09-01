@@ -99,10 +99,12 @@ export const getPetTypeBySlugController = async (req, res, next) => {
 export const updatePetTypeController = async (req, res, next) => {
   try {
     const body = returnFormValidation(updatePetTypeZodSchema, req.body);
-    returnFormValidation(petTypeMainImageZodSchema, {
-      mimetype: req.file?.mimetype,
-      imageFileSize: req.file?.size,
-    });
+    if (req.file) {
+      returnFormValidation(petTypeMainImageZodSchema, {
+        mimetype: req.file.mimetype,
+        imageFileSize: req.file.size,
+      });
+    }
 
     const petType = await PetTypeService.update(
       req.params.id,
