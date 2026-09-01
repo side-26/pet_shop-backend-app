@@ -95,6 +95,7 @@ const persianFieldNames = {
   // Status
   isEnabled: 'وضعیت فعال',
   isEnable: 'وضعیت فعال',
+  inEnable: 'وضعیت فعال',
   enable: 'وضعیت فعال',
 
   // Common

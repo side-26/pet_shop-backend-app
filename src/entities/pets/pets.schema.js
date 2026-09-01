@@ -54,7 +54,7 @@ const petFields = {
   quantity: quantitySchema,
   price: priceSchema,
   discountPercentage: discountPercentageSchema,
-  enable: booleanSchema,
+  inEnable: booleanSchema,
   slug: slugSchema,
 };
 
@@ -82,12 +82,11 @@ export const petModelUpdateZodSchema = object(petFields).partial();
 export const petIdSchema = object({ id: objectIdSchema });
 
 export const petQuerySchema = object({
-  search: string().trim().max(150).optional(),
+  title: string().trim().max(150).optional(),
   petType: objectIdSchema.optional(),
   breed: objectIdSchema.optional(),
-  includeDisabled: string()
-    .optional()
-    .transform((value) => value === 'true'),
+  quantity: quantitySchema.optional(),
+  isEnable: booleanSchema.optional(),
   page: coerce.number().int().min(1).optional().default(1),
   limit: coerce.number().int().min(1).max(100).optional().default(10),
   sort: enumValue(['title', 'createdAt', 'updatedAt', 'price', 'quantity'])

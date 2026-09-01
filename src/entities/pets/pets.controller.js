@@ -14,11 +14,6 @@ import {
 import { PetService } from './pets.service.js';
 
 const getUserId = (user) => user?.userId || user?.id;
-const getManagementQuery = (query) => ({
-  ...query,
-  includeDisabled: true,
-});
-
 const updatePet = async (req, res, next, method) => {
   try {
     const { id } = returnFormValidation(petIdSchema, req.params);
@@ -70,9 +65,7 @@ export const getManagementPetController = async (req, res, next) => {
 
 export const getManagementPetListController = async (req, res, next) => {
   try {
-    const query = getManagementQuery(
-      returnFormValidation(petQuerySchema, req.query),
-    );
+    const query = returnFormValidation(petQuerySchema, req.query);
     const result = await PetService.findManagementList(query);
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: PetService.formatManagementMany(result.result),

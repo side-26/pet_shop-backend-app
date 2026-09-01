@@ -204,6 +204,24 @@ export const schemas = {
       slug: { type: 'string' },
     },
   },
+  PetMainImageCreateBody: {
+    type: 'object',
+    required: ['mainImage'],
+    properties: {
+      mainImage: { type: 'string', format: 'binary' },
+      title: { type: 'string' },
+      images: { type: 'array', items: { type: 'string', format: 'uri' } },
+      summary: { type: 'string' },
+      description: { type: 'string' },
+      petType: { type: 'string' },
+      breed: { type: 'string' },
+      quantity: { type: 'number' },
+      price: { type: 'number' },
+      discountPercentage: { type: 'number' },
+      inEnable: { type: 'boolean' },
+      slug: { type: 'string' },
+    },
+  },
   MainImageUpdateBody: {
     type: 'object',
     properties: {
@@ -225,6 +243,28 @@ export const schemas = {
       price: { type: 'number' },
       discountPercentage: { type: 'number' },
       enable: { type: 'boolean' },
+      slug: { type: 'string' },
+    },
+  },
+  PetMainImageUpdateBody: {
+    type: 'object',
+    properties: {
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Optional replacement image; regenerates mainImageThumbnail',
+      },
+      title: { type: 'string' },
+      images: { type: 'array', items: { type: 'string', format: 'uri' } },
+      summary: { type: 'string' },
+      description: { type: 'string' },
+      petType: { type: 'string' },
+      breed: { type: 'string' },
+      quantity: { type: 'number' },
+      price: { type: 'number' },
+      discountPercentage: { type: 'number' },
+      inEnable: { type: 'boolean' },
       slug: { type: 'string' },
     },
   },

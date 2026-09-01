@@ -43,7 +43,7 @@ const basePetData = {
   quantity: 2,
   price: 12000000,
   discountPercentage: 10,
-  enable: true,
+  inEnable: true,
   slug: 'persian-kitten',
 };
 
@@ -233,22 +233,49 @@ describe('Pet API', () => {
 
     expect(
       (await request(app).patch(`/api/pets/${pet._id}/disable`).set(seller))
-        .body.data.enable,
+        .body.data.inEnable,
     ).toBe(false);
     expect(
       (await request(app).patch(`/api/pets/${pet._id}/enable`).set(seller)).body
-        .data.enable,
+        .data.inEnable,
     ).toBe(true);
     expect(
       (await request(app).get(`/api/pets/manage/${pet._id}`).set(seller))
         .status,
     ).toBe(STATUES.SUCCESS);
-    const list = await request(app)
-      .get('/api/pets/get-full-info-paginate-list')
-      .set(seller);
+    const list = await request(app).get('/api/pets/paginate').set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);
     expect(list.body.pagination.totalItems).toBe(1);
     expect(list.body.data[0].images).toEqual(basePetData.images);
+
+    await PetModel.create({
+      ...petData,
+      title: 'Persian adult',
+      quantity: 7,
+      inEnable: false,
+      slug: 'persian-adult',
+    });
+    const filteredList = await request(app)
+      .get('/api/pets/paginate')
+      .query({
+        title: 'adult',
+        petType: catType._id.toString(),
+        breed: catBreed._id.toString(),
+        quantity: 7,
+        isEnable: false,
+      })
+      .set(seller);
+    expect(filteredList.status).toBe(STATUES.SUCCESS);
+    expect(filteredList.body.pagination.totalItems).toBe(1);
+    expect(filteredList.body.data[0]).toMatchObject({
+      title: 'Persian adult',
+      quantity: 7,
+      inEnable: false,
+    });
+
+    expect(
+      (await request(app).get('/api/pets/get-full-info-paginate-list')).status,
+    ).toBe(STATUES.NOT_FOUND);
   });
 
   test('validates breed/type compatibility during partial updates', async () => {
@@ -279,7 +306,7 @@ describe('Pet API', () => {
       ...petData,
       title: 'Hidden kitten',
       slug: 'hidden-kitten',
-      enable: false,
+      inEnable: false,
     });
 
     const response = await request(app).get('/api/pets');
@@ -300,7 +327,7 @@ describe('Pet API', () => {
   });
 
   test('customer detail does not expose disabled pets', async () => {
-    const pet = await PetModel.create({ ...petData, enable: false });
+    const pet = await PetModel.create({ ...petData, inEnable: false });
     const response = await request(app).get(`/api/pets/customer/${pet._id}`);
     expect(response.status).toBe(STATUES.NOT_FOUND);
     expect(response.body.message).toBe('حیوان یافت نشد');

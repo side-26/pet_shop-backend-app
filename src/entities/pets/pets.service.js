@@ -144,11 +144,11 @@ export class PetService {
     return this.update(id, data, userId, imageFile);
   }
 
-  static async setEnableStatus(id, enable, userId) {
+  static async setEnableStatus(id, inEnable, userId) {
     await this.findById(id);
     const pet = await PetModel.findByIdAndUpdate(
       id,
-      { $set: { enable, updatedBy: userId } },
+      { $set: { inEnable, updatedBy: userId } },
       { returnDocument: 'after', runValidators: true },
     );
     if (!pet) {
@@ -219,7 +219,7 @@ export class PetService {
   }
 
   static async findCustomerById(id) {
-    const pet = await PetModel.findOne({ _id: id, enable: true });
+    const pet = await PetModel.findOne({ _id: id, inEnable: true });
     if (!pet) {
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'حیوان یافت نشد',

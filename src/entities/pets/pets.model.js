@@ -48,7 +48,7 @@ const petSchema = new mongoose.Schema(
       max: PET_LIMITS.MAX_DISCOUNT_PERCENTAGE,
       default: 0,
     },
-    enable: { type: Boolean, required: true, index: true },
+    inEnable: { type: Boolean, required: true, index: true },
     slug: {
       type: String,
       required: true,
@@ -93,7 +93,7 @@ petSchema.pre('save', function () {
       quantity: this.quantity,
       price: this.price,
       discountPercentage: this.discountPercentage,
-      enable: this.enable,
+      inEnable: this.inEnable,
       slug: this.slug,
     },
     'اعتبارسنجی حیوان ناموفق بود',
@@ -109,7 +109,7 @@ petSchema.pre('findOneAndUpdate', function () {
   );
 });
 
-petSchema.index({ enable: 1, petType: 1, breed: 1 });
+petSchema.index({ inEnable: 1, petType: 1, breed: 1 });
 petSchema.index({ title: 'text', description: 'text', summary: 'text' });
 
 export const PetModel = mongoose.model('Pets', petSchema);

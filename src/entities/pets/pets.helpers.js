@@ -5,15 +5,17 @@ export const escapePetRegex = (value = '') =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const buildPetFilter = (
-  { search, petType, breed, includeDisabled } = {},
+  { title, petType, breed, quantity, isEnable } = {},
   enabledOnly = false,
 ) => {
   const filter = {};
-  if (enabledOnly || !includeDisabled) filter.enable = true;
+  if (enabledOnly) filter.inEnable = true;
+  else if (isEnable !== undefined) filter.inEnable = isEnable;
   if (petType) filter.petType = petType;
   if (breed) filter.breed = breed;
-  if (search) {
-    filter.title = { $regex: escapePetRegex(search), $options: 'i' };
+  if (quantity !== undefined) filter.quantity = quantity;
+  if (title) {
+    filter.title = { $regex: escapePetRegex(title), $options: 'i' };
   }
   return filter;
 };
@@ -43,7 +45,7 @@ export const formatManagementPet = (pet) => {
     quantity: value.quantity,
     price: value.price,
     discountPercentage: value.discountPercentage,
-    enable: value.enable,
+    inEnable: value.inEnable,
     slug: value.slug,
     createdBy: value.createdBy,
     updatedBy: value.updatedBy,
@@ -64,7 +66,7 @@ export const formatCustomerPetListItem = (pet) => {
     quantity: value.quantity,
     price: value.price,
     discountPercentage: value.discountPercentage,
-    enable: value.enable,
+    inEnable: value.inEnable,
     slug: value.slug,
     petType: value.petType?.title,
     breed: value.breed?.title,
@@ -84,7 +86,7 @@ export const formatCustomerPetDetail = (pet) => {
     quantity: value.quantity,
     price: value.price,
     discountPercentage: value.discountPercentage,
-    enable: value.enable,
+    inEnable: value.inEnable,
     slug: value.slug,
     petType: PetTypeService.format(value.petType),
     breed: BreedService.format(value.breed),

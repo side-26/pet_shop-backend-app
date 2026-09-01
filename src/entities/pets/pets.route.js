@@ -24,7 +24,12 @@ const managementRoles = [ROLES.ADMIN, ROLES.SELLER];
 router.get('/pets', getCustomerPetListController);
 router.get('/pets/customer/:id', getCustomerPetController);
 router.get(
-  '/pets/get-full-info-paginate-list',
+  '/pets/paginate',
+  /* #swagger.parameters['title'] = { in: 'query', type: 'string' }
+     #swagger.parameters['petType'] = { in: 'query', type: 'string' }
+     #swagger.parameters['breed'] = { in: 'query', type: 'string' }
+     #swagger.parameters['quantity'] = { in: 'query', type: 'integer', minimum: 0 }
+     #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' } */
   authenticated,
   roleMiddleware(managementRoles),
   getManagementPetListController,
@@ -38,7 +43,7 @@ router.get(
 router.post(
   '/pets',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageCreateBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageCreateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
   uploadMainImage,
@@ -47,7 +52,7 @@ router.post(
 router.put(
   '/pets/:id',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageUpdateBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
   uploadMainImage,
@@ -56,7 +61,7 @@ router.put(
 router.patch(
   '/pets/:id',
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageUpdateBody' } } } } */
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
   uploadMainImage,

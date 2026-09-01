@@ -58,7 +58,7 @@ const breed = {
   petType: petTypeId,
   ageAverage: '12-17',
   size: 2,
-  enable: true,
+  inEnable: true,
 };
 const data = {
   title: 'Persian kitten',
@@ -169,10 +169,10 @@ describe('PetService', () => {
 
   test('setEnableStatus, enable, and disable update visibility', async () => {
     PetModel.findById.mockResolvedValue(pet);
-    PetModel.findByIdAndUpdate.mockResolvedValue({ ...pet, enable: false });
+    PetModel.findByIdAndUpdate.mockResolvedValue({ ...pet, inEnable: false });
     await expect(
       PetService.setEnableStatus(id, false, userId),
-    ).resolves.toMatchObject({ enable: false });
+    ).resolves.toMatchObject({ inEnable: false });
 
     const status = jest
       .spyOn(PetService, 'setEnableStatus')
@@ -208,15 +208,34 @@ describe('PetService', () => {
     const management = await PetService.findManagementList({
       page: 1,
       limit: 10,
-      includeDisabled: true,
+      title: 'Persian',
+      petType: petTypeId,
+      breed: breedId,
+      quantity: 0,
+      isEnable: false,
     });
     expect(management.result).toEqual([pet]);
+    expect(getPaginationData).toHaveBeenNthCalledWith(
+      1,
+      PetModel,
+      expect.objectContaining({
+        title: { $regex: 'Persian', $options: 'i' },
+        petType: petTypeId,
+        breed: breedId,
+        quantity: 0,
+        inEnable: false,
+        page: 1,
+        limit: 10,
+      }),
+      '',
+      expect.any(Function),
+    );
 
     const customer = await PetService.findCustomerList({ page: 1, limit: 10 });
     expect(customer.result).toEqual([pet]);
     expect(getPaginationData).toHaveBeenLastCalledWith(
       PetModel,
-      expect.objectContaining({ enable: true, page: 1, limit: 10 }),
+      expect.objectContaining({ inEnable: true, page: 1, limit: 10 }),
       '',
       expect.any(Function),
     );
@@ -225,7 +244,7 @@ describe('PetService', () => {
   test('customer detail returns enabled records and rejects hidden records', async () => {
     PetModel.findOne.mockResolvedValueOnce(pet).mockResolvedValueOnce(null);
     await expect(PetService.findCustomerById(id)).resolves.toBe(pet);
-    expect(PetModel.findOne).toHaveBeenCalledWith({ _id: id, enable: true });
+    expect(PetModel.findOne).toHaveBeenCalledWith({ _id: id, inEnable: true });
     await expect(PetService.findCustomerById(id)).rejects.toThrow(
       'حیوان یافت نشد',
     );

@@ -44,7 +44,7 @@ export const API_ROUTE_METHODS = [
   { path: '/breeds/:id/disable', methods: [patch] },
   { path: '/pets', methods: [get, post] },
   { path: '/pets/customer/:id', methods: [get] },
-  { path: '/pets/get-full-info-paginate-list', methods: [get] },
+  { path: '/pets/paginate', methods: [get] },
   { path: '/pets/manage/:id', methods: [get] },
   { path: '/pets/:id', methods: [put, patch, deleteMethod] },
   { path: '/pets/:id/enable', methods: [patch] },
