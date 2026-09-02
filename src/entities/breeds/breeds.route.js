@@ -50,6 +50,9 @@ router.get(
 );
 router.get(
   '/breeds',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.parameters['petType'] = { in: 'query', description: 'Pet type identifier used to filter breeds', type: 'string' }
+     #swagger.responses[200] = { description: 'Breed list filtered by pet type when provided' } */
   authenticated,
   roleMiddleware([ROLES.ADMIN, ROLES.SELLER]),
   getAllBreedsController,

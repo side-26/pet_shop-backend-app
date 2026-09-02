@@ -274,4 +274,34 @@ describe('Breed API', () => {
       ).status,
     ).toBe(STATUES.NO_ACCESS);
   });
+
+  test('filters the non-paginated list by pet type', async () => {
+    const dogType = await PetTypeModel.create({
+      title: 'Dog',
+      mainImage: 'https://cdn.example.com/pet-types/dog.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
+    const matchingBreed = await BreedModel.create({
+      ...breedData,
+      ...storedImageFields,
+      title: 'Persian Cat',
+      petType: petType._id,
+    });
+    await BreedModel.create({
+      ...breedData,
+      ...storedImageFields,
+      title: 'German Shepherd',
+      petType: dogType._id,
+    });
+
+    const response = await request(app)
+      .get('/api/breeds')
+      .query({ petType: petType._id.toString() });
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data).toEqual([
+      expect.objectContaining({ id: matchingBreed._id.toString() }),
+    ]);
+    expect(response.body.totalRecords).toBe(1);
+  });
 });

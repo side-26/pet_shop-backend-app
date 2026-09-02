@@ -277,11 +277,17 @@ describe('BreedService', () => {
     await expect(BreedService.delete(id)).rejects.toThrow('نژاد یافت نشد');
   });
 
-  test('findAll filters enabled breeds and sorts by title', () => {
+  test('findAll filters enabled breeds by pet type and sorts by title', () => {
     const sort = jest.fn().mockReturnValue('query');
     BreedModel.find.mockReturnValue({ sort });
     expect(BreedService.findAll()).toBe('query');
     expect(BreedModel.find).toHaveBeenCalledWith({ enable: true });
+
+    expect(BreedService.findAll({ petType: id })).toBe('query');
+    expect(BreedModel.find).toHaveBeenLastCalledWith({
+      enable: true,
+      petType: id,
+    });
   });
 
   test('findAllWithPagination delegates to the shared pagination helper', () => {
