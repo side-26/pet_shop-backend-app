@@ -72,7 +72,7 @@ export class PetService {
     const existingPet = await this.findOne({ slug, excludeId });
     if (existingPet) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'حیوانی با این نامک قبلاً ثبت شده است',
+        message: 'حیوانی با این عنوان قبلاً ثبت شده است',
         code: ERROR_CODES.PET_ALREADY_EXISTS,
       });
     }

@@ -134,7 +134,7 @@ describe('PetService', () => {
       PetService.ensureUniqueSlug(data.slug),
     ).resolves.toBeUndefined();
     await expect(PetService.ensureUniqueSlug(data.slug)).rejects.toThrow(
-      'نامک',
+      'عنوان',
     );
   });
 

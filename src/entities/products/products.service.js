@@ -75,7 +75,7 @@ export class ProductService {
     const existingProduct = await this.findOne({ slug, excludeId });
     if (existingProduct) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'محصولی با این نامک قبلاً ثبت شده است',
+        message: 'محصولی با این عنوان قبلاً ثبت شده است',
         code: ERROR_CODES.PRODUCT_ALREADY_EXISTS,
       });
     }

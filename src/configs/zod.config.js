@@ -72,7 +72,7 @@ const persianFieldNames = {
 
   quantity: 'تعداد',
   discountPercentage: 'درصد تخفیف',
-  slug: 'نامک',
+  slug: 'عنوان',
   summary: 'خلاصه',
   mainImage: 'تصویر اصلی',
   propertyDefinitions: 'ویژگی‌های نوع حیوان',

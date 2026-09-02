@@ -141,7 +141,7 @@ describe('ProductService', () => {
       ProductService.ensureUniqueSlug(data.slug),
     ).resolves.toBeUndefined();
     await expect(ProductService.ensureUniqueSlug(data.slug)).rejects.toThrow(
-      'نامک',
+      'عنوان',
     );
   });
 
