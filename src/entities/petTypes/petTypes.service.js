@@ -244,6 +244,10 @@ export class PetTypeService {
       });
     }
 
+    const mainImageKey = MainImageService.getStoredKey(petType.mainImage, {
+      id,
+    });
+    await MainImageService.cleanup(mainImageKey, { id });
     await petTypeCacheStore.invalidate(petType);
 
     return petType;

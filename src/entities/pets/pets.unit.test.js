@@ -290,7 +290,14 @@ describe('PetService', () => {
     PetModel.findByIdAndDelete
       .mockResolvedValueOnce(pet)
       .mockResolvedValueOnce(null);
+    MainImageService.getStoredKey
+      .mockReturnValueOnce('pets/main/deleted.webp')
+      .mockReturnValueOnce('pets/images/deleted.webp');
     await expect(PetService.delete(id)).resolves.toBe(pet);
+    expect(MainImageService.cleanupMany).toHaveBeenCalledWith(
+      ['pets/main/deleted.webp', 'pets/images/deleted.webp'],
+      { id },
+    );
     await expect(PetService.delete(id)).rejects.toThrow('حیوان یافت نشد');
   });
 

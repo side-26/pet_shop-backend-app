@@ -243,6 +243,10 @@ export class CategoryService {
       });
     }
 
+    const mainImageKey = MainImageService.getStoredKey(category.mainImage, {
+      id: categoryId,
+    });
+    await MainImageService.cleanup(mainImageKey, { id: categoryId });
     return category;
   }
 

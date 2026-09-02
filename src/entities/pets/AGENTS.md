@@ -7,7 +7,7 @@ Owns the pet catalog and its separate customer-facing and management-facing view
 ## Important Files
 
 - `pets.model.js` — pet persistence, limits, Zod-backed hooks, filters, and text indexes.
-- `pets.service.js` — pet-type/breed validation, CRUD, main-image upload and replacement, enable/disable, filtered pagination, and view formatting.
+- `pets.service.js` — pet-type/breed validation, CRUD, main/gallery image upload, replacement, and deletion, enable/disable, filtered pagination, and view formatting.
 - `pets.schema.js` — create, base-info, image, price, id, and management/customer query validation.
 - `pets.controller.js`, `pets.route.js`, and `pets.helpers.js` — route orchestration and customer/management filters and projections.
 - Colocated tests cover public and management behavior.

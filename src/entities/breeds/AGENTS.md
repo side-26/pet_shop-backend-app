@@ -7,7 +7,7 @@ Owns breed records associated with pet types, including management lifecycle, fi
 ## Important Files
 
 - `breeds.model.js` — persistence, Zod-backed hooks, property definitions, slug generation, and indexes.
-- `breeds.service.js` — validates pet-type relationships and owns CRUD, property-definition replacement/read formatting, slug lookup, main-image upload/replacement, thumbnail generation, status, filtering, pagination, and formatting.
+- `breeds.service.js` — validates pet-type relationships and owns CRUD, property-definition replacement/read formatting, slug lookup, main-image upload/replacement/deletion, thumbnail generation, status, filtering, pagination, and formatting.
 - `breeds.schema.js` — body, identifier, model-update, and query validation.
 - `breeds.controller.js`, `breeds.route.js`, and `breeds.helpers.js` — HTTP orchestration and pure filters/formatting.
 - Colocated tests cover service and route behavior.

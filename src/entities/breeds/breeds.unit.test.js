@@ -273,7 +273,14 @@ describe('BreedService', () => {
     BreedModel.findByIdAndDelete
       .mockResolvedValueOnce(breed)
       .mockResolvedValueOnce(null);
+    MainImageService.getStoredKey.mockReturnValueOnce(
+      'breeds/main/deleted.webp',
+    );
     await expect(BreedService.delete(id)).resolves.toBe(breed);
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'breeds/main/deleted.webp',
+      { id },
+    );
     await expect(BreedService.delete(id)).rejects.toThrow('نژاد یافت نشد');
   });
 

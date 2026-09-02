@@ -116,11 +116,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import sharp from 'sharp';
 
-import { PetTypeModel } from './petTypes.model.js';
-import petTypeRoutes from './petTypes.route.js';
-
 import { STATUES } from '#configs/constants.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
+import { ObjectStorageService } from '#services/objectStorage.service.js';
+
+import { PetTypeModel } from './petTypes.model.js';
+import petTypeRoutes from './petTypes.route.js';
 
 describe('PetType API - Integration Tests', () => {
   let app;
@@ -160,6 +161,8 @@ describe('PetType API - Integration Tests', () => {
   };
 
   beforeEach(async () => {
+    ObjectStorageService.deleteObject.mockClear();
+
     // Clean PetType collection before every test
     await PetTypeModel.deleteMany({});
 
@@ -672,6 +675,9 @@ describe('PetType API - Integration Tests', () => {
       const deletedPetType = await PetTypeModel.findById(testPetType._id);
 
       expect(deletedPetType).toBeNull();
+      expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+        'pet-types/main/previous.webp',
+      );
     });
 
     it('should return 404 if not found', async () => {

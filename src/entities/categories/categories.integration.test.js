@@ -98,6 +98,7 @@ import { STATUES } from '#configs/constants.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import { CategoryModel } from './categories.model.js';
 
@@ -145,6 +146,8 @@ describe('Category API - Integration Tests', () => {
   };
 
   beforeEach(async () => {
+    ObjectStorageService.deleteObject.mockClear();
+
     await CategoryModel.deleteMany({});
 
     await PetTypeModel.deleteMany({});
@@ -749,6 +752,9 @@ describe('Category API - Integration Tests', () => {
       const deleted = await CategoryModel.findById(testCategory._id);
 
       expect(deleted).toBeNull();
+      expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+        'categories/main/previous.webp',
+      );
     });
 
     test('should return 404 if category does not exist', async () => {

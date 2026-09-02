@@ -7,7 +7,7 @@ Owns product categories associated with pet types, including status management, 
 ## Important Files
 
 - `categories.model.js` — category persistence, Zod-backed hooks, generated slugs, images, and relationship indexes.
-- `categories.service.js` — CRUD, image lifecycle, status, pet-type validation, filtering, and formatting.
+- `categories.service.js` — CRUD, image upload/replacement/deletion lifecycle, status, pet-type validation, filtering, and formatting.
 - `categories.schema.js` — create, update, model-update, id, and query validation.
 - `categories.controller.js`, `categories.route.js`, and `categories.helpers.js` — protected HTTP operations and pure search helpers.
 - Colocated tests cover service and routes.

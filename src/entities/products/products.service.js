@@ -193,6 +193,13 @@ export class ProductService {
         code: ERROR_CODES.PRODUCT_NOT_FOUND,
       });
     }
+    const imageKeys = [
+      MainImageService.getStoredKey(product.mainImage, { id }),
+      ...(product.images || []).map((imageUrl) =>
+        MainImageService.getStoredKey(imageUrl, { id }),
+      ),
+    ];
+    await MainImageService.cleanupMany(imageKeys, { id });
     return product;
   }
 

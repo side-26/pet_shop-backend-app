@@ -7,7 +7,7 @@ Owns pet-type definitions, slugs, enablement state, and configurable property de
 ## Important Files
 
 - `petTypes.model.js` — persistence, virtual display name, hooks, indexes, and enabled/slug query statics.
-- `petTypes.service.js` — CRUD, Arvan-backed main-image upload/replacement, automatic thumbnail generation, status transitions, filtering, Redis-backed public reads, cache invalidation, and public formatting.
+- `petTypes.service.js` — CRUD, Arvan-backed main-image upload/replacement/deletion, automatic thumbnail generation, status transitions, filtering, Redis-backed public reads, cache invalidation, and public formatting.
 - `petTypes.cache.store.js` — owns the bounded Redis cache namespace and safe cache-aside reads for pet-type detail and list responses.
 - `petTypes.schema.js` — create, update, id, slug, query, bulk, and status validation.
 - `petTypes.controller.js` and `petTypes.route.js` — public reads plus protected management operations.

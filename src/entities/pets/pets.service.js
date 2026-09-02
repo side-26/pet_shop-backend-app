@@ -269,6 +269,13 @@ export class PetService {
         code: ERROR_CODES.PET_NOT_FOUND,
       });
     }
+    const imageKeys = [
+      MainImageService.getStoredKey(pet.mainImage, { id }),
+      ...(pet.images || []).map((imageUrl) =>
+        MainImageService.getStoredKey(imageUrl, { id }),
+      ),
+    ];
+    await MainImageService.cleanupMany(imageKeys, { id });
     return pet;
   }
 

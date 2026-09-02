@@ -30,6 +30,7 @@ jest.mock('#services/mainImage.service.js', () => ({
   MainImageService: {
     upload: jest.fn(),
     cleanup: jest.fn(),
+    cleanupMany: jest.fn(),
     getStoredKey: jest.fn(),
   },
 }));
@@ -204,7 +205,14 @@ describe('ProductService', () => {
     ProductModel.findByIdAndDelete
       .mockResolvedValueOnce(product)
       .mockResolvedValueOnce(null);
+    MainImageService.getStoredKey
+      .mockReturnValueOnce('products/main/deleted.webp')
+      .mockReturnValueOnce('products/images/deleted.webp');
     await expect(ProductService.delete(id)).resolves.toBe(product);
+    expect(MainImageService.cleanupMany).toHaveBeenCalledWith(
+      ['products/main/deleted.webp', 'products/images/deleted.webp'],
+      { id },
+    );
     await expect(ProductService.delete(id)).rejects.toThrow('محصول یافت نشد');
   });
 

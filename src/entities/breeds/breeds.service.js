@@ -195,6 +195,10 @@ export class BreedService {
         code: ERROR_CODES.BREED_NOT_FOUND,
       });
     }
+    const mainImageKey = MainImageService.getStoredKey(breed.mainImage, {
+      id,
+    });
+    await MainImageService.cleanup(mainImageKey, { id });
     return breed;
   }
 

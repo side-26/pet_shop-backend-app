@@ -669,6 +669,9 @@ describe('PetTypeService - Unit Tests', () => {
 
   test('delete permanently deletes pet type', async () => {
     PetTypeModel.findByIdAndDelete.mockResolvedValue(mockPetType);
+    MainImageService.getStoredKey.mockReturnValueOnce(
+      'pet-types/main/deleted.webp',
+    );
 
     const result = await PetTypeService.delete(mockPetType._id);
 
@@ -676,6 +679,10 @@ describe('PetTypeService - Unit Tests', () => {
 
     expect(PetTypeModel.findByIdAndDelete).toHaveBeenCalledWith(
       mockPetType._id,
+    );
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'pet-types/main/deleted.webp',
+      { id: mockPetType._id },
     );
     expect(mockPetTypeCacheInvalidate).toHaveBeenCalledWith(mockPetType);
   });

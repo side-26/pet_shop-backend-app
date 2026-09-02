@@ -785,6 +785,9 @@ describe('CategoryService - Unit Tests', () => {
 
   test('delete deletes category', async () => {
     CategoryModel.findByIdAndDelete.mockResolvedValue(mockCategory);
+    MainImageService.getStoredKey.mockReturnValueOnce(
+      'categories/main/deleted.webp',
+    );
 
     const result = await CategoryService.delete(mockCategory._id);
 
@@ -792,6 +795,10 @@ describe('CategoryService - Unit Tests', () => {
 
     expect(CategoryModel.findByIdAndDelete).toHaveBeenCalledWith(
       mockCategory._id,
+    );
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'categories/main/deleted.webp',
+      { id: mockCategory._id },
     );
   });
 
