@@ -99,9 +99,7 @@ export const updatePetBaseInfoZodSchema = object({
   .refine((value) => Object.keys(value).length > 0, {
     message: 'حداقل یک فیلد باید ارسال شود',
   });
-export const updatePetImagesZodSchema = object({
-  images: imageListSchema,
-}).partial();
+export const updatePetImagesZodSchema = object({}).strict();
 export const updatePetPriceZodSchema = object({
   price: priceSchema,
   discountPercentage: discountPercentageSchema,

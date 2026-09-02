@@ -3,7 +3,10 @@ import express from 'express';
 import { ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
-import { uploadMainImage } from '#middlewares/upload.middleware.js';
+import {
+  uploadPetCreateImages,
+  uploadPetUpdateImages,
+} from '#middlewares/upload.middleware.js';
 
 import {
   createPetController,
@@ -83,7 +86,7 @@ router.post(
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageCreateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
-  uploadMainImage,
+  uploadPetCreateImages,
   createPetController,
 );
 router.put(
@@ -100,7 +103,7 @@ router.put(
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetImagesUpdateBody' } } } } */
   authenticated,
   roleMiddleware(managementRoles),
-  uploadMainImage,
+  uploadPetUpdateImages,
   updatePetImagesController,
 );
 router.put(

@@ -29,7 +29,9 @@ jest.mock('./pets.model.js', () => ({
 jest.mock('#services/mainImage.service.js', () => ({
   MainImageService: {
     upload: jest.fn(),
+    uploadImages: jest.fn(),
     cleanup: jest.fn(),
+    cleanupMany: jest.fn(),
     getStoredKey: jest.fn(),
   },
 }));
@@ -87,6 +89,9 @@ describe('PetService', () => {
       mainImage: data.mainImage,
       mainImageThumbnail: data.mainImageThumbnail,
     });
+    MainImageService.uploadImages.mockResolvedValue([
+      { key: 'pets/images/one.webp', url: data.images[0] },
+    ]);
   });
 
   test('escapeRegex and findOne build safe lookups', async () => {
@@ -137,12 +142,38 @@ describe('PetService', () => {
     PetModel.findOne.mockResolvedValue(null);
     PetModel.create.mockResolvedValue(pet);
     await expect(
-      PetService.create(data, userId, { buffer: Buffer.from('image') }),
+      PetService.create(data, userId, { buffer: Buffer.from('main-image') }, [
+        { buffer: Buffer.from('gallery-image') },
+      ]),
     ).resolves.toBe(pet);
     expect(PetModel.create).toHaveBeenCalledWith({
       ...data,
       createdBy: userId,
     });
+    expect(MainImageService.uploadImages).toHaveBeenCalledWith(
+      [{ buffer: Buffer.from('gallery-image') }],
+      'pets/images',
+    );
+  });
+
+  test('create cleans every uploaded image when persistence fails', async () => {
+    const persistenceError = new Error('database failed');
+    PetModel.findOne.mockResolvedValue(null);
+    PetModel.create.mockRejectedValue(persistenceError);
+
+    await expect(
+      PetService.create(data, userId, { buffer: Buffer.from('main-image') }, [
+        { buffer: Buffer.from('gallery-image') },
+      ]),
+    ).rejects.toBe(persistenceError);
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'pets/main/new.webp',
+      { userId },
+    );
+    expect(MainImageService.cleanupMany).toHaveBeenCalledWith(
+      ['pets/images/one.webp'],
+      { userId },
+    );
   });
 
   test('updateBaseInfo updates only base fields and validates relations', async () => {
@@ -158,18 +189,31 @@ describe('PetService', () => {
     );
   });
 
-  test('updateImages replaces image data and cleans up the previous main image', async () => {
+  test('updateImages replaces every image and cleans up the previous image set', async () => {
     const imageFile = { buffer: Buffer.from('replacement') };
     const images = ['https://cdn.example.com/two.webp'];
+    const uploadedGalleryImage = {
+      key: 'pets/images/two.webp',
+      url: images[0],
+    };
     PetModel.findById.mockResolvedValue(pet);
     PetModel.findByIdAndUpdate.mockResolvedValue({ ...pet, images });
-    MainImageService.getStoredKey.mockReturnValue('pets/main/previous.webp');
+    MainImageService.uploadImages.mockResolvedValue([uploadedGalleryImage]);
+    MainImageService.getStoredKey
+      .mockReturnValueOnce('pets/main/previous.webp')
+      .mockReturnValueOnce('pets/images/previous.webp');
 
     await expect(
-      PetService.updateImages(id, { images }, userId, imageFile),
+      PetService.updateImages(id, {}, userId, imageFile, [
+        { buffer: Buffer.from('gallery-replacement') },
+      ]),
     ).resolves.toMatchObject({ images });
-    expect(MainImageService.cleanup).toHaveBeenCalledWith(
-      'pets/main/previous.webp',
+    expect(MainImageService.uploadImages).toHaveBeenCalledWith(
+      [{ buffer: Buffer.from('gallery-replacement') }],
+      'pets/images',
+    );
+    expect(MainImageService.cleanupMany).toHaveBeenCalledWith(
+      ['pets/main/previous.webp', 'pets/images/previous.webp'],
       { id, userId },
     );
   });
@@ -178,16 +222,31 @@ describe('PetService', () => {
     const persistenceError = new Error('database failed');
     PetModel.findById.mockResolvedValue(pet);
     PetModel.findByIdAndUpdate.mockRejectedValue(persistenceError);
+    MainImageService.uploadImages.mockResolvedValueOnce([]);
 
     await expect(
       PetService.updateImages(id, {}, userId, {
         buffer: Buffer.from('replacement'),
       }),
     ).rejects.toBe(persistenceError);
+    expect(MainImageService.cleanupMany).toHaveBeenCalledWith([], {
+      id,
+      userId,
+    });
     expect(MainImageService.cleanup).toHaveBeenCalledWith(
       'pets/main/new.webp',
-      { id, userId },
+      {
+        id,
+        userId,
+      },
     );
+  });
+
+  test('updateImages requires a replacement main image', async () => {
+    await expect(PetService.updateImages(id, {}, userId)).rejects.toThrow(
+      'تصویر اصلی باید ارسال شود',
+    );
+    expect(MainImageService.upload).not.toHaveBeenCalled();
   });
 
   test('updatePrice changes only price fields', async () => {

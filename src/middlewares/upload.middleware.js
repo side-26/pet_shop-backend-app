@@ -1,7 +1,11 @@
 import multer from 'multer';
 
 import { IMAGE_UPLOAD, STATUES } from '#configs/constants.js';
-import { imageUpload, petTypeImageUpload } from '#configs/upload.config.js';
+import {
+  imageUpload,
+  petCreateImageUpload,
+  petTypeImageUpload,
+} from '#configs/upload.config.js';
 
 const MULTER_ERROR_MESSAGES = {
   LIMIT_FILE_SIZE: 'حجم فایل بیشتر از حد مجاز است',
@@ -48,4 +52,24 @@ export const uploadBreedMainImage = handleUpload(
 
 export const uploadPetImages = handleUpload(
   imageUpload.array(IMAGE_UPLOAD.PET_IMAGES_FIELD, IMAGE_UPLOAD.MAX_PET_IMAGES),
+);
+
+export const uploadPetCreateImages = handleUpload(
+  petCreateImageUpload.fields([
+    { name: IMAGE_UPLOAD.MAIN_IMAGE_FIELD, maxCount: 1 },
+    {
+      name: IMAGE_UPLOAD.PET_IMAGES_FIELD,
+      maxCount: IMAGE_UPLOAD.MAX_PET_IMAGES,
+    },
+  ]),
+);
+
+export const uploadPetUpdateImages = handleUpload(
+  petCreateImageUpload.fields([
+    { name: IMAGE_UPLOAD.MAIN_IMAGE_FIELD, maxCount: 1 },
+    {
+      name: IMAGE_UPLOAD.PET_IMAGES_FIELD,
+      maxCount: IMAGE_UPLOAD.MAX_PET_IMAGES,
+    },
+  ]),
 );

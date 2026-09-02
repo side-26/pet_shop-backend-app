@@ -8,7 +8,7 @@ This folder owns shared integration-test environment setup.
 
 ### `setup.js`
 
-Loads test environment variables, starts MongoDB Memory Server, connects Mongoose before tests, clears collections between tests, and closes resources afterward.
+Loads test environment variables, connects Mongoose to a process-isolated database derived from `MONGODB_TEST_URI` (or starts MongoDB Memory Server when it is absent), clears collections between tests, and drops/disconnects the isolated database afterward.
 
 ## Dependencies
 
@@ -16,10 +16,10 @@ Loads test environment variables, starts MongoDB Memory Server, connects Mongoos
 
 ## Modification Rules
 
-- Keep setup deterministic and isolated from development or production databases.
+- Keep setup deterministic and isolated from development or production databases. Never connect integration tests directly to the configured base test-database name.
 - Do not add external network dependencies to test bootstrap.
 
 ## Summary
 
-- Integration tests share an ephemeral MongoDB lifecycle.
+- Each Jest process owns an isolated MongoDB lifecycle and deterministic database cleanup.
 - Unit tests remain independent of this setup.

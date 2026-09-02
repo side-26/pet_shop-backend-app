@@ -1865,6 +1865,7 @@ describe('User API - Integration Tests', () => {
         price: 100,
         discountPercentage: 0,
         enable: true,
+        inEnable: true,
         slug,
         category: new mongoose.Types.ObjectId(),
         petType: new mongoose.Types.ObjectId(),

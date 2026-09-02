@@ -21,7 +21,7 @@ References `PetTypeModel` and `BreedModel`; routes use authentication, role chec
 - Keep customer responses restricted to customer-safe formatting and enabled records.
 - Validate pet type and breed relationships in the service.
 - Persist full uploaded images as complete public URLs.
-- Accept the main image as a multipart upload and generate `mainImageThumbnail` server-side as a WebP Base64 Data URL.
+- On creation, accept `mainImage` and up to five `images` multipart files, optimize and upload them concurrently, persist their complete public URLs, and generate `mainImageThumbnail` server-side as a WebP Base64 Data URL.
 - Management pagination is exposed at `GET /pets/paginate` and filters by `title`, `petType`, `breed`, `quantity`, and `isEnable`.
 - Customer full-data pagination is exposed at `GET /pets/customer/paginate`, always restricts results to `inEnable: true`, and filters by `title`, `petType`, `breed`, and inclusive `priceRange=MIN-MAX`.
 - Every paginated pet response uses `data: { result, pagination }`; never place `pagination` beside `data`.

@@ -78,13 +78,14 @@ describe('Pet API', () => {
       .toBuffer();
   });
 
-  const multipartPet = (requestBuilder, values) => {
+  const multipartPet = (requestBuilder, values, galleryImages = []) => {
     let form = requestBuilder;
     for (const [field, value] of Object.entries(values)) {
       if (
         value === undefined ||
         field === 'mainImage' ||
-        field === 'mainImageThumbnail'
+        field === 'mainImageThumbnail' ||
+        field === 'images'
       ) {
         continue;
       }
@@ -92,10 +93,17 @@ describe('Pet API', () => {
         form = form.field(field, String(item));
       }
     }
-    return form.attach('mainImage', imageBuffer, {
+    form = form.attach('mainImage', imageBuffer, {
       filename: 'pet.png',
       contentType: 'image/png',
     });
+    for (const [index, galleryImage] of galleryImages.entries()) {
+      form = form.attach('images', galleryImage, {
+        filename: `pet-gallery-${index}.png`,
+        contentType: 'image/png',
+      });
+    }
+    return form;
   };
 
   beforeEach(async () => {
@@ -146,12 +154,16 @@ describe('Pet API', () => {
   });
 
   test('creates a valid pet and applies numeric defaults', async () => {
-    const response = await multipartPet(request(app).post('/api/pets'), {
-      ...petData,
-      quantity: undefined,
-      price: undefined,
-      discountPercentage: undefined,
-    });
+    const response = await multipartPet(
+      request(app).post('/api/pets'),
+      {
+        ...petData,
+        quantity: undefined,
+        price: undefined,
+        discountPercentage: undefined,
+      },
+      [imageBuffer, imageBuffer],
+    );
 
     expect(response.status).toBe(STATUES.CREATED);
     expect(response.body.data).toMatchObject({
@@ -163,6 +175,10 @@ describe('Pet API', () => {
     expect(saved.mainImage).toMatch(/^https:\/\/cdn\.example\.com\//);
     expect(saved.mainImageThumbnail).toMatch(/^data:image\/webp;base64,/);
     expect(Buffer.byteLength(saved.mainImageThumbnail)).toBeLessThan(10 * 1024);
+    expect(saved.images).toEqual([
+      'https://cdn.example.com/pets/main/generated.webp',
+      'https://cdn.example.com/pets/main/generated.webp',
+    ]);
   });
 
   test('rejects missing required fields and invalid percentages', async () => {
@@ -211,9 +227,12 @@ describe('Pet API', () => {
     const imageUpdated = await request(app)
       .put(`/api/pets/${pet._id}/images`)
       .set(seller)
-      .field('images', 'https://cdn.example.com/pets/two.webp')
       .attach('mainImage', imageBuffer, {
         filename: 'replacement.png',
+        contentType: 'image/png',
+      })
+      .attach('images', imageBuffer, {
+        filename: 'replacement-gallery.png',
         contentType: 'image/png',
       });
     expect(imageUpdated.status).toBe(STATUES.SUCCESS);
@@ -224,7 +243,7 @@ describe('Pet API', () => {
       petData.mainImageThumbnail,
     );
     expect(imageUpdated.body.data.imagesList).toEqual([
-      'https://cdn.example.com/pets/two.webp',
+      'https://cdn.example.com/pets/main/generated.webp',
     ]);
 
     const priceUpdated = await request(app)
@@ -242,7 +261,7 @@ describe('Pet API', () => {
       .set(seller);
     expect(images.status).toBe(STATUES.SUCCESS);
     expect(images.body.data.imagesList).toEqual([
-      'https://cdn.example.com/pets/two.webp',
+      'https://cdn.example.com/pets/main/generated.webp',
     ]);
 
     const price = await request(app)
@@ -288,7 +307,7 @@ describe('Pet API', () => {
     });
     expect(list.body).not.toHaveProperty('pagination');
     expect(list.body.data.result[0].images).toEqual([
-      'https://cdn.example.com/pets/two.webp',
+      'https://cdn.example.com/pets/main/generated.webp',
     ]);
 
     await PetModel.create({

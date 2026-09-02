@@ -88,6 +88,7 @@ describe('Order API', () => {
       price: 100,
       discountPercentage: 10,
       enable: true,
+      inEnable: true,
       slug,
       category: new mongoose.Types.ObjectId(),
       petType: new mongoose.Types.ObjectId(),

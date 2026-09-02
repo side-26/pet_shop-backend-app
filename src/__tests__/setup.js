@@ -8,6 +8,17 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 dotenv.config();
 
 let mongoServer;
+let isolatedTestDatabase;
+
+const createIsolatedTestDatabaseUri = (databaseUri) => {
+  const parsedUri = new URL(databaseUri);
+  const databaseName =
+    parsedUri.pathname.replace(/^\/+/, '') || 'pet_shop_test';
+
+  isolatedTestDatabase = `${databaseName}_jest_${process.pid}`;
+  parsedUri.pathname = `/${isolatedTestDatabase}`;
+  return parsedUri.toString();
+};
 
 // Increase global timeout for async hooks
 jest.setTimeout(60000);
@@ -15,8 +26,11 @@ jest.setTimeout(60000);
 beforeAll(async () => {
   // If MONGODB_TEST_URI is set, use it (real DB)
   if (process.env.MONGODB_TEST_URI) {
-    console.log('🧪 Using real test database:', process.env.MONGODB_TEST_URI);
-    await mongoose.connect(process.env.MONGODB_TEST_URI);
+    const testDatabaseUri = createIsolatedTestDatabaseUri(
+      process.env.MONGODB_TEST_URI,
+    );
+    console.log('🧪 Using isolated test database:', testDatabaseUri);
+    await mongoose.connect(testDatabaseUri);
   } else {
     // Otherwise, fallback to in‑memory (will download binary)
     console.warn(
@@ -36,9 +50,15 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  if (mongoServer) {
-    await mongoServer.stop();
+  try {
+    if (isolatedTestDatabase) {
+      await mongoose.connection.dropDatabase();
+    }
+  } finally {
+    await mongoose.disconnect();
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
   }
 });
 

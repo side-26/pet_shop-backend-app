@@ -35,6 +35,7 @@ describe('MainImageService', () => {
       'products/main/a.webp',
     );
     ObjectStorageService.uploadObject.mockResolvedValue('products/main/a.webp');
+    ObjectStorageService.deleteObject.mockResolvedValue(undefined);
     ObjectStorageService.buildPublicUrl.mockReturnValue(
       'https://cdn.example.com/products/main/a.webp',
     );
@@ -63,5 +64,44 @@ describe('MainImageService', () => {
       MainImageService.upload({ buffer: Buffer.from('bad') }, 'pets/main'),
     ).rejects.toThrow('تصویر اصلی ارسال‌شده معتبر نیست');
     expect(ObjectStorageService.uploadObject).not.toHaveBeenCalled();
+  });
+
+  test('optimizes and uploads gallery images in parallel', async () => {
+    const files = [
+      { buffer: Buffer.from('first') },
+      { buffer: Buffer.from('second') },
+    ];
+
+    await expect(
+      MainImageService.uploadImages(files, 'pets/images'),
+    ).resolves.toEqual([
+      {
+        key: 'products/main/a.webp',
+        url: 'https://cdn.example.com/products/main/a.webp',
+      },
+      {
+        key: 'products/main/a.webp',
+        url: 'https://cdn.example.com/products/main/a.webp',
+      },
+    ]);
+    expect(formatImageFile).toHaveBeenCalledTimes(2);
+    expect(createBlurThumbnail).not.toHaveBeenCalled();
+    expect(ObjectStorageService.uploadObject).toHaveBeenCalledTimes(2);
+  });
+
+  test('cleans successful gallery uploads when another upload fails', async () => {
+    ObjectStorageService.uploadObject
+      .mockResolvedValueOnce('pets/images/first.webp')
+      .mockRejectedValueOnce(new Error('upload failed'));
+
+    await expect(
+      MainImageService.uploadImages(
+        [{ buffer: Buffer.from('first') }, { buffer: Buffer.from('second') }],
+        'pets/images',
+      ),
+    ).rejects.toThrow('upload failed');
+    expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+      'pets/images/first.webp',
+    );
   });
 });

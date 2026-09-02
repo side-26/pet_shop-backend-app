@@ -210,7 +210,11 @@ export const schemas = {
     properties: {
       mainImage: { type: 'string', format: 'binary' },
       title: { type: 'string' },
-      images: { type: 'array', items: { type: 'string', format: 'uri' } },
+      images: {
+        type: 'array',
+        maxItems: 5,
+        items: { type: 'string', format: 'binary' },
+      },
       summary: { type: 'string' },
       description: { type: 'string' },
       petType: { type: 'string' },
@@ -248,14 +252,19 @@ export const schemas = {
   },
   PetImagesUpdateBody: {
     type: 'object',
+    required: ['mainImage'],
     properties: {
       mainImage: {
         type: 'string',
         format: 'binary',
         description:
-          'Optional replacement image; regenerates mainImageThumbnail',
+          'Required replacement image; regenerates mainImageThumbnail',
       },
-      images: { type: 'array', items: { type: 'string', format: 'uri' } },
+      images: {
+        type: 'array',
+        maxItems: 5,
+        items: { type: 'string', format: 'binary' },
+      },
     },
   },
   PetPriceUpdateBody: {

@@ -78,21 +78,51 @@ export class PetService {
     }
   }
 
-  static async create(data, userId, imageFile) {
+  static async create(data, userId, imageFile, imageFiles = []) {
     await Promise.all([
       this.validateRelations(data.petType, data.breed),
       this.ensureUniqueSlug(data.slug),
     ]);
-    const uploadedImage = await MainImageService.upload(imageFile, 'pets/main');
+
+    const uploadResults = await Promise.allSettled([
+      MainImageService.upload(imageFile, 'pets/main'),
+      MainImageService.uploadImages(imageFiles, 'pets/images'),
+    ]);
+    const uploadedMainImage =
+      uploadResults[0].status === 'fulfilled' ? uploadResults[0].value : null;
+    const uploadedImages =
+      uploadResults[1].status === 'fulfilled' ? uploadResults[1].value : [];
+    const failedUpload = uploadResults.find(
+      (result) => result.status === 'rejected',
+    );
+
+    if (failedUpload) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage?.key, { userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { userId },
+        ),
+      ]);
+      throw failedUpload.reason;
+    }
+
     try {
       return await PetModel.create({
         ...data,
-        mainImage: uploadedImage.mainImage,
-        mainImageThumbnail: uploadedImage.mainImageThumbnail,
+        mainImage: uploadedMainImage.mainImage,
+        mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
+        images: uploadedImages.map(({ url }) => url),
         createdBy: userId,
       });
     } catch (error) {
-      await MainImageService.cleanup(uploadedImage.key, { userId });
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { userId },
+        ),
+      ]);
       throw error;
     }
   }
@@ -116,22 +146,41 @@ export class PetService {
     return pet;
   }
 
-  static async updateImages(id, data, userId, imageFile) {
-    if (!imageFile && !Object.prototype.hasOwnProperty.call(data, 'images')) {
+  static async updateImages(id, data, userId, imageFile, imageFiles = []) {
+    if (!imageFile) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'حداقل یک تصویر باید ارسال شود',
+        message: 'تصویر اصلی باید ارسال شود',
       });
     }
     const currentPet = await this.findById(id);
-    const uploadedImage = imageFile
-      ? await MainImageService.upload(imageFile, 'pets/main')
-      : null;
-    const imageData = uploadedImage
-      ? {
-          mainImage: uploadedImage.mainImage,
-          mainImageThumbnail: uploadedImage.mainImageThumbnail,
-        }
-      : {};
+    const uploadResults = await Promise.allSettled([
+      MainImageService.upload(imageFile, 'pets/main'),
+      MainImageService.uploadImages(imageFiles, 'pets/images'),
+    ]);
+    const uploadedMainImage =
+      uploadResults[0].status === 'fulfilled' ? uploadResults[0].value : null;
+    const uploadedImages =
+      uploadResults[1].status === 'fulfilled' ? uploadResults[1].value : [];
+    const failedUpload = uploadResults.find(
+      (result) => result.status === 'rejected',
+    );
+
+    if (failedUpload) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage?.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      throw failedUpload.reason;
+    }
+
+    const imageData = {
+      mainImage: uploadedMainImage.mainImage,
+      mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
+      images: uploadedImages.map(({ url }) => url),
+    };
     let pet;
     try {
       pet = await PetModel.findByIdAndUpdate(
@@ -140,23 +189,35 @@ export class PetService {
         { returnDocument: 'after', runValidators: true },
       );
     } catch (error) {
-      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
       throw error;
     }
     if (!pet) {
-      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'حیوان یافت نشد',
         code: ERROR_CODES.PET_NOT_FOUND,
       });
     }
-    if (uploadedImage) {
-      const previousKey = MainImageService.getStoredKey(currentPet.mainImage, {
-        id,
-        userId,
-      });
-      await MainImageService.cleanup(previousKey, { id, userId });
-    }
+    const previousKeys = [
+      MainImageService.getStoredKey(currentPet.mainImage, { id, userId }),
+      ...(currentPet.images || []).map((imageUrl) =>
+        MainImageService.getStoredKey(imageUrl, { id, userId }),
+      ),
+    ];
+    await MainImageService.cleanupMany(previousKeys, { id, userId });
     return pet;
   }
 

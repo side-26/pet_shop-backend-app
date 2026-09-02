@@ -5,15 +5,20 @@ import { IMAGE_UPLOAD, STATUES } from '#configs/constants.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import {
   uploadAvatar,
+  uploadPetCreateImages,
   uploadPetImages,
+  uploadPetUpdateImages,
 } from '#middlewares/upload.middleware.js';
 
 const createApp = (path, middleware) => {
   const app = express();
   app.post(path, middleware, (req, res) => {
+    const files = Array.isArray(req.files)
+      ? req.files
+      : Object.values(req.files || {}).flat();
     res.status(STATUES.SUCCESS).json({
       file: req.file?.originalname ?? null,
-      files: req.files?.map((file) => file.originalname) ?? [],
+      files: files.map((file) => file.originalname),
       isBuffer: req.file ? Buffer.isBuffer(req.file.buffer) : null,
     });
   });
@@ -58,6 +63,51 @@ describe('upload middleware', () => {
 
     expect(response.status).toBe(STATUES.SUCCESS);
     expect(response.body.files).toHaveLength(IMAGE_UPLOAD.MAX_PET_IMAGES);
+  });
+
+  it('accepts one main image and a pet image list during creation', async () => {
+    let pendingRequest = request(
+      createApp('/pets/create', uploadPetCreateImages),
+    )
+      .post('/pets/create')
+      .attach(IMAGE_UPLOAD.MAIN_IMAGE_FIELD, Buffer.from('main-image'), {
+        filename: 'main.png',
+        contentType: 'image/png',
+      });
+
+    for (let index = 0; index < IMAGE_UPLOAD.MAX_PET_IMAGES; index += 1) {
+      pendingRequest = pendingRequest.attach(
+        IMAGE_UPLOAD.PET_IMAGES_FIELD,
+        Buffer.from(`image-${index}`),
+        {
+          filename: `pet-${index}.png`,
+          contentType: 'image/png',
+        },
+      );
+    }
+
+    const response = await pendingRequest;
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.files).toHaveLength(IMAGE_UPLOAD.MAX_PET_IMAGES + 1);
+  });
+
+  it('accepts one replacement main image and a gallery image list during updates', async () => {
+    const response = await request(
+      createApp('/pets/update-images', uploadPetUpdateImages),
+    )
+      .post('/pets/update-images')
+      .attach(IMAGE_UPLOAD.MAIN_IMAGE_FIELD, Buffer.from('main-image'), {
+        filename: 'main.png',
+        contentType: 'image/png',
+      })
+      .attach(IMAGE_UPLOAD.PET_IMAGES_FIELD, Buffer.from('gallery-image'), {
+        filename: 'gallery.png',
+        contentType: 'image/png',
+      });
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.files).toEqual(['main.png', 'gallery.png']);
   });
 
   it('rejects unsupported MIME types with the application error shape', async () => {

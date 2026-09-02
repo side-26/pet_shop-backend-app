@@ -45,6 +45,59 @@ export class MainImageService {
     };
   }
 
+  static async uploadImage(imageFile, directory) {
+    if (!imageFile?.buffer) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'تصویر باید ارسال شود',
+        code: 'IMAGE_REQUIRED',
+      });
+    }
+
+    let image;
+    try {
+      image = await formatImageFile(imageFile.buffer, IMAGE_FORMATS.WEBP);
+    } catch {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'تصویر ارسال‌شده معتبر نیست',
+        code: 'INVALID_IMAGE',
+      });
+    }
+
+    const key = ObjectStorageService.createObjectKey(
+      directory,
+      IMAGE_FORMATS.WEBP,
+    );
+    const uploadedKey = await ObjectStorageService.uploadObject({
+      key,
+      body: image,
+      contentType: 'image/webp',
+    });
+    return {
+      key: uploadedKey,
+      url: ObjectStorageService.buildPublicUrl(uploadedKey),
+    };
+  }
+
+  static async uploadImages(imageFiles = [], directory) {
+    const results = await Promise.allSettled(
+      imageFiles.map((imageFile) => this.uploadImage(imageFile, directory)),
+    );
+    const uploadedImages = results
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => result.value);
+    const failedUpload = results.find((result) => result.status === 'rejected');
+
+    if (failedUpload) {
+      await this.cleanupMany(
+        uploadedImages.map(({ key }) => key),
+        { directory },
+      );
+      throw failedUpload.reason;
+    }
+
+    return uploadedImages;
+  }
+
   static async cleanup(key, context) {
     if (!key) return;
     await ObjectStorageService.deleteObject(key).catch((error) =>
@@ -57,6 +110,10 @@ export class MainImageService {
         },
       ),
     );
+  }
+
+  static async cleanupMany(keys = [], context) {
+    await Promise.all(keys.map((key) => this.cleanup(key, context)));
   }
 
   static getStoredKey(imageUrl, context) {

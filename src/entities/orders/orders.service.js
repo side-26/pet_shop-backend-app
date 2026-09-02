@@ -3,6 +3,7 @@ import {
   ERROR_CODES,
   ORDER_IDENTIFIER,
   STATUES,
+  USER_ITEM_TYPES,
 } from '#configs/constants.js';
 import { UserService } from '#entities/users/users.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
@@ -35,7 +36,9 @@ export class OrderService {
     const hasInvalidItem = cart.items.some(
       (entry) =>
         !entry.item ||
-        entry.item.enable !== true ||
+        (entry.itemType === USER_ITEM_TYPES.PRODUCT
+          ? entry.item.enable !== true
+          : entry.item.inEnable !== true) ||
         !Number.isInteger(entry.quantity) ||
         entry.quantity < 1,
     );

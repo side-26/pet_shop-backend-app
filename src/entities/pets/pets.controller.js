@@ -25,6 +25,7 @@ const updatePetSection = async (
   method,
   formatter,
   imageFile,
+  imageFiles,
 ) => {
   try {
     const { id } = returnFormValidation(petIdSchema, req.params);
@@ -34,6 +35,7 @@ const updatePetSection = async (
       body,
       getUserId(req.user),
       imageFile,
+      imageFiles,
     );
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: PetService[formatter](pet),
@@ -47,7 +49,12 @@ const updatePetSection = async (
 export const createPetController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createPetZodSchema, req.body);
-    const pet = await PetService.create(body, getUserId(req.user), req.file);
+    const pet = await PetService.create(
+      body,
+      getUserId(req.user),
+      req.files?.mainImage?.[0],
+      req.files?.images || [],
+    );
     setSuccessResponse(res, STATUES.CREATED, {
       data: PetService.formatManagement(pet),
       message: 'حیوان با موفقیت ایجاد شد',
@@ -75,7 +82,8 @@ export const updatePetImagesController = (req, res, next) =>
     updatePetImagesZodSchema,
     'updateImages',
     'formatImages',
-    req.file,
+    req.files?.mainImage?.[0],
+    req.files?.images || [],
   );
 
 export const updatePetPriceController = (req, res, next) =>

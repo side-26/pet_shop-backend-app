@@ -36,6 +36,16 @@ export const imageUpload = multer({
   },
 });
 
+export const petCreateImageUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: petTypeImageFileFilter,
+  limits: {
+    fileSize: IMAGE_UPLOAD.MAX_FILE_SIZE_BYTES,
+    files: IMAGE_UPLOAD.MAX_PET_IMAGES + 1,
+    fields: IMAGE_UPLOAD.MAX_MULTIPART_FIELDS,
+  },
+});
+
 export const petTypeImageUpload = multer({
   storage: multer.memoryStorage(),
   fileFilter: imageFileFilter,
