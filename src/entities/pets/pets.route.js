@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { ROLES } from '#configs/constants.js';
+import { MANAGEMENT_ROLES, ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import {
@@ -27,7 +27,6 @@ import {
 } from './pets.controller.js';
 
 const router = express.Router();
-const managementRoles = [ROLES.ADMIN, ROLES.SELLER];
 
 router.get(
   '/pets',
@@ -53,31 +52,31 @@ router.get(
      #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' }
      #swagger.responses[200] = { description: 'Paginated management pet list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   getManagementPetListController,
 );
 router.get(
   '/pets/manage/:id',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   getManagementPetController,
 );
 router.get(
   '/pets/:id/images',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   getPetImagesController,
 );
 router.get(
   '/pets/:id/price',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   getPetPriceController,
 );
 router.get(
   '/pets/:id/base-info',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   getPetBaseInfoController,
 );
 router.post(
@@ -85,7 +84,7 @@ router.post(
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageCreateBody' } } } } */
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   uploadPetCreateImages,
   createPetController,
 );
@@ -94,7 +93,7 @@ router.put(
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetBaseInfoUpdateBody' } } } } */
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   updatePetController,
 );
 router.put(
@@ -102,7 +101,7 @@ router.put(
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetImagesUpdateBody' } } } } */
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   uploadPetUpdateImages,
   updatePetImagesController,
 );
@@ -111,19 +110,19 @@ router.put(
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetPriceUpdateBody' } } } } */
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   updatePetPriceController,
 );
 router.patch(
   '/pets/:id/enable',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   enablePetController,
 );
 router.patch(
   '/pets/:id/disable',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   disablePetController,
 );
 router.delete(

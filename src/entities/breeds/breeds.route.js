@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { ROLES } from '#configs/constants.js';
+import { MANAGEMENT_ROLES, ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadBreedMainImage } from '#middlewares/upload.middleware.js';
@@ -45,7 +45,7 @@ router.get(
      #swagger.parameters['activityLevel'] = { in: 'query', description: 'Breed activity level (0 to 4)', type: 'integer' }
      #swagger.responses[200] = { description: 'Paginated breed list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   authenticated,
-  roleMiddleware([ROLES.ADMIN, ROLES.SELLER]),
+  roleMiddleware(MANAGEMENT_ROLES),
   getAllBreedsWithPaginationController,
 );
 router.get(
@@ -54,7 +54,7 @@ router.get(
      #swagger.parameters['petType'] = { in: 'query', description: 'Pet type identifier used to filter breeds', type: 'string' }
      #swagger.responses[200] = { description: 'Breed list filtered by pet type when provided' } */
   authenticated,
-  roleMiddleware([ROLES.ADMIN, ROLES.SELLER]),
+  roleMiddleware(MANAGEMENT_ROLES),
   getAllBreedsController,
 );
 router.get(

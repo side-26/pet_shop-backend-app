@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { ROLES } from '#configs/constants.js';
+import { MANAGEMENT_ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 
@@ -14,7 +14,6 @@ import {
 } from './orders.controller.js';
 
 const router = express.Router();
-const managementRoles = [ROLES.ADMIN, ROLES.SELLER];
 
 router.post(
   '/orders',
@@ -45,7 +44,7 @@ router.get(
 router.get(
   '/orders/all',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   /*
     #swagger.tags = ['Orders']
     #swagger.summary = 'List all orders for Admin or Seller'
@@ -61,7 +60,7 @@ router.get(
 router.patch(
   '/orders/:id/delivery-state',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   /*
     #swagger.tags = ['Orders']
     #swagger.summary = 'Update order delivery state'
@@ -77,7 +76,7 @@ router.patch(
 router.patch(
   '/orders/:id/shipping-info',
   authenticated,
-  roleMiddleware(managementRoles),
+  roleMiddleware(MANAGEMENT_ROLES),
   /*
     #swagger.tags = ['Orders']
     #swagger.summary = 'Update order shipping information'

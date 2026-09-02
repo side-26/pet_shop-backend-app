@@ -77,6 +77,8 @@ export const ROLES = {
   SELLER: 'seller',
 };
 
+export const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SELLER];
+
 export const ORDER_STATUSES = {
   PENDING: 'pending',
   PROCESSING: 'processing',

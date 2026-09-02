@@ -6,7 +6,7 @@ This folder centralizes runtime environment access, MongoDB and object-storage c
 
 ## Important Files
 
-- `constants.js` — shared routes, statuses, roles, limits, error codes, integration settings, image settings, and rate-limit values.
+- `constants.js` — shared routes, statuses, roles and role groups, limits, error codes, integration settings, image settings, and rate-limit values.
 - `routeMethods.config.js` — centralized API path and allowed-method registry consumed before routers.
 - `env.config.js` — loads environment variables and exposes validated secret/API-key accessors.
 - `db.config.js` — opens and closes the Mongoose connection used by `src/server.js`.
