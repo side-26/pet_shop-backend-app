@@ -122,3 +122,19 @@ export const formatProductPrice = (product) => {
     discountPercentage: value.discountPercentage,
   };
 };
+
+export const formatProductMainInfo = (product) => {
+  const value = valueOf(product);
+  return {
+    title: value.title,
+    category: value.category?.title
+      ? CategoryService.format(value.category)
+      : relationId(value.category),
+    subCategory: value.subCategory?.title
+      ? SubCategoryService.format(value.subCategory)
+      : relationId(value.subCategory) || null,
+    quantity: value.quantity,
+    summary: value.summary,
+    description: value.description,
+  };
+};

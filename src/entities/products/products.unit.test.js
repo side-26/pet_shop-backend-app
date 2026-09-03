@@ -76,6 +76,7 @@ const product = { _id: id, ...data };
 
 describe('ProductService', () => {
   beforeEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
     CategoryModel.findById.mockResolvedValue(category);
     SubCategoryModel.findById.mockResolvedValue(subCategory);
@@ -269,6 +270,11 @@ describe('ProductService', () => {
     ProductModel.findById.mockResolvedValue(product);
     await expect(ProductService.findImagesById(id)).resolves.toBe(product);
     await expect(ProductService.findPriceById(id)).resolves.toBe(product);
+    await expect(ProductService.findMainInfoById(id)).resolves.toBe(product);
+    expect(ProductModel.populate).toHaveBeenCalledWith(product, [
+      { path: 'category' },
+      { path: 'subCategory' },
+    ]);
     expect(ProductService.formatImages(product)).toMatchObject({
       imagesList: data.images,
     });
@@ -276,6 +282,34 @@ describe('ProductService', () => {
       price: data.price,
       discountPercentage: data.discountPercentage,
     });
+    expect(ProductService.formatMainInfo(product)).toEqual({
+      title: data.title,
+      category: categoryId,
+      subCategory: subCategoryId,
+      quantity: data.quantity,
+      summary: undefined,
+      description: data.description,
+    });
+  });
+
+  test('main-info updates reuse product relation validation', async () => {
+    ProductModel.findById.mockResolvedValue(product);
+    ProductModel.findByIdAndUpdate.mockResolvedValue({
+      ...product,
+      title: 'Edited product',
+    });
+    await expect(
+      ProductService.updateMainInfo(id, { title: 'Edited product' }, userId),
+    ).resolves.toMatchObject({ title: 'Edited product' });
+    expect(ProductModel.populate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Edited product' }),
+      [{ path: 'category' }, { path: 'subCategory' }],
+    );
+    expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      id,
+      { $set: { title: 'Edited product', updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
   });
 
   test('management and customer lists reuse pagination with their filters', async () => {

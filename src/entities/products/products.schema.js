@@ -75,7 +75,7 @@ export const createProductZodSchema = object({
   subCategory: objectIdSchema.nullable().optional(),
   quantity: quantitySchema.optional().default(0),
 });
-export const updateProductZodSchema = object({
+export const updateProductMainInfoZodSchema = object({
   title: titleSchema,
   summary: summarySchema,
   description: descriptionSchema,
@@ -87,6 +87,7 @@ export const updateProductZodSchema = object({
   .refine((value) => Object.keys(value).length > 0, {
     message: 'حداقل یک فیلد باید ارسال شود',
   });
+export const updateProductZodSchema = updateProductMainInfoZodSchema;
 export const updateProductImagesZodSchema = object({}).strict();
 export const updateProductPriceZodSchema = object({
   price: priceSchema,

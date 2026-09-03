@@ -60,6 +60,7 @@ export const API_ROUTE_METHODS = [
   { path: '/products/:id', methods: [put, patch, deleteMethod] },
   { path: '/products/:id/images', methods: [get, put] },
   { path: '/products/:id/price', methods: [get, put] },
+  { path: '/products/:id/main-info', methods: [get, put] },
   { path: '/products/:id/enable', methods: [patch] },
   { path: '/products/:id/disable', methods: [patch] },
   { path: '/orders', methods: [get, post] },

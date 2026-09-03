@@ -4410,6 +4410,72 @@
         "tags": ["/products"]
       }
     },
+    "/products/{id}/main-info": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "GET, PUT" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "default": { "description": "" }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "tags": ["/products"]
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "GET, PUT" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "default": { "description": "" }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductBaseInfoUpdateBody"
+              }
+            }
+          }
+        },
+        "tags": ["/products"]
+      }
+    },
     "/products/{id}": {
       "put": {
         "description": "",

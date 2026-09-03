@@ -11,6 +11,7 @@ import {
   formatCustomerProductListItem,
   formatManagementProduct,
   formatProductImages,
+  formatProductMainInfo,
   formatProductPrice,
 } from './products.helpers.js';
 import { ProductModel } from './products.model.js';
@@ -139,6 +140,11 @@ export class ProductService {
 
   static edit(id, data, userId) {
     return this.update(id, data, userId);
+  }
+
+  static async updateMainInfo(id, data, userId) {
+    const product = await this.update(id, data, userId);
+    return populateRelations(product);
   }
 
   static async updateImages(id, userId, imageFile, imageFiles = []) {
@@ -287,6 +293,11 @@ export class ProductService {
     return this.findById(id);
   }
 
+  static async findMainInfoById(id) {
+    const product = await this.findById(id);
+    return populateRelations(product);
+  }
+
   static async findManagementList(queryParams = {}) {
     const filter = {
       ...buildProductFilter(queryParams),
@@ -354,5 +365,9 @@ export class ProductService {
 
   static formatPrice(product) {
     return formatProductPrice(product);
+  }
+
+  static formatMainInfo(product) {
+    return formatProductMainInfo(product);
   }
 }

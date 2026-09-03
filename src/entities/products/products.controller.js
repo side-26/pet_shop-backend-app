@@ -10,6 +10,7 @@ import {
   productIdSchema,
   productQuerySchema,
   updateProductImagesZodSchema,
+  updateProductMainInfoZodSchema,
   updateProductPriceZodSchema,
   updateProductZodSchema,
 } from './products.schema.js';
@@ -106,6 +107,15 @@ export const updateProductPriceController = (req, res, next) =>
     'updatePrice',
     'formatPrice',
   );
+export const updateProductMainInfoController = (req, res, next) =>
+  updateProductSection(
+    req,
+    res,
+    next,
+    updateProductMainInfoZodSchema,
+    'updateMainInfo',
+    'formatMainInfo',
+  );
 
 export const getManagementProductController = async (req, res, next) => {
   try {
@@ -150,6 +160,8 @@ export const getProductImagesController = (req, res, next) =>
   getProductSection(req, res, next, 'findImagesById', 'formatImages');
 export const getProductPriceController = (req, res, next) =>
   getProductSection(req, res, next, 'findPriceById', 'formatPrice');
+export const getProductMainInfoController = (req, res, next) =>
+  getProductSection(req, res, next, 'findMainInfoById', 'formatMainInfo');
 
 const changeProductStatus = async (req, res, next, method, message) => {
   try {

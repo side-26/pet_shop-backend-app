@@ -19,9 +19,11 @@ import {
   getManagementProductController,
   getManagementProductListController,
   getProductImagesController,
+  getProductMainInfoController,
   getProductPriceController,
   updateProductController,
   updateProductImagesController,
+  updateProductMainInfoController,
   updateProductPriceController,
 } from './products.controller.js';
 
@@ -60,6 +62,13 @@ router.get(
   roleMiddleware(MANAGEMENT_ROLES),
   getProductPriceController,
 );
+router.get(
+  '/products/:id/main-info',
+  /* #swagger.security = [{ "bearerAuth": [] }] */
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  getProductMainInfoController,
+);
 router.post(
   '/products',
   /* #swagger.security = [{ "bearerAuth": [] }]
@@ -84,6 +93,14 @@ router.patch(
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   editProductController,
+);
+router.put(
+  '/products/:id/main-info',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductBaseInfoUpdateBody' } } } } */
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  updateProductMainInfoController,
 );
 router.put(
   '/products/:id/images',

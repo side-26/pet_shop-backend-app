@@ -244,6 +244,30 @@ describe('Product API', () => {
       .send({ title: 'Updated food' });
     expect(updated.status).toBe(STATUES.SUCCESS);
     expect(updated.body.data.title).toBe('Updated food');
+    const mainInfoUpdated = await request(app)
+      .put(`/api/products/${product._id}/main-info`)
+      .set(seller)
+      .send({
+        category: category._id.toString(),
+        subCategory: subCategory._id.toString(),
+        quantity: 9,
+        summary: 'Updated summary',
+        description: 'Updated product description.',
+      });
+    expect(mainInfoUpdated.status).toBe(STATUES.SUCCESS);
+    expect(mainInfoUpdated.body.data).toMatchObject({
+      title: 'Updated food',
+      category: { title: 'Food' },
+      subCategory: { title: 'Dry Food' },
+      quantity: 9,
+      summary: 'Updated summary',
+      description: 'Updated product description.',
+    });
+    const mainInfo = await request(app)
+      .get(`/api/products/${product._id}/main-info`)
+      .set(seller);
+    expect(mainInfo.status).toBe(STATUES.SUCCESS);
+    expect(mainInfo.body.data).toEqual(mainInfoUpdated.body.data);
     const imageUpdated = await request(app)
       .put(`/api/products/${product._id}/images`)
       .set(seller)
@@ -306,7 +330,7 @@ describe('Product API', () => {
     ).toBe(STATUES.SUCCESS);
     const list = await request(app)
       .get(
-        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=275000&quantity=12&isEnable=true`,
+        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=275000&quantity=9&isEnable=true`,
       )
       .set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);
