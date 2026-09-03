@@ -4139,9 +4139,23 @@
         "parameters": [
           { "name": "title", "in": "query", "schema": { "type": "string" } },
           { "name": "category", "in": "query", "schema": { "type": "string" } },
-          { "name": "subCategory", "in": "query", "schema": { "type": "string" } },
-          { "name": "price", "in": "query", "minimum": 0, "schema": { "type": "number" } },
-          { "name": "quantity", "in": "query", "minimum": 0, "schema": { "type": "integer" } },
+          {
+            "name": "subCategory",
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "minimum": 0,
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "quantity",
+            "in": "query",
+            "minimum": 0,
+            "schema": { "type": "integer" }
+          },
           { "name": "isEnable", "in": "query", "schema": { "type": "boolean" } }
         ],
         "responses": {
