@@ -4136,7 +4136,23 @@
     "/products/paginate": {
       "get": {
         "description": "",
+        "parameters": [
+          { "name": "title", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "subCategory", "in": "query", "schema": { "type": "string" } },
+          { "name": "price", "in": "query", "minimum": 0, "schema": { "type": "number" } },
+          { "name": "quantity", "in": "query", "minimum": 0, "schema": { "type": "integer" } },
+          { "name": "isEnable", "in": "query", "schema": { "type": "boolean" } }
+        ],
         "responses": {
+          "200": {
+            "description": "Paginated management product list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedResponse" }
+              }
+            }
+          },
           "405": {
             "description": "Method not allowed",
             "headers": {
@@ -4154,9 +4170,6 @@
                 }
               }
             }
-          },
-          "default": {
-            "description": ""
           }
         },
         "tags": ["/products"]

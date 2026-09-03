@@ -278,13 +278,19 @@ describe('ProductService', () => {
     });
   });
 
-  test('management and customer lists reuse pagination', async () => {
+  test('management and customer lists reuse pagination with their filters', async () => {
     getPaginationData.mockResolvedValue({
       result: [product],
       pagination: { totalItems: 1 },
     });
     expect(
       await ProductService.findManagementList({
+        title: 'Premium+',
+        category: categoryId,
+        subCategory: subCategoryId,
+        price: 250000,
+        quantity: 5,
+        isEnable: false,
         page: 1,
         limit: 10,
         includeDisabled: true,
@@ -293,6 +299,22 @@ describe('ProductService', () => {
     expect(
       await ProductService.findCustomerList({ page: 1, limit: 10 }),
     ).toMatchObject({ result: [product] });
+    expect(getPaginationData).toHaveBeenNthCalledWith(
+      1,
+      ProductModel,
+      expect.objectContaining({
+        title: { $regex: 'Premium\\+', $options: 'i' },
+        category: categoryId,
+        subCategory: subCategoryId,
+        price: 250000,
+        quantity: 5,
+        isEnable: false,
+        page: 1,
+        limit: 10,
+      }),
+      '',
+      expect.any(Function),
+    );
     expect(getPaginationData).toHaveBeenLastCalledWith(
       ProductModel,
       expect.objectContaining({ isEnable: true, page: 1, limit: 10 }),

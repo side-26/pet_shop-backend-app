@@ -31,6 +31,13 @@ router.get('/products', getCustomerProductListController);
 router.get('/products/customer/:id', getCustomerProductController);
 router.get(
   '/products/paginate',
+  /* #swagger.parameters['title'] = { in: 'query', type: 'string' }
+     #swagger.parameters['category'] = { in: 'query', type: 'string' }
+     #swagger.parameters['subCategory'] = { in: 'query', type: 'string' }
+     #swagger.parameters['price'] = { in: 'query', type: 'number', minimum: 0 }
+     #swagger.parameters['quantity'] = { in: 'query', type: 'integer', minimum: 0 }
+     #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' }
+     #swagger.responses[200] = { description: 'Paginated management product list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getManagementProductListController,

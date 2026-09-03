@@ -100,9 +100,13 @@ export const productModelUpdateZodSchema = object(productFields).partial();
 export const productIdSchema = object({ id: objectIdSchema });
 
 export const productQuerySchema = object({
+  title: string().trim().max(150).optional(),
   search: string().trim().max(150).optional(),
   category: objectIdSchema.optional(),
   subCategory: objectIdSchema.optional(),
+  quantity: quantitySchema.optional(),
+  price: priceSchema.optional(),
+  isEnable: booleanSchema.optional(),
   includeDisabled: string()
     .optional()
     .transform((value) => value === 'true'),

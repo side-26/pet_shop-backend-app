@@ -5,15 +5,29 @@ export const escapeProductRegex = (value = '') =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const buildProductFilter = (
-  { search, category, subCategory, includeDisabled } = {},
+  {
+    title: filterTitle,
+    search,
+    category,
+    subCategory,
+    quantity,
+    price,
+    isEnable,
+    includeDisabled,
+  } = {},
   enabledOnly = false,
 ) => {
   const filter = {};
-  if (enabledOnly || !includeDisabled) filter.isEnable = true;
+  const title = filterTitle ?? search;
+  if (enabledOnly) filter.isEnable = true;
+  else if (isEnable !== undefined) filter.isEnable = isEnable;
+  else if (!includeDisabled) filter.isEnable = true;
   if (category) filter.category = category;
   if (subCategory) filter.subCategory = subCategory;
-  if (search) {
-    filter.title = { $regex: escapeProductRegex(search), $options: 'i' };
+  if (quantity !== undefined) filter.quantity = quantity;
+  if (price !== undefined) filter.price = price;
+  if (title) {
+    filter.title = { $regex: escapeProductRegex(title), $options: 'i' };
   }
   return filter;
 };

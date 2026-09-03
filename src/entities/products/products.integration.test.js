@@ -304,7 +304,11 @@ describe('Product API', () => {
           .set(seller)
       ).status,
     ).toBe(STATUES.SUCCESS);
-    const list = await request(app).get('/api/products/paginate').set(seller);
+    const list = await request(app)
+      .get(
+        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=275000&quantity=12&isEnable=true`,
+      )
+      .set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);
     expect(list.body.pagination.totalItems).toBe(1);
     expect(list.body.data[0].images).toEqual([
