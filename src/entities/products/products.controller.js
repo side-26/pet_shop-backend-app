@@ -9,6 +9,8 @@ import {
   createProductZodSchema,
   productIdSchema,
   productQuerySchema,
+  updateProductImagesZodSchema,
+  updateProductPriceZodSchema,
   updateProductZodSchema,
 } from './products.schema.js';
 import { ProductService } from './products.service.js';
@@ -16,18 +18,30 @@ import { ProductService } from './products.service.js';
 const getUserId = (user) => user?.userId || user?.id;
 const getManagementQuery = (query) => ({ ...query, includeDisabled: true });
 
-const updateProduct = async (req, res, next, method) => {
+const updateProductSection = async (
+  req,
+  res,
+  next,
+  schema,
+  method,
+  formatter,
+  imageFile,
+  imageFiles,
+  requiresImages = false,
+) => {
   try {
     const { id } = returnFormValidation(productIdSchema, req.params);
-    const body = returnFormValidation(updateProductZodSchema, req.body);
-    const product = await ProductService[method](
-      id,
-      body,
-      getUserId(req.user),
-      req.file,
-    );
+    const body = returnFormValidation(schema, req.body);
+    const product = requiresImages
+      ? await ProductService[method](
+          id,
+          getUserId(req.user),
+          imageFile,
+          imageFiles,
+        )
+      : await ProductService[method](id, body, getUserId(req.user));
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: ProductService.formatManagement(product),
+      data: ProductService[formatter](product),
       message: 'اطلاعات محصول با موفقیت ویرایش شد',
     });
   } catch (error) {
@@ -41,7 +55,8 @@ export const createProductController = async (req, res, next) => {
     const product = await ProductService.create(
       body,
       getUserId(req.user),
-      req.file,
+      req.files?.mainImage?.[0],
+      req.files?.images || [],
     );
     setSuccessResponse(res, STATUES.CREATED, {
       data: ProductService.formatManagement(product),
@@ -53,9 +68,44 @@ export const createProductController = async (req, res, next) => {
 };
 
 export const updateProductController = (req, res, next) =>
-  updateProduct(req, res, next, 'update');
+  updateProductSection(
+    req,
+    res,
+    next,
+    updateProductZodSchema,
+    'update',
+    'formatManagement',
+  );
 export const editProductController = (req, res, next) =>
-  updateProduct(req, res, next, 'edit');
+  updateProductSection(
+    req,
+    res,
+    next,
+    updateProductZodSchema,
+    'edit',
+    'formatManagement',
+  );
+export const updateProductImagesController = (req, res, next) =>
+  updateProductSection(
+    req,
+    res,
+    next,
+    updateProductImagesZodSchema,
+    'updateImages',
+    'formatImages',
+    req.files?.mainImage?.[0],
+    req.files?.images || [],
+    true,
+  );
+export const updateProductPriceController = (req, res, next) =>
+  updateProductSection(
+    req,
+    res,
+    next,
+    updateProductPriceZodSchema,
+    'updatePrice',
+    'formatPrice',
+  );
 
 export const getManagementProductController = async (req, res, next) => {
   try {
@@ -83,6 +133,23 @@ export const getManagementProductListController = async (req, res, next) => {
     onCatchPromiseController(error, next);
   }
 };
+
+const getProductSection = async (req, res, next, method, formatter) => {
+  try {
+    const { id } = returnFormValidation(productIdSchema, req.params);
+    const product = await ProductService[method](id);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: ProductService[formatter](product),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getProductImagesController = (req, res, next) =>
+  getProductSection(req, res, next, 'findImagesById', 'formatImages');
+export const getProductPriceController = (req, res, next) =>
+  getProductSection(req, res, next, 'findPriceById', 'formatPrice');
 
 const changeProductStatus = async (req, res, next, method, message) => {
   try {

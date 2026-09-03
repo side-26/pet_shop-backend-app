@@ -204,10 +204,11 @@ export const IMAGE_UPLOAD = {
   MAX_FILE_SIZE_BYTES: 5 * IMAGE_PROCESSING.ONE_MB,
   MAX_PET_TYPE_IMAGE_SIZE_BYTES: IMAGE_PROCESSING.ONE_MB - 1,
   MAX_PET_IMAGES: 5,
+  MAX_PRODUCT_IMAGES: PRODUCT_LIMITS.MAX_IMAGES,
   MAX_MULTIPART_FIELDS: 20,
   AVATAR_FIELD: 'avatar',
   MAIN_IMAGE_FIELD: 'mainImage',
-  PET_IMAGES_FIELD: 'images',
+  IMAGES_FIELD: 'images',
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
   PET_TYPE_ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
 };

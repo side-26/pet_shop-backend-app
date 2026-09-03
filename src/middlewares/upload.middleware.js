@@ -5,6 +5,7 @@ import {
   imageUpload,
   petCreateImageUpload,
   petTypeImageUpload,
+  productCreateImageUpload,
 } from '#configs/upload.config.js';
 
 const MULTER_ERROR_MESSAGES = {
@@ -51,14 +52,14 @@ export const uploadBreedMainImage = handleUpload(
 );
 
 export const uploadPetImages = handleUpload(
-  imageUpload.array(IMAGE_UPLOAD.PET_IMAGES_FIELD, IMAGE_UPLOAD.MAX_PET_IMAGES),
+  imageUpload.array(IMAGE_UPLOAD.IMAGES_FIELD, IMAGE_UPLOAD.MAX_PET_IMAGES),
 );
 
 export const uploadPetCreateImages = handleUpload(
   petCreateImageUpload.fields([
     { name: IMAGE_UPLOAD.MAIN_IMAGE_FIELD, maxCount: 1 },
     {
-      name: IMAGE_UPLOAD.PET_IMAGES_FIELD,
+      name: IMAGE_UPLOAD.IMAGES_FIELD,
       maxCount: IMAGE_UPLOAD.MAX_PET_IMAGES,
     },
   ]),
@@ -68,8 +69,20 @@ export const uploadPetUpdateImages = handleUpload(
   petCreateImageUpload.fields([
     { name: IMAGE_UPLOAD.MAIN_IMAGE_FIELD, maxCount: 1 },
     {
-      name: IMAGE_UPLOAD.PET_IMAGES_FIELD,
+      name: IMAGE_UPLOAD.IMAGES_FIELD,
       maxCount: IMAGE_UPLOAD.MAX_PET_IMAGES,
     },
   ]),
 );
+
+export const uploadProductCreateImages = handleUpload(
+  productCreateImageUpload.fields([
+    { name: IMAGE_UPLOAD.MAIN_IMAGE_FIELD, maxCount: 1 },
+    {
+      name: IMAGE_UPLOAD.IMAGES_FIELD,
+      maxCount: IMAGE_UPLOAD.MAX_PRODUCT_IMAGES,
+    },
+  ]),
+);
+
+export const uploadProductUpdateImages = uploadProductCreateImages;

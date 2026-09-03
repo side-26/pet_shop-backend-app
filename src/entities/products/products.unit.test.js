@@ -29,6 +29,7 @@ jest.mock('./products.model.js', () => ({
 jest.mock('#services/mainImage.service.js', () => ({
   MainImageService: {
     upload: jest.fn(),
+    uploadImages: jest.fn(),
     cleanup: jest.fn(),
     cleanupMany: jest.fn(),
     getStoredKey: jest.fn(),
@@ -50,7 +51,7 @@ const userId = '65a4de97aff1fbb38c437114';
 const category = {
   _id: categoryId,
   title: 'Food',
-  enable: true,
+  isEnable: true,
 };
 const subCategory = {
   _id: subCategoryId,
@@ -68,7 +69,7 @@ const data = {
   quantity: 0,
   price: 0,
   discountPercentage: 0,
-  enable: true,
+  isEnable: true,
   slug: 'premium-cat-food',
 };
 const product = { _id: id, ...data };
@@ -84,15 +85,13 @@ describe('ProductService', () => {
       mainImage: data.mainImage,
       mainImageThumbnail: data.mainImageThumbnail,
     });
+    MainImageService.uploadImages.mockResolvedValue([
+      { key: 'products/images/one.webp', url: data.images[0] },
+    ]);
   });
 
-  test('escapeRegex and findOne build safe lookups', async () => {
+  test('escapeRegex escapes special characters', () => {
     expect(ProductService.escapeRegex('food+cat')).toBe('food\\+cat');
-    ProductModel.findOne.mockResolvedValue(product);
-    await expect(ProductService.findOne({ slug: data.slug })).resolves.toBe(
-      product,
-    );
-    expect(ProductModel.findOne).toHaveBeenCalledWith({ slug: data.slug });
   });
 
   test('findById returns a product and rejects missing products', async () => {
@@ -133,28 +132,21 @@ describe('ProductService', () => {
     ).rejects.toThrow('متعلق');
   });
 
-  test('ensureUniqueSlug accepts unique slugs and rejects duplicates', async () => {
-    ProductModel.findOne
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(product);
-    await expect(
-      ProductService.ensureUniqueSlug(data.slug),
-    ).resolves.toBeUndefined();
-    await expect(ProductService.ensureUniqueSlug(data.slug)).rejects.toThrow(
-      'عنوان',
-    );
-  });
-
   test('create validates and saves the product', async () => {
-    ProductModel.findOne.mockResolvedValue(null);
     ProductModel.create.mockResolvedValue(product);
     await expect(
-      ProductService.create(data, userId, { buffer: Buffer.from('image') }),
+      ProductService.create(data, userId, { buffer: Buffer.from('image') }, [
+        { buffer: Buffer.from('gallery-image') },
+      ]),
     ).resolves.toBe(product);
     expect(ProductModel.create).toHaveBeenCalledWith({
       ...data,
       createdBy: userId,
     });
+    expect(MainImageService.uploadImages).toHaveBeenCalledWith(
+      [{ buffer: Buffer.from('gallery-image') }],
+      'products/images',
+    );
   });
 
   test('update validates effective relations and edit delegates', async () => {
@@ -178,7 +170,50 @@ describe('ProductService', () => {
       id,
       { price: 1 },
       userId,
-      undefined,
+    );
+  });
+
+  test('updateImages replaces the full image set and cleans up previous objects', async () => {
+    const images = ['https://cdn.example.com/two.webp'];
+    ProductModel.findById.mockResolvedValue(product);
+    ProductModel.findByIdAndUpdate.mockResolvedValue({ ...product, images });
+    MainImageService.uploadImages.mockResolvedValue([
+      { key: 'products/images/two.webp', url: images[0] },
+    ]);
+    MainImageService.getStoredKey
+      .mockReturnValueOnce('products/main/previous.webp')
+      .mockReturnValueOnce('products/images/previous.webp');
+
+    await expect(
+      ProductService.updateImages(
+        id,
+        userId,
+        { buffer: Buffer.from('replacement') },
+        [{ buffer: Buffer.from('gallery-replacement') }],
+      ),
+    ).resolves.toMatchObject({ images });
+    expect(MainImageService.cleanupMany).toHaveBeenCalledWith(
+      ['products/main/previous.webp', 'products/images/previous.webp'],
+      { id, userId },
+    );
+  });
+
+  test('updatePrice changes only price fields', async () => {
+    ProductModel.findById.mockResolvedValue(product);
+    ProductModel.findByIdAndUpdate.mockResolvedValue({
+      ...product,
+      price: 100,
+      discountPercentage: 5,
+    });
+    await ProductService.updatePrice(
+      id,
+      { price: 100, discountPercentage: 5 },
+      userId,
+    );
+    expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      id,
+      { $set: { price: 100, discountPercentage: 5, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
     );
   });
 
@@ -186,11 +221,16 @@ describe('ProductService', () => {
     ProductModel.findById.mockResolvedValue(product);
     ProductModel.findByIdAndUpdate.mockResolvedValue({
       ...product,
-      enable: false,
+      isEnable: false,
     });
     await expect(
       ProductService.setEnableStatus(id, false, userId),
-    ).resolves.toMatchObject({ enable: false });
+    ).resolves.toMatchObject({ isEnable: false });
+    expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      id,
+      { $set: { isEnable: false, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
 
     const status = jest
       .spyOn(ProductService, 'setEnableStatus')
@@ -225,6 +265,19 @@ describe('ProductService', () => {
     ]);
   });
 
+  test('section getters return product image and price data', async () => {
+    ProductModel.findById.mockResolvedValue(product);
+    await expect(ProductService.findImagesById(id)).resolves.toBe(product);
+    await expect(ProductService.findPriceById(id)).resolves.toBe(product);
+    expect(ProductService.formatImages(product)).toMatchObject({
+      imagesList: data.images,
+    });
+    expect(ProductService.formatPrice(product)).toEqual({
+      price: data.price,
+      discountPercentage: data.discountPercentage,
+    });
+  });
+
   test('management and customer lists reuse pagination', async () => {
     getPaginationData.mockResolvedValue({
       result: [product],
@@ -242,7 +295,7 @@ describe('ProductService', () => {
     ).toMatchObject({ result: [product] });
     expect(getPaginationData).toHaveBeenLastCalledWith(
       ProductModel,
-      expect.objectContaining({ enable: true, page: 1, limit: 10 }),
+      expect.objectContaining({ isEnable: true, page: 1, limit: 10 }),
       '',
       expect.any(Function),
     );
@@ -255,7 +308,7 @@ describe('ProductService', () => {
     await expect(ProductService.findCustomerById(id)).resolves.toBe(product);
     expect(ProductModel.findOne).toHaveBeenCalledWith({
       _id: id,
-      enable: true,
+      isEnable: true,
     });
     await expect(ProductService.findCustomerById(id)).rejects.toThrow(
       'محصول یافت نشد',

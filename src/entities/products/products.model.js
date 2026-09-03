@@ -48,7 +48,7 @@ const productSchema = new mongoose.Schema(
       max: PRODUCT_LIMITS.MAX_DISCOUNT_PERCENTAGE,
       default: 0,
     },
-    enable: { type: Boolean, required: true, index: true },
+    isEnable: { type: Boolean, required: true, default: true, index: true },
     slug: {
       type: String,
       required: true,
@@ -78,6 +78,21 @@ const validateProductData = (schema, data, message) => {
   }
 };
 
+productSchema.pre('validate', function () {
+  if (!this.slug && this.title) {
+    const generatedSlug = this.title
+      .normalize('NFKC')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/[\s-]+/g, '-')
+      .substring(0, 150);
+    this.slug = generatedSlug
+      ? `${generatedSlug}-${this._id.toString().slice(-8)}`
+      : `product-${this._id.toString().slice(-8)}`;
+  }
+});
+
 productSchema.pre('save', function () {
   validateProductData(
     productPersistedZodSchema,
@@ -93,7 +108,7 @@ productSchema.pre('save', function () {
       quantity: this.quantity,
       price: this.price,
       discountPercentage: this.discountPercentage,
-      enable: this.enable,
+      isEnable: this.isEnable,
       slug: this.slug,
     },
     'اعتبارسنجی محصول ناموفق بود',
@@ -112,7 +127,7 @@ productSchema.pre('findOneAndUpdate', function () {
   );
 });
 
-productSchema.index({ enable: 1, category: 1, subCategory: 1 });
+productSchema.index({ isEnable: 1, category: 1, subCategory: 1 });
 productSchema.index({ title: 'text', description: 'text', summary: 'text' });
 
 export const ProductModel = mongoose.model('Products', productSchema);

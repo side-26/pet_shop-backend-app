@@ -8,6 +8,8 @@ import {
   uploadPetCreateImages,
   uploadPetImages,
   uploadPetUpdateImages,
+  uploadProductCreateImages,
+  uploadProductUpdateImages,
 } from '#middlewares/upload.middleware.js';
 
 const createApp = (path, middleware) => {
@@ -50,7 +52,7 @@ describe('upload middleware', () => {
 
     for (let index = 0; index < IMAGE_UPLOAD.MAX_PET_IMAGES; index += 1) {
       pendingRequest = pendingRequest.attach(
-        IMAGE_UPLOAD.PET_IMAGES_FIELD,
+        IMAGE_UPLOAD.IMAGES_FIELD,
         Buffer.from(`image-${index}`),
         {
           filename: `pet-${index}.png`,
@@ -77,7 +79,7 @@ describe('upload middleware', () => {
 
     for (let index = 0; index < IMAGE_UPLOAD.MAX_PET_IMAGES; index += 1) {
       pendingRequest = pendingRequest.attach(
-        IMAGE_UPLOAD.PET_IMAGES_FIELD,
+        IMAGE_UPLOAD.IMAGES_FIELD,
         Buffer.from(`image-${index}`),
         {
           filename: `pet-${index}.png`,
@@ -101,13 +103,43 @@ describe('upload middleware', () => {
         filename: 'main.png',
         contentType: 'image/png',
       })
-      .attach(IMAGE_UPLOAD.PET_IMAGES_FIELD, Buffer.from('gallery-image'), {
+      .attach(IMAGE_UPLOAD.IMAGES_FIELD, Buffer.from('gallery-image'), {
         filename: 'gallery.png',
         contentType: 'image/png',
       });
 
     expect(response.status).toBe(STATUES.SUCCESS);
     expect(response.body.files).toEqual(['main.png', 'gallery.png']);
+  });
+
+  it('accepts the configured product main image and gallery sizes', async () => {
+    let pendingRequest = request(
+      createApp('/products/create', uploadProductCreateImages),
+    )
+      .post('/products/create')
+      .attach(IMAGE_UPLOAD.MAIN_IMAGE_FIELD, Buffer.from('main-image'), {
+        filename: 'main.png',
+        contentType: 'image/png',
+      });
+
+    for (let index = 0; index < IMAGE_UPLOAD.MAX_PRODUCT_IMAGES; index += 1) {
+      pendingRequest = pendingRequest.attach(
+        IMAGE_UPLOAD.IMAGES_FIELD,
+        Buffer.from(`image-${index}`),
+        {
+          filename: `product-${index}.png`,
+          contentType: 'image/png',
+        },
+      );
+    }
+
+    const response = await pendingRequest;
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.files).toHaveLength(
+      IMAGE_UPLOAD.MAX_PRODUCT_IMAGES + 1,
+    );
+    expect(uploadProductUpdateImages).toBe(uploadProductCreateImages);
   });
 
   it('rejects unsupported MIME types with the application error shape', async () => {
@@ -131,7 +163,7 @@ describe('upload middleware', () => {
 
     for (let index = 0; index <= IMAGE_UPLOAD.MAX_PET_IMAGES; index += 1) {
       pendingRequest = pendingRequest.attach(
-        IMAGE_UPLOAD.PET_IMAGES_FIELD,
+        IMAGE_UPLOAD.IMAGES_FIELD,
         Buffer.from(`image-${index}`),
         {
           filename: `pet-${index}.jpeg`,

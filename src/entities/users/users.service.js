@@ -735,7 +735,7 @@ export class UserService {
     const user = await UserModel.findById(userId).populate({
       path: 'cart.items.item',
       select:
-        'title mainImage mainImageThumbnail price discountPercentage enable inEnable slug',
+        'title mainImage mainImageThumbnail price discountPercentage isEnable inEnable slug',
     });
     if (!user) {
       setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });

@@ -189,19 +189,17 @@ export const schemas = {
     required: ['mainImage'],
     properties: {
       mainImage: { type: 'string', format: 'binary' },
+      images: {
+        type: 'array',
+        maxItems: 10,
+        items: { type: 'string', format: 'binary' },
+      },
       title: { type: 'string' },
-      images: { type: 'array', items: { type: 'string', format: 'uri' } },
       summary: { type: 'string' },
       description: { type: 'string' },
       category: { type: 'string' },
       subCategory: { type: 'string', nullable: true },
-      petType: { type: 'string' },
-      breed: { type: 'string' },
       quantity: { type: 'number' },
-      price: { type: 'number' },
-      discountPercentage: { type: 'number' },
-      enable: { type: 'boolean' },
-      slug: { type: 'string' },
     },
   },
   PetMainImageCreateBody: {
@@ -226,7 +224,7 @@ export const schemas = {
       slug: { type: 'string' },
     },
   },
-  MainImageUpdateBody: {
+  ProductImagesUpdateBody: {
     type: 'object',
     properties: {
       mainImage: {
@@ -235,19 +233,29 @@ export const schemas = {
         description:
           'Optional replacement image; regenerates mainImageThumbnail',
       },
-      title: { type: 'string' },
-      images: { type: 'array', items: { type: 'string', format: 'uri' } },
+      images: {
+        type: 'array',
+        maxItems: 10,
+        items: { type: 'string', format: 'binary' },
+      },
+    },
+  },
+  ProductPriceUpdateBody: {
+    type: 'object',
+    properties: {
+      price: { type: 'number', minimum: 0 },
+      discountPercentage: { type: 'number', minimum: 0, maximum: 100 },
+    },
+  },
+  ProductBaseInfoUpdateBody: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 150 },
       summary: { type: 'string' },
       description: { type: 'string' },
       category: { type: 'string' },
       subCategory: { type: 'string', nullable: true },
-      petType: { type: 'string' },
-      breed: { type: 'string' },
-      quantity: { type: 'number' },
-      price: { type: 'number' },
-      discountPercentage: { type: 'number' },
-      enable: { type: 'boolean' },
-      slug: { type: 'string' },
+      quantity: { type: 'integer', minimum: 0 },
     },
   },
   PetImagesUpdateBody: {

@@ -9,7 +9,7 @@ export const buildProductFilter = (
   enabledOnly = false,
 ) => {
   const filter = {};
-  if (enabledOnly || !includeDisabled) filter.enable = true;
+  if (enabledOnly || !includeDisabled) filter.isEnable = true;
   if (category) filter.category = category;
   if (subCategory) filter.subCategory = subCategory;
   if (search) {
@@ -42,7 +42,7 @@ export const formatManagementProduct = (product) => {
     quantity: value.quantity,
     price: value.price,
     discountPercentage: value.discountPercentage,
-    enable: value.enable,
+    isEnable: value.isEnable,
     slug: value.slug,
     createdBy: value.createdBy,
     updatedBy: value.updatedBy,
@@ -63,7 +63,7 @@ export const formatCustomerProductListItem = (product) => {
     quantity: value.quantity,
     price: value.price,
     discountPercentage: value.discountPercentage,
-    enable: value.enable,
+    isEnable: value.isEnable,
     slug: value.slug,
     category: value.category?.title,
     subCategory: value.subCategory?.title || null,
@@ -83,11 +83,28 @@ export const formatCustomerProductDetail = (product) => {
     quantity: value.quantity,
     price: value.price,
     discountPercentage: value.discountPercentage,
-    enable: value.enable,
+    isEnable: value.isEnable,
     slug: value.slug,
     category: CategoryService.format(value.category),
     subCategory: value.subCategory
       ? SubCategoryService.format(value.subCategory)
       : null,
+  };
+};
+
+export const formatProductImages = (product) => {
+  const value = valueOf(product);
+  return {
+    mainImage: value.mainImage,
+    mainImageThumbnail: value.mainImageThumbnail,
+    imagesList: value.images || [],
+  };
+};
+
+export const formatProductPrice = (product) => {
+  const value = valueOf(product);
+  return {
+    price: value.price,
+    discountPercentage: value.discountPercentage,
   };
 };

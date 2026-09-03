@@ -37,7 +37,7 @@ export class OrderService {
       (entry) =>
         !entry.item ||
         (entry.itemType === USER_ITEM_TYPES.PRODUCT
-          ? entry.item.enable !== true
+          ? entry.item.isEnable !== true
           : entry.item.inEnable !== true) ||
         !Number.isInteger(entry.quantity) ||
         entry.quantity < 1,

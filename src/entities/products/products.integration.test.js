@@ -44,7 +44,7 @@ const baseProductData = {
   quantity: 12,
   price: 250000,
   discountPercentage: 10,
-  enable: true,
+  isEnable: true,
   slug: 'premium-cat-food',
 };
 const categoryImageFields = {
@@ -78,13 +78,14 @@ describe('Product API', () => {
       .toBuffer();
   });
 
-  const multipartProduct = (requestBuilder, values) => {
+  const multipartProduct = (requestBuilder, values, galleryImages = []) => {
     let form = requestBuilder;
     for (const [field, value] of Object.entries(values)) {
       if (
         value === undefined ||
         field === 'mainImage' ||
-        field === 'mainImageThumbnail'
+        field === 'mainImageThumbnail' ||
+        field === 'images'
       ) {
         continue;
       }
@@ -92,10 +93,17 @@ describe('Product API', () => {
         form = form.field(field, String(item));
       }
     }
-    return form.attach('mainImage', imageBuffer, {
+    form = form.attach('mainImage', imageBuffer, {
       filename: 'product.png',
       contentType: 'image/png',
     });
+    for (const [index, galleryImage] of galleryImages.entries()) {
+      form = form.attach('images', galleryImage, {
+        filename: `product-gallery-${index}.png`,
+        contentType: 'image/png',
+      });
+    }
+    return form;
   };
 
   beforeEach(async () => {
@@ -135,29 +143,33 @@ describe('Product API', () => {
     };
   });
 
-  test('creates products with and without a subCategory and applies defaults', async () => {
+  test('creates products with generated status, slug, and price defaults', async () => {
     const withSubCategory = await multipartProduct(
       request(app).post('/api/products'),
       {
         ...productData,
-        quantity: undefined,
-        price: undefined,
-        discountPercentage: undefined,
       },
+      [imageBuffer],
     );
     expect(withSubCategory.status).toBe(STATUES.CREATED);
     expect(withSubCategory.body.data).toMatchObject({
-      quantity: 0,
+      quantity: productData.quantity,
       price: 0,
       discountPercentage: 0,
+      isEnable: true,
     });
+    expect(withSubCategory.body.data.slug).toMatch(
+      /^premium-cat-food-[0-9a-f]{8}$/,
+    );
+    expect(withSubCategory.body.data.images).toEqual([
+      'https://cdn.example.com/products/main/generated.webp',
+    ]);
 
     const withoutSubCategory = await multipartProduct(
       request(app).post('/api/products'),
       {
         ...productData,
         title: 'Simple cat food',
-        slug: 'simple-cat-food',
         subCategory: undefined,
       },
     );
@@ -174,16 +186,29 @@ describe('Product API', () => {
     ).toBeLessThan(10 * 1024);
   });
 
-  test('rejects required-field and percentage validation failures', async () => {
+  test('rejects missing required fields and ignores create-only restricted inputs', async () => {
     const missing = await request(app)
       .post('/api/products')
       .send({ ...productData, title: undefined });
     expect(missing.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
-    const percentage = await request(app)
-      .post('/api/products')
-      .send({ ...productData, discountPercentage: 101 });
-    expect(percentage.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    const response = await multipartProduct(
+      request(app).post('/api/products'),
+      {
+        ...productData,
+        price: 100,
+        discountPercentage: 101,
+        isEnable: false,
+        slug: 'client-supplied-slug',
+      },
+    );
+    expect(response.status).toBe(STATUES.CREATED);
+    expect(response.body.data).toMatchObject({
+      price: 0,
+      discountPercentage: 0,
+      isEnable: true,
+    });
+    expect(response.body.data.slug).not.toBe('client-supplied-slug');
   });
 
   test('rejects invalid Category, invalid SubCategory, and mismatched ownership', async () => {
@@ -209,7 +234,7 @@ describe('Product API', () => {
     expect(mismatch.body.message).toContain('متعلق');
   });
 
-  test('seller can update, edit, change status, read, and paginate', async () => {
+  test('seller can update product sections, toggle status, read, and paginate', async () => {
     const product = await ProductModel.create(productData);
     const seller = { 'x-test-role': ROLES.SELLER };
 
@@ -218,14 +243,16 @@ describe('Product API', () => {
       .set(seller)
       .send({ title: 'Updated food' });
     expect(updated.status).toBe(STATUES.SUCCESS);
-    expect(updated.body.data.mainImageThumbnail).toBe(
-      productData.mainImageThumbnail,
-    );
+    expect(updated.body.data.title).toBe('Updated food');
     const imageUpdated = await request(app)
-      .patch(`/api/products/${product._id}`)
+      .put(`/api/products/${product._id}/images`)
       .set(seller)
       .attach('mainImage', imageBuffer, {
         filename: 'replacement.png',
+        contentType: 'image/png',
+      })
+      .attach('images', imageBuffer, {
+        filename: 'replacement-gallery.png',
         contentType: 'image/png',
       });
     expect(imageUpdated.status).toBe(STATUES.SUCCESS);
@@ -235,25 +262,40 @@ describe('Product API', () => {
     expect(imageUpdated.body.data.mainImageThumbnail).not.toBe(
       productData.mainImageThumbnail,
     );
-    const edited = await request(app)
-      .patch(`/api/products/${product._id}`)
+    expect(imageUpdated.body.data.imagesList).toEqual([
+      'https://cdn.example.com/products/main/generated.webp',
+    ]);
+    const priceUpdated = await request(app)
+      .put(`/api/products/${product._id}/price`)
       .set(seller)
-      .send({ subCategory: null });
-    expect(edited.status).toBe(STATUES.SUCCESS);
-    expect(edited.body.data.subCategory).toBeNull();
+      .send({ price: 275000, discountPercentage: 15 });
+    expect(priceUpdated.body.data).toEqual({
+      price: 275000,
+      discountPercentage: 15,
+    });
+    const images = await request(app)
+      .get(`/api/products/${product._id}/images`)
+      .set(seller);
+    expect(images.body.data.imagesList).toEqual([
+      'https://cdn.example.com/products/main/generated.webp',
+    ]);
+    const price = await request(app)
+      .get(`/api/products/${product._id}/price`)
+      .set(seller);
+    expect(price.body.data).toEqual({ price: 275000, discountPercentage: 15 });
     expect(
       (
         await request(app)
           .patch(`/api/products/${product._id}/disable`)
           .set(seller)
-      ).body.data.enable,
+      ).body.data.isEnable,
     ).toBe(false);
     expect(
       (
         await request(app)
           .patch(`/api/products/${product._id}/enable`)
           .set(seller)
-      ).body.data.enable,
+      ).body.data.isEnable,
     ).toBe(true);
     expect(
       (
@@ -262,12 +304,12 @@ describe('Product API', () => {
           .set(seller)
       ).status,
     ).toBe(STATUES.SUCCESS);
-    const list = await request(app)
-      .get('/api/products/get-full-info-paginate-list')
-      .set(seller);
+    const list = await request(app).get('/api/products/paginate').set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);
     expect(list.body.pagination.totalItems).toBe(1);
-    expect(list.body.data[0].images).toEqual(baseProductData.images);
+    expect(list.body.data[0].images).toEqual([
+      'https://cdn.example.com/products/main/generated.webp',
+    ]);
   });
 
   test('validates effective category/subCategory pair during partial updates', async () => {
@@ -300,7 +342,7 @@ describe('Product API', () => {
       ...productData,
       title: 'Hidden food',
       slug: 'hidden-food',
-      enable: false,
+      isEnable: false,
     });
     await ProductModel.create({
       ...productData,
@@ -344,7 +386,7 @@ describe('Product API', () => {
   test('customer detail hides disabled products', async () => {
     const product = await ProductModel.create({
       ...productData,
-      enable: false,
+      isEnable: false,
     });
     const response = await request(app).get(
       `/api/products/customer/${product._id}`,

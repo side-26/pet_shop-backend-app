@@ -54,7 +54,7 @@ const productFields = {
   quantity: quantitySchema,
   price: priceSchema,
   discountPercentage: discountPercentageSchema,
-  enable: booleanSchema,
+  isEnable: booleanSchema,
   slug: slugSchema,
 };
 
@@ -67,19 +67,35 @@ export const productPersistedZodSchema = object({
   discountPercentage: discountPercentageSchema.optional().default(0),
 });
 
-const productRequestFields = { ...productFields };
-delete productRequestFields.mainImage;
-delete productRequestFields.mainImageThumbnail;
-
 export const createProductZodSchema = object({
-  ...productRequestFields,
-  images: productRequestFields.images.optional().default([]),
-  subCategory: productRequestFields.subCategory.optional(),
+  title: titleSchema,
+  summary: summarySchema,
+  description: descriptionSchema,
+  category: objectIdSchema,
+  subCategory: objectIdSchema.nullable().optional(),
   quantity: quantitySchema.optional().default(0),
-  price: priceSchema.optional().default(0),
-  discountPercentage: discountPercentageSchema.optional().default(0),
 });
-export const updateProductZodSchema = object(productRequestFields).partial();
+export const updateProductZodSchema = object({
+  title: titleSchema,
+  summary: summarySchema,
+  description: descriptionSchema,
+  category: objectIdSchema,
+  subCategory: objectIdSchema.nullable(),
+  quantity: quantitySchema,
+})
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'حداقل یک فیلد باید ارسال شود',
+  });
+export const updateProductImagesZodSchema = object({}).strict();
+export const updateProductPriceZodSchema = object({
+  price: priceSchema,
+  discountPercentage: discountPercentageSchema,
+})
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'حداقل یک فیلد باید ارسال شود',
+  });
 export const productModelUpdateZodSchema = object(productFields).partial();
 export const productIdSchema = object({ id: objectIdSchema });
 

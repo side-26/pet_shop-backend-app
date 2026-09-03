@@ -10,6 +10,8 @@ import {
   formatCustomerProductDetail,
   formatCustomerProductListItem,
   formatManagementProduct,
+  formatProductImages,
+  formatProductPrice,
 } from './products.helpers.js';
 import { ProductModel } from './products.model.js';
 
@@ -22,13 +24,6 @@ const populateRelations = async (documents) =>
 export class ProductService {
   static escapeRegex(value = '') {
     return escapeProductRegex(value);
-  }
-
-  static async findOne({ slug, excludeId } = {}) {
-    const query = {};
-    if (slug) query.slug = slug.toLowerCase();
-    if (excludeId) query._id = { $ne: excludeId };
-    return ProductModel.findOne(query);
   }
 
   static async findById(id, throwOnNotFound = true) {
@@ -71,39 +66,52 @@ export class ProductService {
     return { category, subCategory };
   }
 
-  static async ensureUniqueSlug(slug, excludeId) {
-    const existingProduct = await this.findOne({ slug, excludeId });
-    if (existingProduct) {
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'محصولی با این عنوان قبلاً ثبت شده است',
-        code: ERROR_CODES.PRODUCT_ALREADY_EXISTS,
-      });
-    }
-  }
-
-  static async create(data, userId, imageFile) {
-    await Promise.all([
-      this.validateRelations(data.category, data.subCategory),
-      this.ensureUniqueSlug(data.slug),
+  static async create(data, userId, imageFile, imageFiles = []) {
+    await this.validateRelations(data.category, data.subCategory);
+    const uploadResults = await Promise.allSettled([
+      MainImageService.upload(imageFile, 'products/main'),
+      MainImageService.uploadImages(imageFiles, 'products/images'),
     ]);
-    const uploadedImage = await MainImageService.upload(
-      imageFile,
-      'products/main',
+    const uploadedMainImage =
+      uploadResults[0].status === 'fulfilled' ? uploadResults[0].value : null;
+    const uploadedImages =
+      uploadResults[1].status === 'fulfilled' ? uploadResults[1].value : [];
+    const failedUpload = uploadResults.find(
+      (result) => result.status === 'rejected',
     );
+
+    if (failedUpload) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage?.key, { userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { userId },
+        ),
+      ]);
+      throw failedUpload.reason;
+    }
+
     try {
       return await ProductModel.create({
         ...data,
-        mainImage: uploadedImage.mainImage,
-        mainImageThumbnail: uploadedImage.mainImageThumbnail,
+        mainImage: uploadedMainImage.mainImage,
+        mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
+        images: uploadedImages.map(({ url }) => url),
         createdBy: userId,
       });
     } catch (error) {
-      await MainImageService.cleanup(uploadedImage.key, { userId });
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { userId },
+        ),
+      ]);
       throw error;
     }
   }
 
-  static async update(id, data, userId, imageFile) {
+  static async update(id, data, userId) {
     const currentProduct = await this.findById(id);
     const categoryId = data.category || currentProduct.category;
     const hasSubCategory = Object.prototype.hasOwnProperty.call(
@@ -113,59 +121,122 @@ export class ProductService {
     const subCategoryId = hasSubCategory
       ? data.subCategory
       : currentProduct.subCategory;
-    const validations = [
-      this.validateRelations(categoryId, subCategoryId || null),
-    ];
-    if (data.slug) validations.push(this.ensureUniqueSlug(data.slug, id));
-    await Promise.all(validations);
+    await this.validateRelations(categoryId, subCategoryId || null);
 
-    const uploadedImage = imageFile
-      ? await MainImageService.upload(imageFile, 'products/main')
-      : null;
-    const imageData = uploadedImage
-      ? {
-          mainImage: uploadedImage.mainImage,
-          mainImageThumbnail: uploadedImage.mainImageThumbnail,
-        }
-      : {};
-
-    let product;
-    try {
-      product = await ProductModel.findByIdAndUpdate(
-        id,
-        { $set: { ...data, ...imageData, updatedBy: userId } },
-        { returnDocument: 'after', runValidators: true },
-      );
-    } catch (error) {
-      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
-      throw error;
-    }
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      { $set: { ...data, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
     if (!product) {
-      await MainImageService.cleanup(uploadedImage?.key, { id, userId });
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'محصول یافت نشد',
         code: ERROR_CODES.PRODUCT_NOT_FOUND,
       });
     }
-    if (uploadedImage) {
-      const previousKey = MainImageService.getStoredKey(
-        currentProduct.mainImage,
-        { id, userId },
+    return product;
+  }
+
+  static edit(id, data, userId) {
+    return this.update(id, data, userId);
+  }
+
+  static async updateImages(id, userId, imageFile, imageFiles = []) {
+    if (!imageFile) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'تصویر اصلی باید ارسال شود',
+      });
+    }
+    const currentProduct = await this.findById(id);
+    const uploadResults = await Promise.allSettled([
+      MainImageService.upload(imageFile, 'products/main'),
+      MainImageService.uploadImages(imageFiles, 'products/images'),
+    ]);
+    const uploadedMainImage =
+      uploadResults[0].status === 'fulfilled' ? uploadResults[0].value : null;
+    const uploadedImages =
+      uploadResults[1].status === 'fulfilled' ? uploadResults[1].value : [];
+    const failedUpload = uploadResults.find(
+      (result) => result.status === 'rejected',
+    );
+
+    if (failedUpload) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage?.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      throw failedUpload.reason;
+    }
+
+    const imageData = {
+      mainImage: uploadedMainImage.mainImage,
+      mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
+      images: uploadedImages.map(({ url }) => url),
+    };
+    let product;
+    try {
+      product = await ProductModel.findByIdAndUpdate(
+        id,
+        { $set: { ...imageData, updatedBy: userId } },
+        { returnDocument: 'after', runValidators: true },
       );
-      await MainImageService.cleanup(previousKey, { id, userId });
+    } catch (error) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      throw error;
+    }
+    if (!product) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    const previousKeys = [
+      MainImageService.getStoredKey(currentProduct.mainImage, { id, userId }),
+      ...(currentProduct.images || []).map((imageUrl) =>
+        MainImageService.getStoredKey(imageUrl, { id, userId }),
+      ),
+    ];
+    await MainImageService.cleanupMany(previousKeys, { id, userId });
+    return product;
+  }
+
+  static async updatePrice(id, data, userId) {
+    await this.findById(id);
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      { $set: { ...data, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
     }
     return product;
   }
 
-  static edit(id, data, userId, imageFile) {
-    return this.update(id, data, userId, imageFile);
-  }
-
-  static async setEnableStatus(id, enable, userId) {
+  static async setEnableStatus(id, isEnable, userId) {
     await this.findById(id);
     const product = await ProductModel.findByIdAndUpdate(
       id,
-      { $set: { enable, updatedBy: userId } },
+      { $set: { isEnable, updatedBy: userId } },
       { returnDocument: 'after', runValidators: true },
     );
     if (!product) {
@@ -208,6 +279,14 @@ export class ProductService {
     return populateRelations(product);
   }
 
+  static findImagesById(id) {
+    return this.findById(id);
+  }
+
+  static findPriceById(id) {
+    return this.findById(id);
+  }
+
   static async findManagementList(queryParams = {}) {
     const filter = {
       ...buildProductFilter(queryParams),
@@ -243,7 +322,7 @@ export class ProductService {
   }
 
   static async findCustomerById(id) {
-    const product = await ProductModel.findOne({ _id: id, enable: true });
+    const product = await ProductModel.findOne({ _id: id, isEnable: true });
     if (!product) {
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'محصول یافت نشد',
@@ -267,5 +346,13 @@ export class ProductService {
 
   static formatCustomerDetail(product) {
     return formatCustomerProductDetail(product);
+  }
+
+  static formatImages(product) {
+    return formatProductImages(product);
+  }
+
+  static formatPrice(product) {
+    return formatProductPrice(product);
   }
 }

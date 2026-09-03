@@ -69,7 +69,7 @@ describe('OrderService', () => {
           mainImageThumbnail: 'https://example.test/thumb.webp',
           price: 100,
           discountPercentage: 10,
-          enable: true,
+          isEnable: true,
         },
         itemType: 'product',
         quantity: 2,
