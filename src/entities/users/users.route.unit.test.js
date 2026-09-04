@@ -44,6 +44,7 @@ jest.mock('./users.controller.js', () => ({
   enableUserController: jest.fn(),
   getAllUsersListController: jest.fn(),
   getAllUsersListPaginateController: jest.fn(),
+  getCurrentUserController: jest.fn(),
   getCartItemsController: jest.fn(),
   getUserAddressListController: jest.fn(),
   getUserByIdController: jest.fn(),
@@ -105,8 +106,8 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
       window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
     });
-    expect(registeredRoutes).toHaveLength(25);
-    expect(standardRoutes).toHaveLength(23);
+    expect(registeredRoutes).toHaveLength(26);
+    expect(standardRoutes).toHaveLength(24);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
     });

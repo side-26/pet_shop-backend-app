@@ -28,7 +28,7 @@ const getOperation = (apiPath, method) =>
 
 describe('users-router OpenAPI rate-limit contracts', () => {
   test('documents a 429 response for every users-router operation', () => {
-    expect(userRouterOperations).toHaveLength(25);
+    expect(userRouterOperations).toHaveLength(26);
 
     userRouterOperations.forEach(({ operation }) => {
       expect(operation.responses['429']).toBeDefined();

@@ -20,6 +20,7 @@ import {
   enableUserController,
   getAllUsersListController,
   getAllUsersListPaginateController,
+  getCurrentUserController,
   getCartItemsController,
   getUserByIdController,
   getUserAddressListController,
@@ -414,6 +415,20 @@ router.get(
     }
   */
   getAllUsersListPaginateController,
+);
+
+router.get(
+  '/users/current',
+  standardUserRateLimit,
+  authenticated,
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Get the authenticated current user'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.responses[200] = { description: 'Current user data', content: { "application/json": { schema: { $ref: '#/components/schemas/CurrentUserResponse' } } } }
+    #swagger.responses[401] = { description: 'Authentication is invalid, or the account is disabled or deleted', content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+  */
+  getCurrentUserController,
 );
 
 router.get(
