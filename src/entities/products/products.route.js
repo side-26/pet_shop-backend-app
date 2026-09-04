@@ -29,7 +29,11 @@ import {
 
 const router = express.Router();
 
-router.get('/products', getCustomerProductListController);
+router.get(
+  '/products',
+  /* #swagger.responses[200] = { description: 'Paginated customer product list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
+  getCustomerProductListController,
+);
 router.get('/products/customer/:id', getCustomerProductController);
 router.get(
   '/products/paginate',

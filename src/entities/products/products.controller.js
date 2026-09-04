@@ -136,8 +136,10 @@ export const getManagementProductListController = async (req, res, next) => {
     );
     const result = await ProductService.findManagementList(query);
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: ProductService.formatManagementMany(result.result),
-      pagination: result.pagination,
+      data: {
+        result: ProductService.formatManagementMany(result.result),
+        pagination: result.pagination,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);
@@ -199,8 +201,10 @@ export const getCustomerProductListController = async (req, res, next) => {
     const query = returnFormValidation(productQuerySchema, req.query);
     const result = await ProductService.findCustomerList(query);
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: ProductService.formatCustomerList(result.result),
-      pagination: result.pagination,
+      data: {
+        result: ProductService.formatCustomerList(result.result),
+        pagination: result.pagination,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);

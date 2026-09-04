@@ -334,8 +334,8 @@ describe('Product API', () => {
       )
       .set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);
-    expect(list.body.pagination.totalItems).toBe(1);
-    expect(list.body.data[0].images).toEqual([
+    expect(list.body.data.pagination.totalItems).toBe(1);
+    expect(list.body.data.result[0].images).toEqual([
       'https://cdn.example.com/products/main/generated.webp',
     ]);
   });
@@ -381,12 +381,18 @@ describe('Product API', () => {
 
     const response = await request(app).get('/api/products');
     expect(response.status).toBe(STATUES.SUCCESS);
-    expect(response.body.data).toHaveLength(2);
-    expect(response.body.data[0]).not.toHaveProperty('images');
-    expect(response.body.data[0].category).toBe('Food');
-    expect(response.body.data.map(({ subCategory: value }) => value)).toContain(
-      null,
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        result: expect.any(Array),
+        pagination: expect.any(Object),
+      }),
     );
+    expect(response.body.data.result).toHaveLength(2);
+    expect(response.body.data.result[0]).not.toHaveProperty('images');
+    expect(response.body.data.result[0].category).toBe('Food');
+    expect(
+      response.body.data.result.map(({ subCategory: value }) => value),
+    ).toContain(null);
   });
 
   test('customer detail includes images and complete optional relations', async () => {
