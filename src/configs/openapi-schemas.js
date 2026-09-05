@@ -447,6 +447,32 @@ export const schemas = {
       },
     },
   },
+  CurrentUserResponse: {
+    type: 'object',
+    required: ['isSuccess', 'data'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      data: {
+        type: 'object',
+        required: [
+          'userId',
+          'firstName',
+          'lastName',
+          'phoneNumber',
+          'role',
+          'avatar',
+        ],
+        properties: {
+          userId: { type: 'string' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
+          phoneNumber: { type: 'string', pattern: '^09\\d{9}$' },
+          role: { type: 'string', enum: Object.values(ROLES) },
+          avatar: { type: 'string' },
+        },
+      },
+    },
+  },
   UpdateUserPersonalInfoBody: toOpenApi(userUpdatePersonalInfoSchema),
   AddUserAddressBody: toOpenApi(addUserAddressSchema),
   EditUserAddressBody: toOpenApi(editUserAddressSchema),

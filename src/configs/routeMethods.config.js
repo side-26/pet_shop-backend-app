@@ -18,6 +18,7 @@ export const API_ROUTE_METHODS = [
   { path: '/users/enable/:id', methods: [put] },
   { path: '/users/all', methods: [get] },
   { path: '/users/paginate', methods: [get] },
+  { path: '/users/current', methods: [get] },
   { path: '/users/:id', methods: [get, deleteMethod] },
   { path: '/cart/add', methods: [post] },
   { path: '/cart/delete/:id', methods: [deleteMethod] },

@@ -72,6 +72,27 @@ export class UserService {
     return user;
   }
 
+  static async getCurrentUser(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId, false);
+
+    if (!user || !user.isEnable) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message:
+          '\u062d\u0633\u0627\u0628 \u06a9\u0627\u0631\u0628\u0631\u06cc \u063a\u06cc\u0631\u0641\u0639\u0627\u0644 \u0627\u0633\u062a \u06cc\u0627 \u062d\u0630\u0641 \u0634\u062f\u0647 \u0627\u0633\u062a',
+      });
+    }
+
+    return {
+      userId: user._id.toString(),
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      avatar: user.avatar,
+    };
+  }
+
   static async deleteById(userId) {
     if (!userId) {
       setErrorResponse(STATUES.BAD_REQUEST, {

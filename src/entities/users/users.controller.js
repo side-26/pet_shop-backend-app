@@ -400,6 +400,22 @@ export const getAllUsersListPaginateController = async (req, res, next) => {
 };
 
 // =========================================================
+// GET CURRENT USER
+// =========================================================
+
+export const getCurrentUserController = async (req, res, next) => {
+  try {
+    const user = await UserService.getCurrentUser(req.user);
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: user,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+// =========================================================
 // GET USER BY ID
 // =========================================================
 

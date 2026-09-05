@@ -2,6 +2,7 @@ export const ROUTES = {
   users: {
     getAll: '/users/all',
     getAllPaginate: '/users/paginate',
+    getCurrentUser: '/users/current',
     getUserById: '/users/:id',
     createUser: '/users',
     updateUserInfo: '/users/editInfo',
