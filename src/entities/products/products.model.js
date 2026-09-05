@@ -26,7 +26,7 @@ const productSchema = new mongoose.Schema(
       maxlength: PRODUCT_LIMITS.MAX_THUMBNAIL_LENGTH,
     },
     summary: { type: String, trim: true, maxlength: 500, default: undefined },
-    description: { type: String, required: true, trim: true, maxlength: 5000 },
+    description: { type: mongoose.Schema.Types.Mixed, required: true },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Categories',
@@ -130,6 +130,6 @@ productSchema.pre('findOneAndUpdate', function () {
 });
 
 productSchema.index({ isEnable: 1, category: 1, subCategory: 1 });
-productSchema.index({ title: 'text', description: 'text', summary: 'text' });
+productSchema.index({ title: 'text', summary: 'text' });
 
 export const ProductModel = mongoose.model('Products', productSchema);

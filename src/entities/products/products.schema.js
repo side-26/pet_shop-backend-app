@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { IMAGE_PROCESSING, PRODUCT_LIMITS } from '#configs/constants.js';
 import '#configs/zod.config.js';
+import { parseRichTextFormValue } from '#utils/richText.helpers.js';
 
 const {
   array,
@@ -11,6 +12,7 @@ const {
   object,
   preprocess,
   string,
+  unknown,
   url,
 } = z;
 
@@ -25,7 +27,10 @@ const imageListSchema = preprocess(
   array(imageSchema).max(PRODUCT_LIMITS.MAX_IMAGES),
 );
 const summarySchema = string().trim().max(500).optional();
-const descriptionSchema = string().trim().min(1).max(5000);
+const descriptionSchema = preprocess(
+  parseRichTextFormValue,
+  unknown().refine((value) => value !== undefined),
+);
 const quantitySchema = coerce.number().int().min(0);
 const salesVolumeSchema = coerce.number().int().min(0);
 const priceSchema = coerce.number().min(0);

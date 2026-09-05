@@ -8,6 +8,7 @@ This folder contains shared helpers that are not owned by one entity.
 
 - `helpers.js` — response builders, body checks, pagination, Zod validation, static serving, controller error forwarding, and separate access/refresh JWT verification.
 - `image.helpers.js` — image format normalization, compression quality selection, conversion, and sub-10 KB WebP Data URL blur-placeholder creation.
+- `richText.helpers.js` — parses JSON-serialized rich-text values received through multipart form fields while preserving plain-text compatibility.
 - `fullPath.js` — resolves project-relative filesystem paths.
 - `globalErrors.js` — legacy/global error definitions.
 - `router.js` — shared Express router instance; active entity routes currently create their own routers.

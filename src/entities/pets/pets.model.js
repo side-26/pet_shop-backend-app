@@ -26,7 +26,7 @@ const petSchema = new mongoose.Schema(
       maxlength: PET_LIMITS.MAX_THUMBNAIL_LENGTH,
     },
     summary: { type: String, trim: true, maxlength: 500, default: undefined },
-    description: { type: String, required: true, trim: true, maxlength: 5000 },
+    description: { type: mongoose.Schema.Types.Mixed, required: true },
     petType: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PetType',
@@ -112,6 +112,6 @@ petSchema.pre('findOneAndUpdate', function () {
 });
 
 petSchema.index({ inEnable: 1, petType: 1, breed: 1 });
-petSchema.index({ title: 'text', description: 'text', summary: 'text' });
+petSchema.index({ title: 'text', summary: 'text' });
 
 export const PetModel = mongoose.model('Pets', petSchema);

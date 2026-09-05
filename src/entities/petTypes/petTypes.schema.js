@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { IMAGE_UPLOAD } from '#configs/constants.js';
 import '#configs/zod.config.js';
+import { parseRichTextFormValue } from '#utils/richText.helpers.js';
 
 const {
   array,
@@ -18,6 +19,8 @@ const booleanSchema = preprocess(
   (value) => (value === 'true' ? true : value === 'false' ? false : value),
   boolean(),
 );
+
+const richTextSchema = preprocess(parseRichTextFormValue, unknown());
 
 const propertyDefinitionZodSchema = object({
   key: string()
@@ -91,14 +94,14 @@ export const petTypeMainImageZodSchema = object({
 
 export const createPetTypeZodSchema = object({
   title: string().min(2).max(20).trim(),
-  description: string().max(150).optional().default(''),
+  description: richTextSchema.optional().default(''),
   isEnabled: booleanSchema.optional().default(true),
   propertyDefinitions: propertyDefinitionsZodSchema.optional().default([]),
 });
 
 export const updatePetTypeZodSchema = object({
   title: string().min(2).max(20).trim().optional(),
-  description: string().max(150).optional(),
+  description: richTextSchema.optional(),
   isEnabled: booleanSchema.optional(),
   propertyDefinitions: propertyDefinitionsZodSchema.optional(),
 });
@@ -135,7 +138,7 @@ export const bulkPetTypeSchema = object({
   types: array(
     object({
       title: string().min(2).max(20).trim(),
-      description: string().max(150).optional().default(''),
+      description: richTextSchema.optional().default(''),
       isEnabled: boolean().optional().default(true),
     }),
   ).min(1),

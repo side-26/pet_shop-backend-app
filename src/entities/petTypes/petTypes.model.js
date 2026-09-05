@@ -39,9 +39,7 @@ const petTypeSchema = new mongoose.Schema(
 
     // Description
     description: {
-      type: String,
-      trim: true,
-      maxlength: [150, 'Description cannot exceed 150 characters'],
+      type: mongoose.Schema.Types.Mixed,
       default: '',
     },
 
