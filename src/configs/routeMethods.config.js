@@ -68,6 +68,7 @@ export const API_ROUTE_METHODS = [
   { path: '/orders/:id', methods: [get] },
   { path: '/orders/:id/delivery-state', methods: [patch] },
   { path: '/orders/:id/shipping-info', methods: [patch] },
+  { path: '/dashboard/metrics', methods: [get] },
   { path: '/countries', methods: [get] },
   { path: '/provinces', methods: [get] },
   { path: '/cities/:provinceId', methods: [get] },

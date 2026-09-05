@@ -199,6 +199,7 @@ const routes = [
   '../entities/pets/pets.route.js',
   '../entities/products/products.route.js',
   '../entities/orders/orders.route.js',
+  '../entities/dashboard/dashboard.route.js',
   '../integrations/countries/countries.route.js',
   '../integrations/locations/locations.route.js',
   '../integrations/reverseGeocoding/reverseGeocoding.route.js',

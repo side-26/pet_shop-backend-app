@@ -555,6 +555,138 @@ export const schemas = {
       createdAt: { type: 'string', format: 'date-time' },
     },
   },
+  DashboardMetricsResponse: {
+    type: 'object',
+    required: ['isSuccess', 'data'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      data: {
+        type: 'object',
+        required: [
+          'period',
+          'summary',
+          'ordersByDeliveryState',
+          'salesTrend',
+          'topSellingItems',
+          'lowStockItems',
+          'recentOrders',
+        ],
+        properties: {
+          period: {
+            type: 'object',
+            properties: {
+              fromDate: { type: 'string', format: 'date-time' },
+              toDate: { type: 'string', format: 'date-time' },
+              groupBy: { type: 'string', enum: ['day', 'week', 'month'] },
+              timeZone: { type: 'string', example: 'Asia/Tehran' },
+            },
+          },
+          summary: {
+            type: 'object',
+            properties: {
+              orders: { type: 'integer' },
+              grossRevenue: { type: 'number' },
+              discountTotal: { type: 'number' },
+              shippingRevenue: { type: 'number' },
+              netRevenue: { type: 'number' },
+              unitsSold: { type: 'integer' },
+              averageOrderValue: { type: 'number' },
+              customers: {
+                type: 'object',
+                properties: {
+                  total: { type: 'integer' },
+                  newInPeriod: { type: 'integer' },
+                },
+              },
+              catalog: {
+                type: 'object',
+                properties: {
+                  products: { $ref: '#/components/schemas/CatalogMetrics' },
+                  pets: { $ref: '#/components/schemas/CatalogMetrics' },
+                },
+              },
+            },
+          },
+          ordersByDeliveryState: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                deliveryState: { type: 'integer', enum: [0, 1, 2, 3] },
+                count: { type: 'integer' },
+              },
+            },
+          },
+          salesTrend: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                period: { type: 'string' },
+                orders: { type: 'integer' },
+                revenue: { type: 'number' },
+                unitsSold: { type: 'integer' },
+              },
+            },
+          },
+          topSellingItems: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/DashboardCatalogItem' },
+          },
+          lowStockItems: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/DashboardCatalogItem' },
+          },
+          recentOrders: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/DashboardRecentOrder' },
+          },
+        },
+      },
+    },
+  },
+  CatalogMetrics: {
+    type: 'object',
+    properties: {
+      total: { type: 'integer' },
+      enabled: { type: 'integer' },
+      lowStock: { type: 'integer' },
+    },
+  },
+  DashboardCatalogItem: {
+    type: 'object',
+    properties: {
+      itemId: { type: 'string' },
+      itemType: { type: 'string', enum: ['product', 'pet'] },
+      title: { type: 'string' },
+      mainImage: { type: 'string', format: 'uri' },
+      quantity: { type: 'integer' },
+      unitsSold: { type: 'integer' },
+      revenue: { type: 'number' },
+    },
+  },
+  DashboardRecentOrder: {
+    type: 'object',
+    properties: {
+      _id: { type: 'string' },
+      orderNumber: { type: 'string', pattern: '^\\d{9}$' },
+      deliveryState: { type: 'integer', enum: [0, 1, 2, 3] },
+      totalPrice: { type: 'number' },
+      discountPrice: { type: 'number' },
+      shippingPrice: { type: 'number' },
+      createdAt: { type: 'string', format: 'date-time' },
+      user: {
+        type: 'object',
+        nullable: true,
+        properties: {
+          _id: { type: 'string' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
+          phoneNumber: { type: 'string' },
+        },
+      },
+    },
+  },
 
   // ── Generic responses ────────────────────────────────────────────────────
   SuccessResponse: {

@@ -79,6 +79,20 @@ export const ROLES = {
 
 export const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SELLER];
 
+export const DASHBOARD_METRICS = {
+  DEFAULT_PERIOD_DAYS: 30,
+  DEFAULT_LOW_STOCK_THRESHOLD: 5,
+  MAX_LOW_STOCK_THRESHOLD: 1000,
+  DEFAULT_LIST_LIMIT: 5,
+  MAX_LIST_LIMIT: 20,
+  TIME_ZONE: 'Asia/Tehran',
+  GROUP_BY: {
+    DAY: 'day',
+    WEEK: 'week',
+    MONTH: 'month',
+  },
+};
+
 export const ORDER_STATUSES = {
   PENDING: 'pending',
   PROCESSING: 'processing',

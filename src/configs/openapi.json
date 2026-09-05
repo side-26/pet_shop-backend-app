@@ -5194,6 +5194,211 @@
         ]
       }
     },
+    "/dashboard/metrics": {
+      "get": {
+        "tags": ["/dashboard"],
+        "summary": "Get admin dashboard metrics",
+        "description": "Every created order is recognized as a sale. Revenue and top-selling metrics are derived from immutable order snapshots.",
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "format": {
+                  "type": "string",
+                  "example": "date-time"
+                }
+              }
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "format": {
+                  "type": "string",
+                  "example": "date-time"
+                }
+              }
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "enum": {
+                  "type": "array",
+                  "example": ["day", "week", "month"],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "default": {
+                  "type": "string",
+                  "example": "day"
+                }
+              }
+            }
+          },
+          {
+            "name": "lowStockThreshold",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 0
+                },
+                "maximum": {
+                  "type": "number",
+                  "example": 1000
+                },
+                "default": {
+                  "type": "number",
+                  "example": 5
+                }
+              }
+            }
+          },
+          {
+            "name": "topLimit",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "maximum": {
+                  "type": "number",
+                  "example": 20
+                },
+                "default": {
+                  "type": "number",
+                  "example": 5
+                }
+              }
+            }
+          },
+          {
+            "name": "lowStockLimit",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "maximum": {
+                  "type": "number",
+                  "example": 20
+                },
+                "default": {
+                  "type": "number",
+                  "example": 5
+                }
+              }
+            }
+          },
+          {
+            "name": "recentLimit",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "integer"
+                },
+                "minimum": {
+                  "type": "number",
+                  "example": 1
+                },
+                "maximum": {
+                  "type": "number",
+                  "example": 20
+                },
+                "default": {
+                  "type": "number",
+                  "example": 5
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardMetricsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin role required"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/countries": {
       "get": {
         "description": "",
@@ -6616,6 +6821,241 @@
           }
         }
       },
+      "DashboardMetricsResponse": {
+        "type": "object",
+        "required": ["isSuccess", "data"],
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "period",
+              "summary",
+              "ordersByDeliveryState",
+              "salesTrend",
+              "topSellingItems",
+              "lowStockItems",
+              "recentOrders"
+            ],
+            "properties": {
+              "period": {
+                "type": "object",
+                "properties": {
+                  "fromDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "toDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "groupBy": {
+                    "type": "string",
+                    "enum": ["day", "week", "month"]
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "example": "Asia/Tehran"
+                  }
+                }
+              },
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "orders": {
+                    "type": "integer"
+                  },
+                  "grossRevenue": {
+                    "type": "number"
+                  },
+                  "discountTotal": {
+                    "type": "number"
+                  },
+                  "shippingRevenue": {
+                    "type": "number"
+                  },
+                  "netRevenue": {
+                    "type": "number"
+                  },
+                  "unitsSold": {
+                    "type": "integer"
+                  },
+                  "averageOrderValue": {
+                    "type": "number"
+                  },
+                  "customers": {
+                    "type": "object",
+                    "properties": {
+                      "total": {
+                        "type": "integer"
+                      },
+                      "newInPeriod": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "catalog": {
+                    "type": "object",
+                    "properties": {
+                      "products": {
+                        "$ref": "#/components/schemas/CatalogMetrics"
+                      },
+                      "pets": {
+                        "$ref": "#/components/schemas/CatalogMetrics"
+                      }
+                    }
+                  }
+                }
+              },
+              "ordersByDeliveryState": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "deliveryState": {
+                      "type": "integer",
+                      "enum": [0, 1, 2, 3]
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "salesTrend": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "string"
+                    },
+                    "orders": {
+                      "type": "integer"
+                    },
+                    "revenue": {
+                      "type": "number"
+                    },
+                    "unitsSold": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "topSellingItems": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DashboardCatalogItem"
+                }
+              },
+              "lowStockItems": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DashboardCatalogItem"
+                }
+              },
+              "recentOrders": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DashboardRecentOrder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CatalogMetrics": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "integer"
+          },
+          "lowStock": {
+            "type": "integer"
+          }
+        }
+      },
+      "DashboardCatalogItem": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string"
+          },
+          "itemType": {
+            "type": "string",
+            "enum": ["product", "pet"]
+          },
+          "title": {
+            "type": "string"
+          },
+          "mainImage": {
+            "type": "string",
+            "format": "uri"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unitsSold": {
+            "type": "integer"
+          },
+          "revenue": {
+            "type": "number"
+          }
+        }
+      },
+      "DashboardRecentOrder": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string",
+            "pattern": "^\\d{9}$"
+          },
+          "deliveryState": {
+            "type": "integer",
+            "enum": [0, 1, 2, 3]
+          },
+          "totalPrice": {
+            "type": "number"
+          },
+          "discountPrice": {
+            "type": "number"
+          },
+          "shippingPrice": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "phoneNumber": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "SuccessResponse": {
         "type": "object",
         "properties": {
@@ -6709,6 +7149,10 @@
     {
       "name": "/countries",
       "description": "Endpoints under /api/countries"
+    },
+    {
+      "name": "/dashboard",
+      "description": "Endpoints under /api/dashboard"
     },
     {
       "name": "/orders",

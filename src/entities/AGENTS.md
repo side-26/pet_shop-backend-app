@@ -18,6 +18,7 @@ Each entity owns persistence, business logic, request orchestration, routes, val
 - [`subCategories/AGENTS.md`](./subCategories/AGENTS.md) — category-owned product subdivisions.
 - [`products/AGENTS.md`](./products/AGENTS.md) — customer and management product catalog operations.
 - [`orders/AGENTS.md`](./orders/AGENTS.md) — immutable Cart snapshots, user Order history, and management delivery workflows.
+- [`dashboard/AGENTS.md`](./dashboard/AGENTS.md) — admin-only cross-domain commerce and catalog metrics.
 
 ## Flow
 
