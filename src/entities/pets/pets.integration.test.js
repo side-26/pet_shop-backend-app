@@ -161,6 +161,7 @@ describe('Pet API', () => {
         quantity: undefined,
         price: undefined,
         discountPercentage: undefined,
+        salesVolume: 99,
       },
       [imageBuffer, imageBuffer],
     );
@@ -172,6 +173,7 @@ describe('Pet API', () => {
       discountPercentage: 0,
     });
     const saved = await PetModel.findById(response.body.data.id);
+    expect(saved.salesVolume).toBe(0);
     expect(saved.mainImage).toMatch(/^https:\/\/cdn\.example\.com\//);
     expect(saved.mainImageThumbnail).toMatch(/^data:image\/webp;base64,/);
     expect(Buffer.byteLength(saved.mainImageThumbnail)).toBeLessThan(10 * 1024);
@@ -213,16 +215,17 @@ describe('Pet API', () => {
   });
 
   test('seller can update pet sections, toggle status, read, and paginate', async () => {
-    const pet = await PetModel.create(petData);
+    const pet = await PetModel.create({ ...petData, salesVolume: 13 });
     const seller = { 'x-test-role': ROLES.SELLER };
 
     const updated = await request(app)
       .put(`/api/pets/${pet._id}`)
       .set(seller)
-      .send({ title: 'Updated kitten' });
+      .send({ title: 'Updated kitten', salesVolume: 99 });
     expect(updated.status).toBe(STATUES.SUCCESS);
     expect(updated.body.data.title).toBe('Updated kitten');
     expect(updated.body.data).not.toHaveProperty('price');
+    expect(updated.body.data).not.toHaveProperty('salesVolume');
 
     const imageUpdated = await request(app)
       .put(`/api/pets/${pet._id}/images`)
@@ -309,6 +312,11 @@ describe('Pet API', () => {
     expect(list.body.data.result[0].images).toEqual([
       'https://cdn.example.com/pets/main/generated.webp',
     ]);
+    expect(list.body.data.result[0]).toHaveProperty('salesVolume', 13);
+    const managementDetail = await request(app)
+      .get(`/api/pets/manage/${pet._id}`)
+      .set(seller);
+    expect(managementDetail.body.data).not.toHaveProperty('salesVolume');
 
     await PetModel.create({
       ...petData,

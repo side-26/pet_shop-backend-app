@@ -57,6 +57,11 @@ export const formatManagementPet = (pet) => {
   };
 };
 
+export const formatManagementPetListItem = (pet) => ({
+  ...formatManagementPet(pet),
+  salesVolume: valueOf(pet).salesVolume,
+});
+
 export const formatCustomerPetListItem = (pet) => {
   const value = valueOf(pet);
   return {

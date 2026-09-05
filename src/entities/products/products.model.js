@@ -40,6 +40,7 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
     quantity: { type: Number, required: true, min: 0, default: 0 },
+    salesVolume: { type: Number, required: true, min: 0, default: 0 },
     price: { type: Number, required: true, min: 0, default: 0 },
     discountPercentage: {
       type: Number,
@@ -106,6 +107,7 @@ productSchema.pre('save', function () {
       category: this.category?.toString(),
       subCategory: this.subCategory?.toString(),
       quantity: this.quantity,
+      salesVolume: this.salesVolume,
       price: this.price,
       discountPercentage: this.discountPercentage,
       isEnable: this.isEnable,

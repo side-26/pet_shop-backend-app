@@ -10,6 +10,7 @@ import {
   formatCustomerProductDetail,
   formatCustomerProductListItem,
   formatManagementProduct,
+  formatManagementProductListItem,
   formatProductImages,
   formatProductMainInfo,
   formatProductPrice,
@@ -348,7 +349,7 @@ export class ProductService {
   }
 
   static formatManagementMany(products) {
-    return products.map(formatManagementProduct);
+    return products.map(formatManagementProductListItem);
   }
 
   static formatCustomerList(products) {

@@ -10,6 +10,7 @@ import {
   formatCustomerPetDetail,
   formatCustomerPetListItem,
   formatManagementPet,
+  formatManagementPetListItem,
   formatPetBaseInfo,
   formatPetImages,
   formatPetPrice,
@@ -347,7 +348,7 @@ export class PetService {
   }
 
   static formatManagementMany(pets) {
-    return pets.map(formatManagementPet);
+    return pets.map(formatManagementPetListItem);
   }
 
   static formatCustomerList(pets) {

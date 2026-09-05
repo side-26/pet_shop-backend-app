@@ -27,6 +27,7 @@ const imageListSchema = preprocess(
 const summarySchema = string().trim().max(500).optional();
 const descriptionSchema = string().trim().min(1).max(5000);
 const quantitySchema = coerce.number().int().min(0);
+const salesVolumeSchema = coerce.number().int().min(0);
 const priceSchema = coerce.number().min(0);
 const discountPercentageSchema = coerce
   .number()
@@ -62,6 +63,7 @@ const petFields = {
   petType: objectIdSchema,
   breed: objectIdSchema,
   quantity: quantitySchema,
+  salesVolume: salesVolumeSchema,
   price: priceSchema,
   discountPercentage: discountPercentageSchema,
   inEnable: booleanSchema,
@@ -72,6 +74,7 @@ export const petPersistedZodSchema = object({
   ...petFields,
   images: petFields.images.optional().default([]),
   quantity: quantitySchema.optional().default(0),
+  salesVolume: salesVolumeSchema.optional().default(0),
   price: priceSchema.optional().default(0),
   discountPercentage: discountPercentageSchema.optional().default(0),
 });
@@ -79,6 +82,7 @@ export const petPersistedZodSchema = object({
 const petRequestFields = { ...petFields };
 delete petRequestFields.mainImage;
 delete petRequestFields.mainImageThumbnail;
+delete petRequestFields.salesVolume;
 
 export const createPetZodSchema = object({
   ...petRequestFields,

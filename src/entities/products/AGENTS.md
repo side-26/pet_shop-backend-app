@@ -23,6 +23,7 @@ References `CategoryModel` and `SubCategoryModel`; routes use authentication and
 - Create and replace main/gallery images through the image section APIs; convert uploads to WebP and generate `mainImageThumbnail` server-side as a Base64 Data URL.
 - Generate product slugs server-side from the title and product ID; create products enabled with zero price and discount, then manage status and pricing through their dedicated APIs.
 - Management reads and updates main information, images, and prices through `/products/:id/main-info`, `/products/:id/images`, and `/products/:id/price`.
+- The internal `salesVolume` counter defaults to zero and is returned only for entries in the management paginated list; it is not accepted by catalog create/update APIs or returned by detail and section routes.
 - Reuse shared pagination, statuses, errors, and product limits.
 
 ## Summary

@@ -26,6 +26,7 @@ References `PetTypeModel` and `BreedModel`; routes use authentication, role chec
 - Customer full-data pagination is exposed at `GET /pets/customer/paginate`, always restricts results to `inEnable: true`, and filters by `title`, `petType`, `breed`, and inclusive `priceRange=MIN-MAX`.
 - Every paginated pet response uses `data: { result, pagination }`; never place `pagination` beside `data`.
 - Management reads and updates base information, images, and prices through `/pets/:id/base-info`, `/pets/:id/images`, and `/pets/:id/price`; the generic `PUT /pets/:id` updates base information only.
+- The internal `salesVolume` counter defaults to zero and is returned only for entries in the management paginated list; it is not accepted by catalog create/update APIs or returned by detail and section routes.
 - Persist and return the pet availability property as `inEnable`; map the pagination-only `isEnable` query parameter to it.
 
 ## Summary

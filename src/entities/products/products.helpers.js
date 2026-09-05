@@ -65,6 +65,11 @@ export const formatManagementProduct = (product) => {
   };
 };
 
+export const formatManagementProductListItem = (product) => ({
+  ...formatManagementProduct(product),
+  salesVolume: valueOf(product).salesVolume,
+});
+
 export const formatCustomerProductListItem = (product) => {
   const value = valueOf(product);
   return {

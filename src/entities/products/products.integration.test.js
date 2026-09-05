@@ -200,6 +200,7 @@ describe('Product API', () => {
         discountPercentage: 101,
         isEnable: false,
         slug: 'client-supplied-slug',
+        salesVolume: 99,
       },
     );
     expect(response.status).toBe(STATUES.CREATED);
@@ -209,6 +210,9 @@ describe('Product API', () => {
       isEnable: true,
     });
     expect(response.body.data.slug).not.toBe('client-supplied-slug');
+    expect(
+      (await ProductModel.findById(response.body.data.id)).salesVolume,
+    ).toBe(0);
   });
 
   test('rejects invalid Category, invalid SubCategory, and mismatched ownership', async () => {
@@ -235,15 +239,19 @@ describe('Product API', () => {
   });
 
   test('seller can update product sections, toggle status, read, and paginate', async () => {
-    const product = await ProductModel.create(productData);
+    const product = await ProductModel.create({
+      ...productData,
+      salesVolume: 13,
+    });
     const seller = { 'x-test-role': ROLES.SELLER };
 
     const updated = await request(app)
       .put(`/api/products/${product._id}`)
       .set(seller)
-      .send({ title: 'Updated food' });
+      .send({ title: 'Updated food', salesVolume: 99 });
     expect(updated.status).toBe(STATUES.SUCCESS);
     expect(updated.body.data.title).toBe('Updated food');
+    expect(updated.body.data).not.toHaveProperty('salesVolume');
     const mainInfoUpdated = await request(app)
       .put(`/api/products/${product._id}/main-info`)
       .set(seller)
@@ -338,6 +346,14 @@ describe('Product API', () => {
     expect(list.body.data.result[0].images).toEqual([
       'https://cdn.example.com/products/main/generated.webp',
     ]);
+    expect(list.body.data.result[0]).toHaveProperty('salesVolume', 13);
+    expect(
+      (
+        await request(app)
+          .get(`/api/products/manage/${product._id}`)
+          .set(seller)
+      ).body.data,
+    ).not.toHaveProperty('salesVolume');
   });
 
   test('validates effective category/subCategory pair during partial updates', async () => {

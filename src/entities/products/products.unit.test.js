@@ -67,6 +67,7 @@ const data = {
   category: categoryId,
   subCategory: subCategoryId,
   quantity: 0,
+  salesVolume: 13,
   price: 0,
   discountPercentage: 0,
   isEnable: true,
@@ -376,7 +377,12 @@ describe('ProductService', () => {
     expect(ProductService.formatManagement(populated).images).toEqual(
       data.images,
     );
-    expect(ProductService.formatManagementMany([populated])).toHaveLength(1);
+    const managementList = ProductService.formatManagementMany([populated]);
+    expect(managementList).toHaveLength(1);
+    expect(managementList[0]).toHaveProperty('salesVolume', data.salesVolume);
+    expect(ProductService.formatManagement(populated)).not.toHaveProperty(
+      'salesVolume',
+    );
 
     const list = ProductService.formatCustomerList([populated])[0];
     expect(list).not.toHaveProperty('images');
@@ -384,6 +390,7 @@ describe('ProductService', () => {
     expect(list.subCategory).toBe('Dry Food');
 
     const detail = ProductService.formatCustomerDetail(populated);
+    expect(detail).not.toHaveProperty('salesVolume');
     expect(detail.images).toEqual(data.images);
     expect(detail.category).toMatchObject({ title: 'Food' });
     expect(detail.subCategory).toMatchObject({ title: 'Dry Food' });

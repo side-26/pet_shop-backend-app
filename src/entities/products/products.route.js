@@ -43,7 +43,7 @@ router.get(
      #swagger.parameters['price'] = { in: 'query', type: 'number', minimum: 0 }
      #swagger.parameters['quantity'] = { in: 'query', type: 'integer', minimum: 0 }
      #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' }
-     #swagger.responses[200] = { description: 'Paginated management product list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
+     #swagger.responses[200] = { description: 'Paginated management product list. Each result includes the management-only salesVolume counter.', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getManagementProductListController,

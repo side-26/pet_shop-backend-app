@@ -71,6 +71,7 @@ const data = {
   petType: petTypeId,
   breed: breedId,
   quantity: 0,
+  salesVolume: 13,
   price: 0,
   discountPercentage: 0,
   inEnable: true,
@@ -391,7 +392,12 @@ describe('PetService', () => {
     expect(PetService.formatManagement(populatedPet).images).toEqual(
       data.images,
     );
-    expect(PetService.formatManagementMany([populatedPet])).toHaveLength(1);
+    const managementList = PetService.formatManagementMany([populatedPet]);
+    expect(managementList).toHaveLength(1);
+    expect(managementList[0]).toHaveProperty('salesVolume', data.salesVolume);
+    expect(PetService.formatManagement(populatedPet)).not.toHaveProperty(
+      'salesVolume',
+    );
 
     const list = PetService.formatCustomerList([populatedPet])[0];
     expect(list).not.toHaveProperty('images');
@@ -399,6 +405,7 @@ describe('PetService', () => {
     expect(list.breed).toBe('Persian');
 
     const detail = PetService.formatCustomerDetail(populatedPet);
+    expect(detail).not.toHaveProperty('salesVolume');
     expect(detail.images).toEqual(data.images);
     expect(detail.petType).toMatchObject({ title: 'Cat' });
     expect(detail.breed).toMatchObject({ title: 'Persian' });
