@@ -192,6 +192,7 @@ const doc = {
 const outputFile = path.join(configDirectory, 'openapi.json');
 const routes = [
   '../entities/users/users.route.js',
+  '../entities/images/images.route.js',
   '../entities/petTypes/petTypes.route.js',
   '../entities/categories/categories.route.js',
   '../entities/subCategories/subCategories.route.js',

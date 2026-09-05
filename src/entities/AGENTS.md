@@ -11,6 +11,7 @@ Each entity owns persistence, business logic, request orchestration, routes, val
 ## Entity Map
 
 - [`users/AGENTS.md`](./users/AGENTS.md) — accounts, authentication, profiles, addresses, roles, and carts.
+- [`images/AGENTS.md`](./images/AGENTS.md) — management-only, unassigned object-storage image operations.
 - [`petTypes/AGENTS.md`](./petTypes/AGENTS.md) — pet-type definitions and configurable properties.
 - [`breeds/AGENTS.md`](./breeds/AGENTS.md) — breeds associated with pet types.
 - [`pets/AGENTS.md`](./pets/AGENTS.md) — customer and management pet catalog operations.

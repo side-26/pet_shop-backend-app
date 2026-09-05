@@ -13,6 +13,7 @@ import {
 } from '#middlewares/security.middleware.js';
 
 import userRoutes from '#entities/users/users.route.js';
+import imageRoutes from '#entities/images/images.route.js';
 import petTypeRoutes from '#entities/petTypes/petTypes.route.js';
 import categoryRoutes from '#entities/categories/categories.route.js';
 import subCategoryRoutes from '#entities/subCategories/subCategories.route.js';
@@ -46,6 +47,7 @@ app.use(
 );
 
 app.use('/api', userRoutes);
+app.use('/api', imageRoutes);
 app.use('/api', petTypeRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', subCategoryRoutes);

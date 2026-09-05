@@ -93,6 +93,7 @@ const persianFieldNames = {
   thumbnailImage: 'تصویر بندانگشتی',
   thumbnail: 'تصویر بندانگشتی',
   images: 'تصاویر',
+  imageUrl: 'نشانی تصویر',
 
   // Status
   isEnabled: 'وضعیت فعال',

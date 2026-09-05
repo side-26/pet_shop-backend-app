@@ -11,6 +11,7 @@ export const API_ROUTE_METHODS = [
   { path: '/users/login', methods: [post] },
   { path: '/users/refresh-token', methods: [post] },
   { path: '/users/edit-info', methods: [put] },
+  { path: '/images', methods: [post, deleteMethod] },
   { path: '/users/addresses', methods: [get, post] },
   { path: '/users/addresses/:addressId', methods: [patch] },
   { path: '/users/change-password', methods: [put] },
