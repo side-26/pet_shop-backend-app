@@ -1,0 +1,4 @@
+export const LANDING_LIMITS = {
+  FEATURED_PET_TYPES: 4,
+  FEATURED_PRODUCTS: 4,
+};
