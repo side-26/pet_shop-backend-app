@@ -1,12 +1,21 @@
 jest.mock('#middlewares/auth.middleware.js', () => ({
   authenticated: (req, _res, next) => {
-    req.user = { id: '65a4de97aff1fbb38c437952', role: 'admin' };
+    req.user = {
+      id: '65a4de97aff1fbb38c437952',
+      role: req.get('x-test-role') || 'admin',
+    };
     next();
   },
 }));
 
 jest.mock('#middlewares/role.middleware.js', () => ({
-  roleMiddleware: () => (_req, _res, next) => next(),
+  roleMiddleware: (roles) => (req, res, next) => {
+    if (roles.includes(req.user.role)) {
+      next();
+      return;
+    }
+    res.status(403).json({ isSuccess: false });
+  },
 }));
 
 jest.mock('#services/objectStorage.service.js', () => ({
@@ -107,6 +116,17 @@ describe('Brand API', () => {
       title: 'Enabled brand',
       isEnable: true,
     });
+  });
+
+  test('rejects customers but permits sellers on brand routes', async () => {
+    await request(app)
+      .get('/api/brands')
+      .set('x-test-role', 'customer')
+      .expect(403);
+    await request(app)
+      .get('/api/brands')
+      .set('x-test-role', 'seller')
+      .expect(200);
   });
 
   test('validates required create fields and identifiers', async () => {

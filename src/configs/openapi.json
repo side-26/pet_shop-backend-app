@@ -3093,6 +3093,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "/brands"
         ]
@@ -3168,6 +3173,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "/brands"
         ]
@@ -3209,6 +3219,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "tags": [
           "/brands"
         ]
