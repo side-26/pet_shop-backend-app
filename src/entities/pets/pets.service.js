@@ -2,6 +2,7 @@ import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
@@ -263,6 +264,7 @@ export class PetService {
   }
 
   static async delete(id) {
+    await assertEntityIsNotReferenced('pet', id);
     const pet = await PetModel.findByIdAndDelete(id);
     if (!pet) {
       setErrorResponse(STATUES.NOT_FOUND, {

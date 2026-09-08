@@ -12,6 +12,10 @@ jest.mock('#utils/helpers.js', () => ({
   }),
 }));
 
+jest.mock('#services/referenceGuard.service.js', () => ({
+  assertEntityIsNotReferenced: jest.fn(),
+}));
+
 jest.mock('#services/mainImage.service.js', () => ({
   MainImageService: {
     upload: jest.fn(),

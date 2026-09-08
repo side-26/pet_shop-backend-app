@@ -7,6 +7,10 @@ jest.mock('#utils/helpers.js', () => ({
   }),
 }));
 
+jest.mock('#services/referenceGuard.service.js', () => ({
+  assertEntityIsNotReferenced: jest.fn(),
+}));
+
 jest.mock('#entities/petTypes/petTypes.model.js', () => ({
   PetTypeModel: { findById: jest.fn() },
 }));

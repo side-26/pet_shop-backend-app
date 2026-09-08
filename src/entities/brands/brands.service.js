@@ -1,5 +1,6 @@
 import { STATUES } from '#configs/constants.js';
 import { MainImageService } from '#services/mainImage.service.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
 import { BrandModel } from './brands.model.js';
@@ -68,6 +69,7 @@ export class BrandService {
   }
 
   static async delete(id) {
+    await assertEntityIsNotReferenced('brand', id);
     const brand = await BrandModel.findByIdAndDelete(id);
     if (!brand) {
       setErrorResponse(STATUES.NOT_FOUND, {

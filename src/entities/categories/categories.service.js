@@ -1,5 +1,6 @@
 import { STATUES } from '#configs/constants.js';
 import { MainImageService } from '#services/mainImage.service.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
 import { setErrorResponse } from '#utils/helpers.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 
@@ -233,6 +234,7 @@ export class CategoryService {
   }
 
   static async delete(categoryId) {
+    await assertEntityIsNotReferenced('category', categoryId);
     const category = await CategoryModel.findByIdAndDelete(categoryId);
 
     if (!category) {

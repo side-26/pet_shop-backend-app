@@ -3,6 +3,7 @@ import { CategoryModel } from '#entities/categories/categories.model.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
@@ -274,6 +275,7 @@ export class ProductService {
   }
 
   static async delete(id) {
+    await assertEntityIsNotReferenced('product', id);
     const product = await ProductModel.findByIdAndDelete(id);
     if (!product) {
       setErrorResponse(STATUES.NOT_FOUND, {

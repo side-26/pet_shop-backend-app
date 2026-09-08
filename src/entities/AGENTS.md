@@ -36,6 +36,7 @@ Zod schemas validate request and model-update data. Public service functions are
 - Keep entity-specific pure formatting/filter helpers in `<entity>.helpers.js`; promote cross-entity helpers to `src/utils`.
 - Update both unit and integration tests when a service function or endpoint changes.
 - Reuse domain constants and keep application messages in Persian.
+- Before permanently deleting a referenced domain record, use the shared reference guard. Return `409 Conflict` when dependents exist; enabling and disabling remain available lifecycle alternatives.
 - Follow the root Zod, import grouping, and documentation synchronization rules.
 
 ## When Adding a Feature

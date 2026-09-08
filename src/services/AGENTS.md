@@ -20,6 +20,8 @@ Processes Product and Pet main-image buffers, uploads the full WebP image, retur
 
 ## Dependencies
 
+`referenceGuard.service.js` protects domain integrity before destructive deletes and returns the shared `409 Conflict` response when a record is referenced.
+
 The users, products, and pets services use object storage; image transformation is provided by `src/utils/image.helpers.js`.
 
 ## Modification Rules
@@ -27,6 +29,7 @@ The users, products, and pets services use object storage; image transformation 
 - Keep provider operations and error translation inside the service.
 - Persist complete public image URLs, never raw object keys or metadata objects.
 - Mock external clients in unit tests.
+- Keep delete-reference policies centralized in `referenceGuard.service.js`; referenced domain records must be disabled rather than deleted.
 
 ## Summary
 

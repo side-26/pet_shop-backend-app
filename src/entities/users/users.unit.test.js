@@ -129,6 +129,10 @@ jest.mock('#utils/helpers.js', () => ({
   verifyRefreshToken: jest.fn(),
 }));
 
+jest.mock('#services/referenceGuard.service.js', () => ({
+  assertEntityIsNotReferenced: jest.fn(),
+}));
+
 jest.mock('./users.model.js', () => ({
   UserModel: {
     findOne: jest.fn(),

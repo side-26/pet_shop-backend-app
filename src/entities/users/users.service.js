@@ -22,6 +22,7 @@ import logger from '#configs/logger.js';
 import { PetService } from '#entities/pets/pets.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
 
 import {
   createNewQueryParam,
@@ -100,6 +101,7 @@ export class UserService {
       });
     }
 
+    await assertEntityIsNotReferenced('user', userId);
     const deletedUser = await UserModel.findByIdAndDelete(userId.toString());
 
     if (!deletedUser) {

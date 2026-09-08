@@ -91,6 +91,35 @@ const addMethodNotAllowedResponses = (openapiDocument) => {
   return openapiDocument;
 };
 
+const referenceProtectedDeletePaths = new Set([
+  '/pet-types/{id}',
+  '/breeds/{id}',
+  '/categories/{id}',
+  '/sub-categories/{id}',
+  '/brands/{id}',
+  '/pets/{id}',
+  '/products/{id}',
+  '/users/{id}',
+]);
+
+const addReferenceConflictResponses = (openapiDocument) => {
+  referenceProtectedDeletePaths.forEach((apiPath) => {
+    const operation = openapiDocument.paths?.[apiPath]?.delete;
+    if (!operation) return;
+    operation.responses ??= {};
+    operation.responses['409'] = {
+      description:
+        'The record is referenced by another entity and cannot be deleted.',
+      content: {
+        'application/json': {
+          schema: { $ref: '#/components/schemas/ErrorResponse' },
+        },
+      },
+    };
+  });
+  return openapiDocument;
+};
+
 const userRouterCollections = new Set(['users', 'cart', 'wishlist']);
 
 const getUserRouteRateLimitPolicy = (apiPath) => {
@@ -213,7 +242,11 @@ await swaggerAutogen({ openapi: '3.0.0' })(outputFile, routes, doc);
 
 const openapiDocument = JSON.parse(readFileSync(outputFile, 'utf8'));
 const taggedOpenapiDocument = addCollectionTags(
-  addMethodNotAllowedResponses(addUserRouteRateLimitResponses(openapiDocument)),
+  addReferenceConflictResponses(
+    addMethodNotAllowedResponses(
+      addUserRouteRateLimitResponses(openapiDocument),
+    ),
+  ),
 );
 
 writeFileSync(

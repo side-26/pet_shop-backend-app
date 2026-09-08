@@ -1,6 +1,7 @@
 import { STATUES } from '#configs/constants.js';
 
 import { setErrorResponse } from '#utils/helpers.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
 
 import { CategoryModel } from '#entities/categories/categories.model.js';
 
@@ -175,6 +176,7 @@ export class SubCategoryService {
   // ============================================
 
   static async delete(id) {
+    await assertEntityIsNotReferenced('subCategory', id);
     const subCategory = await SubCategoryModel.findByIdAndDelete(id);
 
     if (!subCategory) {
