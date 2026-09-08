@@ -184,6 +184,22 @@ export const schemas = {
       isEnable: { type: 'boolean' },
     },
   },
+  BrandMultipartBody: {
+    type: 'object',
+    required: ['title', 'title_fa'],
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 100 },
+      title_fa: { type: 'string', minLength: 2, maxLength: 100 },
+      logo: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Optional image smaller than 1 MB; generates thumbnailLogo.',
+      },
+      description: { description: 'Optional rich-text JSON value.' },
+      isEnable: { type: 'boolean', default: true },
+    },
+  },
   MainImageCreateBody: {
     type: 'object',
     required: ['mainImage'],

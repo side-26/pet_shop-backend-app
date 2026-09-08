@@ -51,6 +51,7 @@ const persianFieldNames = {
 
   // Pet / Pet Type / Category
   title: 'عنوان',
+  title_fa: 'عنوان فارسی',
   description: 'توضیحات',
   petType: 'نوع حیوان',
   petTypeId: 'شناسه نوع حیوان',
@@ -76,6 +77,8 @@ const persianFieldNames = {
   slug: 'عنوان',
   summary: 'خلاصه',
   mainImage: 'تصویر اصلی',
+  logo: 'لوگو',
+  thumbnailLogo: 'لوگوی بندانگشتی',
   propertyDefinitions: 'ویژگی‌های نوع حیوان',
   key: 'کلید ویژگی',
   label: 'عنوان ویژگی',

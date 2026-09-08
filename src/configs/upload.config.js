@@ -65,3 +65,13 @@ export const petTypeImageUpload = multer({
     fields: IMAGE_UPLOAD.MAX_MULTIPART_FIELDS,
   },
 });
+
+export const brandLogoImageUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: IMAGE_UPLOAD.MAX_BRAND_LOGO_SIZE_BYTES,
+    files: 1,
+    fields: IMAGE_UPLOAD.MAX_MULTIPART_FIELDS,
+  },
+});

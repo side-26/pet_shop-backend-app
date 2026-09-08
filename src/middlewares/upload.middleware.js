@@ -2,6 +2,7 @@ import multer from 'multer';
 
 import { IMAGE_UPLOAD, STATUES } from '#configs/constants.js';
 import {
+  brandLogoImageUpload,
   imageUpload,
   petCreateImageUpload,
   petTypeImageUpload,
@@ -45,6 +46,10 @@ export const uploadMainImage = handleUpload(
 
 export const uploadPetTypeMainImage = handleUpload(
   petTypeImageUpload.single(IMAGE_UPLOAD.MAIN_IMAGE_FIELD),
+);
+
+export const uploadBrandLogo = handleUpload(
+  brandLogoImageUpload.single(IMAGE_UPLOAD.BRAND_LOGO_FIELD),
 );
 
 export const uploadBreedMainImage = handleUpload(
