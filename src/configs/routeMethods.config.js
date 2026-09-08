@@ -39,7 +39,7 @@ export const API_ROUTE_METHODS = [
   { path: '/categories/:id', methods: [get, put, deleteMethod] },
   { path: '/brands', methods: [get, post] },
   { path: '/brands/enabled', methods: [get] },
-  { path: '/brands/:id', methods: [get, deleteMethod] },
+  { path: '/brands/:id', methods: [get, put, deleteMethod] },
   { path: '/brands/:id/enable', methods: [patch] },
   { path: '/brands/:id/disable', methods: [patch] },
   { path: '/sub-categories', methods: [get, post] },

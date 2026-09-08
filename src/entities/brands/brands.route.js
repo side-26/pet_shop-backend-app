@@ -13,6 +13,7 @@ import {
   getAllBrandsController,
   getBrandByIdController,
   getEnabledBrandsController,
+  updateBrandController,
 } from './brands.controller.js';
 
 const router = express.Router();
@@ -47,6 +48,15 @@ router.post(
   roleMiddleware(MANAGEMENT_ROLES),
   uploadBrandLogo,
   createBrandController,
+);
+router.put(
+  '/brands/:id',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BrandUpdateMultipartBody' } } } } */
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  uploadBrandLogo,
+  updateBrandController,
 );
 router.patch(
   '/brands/:id/enable',

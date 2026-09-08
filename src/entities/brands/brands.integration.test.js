@@ -102,6 +102,34 @@ describe('Brand API', () => {
     await request(app).get(`/api/brands/${brand._id}`).expect(200);
   });
 
+  test('updates a brand with the same multipart contract as creation', async () => {
+    const brand = await BrandModel.create({
+      title: 'Original brand',
+      title_fa: 'برند اولیه',
+      description: 'Original description',
+    });
+
+    const response = await request(app)
+      .put(`/api/brands/${brand._id}`)
+      .field('title', 'Updated brand')
+      .field('title_fa', 'برند به‌روز')
+      .field('description', 'Updated description')
+      .field('isEnable', 'false')
+      .attach('logo', logoBuffer, {
+        filename: 'updated-logo.png',
+        contentType: 'image/png',
+      })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      title: 'Updated brand',
+      title_fa: 'برند به‌روز',
+      description: 'Updated description',
+      isEnable: false,
+      logo: 'https://cdn.example.com/brands/logos/generated.webp',
+    });
+  });
+
   test('returns only enabled brands from the explicit enabled list endpoint', async () => {
     await BrandModel.create([
       { title: 'Enabled brand', title_fa: 'برند فعال', isEnable: true },

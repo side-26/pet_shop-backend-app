@@ -9,6 +9,7 @@ import {
   brandIdZodSchema,
   brandLogoZodSchema,
   createBrandZodSchema,
+  updateBrandZodSchema,
 } from './brands.schema.js';
 import { BrandService } from './brands.service.js';
 
@@ -24,6 +25,26 @@ export const createBrandController = async (req, res, next) => {
     const brand = await BrandService.create(body, req.user?.id, req.file);
     setSuccessResponse(res, STATUES.CREATED, {
       message: `برند "${brand.title}" با موفقیت ایجاد شد`,
+      data: BrandService.format(brand),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const updateBrandController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(brandIdZodSchema, req.params);
+    const body = returnFormValidation(updateBrandZodSchema, req.body);
+    if (req.file) {
+      returnFormValidation(brandLogoZodSchema, {
+        mimetype: req.file.mimetype,
+        imageFileSize: req.file.size,
+      });
+    }
+    const brand = await BrandService.update(id, body, req.user?.id, req.file);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: `برند "${brand.title}" با موفقیت ویرایش شد`,
       data: BrandService.format(brand),
     });
   } catch (error) {

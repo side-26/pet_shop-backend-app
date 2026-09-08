@@ -117,6 +117,34 @@ describe('BrandService', () => {
     );
   });
 
+  test('updates the brand and keeps its existing logo when no replacement is sent', async () => {
+    const mutableBrand = {
+      ...brand,
+      save: jest.fn().mockResolvedValue({ ...brand, title: 'Updated brand' }),
+    };
+    BrandModel.findById.mockResolvedValue(mutableBrand);
+    BrandModel.findOne.mockResolvedValue(null);
+
+    await expect(
+      BrandService.update(
+        brand._id,
+        {
+          title: 'Updated brand',
+          title_fa: 'برند به‌روز',
+          description: '',
+          isEnable: true,
+        },
+        'admin-id',
+      ),
+    ).resolves.toMatchObject({ title: 'Updated brand' });
+
+    expect(MainImageService.upload).not.toHaveBeenCalled();
+    expect(mutableBrand).toMatchObject({
+      logo: brand.logo,
+      updatedBy: 'admin-id',
+    });
+  });
+
   test('rejects duplicate titles case-insensitively', async () => {
     BrandModel.findOne.mockResolvedValue(brand);
 

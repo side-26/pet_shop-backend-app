@@ -200,6 +200,21 @@ export const schemas = {
       isEnable: { type: 'boolean', default: true },
     },
   },
+  BrandUpdateMultipartBody: {
+    type: 'object',
+    required: ['title', 'title_fa'],
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 100 },
+      title_fa: { type: 'string', minLength: 2, maxLength: 100 },
+      logo: {
+        type: 'string',
+        format: 'binary',
+        description: 'Optional replacement image smaller than 1 MB.',
+      },
+      description: { description: 'Optional rich-text JSON value.' },
+      isEnable: { type: 'boolean' },
+    },
+  },
   MainImageCreateBody: {
     type: 'object',
     required: ['mainImage', 'title', 'description', 'category', 'brand'],

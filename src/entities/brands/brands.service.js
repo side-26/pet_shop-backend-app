@@ -10,10 +10,11 @@ export class BrandService {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  static async findOne({ title } = {}) {
+  static async findOne({ title, excludeId } = {}) {
     const query = title
       ? { title: { $regex: `^${this.escapeRegex(title)}$`, $options: 'i' } }
       : {};
+    if (excludeId) query._id = { $ne: excludeId };
     return BrandModel.findOne(query);
   }
 
@@ -58,6 +59,43 @@ export class BrandService {
     brand.isEnable = isEnable;
     brand.updatedBy = userId;
     return brand.save();
+  }
+
+  static async update(id, data, userId, logoFile) {
+    const brand = await this.findById(id);
+    const existingBrand = await this.findOne({
+      title: data.title,
+      excludeId: id,
+    });
+    if (existingBrand) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: `برند "${data.title}" قبلاً ثبت شده است`,
+        code: 'BRAND_ALREADY_EXISTS',
+      });
+    }
+
+    const uploadedLogo = logoFile
+      ? await MainImageService.upload(logoFile, 'brands/logos')
+      : null;
+    const previousLogoKey = uploadedLogo
+      ? MainImageService.getStoredKey(brand.logo, { id, userId })
+      : undefined;
+    Object.assign(brand, data);
+    if (uploadedLogo) {
+      brand.logo = uploadedLogo.mainImage;
+      brand.thumbnailLogo = uploadedLogo.mainImageThumbnail;
+    }
+    brand.updatedBy = userId;
+    try {
+      const updatedBrand = await brand.save();
+      if (uploadedLogo) {
+        await MainImageService.cleanup(previousLogoKey, { id, userId });
+      }
+      return updatedBrand;
+    } catch (error) {
+      await MainImageService.cleanup(uploadedLogo?.key, { id, userId });
+      throw error;
+    }
   }
 
   static async enable(id, userId) {

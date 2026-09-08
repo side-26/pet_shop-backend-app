@@ -28,6 +28,7 @@ const brandFields = {
 };
 
 export const createBrandZodSchema = object(brandFields);
+export const updateBrandZodSchema = createBrandZodSchema;
 export const brandIdZodSchema = object({
   id: string().regex(/^[0-9a-fA-F]{24}$/),
 });
