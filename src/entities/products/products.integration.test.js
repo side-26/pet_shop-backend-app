@@ -27,6 +27,7 @@ import request from 'supertest';
 
 import { ROLES, STATUES } from '#configs/constants.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
+import { BrandModel } from '#entities/brands/brands.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
@@ -55,6 +56,7 @@ const categoryImageFields = {
 describe('Product API', () => {
   let app;
   let category;
+  let brand;
   let otherCategory;
   let subCategory;
   let otherSubCategory;
@@ -111,6 +113,7 @@ describe('Product API', () => {
       ProductModel.deleteMany({}),
       SubCategoryModel.deleteMany({}),
       CategoryModel.deleteMany({}),
+      BrandModel.deleteMany({}),
       PetTypeModel.deleteMany({}),
     ]);
     const petType = await PetTypeModel.create({
@@ -136,9 +139,14 @@ describe('Product API', () => {
       { title: 'Dry Food', category: category._id },
       { title: 'Collars', category: otherCategory._id },
     ]);
+    brand = await BrandModel.create({
+      title: 'Royal Canin',
+      title_fa: 'رویال کنین',
+    });
     productData = {
       ...baseProductData,
       category: category._id.toString(),
+      brand: brand._id.toString(),
       subCategory: subCategory._id.toString(),
     };
   });
@@ -192,6 +200,11 @@ describe('Product API', () => {
       .send({ ...productData, title: undefined });
     expect(missing.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
+    const missingBrand = await request(app)
+      .post('/api/products')
+      .send({ ...productData, brand: undefined });
+    expect(missingBrand.status).toBe(STATUES.BAD_FORM_VALIDATION);
+
     const response = await multipartProduct(
       request(app).post('/api/products'),
       {
@@ -228,6 +241,13 @@ describe('Product API', () => {
       (
         await request(app)
           .post('/api/products')
+          .send({ ...productData, brand: missingId })
+      ).status,
+    ).toBe(STATUES.BAD_FORM_VALIDATION);
+    expect(
+      (
+        await request(app)
+          .post('/api/products')
           .send({ ...productData, subCategory: missingId })
       ).status,
     ).toBe(STATUES.BAD_FORM_VALIDATION);
@@ -248,7 +268,11 @@ describe('Product API', () => {
     const updated = await request(app)
       .put(`/api/products/${product._id}`)
       .set(seller)
-      .send({ title: 'Updated food', salesVolume: 99 });
+      .send({
+        title: 'Updated food',
+        brand: brand._id.toString(),
+        salesVolume: 99,
+      });
     expect(updated.status).toBe(STATUES.SUCCESS);
     expect(updated.body.data.title).toBe('Updated food');
     expect(updated.body.data).not.toHaveProperty('salesVolume');
@@ -256,6 +280,7 @@ describe('Product API', () => {
       .put(`/api/products/${product._id}/main-info`)
       .set(seller)
       .send({
+        brand: brand._id.toString(),
         category: category._id.toString(),
         subCategory: subCategory._id.toString(),
         quantity: 9,
@@ -360,9 +385,21 @@ describe('Product API', () => {
     const product = await ProductModel.create(productData);
     const response = await request(app)
       .patch(`/api/products/${product._id}`)
-      .send({ category: otherCategory._id.toString() });
+      .send({
+        brand: brand._id.toString(),
+        category: otherCategory._id.toString(),
+      });
     expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
     expect(response.body.message).toContain('متعلق');
+  });
+
+  test('requires a brand for main-information updates', async () => {
+    const product = await ProductModel.create(productData);
+    const response = await request(app)
+      .patch(`/api/products/${product._id}`)
+      .send({ title: 'No brand update' });
+
+    expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 
   test('seller cannot delete while admin can delete', async () => {

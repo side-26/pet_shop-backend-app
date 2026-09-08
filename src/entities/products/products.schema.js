@@ -56,6 +56,7 @@ const productFields = {
   summary: summarySchema,
   description: descriptionSchema,
   category: objectIdSchema,
+  brand: objectIdSchema,
   subCategory: objectIdSchema.nullable(),
   quantity: quantitySchema,
   salesVolume: salesVolumeSchema,
@@ -80,18 +81,31 @@ export const createProductZodSchema = object({
   summary: summarySchema,
   description: descriptionSchema,
   category: objectIdSchema,
+  brand: objectIdSchema,
   subCategory: objectIdSchema.nullable().optional(),
   quantity: quantitySchema.optional().default(0),
 });
-export const updateProductMainInfoZodSchema = object({
+const productMainInfoFields = {
   title: titleSchema,
   summary: summarySchema,
   description: descriptionSchema,
   category: objectIdSchema,
   subCategory: objectIdSchema.nullable(),
   quantity: quantitySchema,
+};
+
+export const updateProductMainInfoZodSchema = object({
+  ...productMainInfoFields,
+  brand: objectIdSchema,
 })
-  .partial()
+  .partial({
+    title: true,
+    summary: true,
+    description: true,
+    category: true,
+    subCategory: true,
+    quantity: true,
+  })
   .refine((value) => Object.keys(value).length > 0, {
     message: 'حداقل یک فیلد باید ارسال شود',
   });

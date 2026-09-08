@@ -202,7 +202,7 @@ export const schemas = {
   },
   MainImageCreateBody: {
     type: 'object',
-    required: ['mainImage'],
+    required: ['mainImage', 'title', 'description', 'category', 'brand'],
     properties: {
       mainImage: { type: 'string', format: 'binary' },
       images: {
@@ -214,6 +214,7 @@ export const schemas = {
       summary: { type: 'string' },
       description: { description: 'Rich-text JSON value.' },
       category: { type: 'string' },
+      brand: { type: 'string' },
       subCategory: { type: 'string', nullable: true },
       quantity: { type: 'number' },
     },
@@ -265,11 +266,13 @@ export const schemas = {
   },
   ProductBaseInfoUpdateBody: {
     type: 'object',
+    required: ['brand'],
     properties: {
       title: { type: 'string', minLength: 2, maxLength: 150 },
       summary: { type: 'string' },
       description: { description: 'Rich-text JSON value.' },
       category: { type: 'string' },
+      brand: { type: 'string' },
       subCategory: { type: 'string', nullable: true },
       quantity: { type: 'integer', minimum: 0 },
     },

@@ -33,6 +33,12 @@ const productSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    brand: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Brand',
+      required: true,
+      index: true,
+    },
     subCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'SubCategories',
@@ -105,6 +111,7 @@ productSchema.pre('save', function () {
       summary: this.summary,
       description: this.description,
       category: this.category?.toString(),
+      brand: this.brand?.toString(),
       subCategory: this.subCategory?.toString(),
       quantity: this.quantity,
       salesVolume: this.salesVolume,
@@ -121,6 +128,7 @@ productSchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
   const data = { ...(update?.$set || update || {}) };
   if (data.category) data.category = data.category.toString();
+  if (data.brand) data.brand = data.brand.toString();
   if (data.subCategory) data.subCategory = data.subCategory.toString();
   validateProductData(
     productModelUpdateZodSchema,
@@ -129,7 +137,7 @@ productSchema.pre('findOneAndUpdate', function () {
   );
 });
 
-productSchema.index({ isEnable: 1, category: 1, subCategory: 1 });
+productSchema.index({ isEnable: 1, category: 1, brand: 1, subCategory: 1 });
 productSchema.index({ title: 'text', summary: 'text' });
 
 export const ProductModel = mongoose.model('Products', productSchema);

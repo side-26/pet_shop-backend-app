@@ -40,6 +40,7 @@ export class LandingModel {
   static findProductBySlug(slug) {
     return ProductModel.findOne({ slug, isEnable: true }).populate([
       { path: 'category' },
+      { path: 'brand' },
       { path: 'subCategory' },
     ]);
   }

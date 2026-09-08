@@ -16,6 +16,6 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 ## Rules
 
 - All endpoints are public and return only enabled catalog records.
-- Slug detail endpoints validate the path parameter and reuse the catalog entities' full customer-detail formatters, including populated taxonomy relations.
+- Slug detail endpoints validate the path parameter and reuse the catalog entities' full customer-detail formatters, including populated taxonomy and brand relations.
 - Featured section limits are centralized in `landing.constants.js`.
 - Queries are ordinary bounded Mongoose queries and do not create cursors, caches, timers, or other long-lived resources.

@@ -1,4 +1,5 @@
 import { CategoryService } from '#entities/categories/categories.service.js';
+import { BrandService } from '#entities/brands/brands.service.js';
 import { SubCategoryService } from '#entities/subCategories/subCategories.service.js';
 
 export const escapeProductRegex = (value = '') =>
@@ -50,6 +51,9 @@ export const formatManagementProduct = (product) => {
     category: value.category?.title
       ? CategoryService.format(value.category)
       : relationId(value.category),
+    brand: value.brand?.title
+      ? BrandService.format(value.brand)
+      : relationId(value.brand),
     subCategory: value.subCategory?.title
       ? SubCategoryService.format(value.subCategory)
       : relationId(value.subCategory) || null,
@@ -85,6 +89,7 @@ export const formatCustomerProductListItem = (product) => {
     isEnable: value.isEnable,
     slug: value.slug,
     category: value.category?.title,
+    brand: value.brand?.title,
     subCategory: value.subCategory?.title || null,
   };
 };
@@ -105,6 +110,7 @@ export const formatCustomerProductDetail = (product) => {
     isEnable: value.isEnable,
     slug: value.slug,
     category: CategoryService.format(value.category),
+    brand: BrandService.format(value.brand),
     subCategory: value.subCategory
       ? SubCategoryService.format(value.subCategory)
       : null,
@@ -135,6 +141,9 @@ export const formatProductMainInfo = (product) => {
     category: value.category?.title
       ? CategoryService.format(value.category)
       : relationId(value.category),
+    brand: value.brand?.title
+      ? BrandService.format(value.brand)
+      : relationId(value.brand),
     subCategory: value.subCategory?.title
       ? SubCategoryService.format(value.subCategory)
       : relationId(value.subCategory) || null,

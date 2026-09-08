@@ -11,6 +11,10 @@ jest.mock('#entities/categories/categories.model.js', () => ({
   CategoryModel: { findById: jest.fn() },
 }));
 
+jest.mock('#entities/brands/brands.model.js', () => ({
+  BrandModel: { findById: jest.fn() },
+}));
+
 jest.mock('#entities/subCategories/subCategories.model.js', () => ({
   SubCategoryModel: { findById: jest.fn() },
 }));
@@ -38,6 +42,7 @@ jest.mock('#services/mainImage.service.js', () => ({
 
 import { getPaginationData } from '#utils/helpers.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
+import { BrandModel } from '#entities/brands/brands.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
 
@@ -47,6 +52,7 @@ import { ProductService } from './products.service.js';
 const id = '65a4de97aff1fbb38c437111';
 const categoryId = '65a4de97aff1fbb38c437112';
 const subCategoryId = '65a4de97aff1fbb38c437113';
+const brandId = '65a4de97aff1fbb38c437115';
 const userId = '65a4de97aff1fbb38c437114';
 const category = {
   _id: categoryId,
@@ -58,6 +64,7 @@ const subCategory = {
   title: 'Dry Food',
   category: categoryId,
 };
+const brand = { _id: brandId, title: 'Royal Canin', title_fa: 'رویال کنین' };
 const data = {
   title: 'Premium cat food',
   mainImage: 'https://cdn.example.com/main.webp',
@@ -65,6 +72,7 @@ const data = {
   mainImageThumbnail: 'data:image/webp;base64,AAAA',
   description: 'Complete food',
   category: categoryId,
+  brand: brandId,
   subCategory: subCategoryId,
   quantity: 0,
   salesVolume: 13,
@@ -80,6 +88,7 @@ describe('ProductService', () => {
     jest.restoreAllMocks();
     jest.clearAllMocks();
     CategoryModel.findById.mockResolvedValue(category);
+    BrandModel.findById.mockResolvedValue(brand);
     SubCategoryModel.findById.mockResolvedValue(subCategory);
     ProductModel.populate.mockImplementation(async (value) => value);
     MainImageService.upload.mockResolvedValue({
@@ -106,23 +115,28 @@ describe('ProductService', () => {
 
   test('validateRelations supports an optional subCategory', async () => {
     await expect(
-      ProductService.validateRelations(categoryId, subCategoryId),
-    ).resolves.toEqual({ category, subCategory });
+      ProductService.validateRelations(categoryId, brandId, subCategoryId),
+    ).resolves.toEqual({ category, brand, subCategory });
     await expect(
-      ProductService.validateRelations(categoryId, null),
-    ).resolves.toEqual({ category, subCategory: null });
+      ProductService.validateRelations(categoryId, brandId, null),
+    ).resolves.toEqual({ category, brand, subCategory: null });
     expect(SubCategoryModel.findById).toHaveBeenCalledTimes(1);
   });
 
   test('validateRelations rejects missing and mismatched relations', async () => {
     CategoryModel.findById.mockResolvedValueOnce(null);
     await expect(
-      ProductService.validateRelations(categoryId, subCategoryId),
+      ProductService.validateRelations(categoryId, brandId, subCategoryId),
     ).rejects.toThrow('دسته‌بندی انتخاب‌شده وجود ندارد');
+
+    BrandModel.findById.mockResolvedValueOnce(null);
+    await expect(
+      ProductService.validateRelations(categoryId, brandId, subCategoryId),
+    ).rejects.toThrow('برند انتخاب‌شده وجود ندارد');
 
     SubCategoryModel.findById.mockResolvedValueOnce(null);
     await expect(
-      ProductService.validateRelations(categoryId, subCategoryId),
+      ProductService.validateRelations(categoryId, brandId, subCategoryId),
     ).rejects.toThrow('زیر دسته‌بندی انتخاب‌شده وجود ندارد');
 
     SubCategoryModel.findById.mockResolvedValueOnce({
@@ -130,7 +144,7 @@ describe('ProductService', () => {
       category: id,
     });
     await expect(
-      ProductService.validateRelations(categoryId, subCategoryId),
+      ProductService.validateRelations(categoryId, brandId, subCategoryId),
     ).rejects.toThrow('متعلق');
   });
 
@@ -263,6 +277,7 @@ describe('ProductService', () => {
     await expect(ProductService.findManagementById(id)).resolves.toBe(product);
     expect(ProductModel.populate).toHaveBeenCalledWith(product, [
       { path: 'category' },
+      { path: 'brand' },
       { path: 'subCategory' },
     ]);
   });
@@ -274,6 +289,7 @@ describe('ProductService', () => {
     await expect(ProductService.findMainInfoById(id)).resolves.toBe(product);
     expect(ProductModel.populate).toHaveBeenCalledWith(product, [
       { path: 'category' },
+      { path: 'brand' },
       { path: 'subCategory' },
     ]);
     expect(ProductService.formatImages(product)).toMatchObject({
@@ -286,6 +302,7 @@ describe('ProductService', () => {
     expect(ProductService.formatMainInfo(product)).toEqual({
       title: data.title,
       category: categoryId,
+      brand: brandId,
       subCategory: subCategoryId,
       quantity: data.quantity,
       summary: undefined,
@@ -304,7 +321,7 @@ describe('ProductService', () => {
     ).resolves.toMatchObject({ title: 'Edited product' });
     expect(ProductModel.populate).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Edited product' }),
-      [{ path: 'category' }, { path: 'subCategory' }],
+      [{ path: 'category' }, { path: 'brand' }, { path: 'subCategory' }],
     );
     expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
       id,
@@ -373,7 +390,7 @@ describe('ProductService', () => {
   });
 
   test('formatters keep management data and separate customer DTOs', () => {
-    const populated = { ...product, category, subCategory };
+    const populated = { ...product, category, brand, subCategory };
     expect(ProductService.formatManagement(populated).images).toEqual(
       data.images,
     );
@@ -387,12 +404,14 @@ describe('ProductService', () => {
     const list = ProductService.formatCustomerList([populated])[0];
     expect(list).not.toHaveProperty('images');
     expect(list.category).toBe('Food');
+    expect(list.brand).toBe('Royal Canin');
     expect(list.subCategory).toBe('Dry Food');
 
     const detail = ProductService.formatCustomerDetail(populated);
     expect(detail).not.toHaveProperty('salesVolume');
     expect(detail.images).toEqual(data.images);
     expect(detail.category).toMatchObject({ title: 'Food' });
+    expect(detail.brand).toMatchObject({ title: 'Royal Canin' });
     expect(detail.subCategory).toMatchObject({ title: 'Dry Food' });
 
     expect(

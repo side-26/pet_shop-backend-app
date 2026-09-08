@@ -15,6 +15,7 @@ import request from 'supertest';
 import { STATUES } from '#configs/constants.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
+import { BrandModel } from '#entities/brands/brands.model.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
@@ -33,6 +34,10 @@ describe('Landing API', () => {
   });
 
   beforeEach(async () => {
+    const brand = await BrandModel.create({
+      title: 'برند پیش‌فرض',
+      title_fa: 'برند پیش‌فرض',
+    });
     await PetTypeModel.create([
       ...Array.from({ length: 5 }, (_, index) => ({
         title: `نوع-${index}`,
@@ -55,6 +60,7 @@ describe('Landing API', () => {
         description: 'توضیحات محصول',
         summary: `خلاصه محصول-${index}`,
         category: new mongoose.Types.ObjectId(),
+        brand: brand._id,
         quantity: 10,
         price: 100000,
         discountPercentage: index * 10,
@@ -136,6 +142,10 @@ describe('Landing API', () => {
       title: 'غذای خشک',
       category: category._id,
     });
+    const brand = await BrandModel.create({
+      title: 'برند غذای سگ',
+      title_fa: 'برند غذای سگ',
+    });
     await PetModel.create({
       title: 'هاسکی جوان',
       mainImage: 'https://cdn.example.com/husky-young.webp',
@@ -162,6 +172,7 @@ describe('Landing API', () => {
       mainImageThumbnail: 'data:image/webp;base64,AAAA',
       description: 'توضیحات غذای سگ',
       category: category._id,
+      brand: brand._id,
       subCategory: subCategory._id,
       slug: 'dog-food',
     });
@@ -187,6 +198,7 @@ describe('Landing API', () => {
       expect.objectContaining({
         slug: 'dog-food',
         category: expect.objectContaining({ title: 'غذا' }),
+        brand: expect.objectContaining({ title: 'برند غذای سگ' }),
         subCategory: expect.objectContaining({ title: 'غذای خشک' }),
       }),
     );

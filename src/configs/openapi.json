@@ -6827,7 +6827,11 @@
       "MainImageCreateBody": {
         "type": "object",
         "required": [
-          "mainImage"
+          "mainImage",
+          "title",
+          "description",
+          "category",
+          "brand"
         ],
         "properties": {
           "mainImage": {
@@ -6852,6 +6856,9 @@
             "description": "Rich-text JSON value."
           },
           "category": {
+            "type": "string"
+          },
+          "brand": {
             "type": "string"
           },
           "subCategory": {
@@ -6947,6 +6954,9 @@
       },
       "ProductBaseInfoUpdateBody": {
         "type": "object",
+        "required": [
+          "brand"
+        ],
         "properties": {
           "title": {
             "type": "string",
@@ -6960,6 +6970,9 @@
             "description": "Rich-text JSON value."
           },
           "category": {
+            "type": "string"
+          },
+          "brand": {
             "type": "string"
           },
           "subCategory": {

@@ -1,5 +1,6 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
+import { BrandModel } from '#entities/brands/brands.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
@@ -20,6 +21,7 @@ import { ProductModel } from './products.model.js';
 const populateRelations = async (documents) =>
   ProductModel.populate(documents, [
     { path: 'category' },
+    { path: 'brand' },
     { path: 'subCategory' },
   ]);
 
@@ -39,15 +41,22 @@ export class ProductService {
     return product;
   }
 
-  static async validateRelations(categoryId, subCategoryId) {
-    const [category, subCategory] = await Promise.all([
+  static async validateRelations(categoryId, brandId, subCategoryId) {
+    const [category, brand, subCategory] = await Promise.all([
       CategoryModel.findById(categoryId),
+      BrandModel.findById(brandId),
       subCategoryId ? SubCategoryModel.findById(subCategoryId) : null,
     ]);
     if (!category) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
         message: 'دسته‌بندی انتخاب‌شده وجود ندارد',
         code: ERROR_CODES.PRODUCT_CATEGORY_NOT_FOUND,
+      });
+    }
+    if (!brand) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'برند انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PRODUCT_BRAND_NOT_FOUND,
       });
     }
     if (subCategoryId && !subCategory) {
@@ -65,11 +74,11 @@ export class ProductService {
         code: ERROR_CODES.PRODUCT_SUB_CATEGORY_MISMATCH,
       });
     }
-    return { category, subCategory };
+    return { category, brand, subCategory };
   }
 
   static async create(data, userId, imageFile, imageFiles = []) {
-    await this.validateRelations(data.category, data.subCategory);
+    await this.validateRelations(data.category, data.brand, data.subCategory);
     const uploadResults = await Promise.allSettled([
       MainImageService.upload(imageFile, 'products/main'),
       MainImageService.uploadImages(imageFiles, 'products/images'),
@@ -116,6 +125,7 @@ export class ProductService {
   static async update(id, data, userId) {
     const currentProduct = await this.findById(id);
     const categoryId = data.category || currentProduct.category;
+    const brandId = data.brand || currentProduct.brand;
     const hasSubCategory = Object.prototype.hasOwnProperty.call(
       data,
       'subCategory',
@@ -123,7 +133,7 @@ export class ProductService {
     const subCategoryId = hasSubCategory
       ? data.subCategory
       : currentProduct.subCategory;
-    await this.validateRelations(categoryId, subCategoryId || null);
+    await this.validateRelations(categoryId, brandId, subCategoryId || null);
 
     const product = await ProductModel.findByIdAndUpdate(
       id,
