@@ -45,6 +45,18 @@ export const getAllBrandsController = async (req, res, next) => {
   }
 };
 
+export const getEnabledBrandsController = async (_req, res, next) => {
+  try {
+    const brands = await BrandService.findAll();
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: BrandService.formatMany(brands),
+      totalRecords: brands.length,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const getBrandByIdController = async (req, res, next) => {
   try {
     const { id } = returnFormValidation(brandIdZodSchema, req.params);

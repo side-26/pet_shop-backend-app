@@ -93,6 +93,22 @@ describe('Brand API', () => {
     await request(app).get(`/api/brands/${brand._id}`).expect(200);
   });
 
+  test('returns only enabled brands from the explicit enabled list endpoint', async () => {
+    await BrandModel.create([
+      { title: 'Enabled brand', title_fa: 'برند فعال', isEnable: true },
+      { title: 'Disabled brand', title_fa: 'برند غیرفعال', isEnable: false },
+    ]);
+
+    const response = await request(app).get('/api/brands/enabled').expect(200);
+
+    expect(response.body).toMatchObject({ totalRecords: 1 });
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
+      title: 'Enabled brand',
+      isEnable: true,
+    });
+  });
+
   test('validates required create fields and identifiers', async () => {
     await request(app)
       .post('/api/brands')

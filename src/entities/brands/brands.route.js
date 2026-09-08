@@ -12,11 +12,13 @@ import {
   enableBrandController,
   getAllBrandsController,
   getBrandByIdController,
+  getEnabledBrandsController,
 } from './brands.controller.js';
 
 const router = express.Router();
 
 router.get('/brands', getAllBrandsController);
+router.get('/brands/enabled', getEnabledBrandsController);
 router.get('/brands/:id', getBrandByIdController);
 
 router.post(
