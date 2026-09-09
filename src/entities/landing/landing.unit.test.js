@@ -3,7 +3,10 @@ jest.mock('./landing.model.js', () => ({
     findPetBySlug: jest.fn(),
     findFeaturedPetTypes: jest.fn(),
     findAllPetTypes: jest.fn(),
+    findHighestPricedPets: jest.fn(),
     findMostPopularPets: jest.fn(),
+    findMostWishlistedPetIds: jest.fn(),
+    findPetsByIds: jest.fn(),
     findMostDiscountedProducts: jest.fn(),
     findMostPopularProducts: jest.fn(),
     findProductBySlug: jest.fn(),
@@ -75,6 +78,11 @@ const fullProduct = {
   isEnable: true,
   slug: 'cat-food',
 };
+const highestPricedPet = {
+  ...pet,
+  _id: 'highest-priced-pet-id',
+  title: 'گربه گران‌قیمت',
+};
 
 describe('LandingService', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -100,8 +108,12 @@ describe('LandingService', () => {
     expect(LandingModel.findAllPetTypes).toHaveBeenCalledTimes(1);
   });
 
-  test('formats the most popular enabled pets', async () => {
-    LandingModel.findMostPopularPets.mockResolvedValue([pet]);
+  test('returns pets most commonly wishlisted by non-management users', async () => {
+    LandingModel.findMostWishlistedPetIds.mockResolvedValue([
+      { petId: pet._id },
+    ]);
+    LandingModel.findPetsByIds.mockResolvedValue([pet]);
+    LandingModel.findHighestPricedPets.mockResolvedValue([]);
 
     await expect(LandingService.getMostPopularPets()).resolves.toEqual([
       {
@@ -111,7 +123,24 @@ describe('LandingService', () => {
         mainImageThumbnail: pet.mainImageThumbnail,
       },
     ]);
-    expect(LandingModel.findMostPopularPets).toHaveBeenCalledTimes(1);
+    expect(LandingModel.findPetsByIds).toHaveBeenCalledWith([pet._id]);
+    expect(LandingModel.findMostPopularPets).not.toHaveBeenCalled();
+  });
+
+  test('falls back to sales volume and supplements sparse results by price', async () => {
+    LandingModel.findMostWishlistedPetIds.mockResolvedValue([]);
+    LandingModel.findMostPopularPets.mockResolvedValue([pet]);
+    LandingModel.findHighestPricedPets.mockResolvedValue([highestPricedPet]);
+
+    await expect(LandingService.getMostPopularPets()).resolves.toEqual([
+      expect.objectContaining({ id: pet._id }),
+      expect.objectContaining({ id: highestPricedPet._id }),
+    ]);
+    expect(LandingModel.findMostPopularPets).toHaveBeenCalledWith(5);
+    expect(LandingModel.findHighestPricedPets).toHaveBeenCalledWith(
+      [pet._id],
+      4,
+    );
   });
 
   test('returns full enabled pet and product details by slug', async () => {

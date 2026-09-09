@@ -6389,8 +6389,8 @@
     },
     "/landing/pets/popular": {
       "get": {
-        "summary": "Get four most popular pets",
-        "description": "Returns up to four enabled pets ordered by sales volume with customer-safe catalog information.",
+        "summary": "Get five most popular pets",
+        "description": "Returns up to five enabled pets ranked by non-management user wishlist frequency. When no pets are wishlisted, sales volume is used; sparse results are supplemented with the highest-priced enabled pets.",
         "responses": {
           "200": {
             "description": "Most popular pets"

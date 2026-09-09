@@ -12,7 +12,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
 
-import { STATUES } from '#configs/constants.js';
+import { ROLES, STATUES, USER_ITEM_TYPES } from '#configs/constants.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
@@ -20,6 +20,7 @@ import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
+import { UserModel } from '#entities/users/users.model.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import landingRoutes from './landing.route.js';
@@ -68,7 +69,7 @@ describe('Landing API', () => {
         slug: `product-${index}`,
       })),
     );
-    await PetModel.create(
+    const pets = await PetModel.create(
       Array.from({ length: 5 }, (_, index) => ({
         title: `حیوان-${index}`,
         mainImage: `https://cdn.example.com/pet-${index}.webp`,
@@ -81,6 +82,27 @@ describe('Landing API', () => {
         slug: `pet-${index}`,
       })),
     );
+    await UserModel.create([
+      {
+        phoneNumber: '09120000001',
+        password: 'password123',
+        wishlist: [
+          { item: pets[0]._id, itemType: USER_ITEM_TYPES.PET },
+          { item: pets[1]._id, itemType: USER_ITEM_TYPES.PET },
+        ],
+      },
+      {
+        phoneNumber: '09120000002',
+        password: 'password123',
+        wishlist: [{ item: pets[0]._id, itemType: USER_ITEM_TYPES.PET }],
+      },
+      {
+        phoneNumber: '09120000003',
+        password: 'password123',
+        role: ROLES.ADMIN,
+        wishlist: [{ item: pets[4]._id, itemType: USER_ITEM_TYPES.PET }],
+      },
+    ]);
   });
 
   test('returns public landing sections with enabled records only', async () => {
@@ -134,10 +156,11 @@ describe('Landing API', () => {
       'محصول-1',
     ]);
     expect(popularPets.body.data.map(({ title }) => title)).toEqual([
-      'حیوان-4',
-      'حیوان-3',
-      'حیوان-2',
+      'حیوان-0',
       'حیوان-1',
+      'حیوان-2',
+      'حیوان-3',
+      'حیوان-4',
     ]);
     expect(popularPets.body.data[0]).toEqual(
       expect.objectContaining({

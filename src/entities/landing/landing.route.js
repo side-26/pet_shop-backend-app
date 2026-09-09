@@ -43,8 +43,8 @@ router.get(
 );
 router.get(
   '/landing/pets/popular',
-  /* #swagger.summary = 'Get four most popular pets'
-     #swagger.description = 'Returns up to four enabled pets ordered by sales volume with customer-safe catalog information.'
+  /* #swagger.summary = 'Get five most popular pets'
+     #swagger.description = 'Returns up to five enabled pets ranked by non-management user wishlist frequency. When no pets are wishlisted, sales volume is used; sparse results are supplemented with the highest-priced enabled pets.'
      #swagger.responses[200] = { description: 'Most popular pets' } */
   getMostPopularPetsController,
 );
