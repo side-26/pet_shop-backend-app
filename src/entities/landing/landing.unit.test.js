@@ -3,6 +3,7 @@ jest.mock('./landing.model.js', () => ({
     findPetBySlug: jest.fn(),
     findFeaturedPetTypes: jest.fn(),
     findAllPetTypes: jest.fn(),
+    findMostPopularPets: jest.fn(),
     findMostDiscountedProducts: jest.fn(),
     findMostPopularProducts: jest.fn(),
     findProductBySlug: jest.fn(),
@@ -13,6 +14,12 @@ jest.mock('#entities/pets/pets.helpers.js', () => ({
   formatCustomerPetDetail: jest.fn((pet) => ({
     id: pet._id,
     title: pet.title,
+  })),
+  formatCustomerPetListItem: jest.fn((pet) => ({
+    id: pet._id,
+    title: pet.title,
+    mainImage: pet.mainImage,
+    mainImageThumbnail: pet.mainImageThumbnail,
   })),
 }));
 
@@ -91,6 +98,20 @@ describe('LandingService', () => {
 
     await expect(LandingService.getAllPetTypes()).resolves.toHaveLength(1);
     expect(LandingModel.findAllPetTypes).toHaveBeenCalledTimes(1);
+  });
+
+  test('formats the most popular enabled pets', async () => {
+    LandingModel.findMostPopularPets.mockResolvedValue([pet]);
+
+    await expect(LandingService.getMostPopularPets()).resolves.toEqual([
+      {
+        id: pet._id,
+        title: pet.title,
+        mainImage: pet.mainImage,
+        mainImageThumbnail: pet.mainImageThumbnail,
+      },
+    ]);
+    expect(LandingModel.findMostPopularPets).toHaveBeenCalledTimes(1);
   });
 
   test('returns full enabled pet and product details by slug', async () => {

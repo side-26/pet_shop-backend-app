@@ -68,6 +68,19 @@ describe('Landing API', () => {
         slug: `product-${index}`,
       })),
     );
+    await PetModel.create(
+      Array.from({ length: 5 }, (_, index) => ({
+        title: `حیوان-${index}`,
+        mainImage: `https://cdn.example.com/pet-${index}.webp`,
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+        description: 'توضیحات حیوان',
+        petType: new mongoose.Types.ObjectId(),
+        breed: new mongoose.Types.ObjectId(),
+        salesVolume: index * 5,
+        inEnable: true,
+        slug: `pet-${index}`,
+      })),
+    );
   });
 
   test('returns public landing sections with enabled records only', async () => {
@@ -77,6 +90,7 @@ describe('Landing API', () => {
       discounted,
       defaultDiscounted,
       popular,
+      popularPets,
       invalidLimit,
     ] = await Promise.all([
       request(app).get('/api/landing/pet-types'),
@@ -84,6 +98,7 @@ describe('Landing API', () => {
       request(app).get('/api/landing/products/discounted').query({ limit: 2 }),
       request(app).get('/api/landing/products/discounted'),
       request(app).get('/api/landing/products/popular'),
+      request(app).get('/api/landing/pets/popular'),
       request(app).get('/api/landing/products/discounted').query({
         limit: 101,
       }),
@@ -118,6 +133,18 @@ describe('Landing API', () => {
       'محصول-2',
       'محصول-1',
     ]);
+    expect(popularPets.body.data.map(({ title }) => title)).toEqual([
+      'حیوان-4',
+      'حیوان-3',
+      'حیوان-2',
+      'حیوان-1',
+    ]);
+    expect(popularPets.body.data[0]).toEqual(
+      expect.objectContaining({
+        mainImage: expect.any(String),
+        mainImageThumbnail: expect.any(String),
+      }),
+    );
     expect(invalidLimit.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 

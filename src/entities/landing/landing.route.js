@@ -4,6 +4,7 @@ import {
   getAllPetTypesController,
   getFeaturedPetTypesController,
   getMostDiscountedProductsController,
+  getMostPopularPetsController,
   getMostPopularProductsController,
   getPetBySlugController,
   getProductBySlugController,
@@ -39,6 +40,13 @@ router.get(
      #swagger.description = 'Returns up to four enabled products ordered by sales volume, including the main image thumbnail, product price, discount percentage, and calculated discount amount.'
      #swagger.responses[200] = { description: 'Most popular products' } */
   getMostPopularProductsController,
+);
+router.get(
+  '/landing/pets/popular',
+  /* #swagger.summary = 'Get four most popular pets'
+     #swagger.description = 'Returns up to four enabled pets ordered by sales volume with customer-safe catalog information.'
+     #swagger.responses[200] = { description: 'Most popular pets' } */
+  getMostPopularPetsController,
 );
 router.get(
   '/landing/pets/:slug',

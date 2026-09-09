@@ -1,5 +1,8 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
-import { formatCustomerPetDetail } from '#entities/pets/pets.helpers.js';
+import {
+  formatCustomerPetDetail,
+  formatCustomerPetListItem,
+} from '#entities/pets/pets.helpers.js';
 import { formatCustomerProductDetail } from '#entities/products/products.helpers.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
@@ -44,6 +47,11 @@ export class LandingService {
   static async getAllPetTypes() {
     const petTypes = await LandingModel.findAllPetTypes();
     return petTypes.map(formatPetType);
+  }
+
+  static async getMostPopularPets() {
+    const pets = await LandingModel.findMostPopularPets();
+    return pets.map(formatCustomerPetListItem);
   }
 
   static async getMostDiscountedProducts(limit) {

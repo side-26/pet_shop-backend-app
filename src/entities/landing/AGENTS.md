@@ -10,6 +10,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 - `GET /landing/products/discounted?limit=COUNT` — enabled products ordered by discount percentage, with the main image thumbnail, source price, discount percentage, and response-only calculated discount amount; `limit` defaults to four and is capped at 100.
 - `GET /landing/pet-types/all` — every enabled pet type, ordered by creation date, each with its main image, thumbnail, and summary.
 - `GET /landing/products/popular` — up to four enabled products, ordered by sales volume, with the main image thumbnail, source price, discount percentage, and response-only calculated discount amount.
+- `GET /landing/pets/popular` — up to four enabled pets, ordered by sales volume, with customer-safe catalog information.
 - `GET /landing/pets/:slug` — full customer-safe detail for an enabled pet.
 - `GET /landing/products/:slug` — full customer-safe detail for an enabled product.
 

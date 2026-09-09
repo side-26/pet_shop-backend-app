@@ -6387,6 +6387,20 @@
         ]
       }
     },
+    "/landing/pets/popular": {
+      "get": {
+        "summary": "Get four most popular pets",
+        "description": "Returns up to four enabled pets ordered by sales volume with customer-safe catalog information.",
+        "responses": {
+          "200": {
+            "description": "Most popular pets"
+          }
+        },
+        "tags": [
+          "/landing"
+        ]
+      }
+    },
     "/landing/pets/{slug}": {
       "get": {
         "summary": "Get an enabled pet by slug",

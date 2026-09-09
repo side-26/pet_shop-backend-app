@@ -25,6 +25,13 @@ export class LandingModel {
     });
   }
 
+  static findMostPopularPets() {
+    return PetModel.find({ inEnable: true })
+      .sort({ salesVolume: -1, title: 1, _id: 1 })
+      .limit(LANDING_LIMITS.FEATURED_PETS)
+      .populate([{ path: 'petType' }, { path: 'breed' }]);
+  }
+
   static findMostDiscountedProducts(limit) {
     return ProductModel.find({ isEnable: true })
       .sort({ discountPercentage: -1, title: 1, _id: 1 })
