@@ -17,6 +17,7 @@ const formatProduct = (product) => ({
   id: product._id,
   title: product.title,
   mainImage: product.mainImage,
+  mainImageThumbnail: product.mainImageThumbnail,
   summary: product.summary,
   price: product.price,
   discountPercentage: product.discountPercentage,
