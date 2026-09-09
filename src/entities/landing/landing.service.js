@@ -20,6 +20,7 @@ const formatProduct = (product) => ({
   summary: product.summary,
   price: product.price,
   discountPercentage: product.discountPercentage,
+  discountPrice: product.price * (product.discountPercentage / 100),
 });
 
 export class LandingService {

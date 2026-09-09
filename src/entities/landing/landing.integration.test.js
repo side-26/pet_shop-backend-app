@@ -105,6 +105,9 @@ describe('Landing API', () => {
     expect(
       discounted.body.data.map(({ discountPercentage }) => discountPercentage),
     ).toEqual([40, 30]);
+    expect(
+      discounted.body.data.map(({ discountPrice }) => discountPrice),
+    ).toEqual([40000, 30000]);
     expect(defaultDiscounted.body.data).toHaveLength(4);
     expect(popular.body.data.map(({ title }) => title)).toEqual([
       'محصول-4',

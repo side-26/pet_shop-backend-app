@@ -137,6 +137,7 @@ describe('LandingService', () => {
       summary: product.summary,
       price: product.price,
       discountPercentage: product.discountPercentage,
+      discountPrice: 40000,
     };
     await expect(LandingService.getMostDiscountedProducts(2)).resolves.toEqual([
       expected,

@@ -21,7 +21,7 @@ router.get(
 router.get(
   '/landing/products/discounted',
   /* #swagger.summary = 'Get the most discounted products'
-     #swagger.description = 'Returns enabled products ordered by discount percentage. The optional limit defaults to four and is capped at 100.'
+     #swagger.description = 'Returns enabled products ordered by discount percentage, including product price, discount percentage, and calculated discount amount. The optional limit defaults to four and is capped at 100.'
      #swagger.parameters['limit'] = { in: 'query', type: 'integer', minimum: 1, maximum: 100, default: 4 }
      #swagger.responses[200] = { description: 'Most discounted products' } */
   getMostDiscountedProductsController,
@@ -36,7 +36,7 @@ router.get(
 router.get(
   '/landing/products/popular',
   /* #swagger.summary = 'Get four most popular products'
-     #swagger.description = 'Returns up to four enabled products ordered by sales volume.'
+     #swagger.description = 'Returns up to four enabled products ordered by sales volume, including product price, discount percentage, and calculated discount amount.'
      #swagger.responses[200] = { description: 'Most popular products' } */
   getMostPopularProductsController,
 );
