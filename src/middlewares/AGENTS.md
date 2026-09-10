@@ -7,6 +7,7 @@ This folder owns cross-cutting Express request behavior: authentication, role ch
 ## Important Files
 
 - `auth.middleware.js` and `role.middleware.js` — verify JWT identity and allowed roles.
+- `permission.js` and `permission.middleware.js` — own the future role/resource/action permission map and its route-middleware factory; no route uses this middleware until stakeholder policy is defined.
 - `security.middleware.js` and `header.middleware.js` — configure Helmet, rate limiting, and CORS-related headers.
 - `method.middleware.js` — checks the centralized API route registry before routers and rejects unsupported methods with HTTP 405 and an `Allow` header.
 - `logger.middleware.js` — records request completion and errors through the shared logger.
