@@ -85,6 +85,19 @@ export class LandingService {
     return pets.map(formatCustomerPetListItem);
   }
 
+  static async getRecentlyUpdatedPets() {
+    let pets = await LandingModel.findRecentlyUpdatedPets();
+    if (pets.length < LANDING_LIMITS.RECENT_PETS) {
+      const highestPricedPets =
+        await LandingModel.findHighestPricedAvailablePets(
+          pets.map((pet) => pet._id),
+          LANDING_LIMITS.RECENT_PETS - pets.length,
+        );
+      pets = [...pets, ...highestPricedPets];
+    }
+    return pets.map(formatCustomerPetListItem);
+  }
+
   static async getMostDiscountedProducts(limit) {
     const products = await LandingModel.findMostDiscountedProducts(limit);
     return products.map(formatProduct);

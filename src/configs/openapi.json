@@ -6394,6 +6394,56 @@
         "responses": {
           "200": {
             "description": "Most popular pets"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "/landing"
+        ]
+      }
+    },
+    "/landing/pets/recent": {
+      "get": {
+        "summary": "Get five recently updated available pets",
+        "description": "Returns up to five enabled, in-stock pets that have an updatedBy value, ordered by most recent update. When fewer than five qualify, the result is completed with the highest-priced enabled, in-stock pets without duplicates.",
+        "responses": {
+          "200": {
+            "description": "Recently updated available pets"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "tags": [

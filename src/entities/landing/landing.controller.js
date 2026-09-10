@@ -26,6 +26,9 @@ export const getAllPetTypesController = (_req, res, next) =>
 export const getMostPopularPetsController = (_req, res, next) =>
   getLandingSection(res, next, 'getMostPopularPets');
 
+export const getRecentlyUpdatedPetsController = (_req, res, next) =>
+  getLandingSection(res, next, 'getRecentlyUpdatedPets');
+
 export const getMostDiscountedProductsController = async (req, res, next) => {
   try {
     const { limit } = returnFormValidation(landingLimitSchema, req.query);

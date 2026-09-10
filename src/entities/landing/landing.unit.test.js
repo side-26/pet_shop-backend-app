@@ -4,7 +4,9 @@ jest.mock('./landing.model.js', () => ({
     findFeaturedPetTypes: jest.fn(),
     findAllPetTypes: jest.fn(),
     findHighestPricedPets: jest.fn(),
+    findHighestPricedAvailablePets: jest.fn(),
     findMostPopularPets: jest.fn(),
+    findRecentlyUpdatedPets: jest.fn(),
     findMostWishlistedPetIds: jest.fn(),
     findPetsByIds: jest.fn(),
     findMostDiscountedProducts: jest.fn(),
@@ -138,6 +140,33 @@ describe('LandingService', () => {
     ]);
     expect(LandingModel.findMostPopularPets).toHaveBeenCalledWith(5);
     expect(LandingModel.findHighestPricedPets).toHaveBeenCalledWith(
+      [pet._id],
+      4,
+    );
+  });
+
+  test('supplements recently updated pets with highest-priced available pets', async () => {
+    LandingModel.findRecentlyUpdatedPets.mockResolvedValue([pet]);
+    LandingModel.findHighestPricedAvailablePets.mockResolvedValue([
+      highestPricedPet,
+    ]);
+
+    await expect(LandingService.getRecentlyUpdatedPets()).resolves.toEqual([
+      {
+        id: pet._id,
+        title: pet.title,
+        mainImage: pet.mainImage,
+        mainImageThumbnail: pet.mainImageThumbnail,
+      },
+      {
+        id: highestPricedPet._id,
+        title: highestPricedPet.title,
+        mainImage: highestPricedPet.mainImage,
+        mainImageThumbnail: highestPricedPet.mainImageThumbnail,
+      },
+    ]);
+    expect(LandingModel.findRecentlyUpdatedPets).toHaveBeenCalledTimes(1);
+    expect(LandingModel.findHighestPricedAvailablePets).toHaveBeenCalledWith(
       [pet._id],
       4,
     );

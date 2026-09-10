@@ -8,6 +8,7 @@ import {
   getMostPopularProductsController,
   getPetBySlugController,
   getProductBySlugController,
+  getRecentlyUpdatedPetsController,
 } from './landing.controller.js';
 
 const router = express.Router();
@@ -47,6 +48,13 @@ router.get(
      #swagger.description = 'Returns up to five enabled pets ranked by non-management user wishlist frequency. When no pets are wishlisted, sales volume is used; sparse results are supplemented with the highest-priced enabled pets.'
      #swagger.responses[200] = { description: 'Most popular pets' } */
   getMostPopularPetsController,
+);
+router.get(
+  '/landing/pets/recent',
+  /* #swagger.summary = 'Get five recently updated available pets'
+     #swagger.description = 'Returns up to five enabled, in-stock pets that have an updatedBy value, ordered by most recent update. When fewer than five qualify, the result is completed with the highest-priced enabled, in-stock pets without duplicates.'
+     #swagger.responses[200] = { description: 'Recently updated available pets' } */
+  getRecentlyUpdatedPetsController,
 );
 router.get(
   '/landing/pets/:slug',

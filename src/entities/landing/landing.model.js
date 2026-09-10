@@ -63,6 +63,28 @@ export class LandingModel {
       .populate([{ path: 'petType' }, { path: 'breed' }]);
   }
 
+  static findRecentlyUpdatedPets() {
+    return PetModel.find({
+      inEnable: true,
+      quantity: { $gt: 0 },
+      updatedBy: { $exists: true, $ne: null },
+    })
+      .sort({ updatedAt: -1, _id: -1 })
+      .limit(LANDING_LIMITS.RECENT_PETS)
+      .populate([{ path: 'petType' }, { path: 'breed' }]);
+  }
+
+  static findHighestPricedAvailablePets(excludedIds, limit) {
+    return PetModel.find({
+      _id: { $nin: excludedIds },
+      inEnable: true,
+      quantity: { $gt: 0 },
+    })
+      .sort({ price: -1, title: 1, _id: 1 })
+      .limit(limit)
+      .populate([{ path: 'petType' }, { path: 'breed' }]);
+  }
+
   static findHighestPricedPets(excludedIds, limit) {
     return PetModel.find({
       _id: { $nin: excludedIds },

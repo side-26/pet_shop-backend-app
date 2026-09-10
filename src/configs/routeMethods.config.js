@@ -80,6 +80,8 @@ export const API_ROUTE_METHODS = [
   { path: '/landing/pet-types/all', methods: [get] },
   { path: '/landing/products/discounted', methods: [get] },
   { path: '/landing/products/popular', methods: [get] },
+  { path: '/landing/pets/popular', methods: [get] },
+  { path: '/landing/pets/recent', methods: [get] },
   { path: '/countries', methods: [get] },
   { path: '/provinces', methods: [get] },
   { path: '/cities/:provinceId', methods: [get] },

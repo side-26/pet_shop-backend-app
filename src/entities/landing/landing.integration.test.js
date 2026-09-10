@@ -171,6 +171,103 @@ describe('Landing API', () => {
     expect(invalidLimit.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 
+  test('returns only recently updated, enabled, in-stock pets', async () => {
+    const updatedBy = new mongoose.Types.ObjectId();
+    const petAttributes = {
+      mainImage: 'https://cdn.example.com/recent-pet.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات حیوان',
+      petType: new mongoose.Types.ObjectId(),
+      breed: new mongoose.Types.ObjectId(),
+      inEnable: true,
+      quantity: 1,
+      updatedBy,
+    };
+    await PetModel.create([
+      ...Array.from({ length: 6 }, (_, index) => ({
+        ...petAttributes,
+        title: `حیوان به‌روز-${index}`,
+        slug: `recent-pet-${index}`,
+      })),
+      {
+        ...petAttributes,
+        title: 'حیوان ناموجود',
+        slug: 'out-of-stock-pet',
+        quantity: 0,
+      },
+      {
+        ...petAttributes,
+        title: 'حیوان غیرفعال',
+        slug: 'disabled-pet',
+        inEnable: false,
+      },
+      {
+        ...petAttributes,
+        title: 'حیوان بدون به‌روزرسانی',
+        slug: 'not-updated-pet',
+        updatedBy: undefined,
+      },
+    ]);
+
+    const response = await request(app).get('/api/landing/pets/recent');
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data).toHaveLength(5);
+    expect(response.body.data.map(({ slug }) => slug)).toEqual([
+      'recent-pet-5',
+      'recent-pet-4',
+      'recent-pet-3',
+      'recent-pet-2',
+      'recent-pet-1',
+    ]);
+    expect(response.body.data).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ slug: 'out-of-stock-pet' }),
+        expect.objectContaining({ slug: 'disabled-pet' }),
+        expect.objectContaining({ slug: 'not-updated-pet' }),
+      ]),
+    );
+  });
+
+  test('supplements a sparse recent-pet section with highest-priced available pets', async () => {
+    const updatedBy = new mongoose.Types.ObjectId();
+    const petAttributes = {
+      mainImage: 'https://cdn.example.com/supplement-pet.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات حیوان',
+      petType: new mongoose.Types.ObjectId(),
+      breed: new mongoose.Types.ObjectId(),
+      inEnable: true,
+      quantity: 1,
+    };
+    await PetModel.create([
+      {
+        ...petAttributes,
+        title: 'حیوان تازه',
+        slug: 'recently-updated-pet',
+        updatedBy,
+        price: 100,
+      },
+      ...[900, 800, 700, 600].map((price) => ({
+        ...petAttributes,
+        title: `حیوان ارزشمند-${price}`,
+        slug: `valuable-pet-${price}`,
+        price,
+      })),
+    ]);
+
+    const response = await request(app).get('/api/landing/pets/recent');
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data.map(({ slug }) => slug)).toEqual([
+      'recently-updated-pet',
+      'valuable-pet-900',
+      'valuable-pet-800',
+      'valuable-pet-700',
+      'valuable-pet-600',
+    ]);
+  });
+
   test('returns full enabled pet and product details by slug', async () => {
     const petType = await PetTypeModel.create({
       title: 'سگ',
