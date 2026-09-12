@@ -10,6 +10,7 @@ jest.mock('./landing.model.js', () => ({
     findMostWishlistedPetIds: jest.fn(),
     findPetsByIds: jest.fn(),
     findMostDiscountedProducts: jest.fn(),
+    findMostPopularBrands: jest.fn(),
     findMostPopularProducts: jest.fn(),
     findMostPurchasedProduct: jest.fn(),
     findMostDiscountedProduct: jest.fn(),
@@ -231,6 +232,32 @@ describe('LandingService', () => {
       { ...expected, slug: product.slug, discountPrice: 160000 },
     ]);
     expect(LandingModel.findMostDiscountedProducts).toHaveBeenCalledWith(2);
+  });
+
+  test('formats enabled brands by their enabled-product count', async () => {
+    const brand = {
+      _id: 'brand-id',
+      title: 'brand',
+      title_fa: 'برند',
+      logo: 'https://cdn.example.com/brand.webp',
+      thumbnailLogo: 'data:image/webp;base64,AAAA',
+      slug: 'brand',
+    };
+    LandingModel.findMostPopularBrands.mockResolvedValue([
+      { brand, productCount: 3 },
+    ]);
+
+    await expect(LandingService.getMostPopularBrands()).resolves.toEqual([
+      {
+        id: brand._id,
+        title: brand.title,
+        title_fa: brand.title_fa,
+        logo: brand.logo,
+        thumbnailLogo: brand.thumbnailLogo,
+        slug: brand.slug,
+        productCount: 3,
+      },
+    ]);
   });
 
   test('returns distinct featured products in selection-priority order', async () => {

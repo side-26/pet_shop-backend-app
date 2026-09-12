@@ -38,6 +38,16 @@ const formatPopularProduct = (product) => ({
   ),
 });
 
+const formatPopularBrand = ({ brand, productCount }) => ({
+  id: brand._id,
+  title: brand.title,
+  title_fa: brand.title_fa,
+  logo: brand.logo,
+  thumbnailLogo: brand.thumbnailLogo,
+  slug: brand.slug,
+  productCount,
+});
+
 const orderPetsById = (pets, ids) => {
   const petsById = new Map(pets.map((pet) => [String(pet._id), pet]));
   return ids.map((id) => petsById.get(String(id))).filter(Boolean);
@@ -116,6 +126,11 @@ export class LandingService {
   static async getMostPopularProducts() {
     const products = await LandingModel.findMostPopularProducts();
     return products.map(formatPopularProduct);
+  }
+
+  static async getMostPopularBrands() {
+    const brands = await LandingModel.findMostPopularBrands();
+    return brands.map(formatPopularBrand);
   }
 
   static async getFeaturedProducts() {

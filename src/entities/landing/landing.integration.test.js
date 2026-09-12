@@ -261,6 +261,58 @@ describe('Landing API', () => {
     expect(hiddenPetDetail.status).toBe(STATUES.NOT_FOUND);
   });
 
+  test('returns five enabled brands with the most enabled products', async () => {
+    const baseBrand = await BrandModel.findOne({ title: 'برند پیش‌فرض' });
+    const [secondBrand, thirdBrand, fourthBrand, fifthBrand, hiddenBrand] =
+      await BrandModel.create([
+        { title: 'brand-two', title_fa: 'برند دو' },
+        { title: 'brand-three', title_fa: 'برند سه' },
+        { title: 'brand-four', title_fa: 'برند چهار' },
+        { title: 'brand-five', title_fa: 'برند پنج' },
+        { title: 'brand-hidden', title_fa: 'برند پنهان', isEnable: false },
+      ]);
+    const createProducts = (brand, count, prefix, isEnable = true) =>
+      Array.from({ length: count }, (_, index) => ({
+        title: `${prefix}-${index}`,
+        mainImage: `https://cdn.example.com/${prefix}-${index}.webp`,
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+        description: 'توضیحات محصول',
+        category: new mongoose.Types.ObjectId(),
+        brand: brand._id,
+        quantity: 10,
+        isEnable,
+        slug: `${prefix}-${index}`,
+      }));
+    await ProductModel.create([
+      ...createProducts(secondBrand, 4, 'brand-two-product'),
+      ...createProducts(thirdBrand, 3, 'brand-three-product'),
+      ...createProducts(fourthBrand, 2, 'brand-four-product'),
+      ...createProducts(fifthBrand, 1, 'brand-five-product'),
+      ...createProducts(hiddenBrand, 10, 'hidden-brand-product'),
+      ...createProducts(fifthBrand, 10, 'disabled-fifth-brand-product', false),
+    ]);
+
+    const response = await request(app).get('/api/landing/brands/popular');
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data).toHaveLength(5);
+    expect(response.body.data.map(({ id }) => String(id))).toEqual([
+      String(baseBrand._id),
+      String(secondBrand._id),
+      String(thirdBrand._id),
+      String(fourthBrand._id),
+      String(fifthBrand._id),
+    ]);
+    expect(response.body.data.map(({ productCount }) => productCount)).toEqual([
+      5, 4, 3, 2, 1,
+    ]);
+    expect(response.body.data).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: String(hiddenBrand._id) }),
+      ]),
+    );
+  });
+
   test('returns only recently updated, enabled, in-stock pets', async () => {
     const updatedBy = new mongoose.Types.ObjectId();
     const petAttributes = {

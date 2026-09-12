@@ -6424,6 +6424,38 @@
         ]
       }
     },
+    "/landing/brands/popular": {
+      "get": {
+        "summary": "Get five enabled brands with the most enabled products",
+        "description": "Returns up to five enabled brands ranked by their enabled-product count. Disabled brands and disabled products are excluded before the result limit is applied.",
+        "responses": {
+          "200": {
+            "description": "Most popular brands"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "/landing"
+        ]
+      }
+    },
     "/landing/pets/popular": {
       "get": {
         "summary": "Get five most popular pets",

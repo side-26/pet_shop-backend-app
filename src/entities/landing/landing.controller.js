@@ -42,6 +42,9 @@ export const getMostDiscountedProductsController = async (req, res, next) => {
 export const getMostPopularProductsController = (_req, res, next) =>
   getLandingSection(res, next, 'getMostPopularProducts');
 
+export const getMostPopularBrandsController = (_req, res, next) =>
+  getLandingSection(res, next, 'getMostPopularBrands');
+
 export const getFeaturedProductsController = (_req, res, next) =>
   getLandingSection(res, next, 'getFeaturedProducts');
 

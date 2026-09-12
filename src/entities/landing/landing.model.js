@@ -1,4 +1,5 @@
 import { MANAGEMENT_ROLES, USER_ITEM_TYPES } from '#configs/constants.js';
+import { BrandModel } from '#entities/brands/brands.model.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
@@ -106,6 +107,39 @@ export class LandingModel {
     return ProductModel.find({ isEnable: true })
       .sort({ salesVolume: -1, title: 1, _id: 1 })
       .limit(LANDING_LIMITS.FEATURED_PRODUCTS);
+  }
+
+  static findMostPopularBrands() {
+    return ProductModel.aggregate([
+      { $match: { isEnable: true } },
+      { $group: { _id: '$brand', productCount: { $sum: 1 } } },
+      { $sort: { productCount: -1, _id: 1 } },
+      {
+        $lookup: {
+          from: BrandModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'brand',
+        },
+      },
+      { $unwind: '$brand' },
+      { $match: { 'brand.isEnable': true } },
+      { $limit: LANDING_LIMITS.POPULAR_BRANDS },
+      {
+        $project: {
+          _id: 0,
+          productCount: 1,
+          brand: {
+            _id: '$brand._id',
+            title: '$brand.title',
+            title_fa: '$brand.title_fa',
+            logo: '$brand.logo',
+            thumbnailLogo: '$brand.thumbnailLogo',
+            slug: '$brand.slug',
+          },
+        },
+      },
+    ]);
   }
 
   static findMostPurchasedProduct(excludedIds) {

@@ -6,6 +6,7 @@ import {
   getAllPetTypesController,
   getFeaturedPetTypesController,
   getFeaturedProductsController,
+  getMostPopularBrandsController,
   getMostDiscountedProductsController,
   getMostPopularPetsController,
   getMostPopularProductsController,
@@ -52,6 +53,14 @@ router.get(
      #swagger.description = 'Returns up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. A product selected for an earlier type is excluded from later types.'
      #swagger.responses[200] = { description: 'Distinct featured products' } */
   getFeaturedProductsController,
+);
+router.get(
+  ROUTES.landing.popularBrands,
+  /* #swagger.summary = 'Get five enabled brands with the most enabled products'
+     #swagger.path = '/landing/brands/popular'
+     #swagger.description = 'Returns up to five enabled brands ranked by their enabled-product count. Disabled brands and disabled products are excluded before the result limit is applied.'
+     #swagger.responses[200] = { description: 'Most popular brands' } */
+  getMostPopularBrandsController,
 );
 router.get(
   '/landing/pets/popular',

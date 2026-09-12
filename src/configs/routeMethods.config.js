@@ -82,6 +82,7 @@ export const API_ROUTE_METHODS = [
   { path: '/landing/products/discounted', methods: [get] },
   { path: '/landing/products/popular', methods: [get] },
   { path: ROUTES.landing.featuredProducts, methods: [get] },
+  { path: ROUTES.landing.popularBrands, methods: [get] },
   { path: '/landing/pets/popular', methods: [get] },
   { path: '/landing/pets/recent', methods: [get] },
   { path: '/countries', methods: [get] },

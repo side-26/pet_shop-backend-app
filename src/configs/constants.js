@@ -47,6 +47,7 @@ export const ROUTES = {
   },
   landing: {
     featuredProducts: '/landing/products/featured',
+    popularBrands: '/landing/brands/popular',
   },
 };
 export const STATUES = {
