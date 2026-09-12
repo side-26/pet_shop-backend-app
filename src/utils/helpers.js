@@ -136,26 +136,38 @@ export const onCatchPromiseController = (err, next) => {
   next(err);
 };
 
-export const verifyUser = (token, onSuccess) => {
-  jwt.verify(token, getJwtSecret(), (err, decoded) => {
-    if (err) {
-      setErrorResponse(STATUES.UN_AUTHORIZED, {
-        message: 'توکن نامعتبر است',
-      });
-    }
-
-    onSuccess(decoded);
-  });
+export const verifyUser = (token) => {
+  try {
+    return jwt.verify(token, getJwtSecret());
+  } catch {
+    setErrorResponse(STATUES.UN_AUTHORIZED, {
+      message: 'توکن نامعتبر است',
+    });
+  }
 };
 
-export const verifyRefreshToken = (token, onSuccess) => {
-  jwt.verify(token, getJwtRefreshSecret(), (err, decoded) => {
-    if (err) {
-      setErrorResponse(STATUES.UN_AUTHORIZED, {
-        message: 'توکن تازه‌سازی نامعتبر است',
-      });
-    }
+export const getUserSessionClaims = (decoded) => {
+  const { sessionId, userId } = decoded || {};
 
-    onSuccess(decoded);
-  });
+  if (
+    typeof sessionId !== 'string' ||
+    !sessionId.trim() ||
+    (typeof userId !== 'string' && typeof userId !== 'number')
+  ) {
+    setErrorResponse(STATUES.UN_AUTHORIZED, {
+      message: 'توکن نامعتبر است',
+    });
+  }
+
+  return { sessionId, userId: userId.toString() };
+};
+
+export const verifyRefreshToken = (token) => {
+  try {
+    return jwt.verify(token, getJwtRefreshSecret());
+  } catch {
+    setErrorResponse(STATUES.UN_AUTHORIZED, {
+      message: 'توکن تازه‌سازی نامعتبر است',
+    });
+  }
 };

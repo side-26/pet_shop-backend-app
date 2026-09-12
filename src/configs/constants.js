@@ -264,6 +264,14 @@ export const USER_TEMPORARY_TOKEN = {
   TTL_SECONDS: 5 * 60,
 };
 
+export const USER_AUTH_SESSION = {
+  KEY_NAMESPACE: 'auth-session:users',
+  USER_SESSIONS_KEY_NAMESPACE: 'auth-sessions:user',
+  ACCESS_TOKEN_TTL: '7h',
+  REFRESH_TOKEN_TTL: '7d',
+  TTL_SECONDS: 7 * 24 * 60 * 60,
+};
+
 export const SERVER_LIFECYCLE = {
   SHUTDOWN_TIMEOUT_MS: 10000,
 };

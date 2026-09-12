@@ -124,7 +124,6 @@ export const userChangePasswordFormBodyValidation = object({
   password: string().min(8),
   oldPassword: string().min(8),
   repeatPassword: string().min(8),
-  userId: string(),
 }).refine((data) => data.password === data.repeatPassword, {
   message: 'کلمه عبور و تکرار کلمه عبور مشابه نیستند.',
   path: ['repeatPassword'],

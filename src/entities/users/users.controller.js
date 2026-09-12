@@ -312,7 +312,7 @@ export const changeUserPasswordController = async (req, res, next) => {
       req.body,
     );
 
-    const user = await UserService.changePassword(body);
+    const user = await UserService.changePassword(req.user, body);
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `${UserService.getFullName(

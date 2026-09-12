@@ -1507,6 +1507,11 @@
             }
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6479,7 +6484,8 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "description": "A currently active, Redis-backed login-session access token."
       }
     },
     "schemas": {
@@ -7541,12 +7547,9 @@
           "repeatPassword": {
             "type": "string",
             "minLength": 8
-          },
-          "userId": {
-            "type": "string"
           }
         },
-        "required": ["password", "oldPassword", "repeatPassword", "userId"],
+        "required": ["password", "oldPassword", "repeatPassword"],
         "additionalProperties": false
       },
       "AddCartItemBody": {

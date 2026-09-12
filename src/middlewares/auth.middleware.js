@@ -1,19 +1,36 @@
 import { STATUES } from '#configs/constants.js';
-import { setErrorResponse, verifyUser } from '#utils/helpers.js';
+import {
+  getUserSessionClaims,
+  setErrorResponse,
+  verifyUser,
+} from '#utils/helpers.js';
 
-export const authenticated = (req, res, next) => {
+import { RedisAuthSessionStore } from '../infrastructure/redis/auth/redisAuthSession.store.js';
+
+const redisAuthSessionStore = new RedisAuthSessionStore();
+
+export const authenticated = async (req, res, next) => {
   const authHeader = req.get('Authorization')?.toString() || '';
 
   const token = authHeader.split(' ')?.[1] || '';
 
   try {
-    verifyUser(token, (decoded) => {
-      req.user = decoded;
-      next();
+    const decoded = verifyUser(token);
+    const { sessionId, userId } = getUserSessionClaims(decoded);
+    const isActiveSession = await redisAuthSessionStore.isOwnedBy({
+      sessionId,
+      userId,
     });
-  } catch {
-    setErrorResponse(STATUES.UN_AUTHORIZED, {
-      message: 'توکن نامعتبر است',
-    });
+
+    if (!isActiveSession) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'نشست ورود معتبر نیست یا منقضی شده است',
+      });
+    }
+
+    req.user = { ...decoded, userId };
+    next();
+  } catch (error) {
+    next(error);
   }
 };

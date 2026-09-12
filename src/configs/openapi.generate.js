@@ -213,6 +213,8 @@ const doc = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
+        description:
+          'A currently active, Redis-backed login-session access token.',
       },
     },
   },

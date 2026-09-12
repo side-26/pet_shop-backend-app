@@ -2,6 +2,12 @@ jest.mock('./reverseGeocoding.service.js', () => ({
   ReverseGeocodingService: { reverseGeocode: jest.fn() },
 }));
 
+jest.mock('../../infrastructure/redis/auth/redisAuthSession.store.js', () => ({
+  RedisAuthSessionStore: jest.fn(() => ({
+    isOwnedBy: jest.fn().mockResolvedValue(true),
+  })),
+}));
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
@@ -20,7 +26,10 @@ describe('Reverse geocoding API', () => {
   beforeAll(() => {
     process.env.JWT_SECRET_KEY = 'reverse-geocoding-test-secret';
     authorization = `Bearer ${jwt.sign(
-      { userId: '65a4de97aff1fbb38c437952' },
+      {
+        userId: '65a4de97aff1fbb38c437952',
+        sessionId: 'reverse-geocoding-session',
+      },
       process.env.JWT_SECRET_KEY,
     )}`;
     app = express();

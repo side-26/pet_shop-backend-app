@@ -9,6 +9,7 @@ import {
   ROLES,
   STATUES,
   USER_ADDRESS_LIMITS,
+  USER_AUTH_SESSION,
   USER_ITEM_TYPES,
   USER_OTP,
   USER_TEMPORARY_TOKEN,
@@ -26,24 +27,27 @@ import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js
 
 import {
   createNewQueryParam,
+  getUserSessionClaims,
   getPaginationData,
   setErrorResponse,
   verifyRefreshToken,
 } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
-import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
+import { RedisAuthSessionStore } from '../../infrastructure/redis/auth/redisAuthSession.store.js';
 import {
   createUserOtpKey,
   createUserTemporaryTokenKey,
   createUserTemporaryTokenRateLimitKey,
   RedisOtpStore,
 } from '../../infrastructure/redis/otp/redisOtp.store.js';
+import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import { UserModel } from './users.model.js';
 import { calculateCartPrices, formatUserFullName } from './users.helpers.js';
 import { userAddressSchema } from './users.schema.js';
 
 const redisOtpStore = new RedisOtpStore();
+const redisAuthSessionStore = new RedisAuthSessionStore();
 const sixDigitOtpPattern = new RegExp(`^\\d{${USER_OTP.CODE_LENGTH}}$`);
 
 export class UserService {
@@ -110,6 +114,8 @@ export class UserService {
       });
     }
 
+    await this.invalidateUserSessions(deletedUser._id);
+
     if (deletedUser.avatar) {
       try {
         const avatarKey = ObjectStorageService.getObjectKeyFromUrl(
@@ -151,12 +157,19 @@ export class UserService {
   // TOKENS
   // =========================================================
 
-  static createAccessToken(userId, phoneNumber, role, expiresIn = '8h') {
+  static createAccessToken(
+    userId,
+    phoneNumber,
+    role,
+    sessionId,
+    expiresIn = USER_AUTH_SESSION.ACCESS_TOKEN_TTL,
+  ) {
     return jwt.sign(
       {
         userId,
         username: phoneNumber,
         role,
+        sessionId,
       },
       getJwtSecret(),
       {
@@ -165,8 +178,14 @@ export class UserService {
     );
   }
 
-  static createRefreshToken(userId, expiresIn = '7d') {
-    return jwt.sign({ userId }, getJwtRefreshSecret(), { expiresIn });
+  static createRefreshToken(
+    userId,
+    sessionId,
+    expiresIn = USER_AUTH_SESSION.REFRESH_TOKEN_TTL,
+  ) {
+    return jwt.sign({ userId, sessionId }, getJwtRefreshSecret(), {
+      expiresIn,
+    });
   }
 
   static verifyTemporaryToken(authorization) {
@@ -203,16 +222,23 @@ export class UserService {
     });
   }
 
-  static createLoginData(user) {
+  static async createLoginData(user) {
+    const sessionId = randomUUID();
     const accessToken = this.createAccessToken(
       user._id,
       user.phoneNumber,
       user.role,
-      '7h',
+      sessionId,
     );
-    const refreshToken = this.createRefreshToken(user._id);
+    const refreshToken = this.createRefreshToken(user._id, sessionId);
     const accessExp = jwt.decode(accessToken).exp * 1000;
     const sessionExp = jwt.decode(refreshToken).exp * 1000;
+
+    await redisAuthSessionStore.create({
+      sessionId,
+      userId: user._id,
+      ttlSeconds: USER_AUTH_SESSION.TTL_SECONDS,
+    });
 
     return {
       user,
@@ -374,7 +400,7 @@ export class UserService {
       };
     }
 
-    const { user: ignoredUser, ...data } = this.createLoginData(user);
+    const { user: ignoredUser, ...data } = await this.createLoginData(user);
 
     void ignoredUser;
 
@@ -405,6 +431,8 @@ export class UserService {
         message: 'شما دسترسی لازم را ندارید',
       });
     }
+
+    await this.invalidateUserSessions(user._id);
 
     await redisOtpStore.deleteTemporaryToken({ key, temporaryToken });
 
@@ -451,34 +479,37 @@ export class UserService {
       });
     }
 
-    return new Promise((resolve, reject) => {
-      try {
-        verifyRefreshToken(refreshToken, async (decoded) => {
-          try {
-            /*
-             * Refresh token currently contains only userId.
-             *
-             * Therefore we load the user again rather than
-             * assuming phoneNumber and role exist in decoded.
-             */
-            const user = await this.findById(decoded.userId);
-
-            const accessToken = this.createAccessToken(
-              user._id,
-              user.phoneNumber,
-              user.role,
-              '7h',
-            );
-
-            resolve(accessToken);
-          } catch (error) {
-            reject(error);
-          }
-        });
-      } catch (error) {
-        reject(error);
-      }
+    const decoded = verifyRefreshToken(refreshToken);
+    const { userId, sessionId } = getUserSessionClaims(decoded);
+    const isActiveSession = await redisAuthSessionStore.isOwnedBy({
+      sessionId,
+      userId,
     });
+
+    if (!isActiveSession) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'نشست ورود معتبر نیست یا منقضی شده است',
+      });
+    }
+
+    const user = await this.findById(userId);
+
+    if (!user.isEnable) {
+      setErrorResponse(STATUES.UN_AUTHORIZED, {
+        message: 'حساب کاربری غیرفعال است یا حذف شده است',
+      });
+    }
+
+    return this.createAccessToken(
+      user._id,
+      user.phoneNumber,
+      user.role,
+      sessionId,
+    );
+  }
+
+  static async invalidateUserSessions(userId) {
+    await redisAuthSessionStore.deleteByUserId(userId);
   }
 
   // =========================================================
@@ -922,8 +953,9 @@ export class UserService {
   // CHANGE PASSWORD
   // =========================================================
 
-  static async changePassword(data) {
-    const user = await this.findById(data.userId);
+  static async changePassword(actor, data) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
 
     const isOldPasswordCorrect = await this.comparePassword(
       user.password,
@@ -949,6 +981,8 @@ export class UserService {
       },
     );
 
+    await this.invalidateUserSessions(user._id);
+
     return user;
   }
 
@@ -963,9 +997,13 @@ export class UserService {
   }
 
   static async disable(userId) {
-    return this.update(userId, {
+    const user = await this.update(userId, {
       isEnable: false,
     });
+
+    await this.invalidateUserSessions(user._id);
+
+    return user;
   }
 
   // =========================================================

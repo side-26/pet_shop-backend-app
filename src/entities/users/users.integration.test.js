@@ -54,6 +54,14 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
   };
 });
 
+jest.mock('../../infrastructure/redis/auth/redisAuthSession.store.js', () => ({
+  RedisAuthSessionStore: jest.fn(() => ({
+    create: jest.fn().mockResolvedValue(),
+    deleteByUserId: jest.fn().mockResolvedValue(),
+    isOwnedBy: jest.fn().mockResolvedValue(true),
+  })),
+}));
+
 jest.mock('../../integrations/otpCode/otpCode.service.js', () => ({
   OtpCodeService: { send: jest.fn() },
 }));
@@ -190,20 +198,26 @@ jest.mock('#utils/helpers.js', () => ({
     };
   }),
 
-  verifyUser: jest.fn((token, callback) => {
+  getUserSessionClaims: jest.fn((decoded) => ({
+    userId: decoded.userId.toString(),
+    sessionId: decoded.sessionId,
+  })),
+
+  verifyUser: jest.fn((token) => {
     void token;
 
-    callback({
+    return {
       userId: global.__TEST_USER_ID__,
-    });
+    };
   }),
 
-  verifyRefreshToken: jest.fn((token, callback) => {
+  verifyRefreshToken: jest.fn((token) => {
     void token;
 
-    callback({
+    return {
       userId: global.__TEST_USER_ID__,
-    });
+      sessionId: 'test-session-id',
+    };
   }),
 }));
 
@@ -1511,6 +1525,37 @@ describe('User API - Integration Tests', () => {
       );
 
       expect(isPasswordCorrect).toBe(true);
+    });
+
+    test('uses the authenticated user instead of a userId supplied in the body', async () => {
+      const otherUser = await createTestUser({
+        phoneNumber: '09121112233',
+        nationalCode: '9876543210',
+      });
+
+      const res = await request(app)
+        .put('/api/users/change-password')
+        .send({
+          userId: otherUser._id.toString(),
+          oldPassword: DEFAULT_PASSWORD,
+          password: 'newPassword123',
+          repeatPassword: 'newPassword123',
+        })
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+
+      const [authenticatedUser, unchangedOtherUser] = await Promise.all([
+        UserModel.findById(testUser._id),
+        UserModel.findById(otherUser._id),
+      ]);
+
+      await expect(
+        bcrypt.compare('newPassword123', authenticatedUser.password),
+      ).resolves.toBe(true);
+      await expect(
+        bcrypt.compare(DEFAULT_PASSWORD, unchangedOtherUser.password),
+      ).resolves.toBe(true);
     });
 
     test('should return 422 if old password is wrong', async () => {

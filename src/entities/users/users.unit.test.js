@@ -101,6 +101,23 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
   };
 });
 
+jest.mock('../../infrastructure/redis/auth/redisAuthSession.store.js', () => {
+  const create = jest.fn();
+  const deleteByUserId = jest.fn();
+  const isOwnedBy = jest.fn();
+
+  return {
+    __mockRedisAuthSessionCreate: create,
+    __mockRedisAuthSessionDeleteByUserId: deleteByUserId,
+    __mockRedisAuthSessionIsOwnedBy: isOwnedBy,
+    RedisAuthSessionStore: jest.fn(() => ({
+      create,
+      deleteByUserId,
+      isOwnedBy,
+    })),
+  };
+});
+
 jest.mock('#utils/helpers.js', () => ({
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
@@ -125,6 +142,11 @@ jest.mock('#utils/helpers.js', () => ({
   }),
 
   getPaginationData: jest.fn(),
+
+  getUserSessionClaims: jest.fn((decoded) => ({
+    userId: decoded.userId.toString(),
+    sessionId: decoded.sessionId,
+  })),
 
   verifyRefreshToken: jest.fn(),
 }));
@@ -156,6 +178,7 @@ import {
   ROLES,
   STATUES,
   USER_OTP,
+  USER_AUTH_SESSION,
   USER_TEMPORARY_TOKEN,
 } from '#configs/constants.js';
 import logger from '#configs/logger.js';
@@ -166,6 +189,11 @@ import { getPaginationData, verifyRefreshToken } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
+import {
+  __mockRedisAuthSessionCreate as mockRedisAuthSessionCreate,
+  __mockRedisAuthSessionDeleteByUserId as mockRedisAuthSessionDeleteByUserId,
+  __mockRedisAuthSessionIsOwnedBy as mockRedisAuthSessionIsOwnedBy,
+} from '../../infrastructure/redis/auth/redisAuthSession.store.js';
 import {
   __mockRedisTemporaryTokenFind as mockRedisTemporaryTokenFind,
   __mockRedisTemporaryTokenDelete as mockRedisTemporaryTokenDelete,
@@ -253,6 +281,9 @@ describe('UserService - Unit Tests', () => {
     mockRedisTemporaryTokenFind.mockResolvedValue(null);
     mockRedisTemporaryTokenDelete.mockResolvedValue(true);
     mockRedisOtpReleaseReservation.mockResolvedValue(true);
+    mockRedisAuthSessionCreate.mockResolvedValue();
+    mockRedisAuthSessionDeleteByUserId.mockResolvedValue();
+    mockRedisAuthSessionIsOwnedBy.mockResolvedValue(true);
   });
 
   // =========================================================
@@ -338,6 +369,9 @@ describe('UserService - Unit Tests', () => {
     );
     expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
       'users/avatar.webp',
+    );
+    expect(mockRedisAuthSessionDeleteByUserId).toHaveBeenCalledWith(
+      mockUser._id,
     );
   });
 
@@ -433,6 +467,7 @@ describe('UserService - Unit Tests', () => {
       mockUser._id,
       mockUser.phoneNumber,
       mockUser.role,
+      'request-id',
       '7h',
     );
 
@@ -443,6 +478,7 @@ describe('UserService - Unit Tests', () => {
         userId: mockUser._id,
         username: mockUser.phoneNumber,
         role: mockUser.role,
+        sessionId: 'request-id',
       },
       process.env.JWT_SECRET_KEY,
       {
@@ -454,13 +490,14 @@ describe('UserService - Unit Tests', () => {
   test('createRefreshToken creates refresh token', () => {
     jwt.sign.mockReturnValue('refresh-token');
 
-    const result = UserService.createRefreshToken(mockUser._id);
+    const result = UserService.createRefreshToken(mockUser._id, 'request-id');
 
     expect(result).toBe('refresh-token');
 
     expect(jwt.sign).toHaveBeenCalledWith(
       {
         userId: mockUser._id,
+        sessionId: 'request-id',
       },
       process.env.JWT_REFRESH_SECRET_KEY,
       {
@@ -691,6 +728,11 @@ describe('UserService - Unit Tests', () => {
     );
     expect(bcrypt.compare).toHaveBeenCalledWith('123456', 'hashed-code');
     expect(mockRedisTemporaryTokenConsume).not.toHaveBeenCalled();
+    expect(mockRedisAuthSessionCreate).toHaveBeenCalledWith({
+      sessionId: 'request-id',
+      userId: mockUser._id,
+      ttlSeconds: USER_AUTH_SESSION.TTL_SECONDS,
+    });
   });
 
   test('verifyOtp returns and stores a five-minute temporary reset token', async () => {
@@ -983,20 +1025,20 @@ describe('UserService - Unit Tests', () => {
 
     jwt.sign.mockReturnValue('new-access-token');
 
-    verifyRefreshToken.mockImplementation((token, callback) => {
-      callback({
-        userId: mockUser._id,
-      });
+    verifyRefreshToken.mockReturnValue({
+      userId: mockUser._id,
+      sessionId: 'request-id',
     });
 
     const result = await UserService.refreshAccessToken('refresh-token');
 
     expect(result).toBe('new-access-token');
 
-    expect(verifyRefreshToken).toHaveBeenCalledWith(
-      'refresh-token',
-      expect.any(Function),
-    );
+    expect(verifyRefreshToken).toHaveBeenCalledWith('refresh-token');
+    expect(mockRedisAuthSessionIsOwnedBy).toHaveBeenCalledWith({
+      userId: mockUser._id,
+      sessionId: 'request-id',
+    });
   });
 
   test('refreshAccessToken throws if token is missing', async () => {
@@ -1253,6 +1295,9 @@ describe('UserService - Unit Tests', () => {
         runValidators: true,
       },
     );
+    expect(mockRedisAuthSessionDeleteByUserId).toHaveBeenCalledWith(
+      mockUser._id,
+    );
   });
 
   test('enable sets isEnable true', async () => {
@@ -1283,8 +1328,7 @@ describe('UserService - Unit Tests', () => {
       acknowledged: true,
     });
 
-    const result = await UserService.changePassword({
-      userId: mockUser._id,
+    const result = await UserService.changePassword(mockActor, {
       oldPassword: 'password123',
       password: 'newPassword123',
       repeatPassword: 'newPassword123',
@@ -1302,6 +1346,9 @@ describe('UserService - Unit Tests', () => {
         },
       },
     );
+    expect(mockRedisAuthSessionDeleteByUserId).toHaveBeenCalledWith(
+      mockUser._id,
+    );
   });
 
   test('changePassword throws if old password is incorrect', async () => {
@@ -1310,8 +1357,7 @@ describe('UserService - Unit Tests', () => {
     bcrypt.compare.mockResolvedValue(false);
 
     await expect(
-      UserService.changePassword({
-        userId: mockUser._id,
+      UserService.changePassword(mockActor, {
         oldPassword: 'wrong-password',
         password: 'newPassword123',
       }),
