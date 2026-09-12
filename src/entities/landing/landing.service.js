@@ -7,7 +7,7 @@ import { formatCustomerProductDetail } from '#entities/products/products.helpers
 import { setErrorResponse } from '#utils/helpers.js';
 
 import { LandingModel } from './landing.model.js';
-import { LANDING_LIMITS } from './landing.constants.js';
+import { FEATURED_PRODUCT_TAGS, LANDING_LIMITS } from './landing.constants.js';
 
 const formatPetType = (petType) => ({
   id: petType._id,
@@ -106,6 +106,49 @@ export class LandingService {
   static async getMostPopularProducts() {
     const products = await LandingModel.findMostPopularProducts();
     return products.map(formatProduct);
+  }
+
+  static async getFeaturedProducts() {
+    const featuredProducts = [];
+    const excludedIds = [];
+    const selections = [
+      [
+        FEATURED_PRODUCT_TAGS.MOST_PURCHASED,
+        async () => {
+          const [product] = await LandingModel.findMostPurchasedProduct([
+            ...excludedIds,
+          ]);
+          return product;
+        },
+      ],
+      [
+        FEATURED_PRODUCT_TAGS.MOST_DISCOUNTED,
+        () => LandingModel.findMostDiscountedProduct([...excludedIds]),
+      ],
+      [
+        FEATURED_PRODUCT_TAGS.CHEAPEST,
+        () => LandingModel.findCheapestProduct([...excludedIds]),
+      ],
+      [
+        FEATURED_PRODUCT_TAGS.MOST_WISHLISTED,
+        async () => {
+          const [product] = await LandingModel.findMostWishlistedProduct([
+            ...excludedIds,
+          ]);
+          return product;
+        },
+      ],
+    ];
+
+    for (const [tag, findProduct] of selections) {
+      const product = await findProduct();
+      if (!product) continue;
+
+      excludedIds.push(product._id);
+      featuredProducts.push({ tag, product: formatProduct(product) });
+    }
+
+    return featuredProducts;
   }
 
   static async getProductBySlug(slug) {

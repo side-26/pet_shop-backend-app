@@ -12,11 +12,17 @@ import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
 
-import { ROLES, STATUES, USER_ITEM_TYPES } from '#configs/constants.js';
+import {
+  CART_PAYMENT_TYPES,
+  ROLES,
+  STATUES,
+  USER_ITEM_TYPES,
+} from '#configs/constants.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
 import { PetModel } from '#entities/pets/pets.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
@@ -136,6 +142,9 @@ describe('Landing API', () => {
       }),
     );
     expect(allPetTypes.body.data).toHaveLength(5);
+    expect(allPetTypes.body.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ title: 'غیرفعال' })]),
+    );
     expect(allPetTypes.body.data[0].thumbnail).toBe(
       'data:image/webp;base64,AAAA',
     );
@@ -169,6 +178,78 @@ describe('Landing API', () => {
       }),
     );
     expect(invalidLimit.status).toBe(STATUES.BAD_FORM_VALIDATION);
+  });
+
+  test('never returns disabled records from public landing routes', async () => {
+    const hiddenProduct = await ProductModel.create({
+      title: 'محصول پنهان',
+      mainImage: 'https://cdn.example.com/hidden-product.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات محصول پنهان',
+      summary: 'خلاصه محصول پنهان',
+      category: new mongoose.Types.ObjectId(),
+      brand: new mongoose.Types.ObjectId(),
+      quantity: 10,
+      price: 1,
+      discountPercentage: 100,
+      salesVolume: 10_000,
+      isEnable: false,
+      slug: 'hidden-product',
+    });
+    const hiddenPet = await PetModel.create({
+      title: 'حیوان پنهان',
+      mainImage: 'https://cdn.example.com/hidden-pet.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات حیوان پنهان',
+      petType: new mongoose.Types.ObjectId(),
+      breed: new mongoose.Types.ObjectId(),
+      price: 10_000_000,
+      salesVolume: 10_000,
+      inEnable: false,
+      slug: 'hidden-pet',
+    });
+    await UserModel.create({
+      phoneNumber: '09120000004',
+      password: 'password123',
+      wishlist: [
+        { item: hiddenProduct._id, itemType: USER_ITEM_TYPES.PRODUCT },
+        { item: hiddenPet._id, itemType: USER_ITEM_TYPES.PET },
+      ],
+    });
+
+    const [
+      discountedProducts,
+      popularProducts,
+      featuredProducts,
+      popularPets,
+      hiddenProductDetail,
+      hiddenPetDetail,
+    ] = await Promise.all([
+      request(app).get('/api/landing/products/discounted'),
+      request(app).get('/api/landing/products/popular'),
+      request(app).get('/api/landing/products/featured'),
+      request(app).get('/api/landing/pets/popular'),
+      request(app).get('/api/landing/products/hidden-product'),
+      request(app).get('/api/landing/pets/hidden-pet'),
+    ]);
+
+    const productIds = (response) =>
+      response.body.data.map(({ id }) => String(id));
+
+    expect(productIds(discountedProducts)).not.toContain(
+      String(hiddenProduct._id),
+    );
+    expect(productIds(popularProducts)).not.toContain(
+      String(hiddenProduct._id),
+    );
+    expect(
+      featuredProducts.body.data.map(({ product }) => String(product.id)),
+    ).not.toContain(String(hiddenProduct._id));
+    expect(popularPets.body.data.map(({ id }) => String(id))).not.toContain(
+      String(hiddenPet._id),
+    );
+    expect(hiddenProductDetail.status).toBe(STATUES.NOT_FOUND);
+    expect(hiddenPetDetail.status).toBe(STATUES.NOT_FOUND);
   });
 
   test('returns only recently updated, enabled, in-stock pets', async () => {
@@ -227,6 +308,104 @@ describe('Landing API', () => {
         expect.objectContaining({ slug: 'not-updated-pet' }),
       ]),
     );
+  });
+
+  test('returns four distinct featured products in priority order', async () => {
+    const products = await ProductModel.find().sort({ title: 1, _id: 1 });
+    const [purchased, discounted, cheapest, wishlisted] = products;
+    const purchaser = await UserModel.findOne({ phoneNumber: '09120000001' });
+    await Promise.all([
+      ProductModel.updateOne(
+        { _id: purchased._id },
+        { $set: { salesVolume: 100, discountPercentage: 90, price: 100 } },
+      ),
+      ProductModel.updateOne(
+        { _id: discounted._id },
+        { $set: { salesVolume: 90, discountPercentage: 80, price: 1_000 } },
+      ),
+      ProductModel.updateOne(
+        { _id: cheapest._id },
+        { $set: { salesVolume: 80, discountPercentage: 70, price: 10 } },
+      ),
+      ProductModel.updateOne(
+        { _id: wishlisted._id },
+        { $set: { salesVolume: 70, discountPercentage: 60, price: 200 } },
+      ),
+      UserModel.create([
+        {
+          phoneNumber: '09120000004',
+          password: 'password123',
+          wishlist: [
+            { item: wishlisted._id, itemType: USER_ITEM_TYPES.PRODUCT },
+          ],
+        },
+        {
+          phoneNumber: '09120000005',
+          password: 'password123',
+          wishlist: [
+            { item: wishlisted._id, itemType: USER_ITEM_TYPES.PRODUCT },
+          ],
+        },
+      ]),
+      OrderModel.create({
+        user: purchaser._id,
+        orderNumber: '123456789',
+        trackingCode: '987654321',
+        paymentTrackingId: 'featured-products-payment',
+        totalPrice: 300,
+        items: [
+          {
+            item: purchased._id,
+            itemType: USER_ITEM_TYPES.PRODUCT,
+            quantity: 3,
+            price: 100,
+            discountPercentage: 0,
+            title: purchased.title,
+            mainImage: purchased.mainImage,
+            mainImageThumbnail: purchased.mainImageThumbnail,
+          },
+        ],
+        discountPrice: 0,
+        userAddress: {
+          sourceId: new mongoose.Types.ObjectId(),
+          province: 'تهران',
+          city: 'تهران',
+          detailAddress: 'نشانی آزمایشی',
+          plate: '۱',
+          postalCode: '1234567890',
+          receiverIsMe: true,
+          firstName: 'کاربر',
+          lastName: 'آزمایشی',
+          nationalCode: '0012345678',
+          phoneNumber: purchaser.phoneNumber,
+        },
+        deliveringDateToShipping: new Date('2026-09-13T00:00:00.000Z'),
+        shippingPrice: 0,
+        shippingInfo: {},
+        paymentType: CART_PAYMENT_TYPES.DIRECT,
+      }),
+    ]);
+
+    const response = await request(app).get('/api/landing/products/featured');
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data.map(({ tag }) => tag)).toEqual([
+      'mostPurchased',
+      'mostDiscounted',
+      'cheapest',
+      'mostWishlisted',
+    ]);
+    expect(response.body.data.map(({ product }) => String(product.id))).toEqual(
+      [
+        String(purchased._id),
+        String(discounted._id),
+        String(cheapest._id),
+        String(wishlisted._id),
+      ],
+    );
+    expect(
+      new Set(response.body.data.map(({ product }) => String(product.id))).size,
+    ).toBe(4);
   });
 
   test('supplements a sparse recent-pet section with highest-priced available pets', async () => {

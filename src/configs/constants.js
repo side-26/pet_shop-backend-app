@@ -45,6 +45,9 @@ export const ROUTES = {
     updateOrder: '/products/edit/:id',
     deleteOrder: '/products/delete/:id',
   },
+  landing: {
+    featuredProducts: '/landing/products/featured',
+  },
 };
 export const STATUES = {
   SUCCESS: 200,

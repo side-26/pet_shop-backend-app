@@ -11,6 +11,10 @@ jest.mock('./landing.model.js', () => ({
     findPetsByIds: jest.fn(),
     findMostDiscountedProducts: jest.fn(),
     findMostPopularProducts: jest.fn(),
+    findMostPurchasedProduct: jest.fn(),
+    findMostDiscountedProduct: jest.fn(),
+    findCheapestProduct: jest.fn(),
+    findMostWishlistedProduct: jest.fn(),
     findProductBySlug: jest.fn(),
   },
 }));
@@ -227,6 +231,52 @@ describe('LandingService', () => {
       expected,
     ]);
     expect(LandingModel.findMostDiscountedProducts).toHaveBeenCalledWith(2);
+  });
+
+  test('returns distinct featured products in selection-priority order', async () => {
+    const purchased = { ...product, _id: 'purchased-id', title: 'پرفروش' };
+    const discounted = {
+      ...product,
+      _id: 'discounted-id',
+      title: 'تخفیف‌دار',
+    };
+    const cheapest = { ...product, _id: 'cheapest-id', title: 'ارزان' };
+    const wishlisted = { ...product, _id: 'wishlisted-id', title: 'دلخواه' };
+    LandingModel.findMostPurchasedProduct.mockResolvedValue([purchased]);
+    LandingModel.findMostDiscountedProduct.mockResolvedValue(discounted);
+    LandingModel.findCheapestProduct.mockResolvedValue(cheapest);
+    LandingModel.findMostWishlistedProduct.mockResolvedValue([wishlisted]);
+
+    await expect(LandingService.getFeaturedProducts()).resolves.toEqual([
+      expect.objectContaining({
+        tag: 'mostPurchased',
+        product: expect.objectContaining({ id: purchased._id }),
+      }),
+      expect.objectContaining({
+        tag: 'mostDiscounted',
+        product: expect.objectContaining({ id: discounted._id }),
+      }),
+      expect.objectContaining({
+        tag: 'cheapest',
+        product: expect.objectContaining({ id: cheapest._id }),
+      }),
+      expect.objectContaining({
+        tag: 'mostWishlisted',
+        product: expect.objectContaining({ id: wishlisted._id }),
+      }),
+    ]);
+    expect(LandingModel.findMostDiscountedProduct).toHaveBeenCalledWith([
+      purchased._id,
+    ]);
+    expect(LandingModel.findCheapestProduct).toHaveBeenCalledWith([
+      purchased._id,
+      discounted._id,
+    ]);
+    expect(LandingModel.findMostWishlistedProduct).toHaveBeenCalledWith([
+      purchased._id,
+      discounted._id,
+      cheapest._id,
+    ]);
   });
 
   test('propagates source-query failures', async () => {

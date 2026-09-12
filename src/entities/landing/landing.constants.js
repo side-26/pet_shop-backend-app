@@ -6,3 +6,10 @@ export const LANDING_LIMITS = {
   MINIMUM_PREFERRED_PETS: 4,
   MAX_SECTION_ITEMS: 100,
 };
+
+export const FEATURED_PRODUCT_TAGS = {
+  MOST_PURCHASED: 'mostPurchased',
+  MOST_DISCOUNTED: 'mostDiscounted',
+  CHEAPEST: 'cheapest',
+  MOST_WISHLISTED: 'mostWishlisted',
+};

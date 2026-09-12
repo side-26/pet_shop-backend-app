@@ -6157,6 +6157,36 @@
         "tags": ["/landing"]
       }
     },
+    "/landing/products/featured": {
+      "get": {
+        "summary": "Get distinct featured products",
+        "description": "Returns up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. A product selected for an earlier type is excluded from later types.",
+        "responses": {
+          "200": {
+            "description": "Distinct featured products"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["/landing"]
+      }
+    },
     "/landing/pets/popular": {
       "get": {
         "summary": "Get five most popular pets",

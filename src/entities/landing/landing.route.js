@@ -1,8 +1,11 @@
 import express from 'express';
 
+import { ROUTES } from '#configs/constants.js';
+
 import {
   getAllPetTypesController,
   getFeaturedPetTypesController,
+  getFeaturedProductsController,
   getMostDiscountedProductsController,
   getMostPopularPetsController,
   getMostPopularProductsController,
@@ -41,6 +44,14 @@ router.get(
      #swagger.description = 'Returns up to four enabled products ordered by sales volume, including the main image thumbnail, product price, discount percentage, and calculated discount amount.'
      #swagger.responses[200] = { description: 'Most popular products' } */
   getMostPopularProductsController,
+);
+router.get(
+  ROUTES.landing.featuredProducts,
+  /* #swagger.summary = 'Get distinct featured products'
+     #swagger.path = '/landing/products/featured'
+     #swagger.description = 'Returns up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. A product selected for an earlier type is excluded from later types.'
+     #swagger.responses[200] = { description: 'Distinct featured products' } */
+  getFeaturedProductsController,
 );
 router.get(
   '/landing/pets/popular',

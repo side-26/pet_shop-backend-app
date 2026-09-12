@@ -36,6 +36,8 @@ For every coding task or code change in this repository, read and apply the comp
 
 Treat `app-general-workflow` as mandatory repository policy even when the user does not explicitly name it. Apply its production-quality checks, entity architecture, test coverage, naming, and constant-usage rules before considering work complete.
 
+For every addition or change to a public landing list, selector, aggregation, or lookup, read and apply `.agents/skills/landing-enabled-filter/SKILL.md`. Public landing records must be filtered by the queried model's actual enabled-state field; use `isEnable: true` whenever that field exists.
+
 For every coding task or review that creates or changes stable values, arrays, policies, role groups, routes, or configuration fragments, also read and apply `.agents/skills/single-source-of-truth/SKILL.md`. Treat it as mandatory repository policy: centralize shared domain vocabulary in the narrowest appropriate owner and replace all duplicate consumers in the same change.
 
 For every coding task or code review in this repository, also read and apply `.agents/skills/prevent-memory-leaks/SKILL.md`. Treat it as mandatory repository policy. Audit every changed or affected timer, listener, stream, socket, database resource, watcher, subscription, cache, and background task for explicit ownership and deterministic cleanup. Store and clear timer handles on every applicable completion, cancellation, error, and shutdown path; refactor lifecycle leaks in the affected scope before considering work complete.

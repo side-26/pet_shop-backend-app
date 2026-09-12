@@ -42,6 +42,9 @@ export const getMostDiscountedProductsController = async (req, res, next) => {
 export const getMostPopularProductsController = (_req, res, next) =>
   getLandingSection(res, next, 'getMostPopularProducts');
 
+export const getFeaturedProductsController = (_req, res, next) =>
+  getLandingSection(res, next, 'getFeaturedProducts');
+
 const getCatalogItemBySlug = async (req, res, next, serviceMethod) => {
   try {
     const { slug } = returnFormValidation(landingSlugSchema, req.params);

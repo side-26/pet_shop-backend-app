@@ -1,6 +1,7 @@
 import { MANAGEMENT_ROLES, USER_ITEM_TYPES } from '#configs/constants.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
 import { UserModel } from '#entities/users/users.model.js';
 
@@ -105,6 +106,70 @@ export class LandingModel {
     return ProductModel.find({ isEnable: true })
       .sort({ salesVolume: -1, title: 1, _id: 1 })
       .limit(LANDING_LIMITS.FEATURED_PRODUCTS);
+  }
+
+  static findMostPurchasedProduct(excludedIds) {
+    return OrderModel.aggregate([
+      { $unwind: '$items' },
+      { $match: { 'items.itemType': USER_ITEM_TYPES.PRODUCT } },
+      {
+        $group: {
+          _id: '$items.item',
+          purchasedQuantity: { $sum: '$items.quantity' },
+        },
+      },
+      { $match: { _id: { $nin: excludedIds } } },
+      { $sort: { purchasedQuantity: -1, _id: 1 } },
+      {
+        $lookup: {
+          from: ProductModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'product',
+        },
+      },
+      { $unwind: '$product' },
+      { $match: { 'product.isEnable': true } },
+      { $limit: 1 },
+      { $replaceWith: '$product' },
+    ]);
+  }
+
+  static findMostDiscountedProduct(excludedIds) {
+    return ProductModel.findOne({
+      _id: { $nin: excludedIds },
+      isEnable: true,
+    }).sort({ discountPercentage: -1, title: 1, _id: 1 });
+  }
+
+  static findCheapestProduct(excludedIds) {
+    return ProductModel.findOne({
+      _id: { $nin: excludedIds },
+      isEnable: true,
+    }).sort({ price: 1, title: 1, _id: 1 });
+  }
+
+  static findMostWishlistedProduct(excludedIds) {
+    return UserModel.aggregate([
+      { $match: { role: { $nin: MANAGEMENT_ROLES } } },
+      { $unwind: '$wishlist' },
+      { $match: { 'wishlist.itemType': USER_ITEM_TYPES.PRODUCT } },
+      { $group: { _id: '$wishlist.item', likes: { $sum: 1 } } },
+      { $match: { _id: { $nin: excludedIds } } },
+      { $sort: { likes: -1, _id: 1 } },
+      {
+        $lookup: {
+          from: ProductModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'product',
+        },
+      },
+      { $unwind: '$product' },
+      { $match: { 'product.isEnable': true } },
+      { $limit: 1 },
+      { $replaceWith: '$product' },
+    ]);
   }
 
   static findProductBySlug(slug) {
