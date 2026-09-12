@@ -28,6 +28,11 @@ const formatProduct = (product) => ({
   discountPrice: product.price * (product.discountPercentage / 100),
 });
 
+const formatPopularProduct = (product) => ({
+  ...formatProduct(product),
+  slug: product.slug,
+});
+
 const orderPetsById = (pets, ids) => {
   const petsById = new Map(pets.map((pet) => [String(pet._id), pet]));
   return ids.map((id) => petsById.get(String(id))).filter(Boolean);
@@ -105,7 +110,7 @@ export class LandingService {
 
   static async getMostPopularProducts() {
     const products = await LandingModel.findMostPopularProducts();
-    return products.map(formatProduct);
+    return products.map(formatPopularProduct);
   }
 
   static async getFeaturedProducts() {

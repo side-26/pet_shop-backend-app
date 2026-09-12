@@ -9,7 +9,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 - `GET /landing/pet-types` — up to four enabled pet types, ordered by creation date, each with its main image, thumbnail, and summary.
 - `GET /landing/products/discounted?limit=COUNT` — enabled products ordered by discount percentage, with the main image thumbnail, source price, discount percentage, and response-only calculated discount amount; `limit` defaults to four and is capped at 100.
 - `GET /landing/pet-types/all` — every enabled pet type, ordered by creation date, each with its main image, thumbnail, and summary.
-- `GET /landing/products/popular` — up to four enabled products, ordered by sales volume, with the main image thumbnail, source price, discount percentage, and response-only calculated discount amount.
+- `GET /landing/products/popular` — up to four enabled products, ordered by sales volume, with the main image thumbnail, slug, source price, discount percentage, and response-only calculated discount amount.
 - `GET /landing/products/featured` — up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. A product selected for an earlier category is excluded from later categories.
 - `GET /landing/pets/popular` — up to five enabled pets ranked by non-management wishlist frequency; it falls back to sales volume when no enabled pets are wishlisted and supplements sparse results with the highest-priced enabled pets.
 - `GET /landing/pets/recent` — up to five enabled, in-stock pets that were updated or enabled by a user, ordered by their most recent update and supplemented with highest-priced available pets when needed.

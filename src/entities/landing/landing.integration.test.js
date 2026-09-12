@@ -164,6 +164,12 @@ describe('Landing API', () => {
       'محصول-2',
       'محصول-1',
     ]);
+    expect(popular.body.data.map(({ slug }) => slug)).toEqual([
+      'product-4',
+      'product-3',
+      'product-2',
+      'product-1',
+    ]);
     expect(popularPets.body.data.map(({ title }) => title)).toEqual([
       'حیوان-0',
       'حیوان-1',

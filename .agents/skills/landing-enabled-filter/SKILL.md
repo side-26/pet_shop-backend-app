@@ -10,7 +10,7 @@ Public landing data must not expose disabled catalog records.
 Before changing a landing query, inspect the queried model and identify its actual enabled-state field. If that model defines `isEnable`, every list, selector, fallback, slug lookup, and aggregate result that returns that model must require:
 
 ```js
-isEnable: true
+isEnable: true;
 ```
 
 For aggregation pipelines, apply the equivalent predicate to the correct document stage:
