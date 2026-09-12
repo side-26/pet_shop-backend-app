@@ -261,6 +261,115 @@ describe('Landing API', () => {
     expect(hiddenPetDetail.status).toBe(STATUES.NOT_FOUND);
   });
 
+  test('filters, sorts, and paginates enabled landing products', async () => {
+    const [matchingBrand, otherBrand] = await BrandModel.create([
+      { title: 'برند فیلتر', title_fa: 'برند فیلتر' },
+      { title: 'برند دیگر', title_fa: 'برند دیگر' },
+    ]);
+    const category = new mongoose.Types.ObjectId();
+    const subCategory = new mongoose.Types.ObjectId();
+    await ProductModel.create([
+      {
+        title: 'محصول کم‌قیمت',
+        mainImage: 'https://cdn.example.com/filtered-low.webp',
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+        description: 'توضیحات محصول',
+        category,
+        subCategory,
+        brand: matchingBrand._id,
+        price: 100,
+        salesVolume: 10,
+        slug: 'filtered-low',
+      },
+      {
+        title: 'محصول گران‌قیمت',
+        mainImage: 'https://cdn.example.com/filtered-high.webp',
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+        description: 'توضیحات محصول',
+        category,
+        subCategory,
+        brand: matchingBrand._id,
+        price: 300,
+        salesVolume: 20,
+        slug: 'filtered-high',
+      },
+      {
+        title: 'محصول برند دیگر',
+        mainImage: 'https://cdn.example.com/other-brand.webp',
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+        description: 'توضیحات محصول',
+        category,
+        subCategory,
+        brand: otherBrand._id,
+        price: 200,
+        salesVolume: 30,
+        slug: 'other-brand',
+      },
+      {
+        title: 'محصول غیرفعال',
+        mainImage: 'https://cdn.example.com/disabled-filtered.webp',
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+        description: 'توضیحات محصول',
+        category,
+        subCategory,
+        brand: matchingBrand._id,
+        price: 50,
+        salesVolume: 100,
+        isEnable: false,
+        slug: 'disabled-filtered',
+      },
+    ]);
+
+    const [response, mostSales, invalidRange] = await Promise.all([
+      request(app)
+        .get('/api/landing/products')
+        .query({
+          category: String(category),
+          subCategory: String(subCategory),
+          brand: String(matchingBrand._id),
+          priceFrom: 100,
+          priceTo: 300,
+          sort: 'less-valued',
+          page: 1,
+          limit: 1,
+        }),
+      request(app)
+        .get('/api/landing/products')
+        .query({
+          category: String(category),
+          brand: String(matchingBrand._id),
+          sort: 'most-sales',
+        }),
+      request(app).get('/api/landing/products').query({
+        priceFrom: 300,
+        priceTo: 100,
+      }),
+    ]);
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data.result.map(({ slug }) => slug)).toEqual([
+      'filtered-low',
+    ]);
+    expect(response.body.data.pagination).toEqual({
+      currentPage: 1,
+      totalPages: 2,
+      totalItems: 2,
+      itemsPerPage: 1,
+      hasNextPage: true,
+      hasPrevPage: false,
+      nextPage: 2,
+      prevPage: null,
+    });
+    expect(response.body.data.result[0]).toEqual(
+      expect.objectContaining({ discountPrice: 100, slug: 'filtered-low' }),
+    );
+    expect(mostSales.body.data.result.map(({ slug }) => slug)).toEqual([
+      'filtered-high',
+      'filtered-low',
+    ]);
+    expect(invalidRange.status).toBe(STATUES.BAD_FORM_VALIDATION);
+  });
+
   test('returns five enabled brands with the most enabled products', async () => {
     const baseBrand = await BrandModel.findOne({ title: 'برند پیش‌فرض' });
     const [secondBrand, thirdBrand, fourthBrand, fifthBrand, hiddenBrand] =

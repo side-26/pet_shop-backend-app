@@ -5,7 +5,11 @@ import {
   setSuccessResponse,
 } from '#utils/helpers.js';
 
-import { landingLimitSchema, landingSlugSchema } from './landing.schema.js';
+import {
+  landingLimitSchema,
+  landingProductListQuerySchema,
+  landingSlugSchema,
+} from './landing.schema.js';
 import { LandingService } from './landing.service.js';
 
 const getLandingSection = async (res, next, serviceMethod) => {
@@ -47,6 +51,19 @@ export const getMostPopularBrandsController = (_req, res, next) =>
 
 export const getFeaturedProductsController = (_req, res, next) =>
   getLandingSection(res, next, 'getFeaturedProducts');
+
+export const getProductListController = async (req, res, next) => {
+  try {
+    const query = returnFormValidation(
+      landingProductListQuerySchema,
+      req.query,
+    );
+    const data = await LandingService.getProductList(query);
+    setSuccessResponse(res, STATUES.SUCCESS, { data });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
 
 const getCatalogItemBySlug = async (req, res, next, serviceMethod) => {
   try {

@@ -46,6 +46,7 @@ export const ROUTES = {
     deleteOrder: '/products/delete/:id',
   },
   landing: {
+    productList: '/landing/products',
     featuredProducts: '/landing/products/featured',
     popularBrands: '/landing/brands/popular',
   },

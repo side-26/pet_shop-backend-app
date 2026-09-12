@@ -6424,6 +6424,95 @@
         ]
       }
     },
+    "/landing/products": {
+      "get": {
+        "summary": "Get enabled products with landing filters",
+        "description": "Returns enabled products filtered by category, sub-category, brand, and inclusive raw-price range. Sort supports most-valued, less-valued, most-sales, and less-sales; results are paginated.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "pattern": "^[0-9a-fA-F]{24}$",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subCategory",
+            "in": "query",
+            "pattern": "^[0-9a-fA-F]{24}$",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "pattern": "^[0-9a-fA-F]{24}$",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priceFrom",
+            "in": "query",
+            "minimum": 0,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "priceTo",
+            "in": "query",
+            "minimum": 0,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "enum": [
+              "most-valued",
+              "less-valued",
+              "most-sales",
+              "less-sales"
+            ],
+            "default": "most-sales",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "minimum": 1,
+            "default": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered, paginated enabled products"
+          }
+        },
+        "tags": [
+          "/landing"
+        ]
+      }
+    },
     "/landing/brands/popular": {
       "get": {
         "summary": "Get five enabled brands with the most enabled products",

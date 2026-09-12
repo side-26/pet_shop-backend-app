@@ -9,6 +9,14 @@ import { UserModel } from '#entities/users/users.model.js';
 import { LANDING_LIMITS } from './landing.constants.js';
 
 export class LandingModel {
+  static findProductList(filter, sort, skip, limit) {
+    return ProductModel.find(filter).sort(sort).skip(skip).limit(limit);
+  }
+
+  static countProductList(filter) {
+    return ProductModel.countDocuments(filter);
+  }
+
   static findPetBySlug(slug) {
     return PetModel.findOne({ slug, inEnable: true }).populate([
       { path: 'petType' },

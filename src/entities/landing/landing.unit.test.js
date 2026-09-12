@@ -17,6 +17,8 @@ jest.mock('./landing.model.js', () => ({
     findCheapestProduct: jest.fn(),
     findMostWishlistedProduct: jest.fn(),
     findProductBySlug: jest.fn(),
+    findProductList: jest.fn(),
+    countProductList: jest.fn(),
   },
 }));
 
@@ -232,6 +234,63 @@ describe('LandingService', () => {
       { ...expected, slug: product.slug, discountPrice: 160000 },
     ]);
     expect(LandingModel.findMostDiscountedProducts).toHaveBeenCalledWith(2);
+  });
+
+  test('filters and paginates enabled landing products with the selected sort', async () => {
+    LandingModel.findProductList.mockResolvedValue([
+      { ...product, slug: 'food' },
+    ]);
+    LandingModel.countProductList.mockResolvedValue(3);
+
+    await expect(
+      LandingService.getProductList({
+        category: 'category-id',
+        subCategory: 'sub-category-id',
+        brand: 'brand-id',
+        priceFrom: 100000,
+        priceTo: 300000,
+        sort: 'less-valued',
+        page: 2,
+        limit: 2,
+      }),
+    ).resolves.toEqual({
+      result: [
+        expect.objectContaining({
+          id: product._id,
+          slug: 'food',
+          discountPrice: 160000,
+        }),
+      ],
+      pagination: {
+        currentPage: 2,
+        totalPages: 2,
+        totalItems: 3,
+        itemsPerPage: 2,
+        hasNextPage: false,
+        hasPrevPage: true,
+        nextPage: null,
+        prevPage: 1,
+      },
+    });
+    expect(LandingModel.findProductList).toHaveBeenCalledWith(
+      {
+        isEnable: true,
+        category: 'category-id',
+        subCategory: 'sub-category-id',
+        brand: 'brand-id',
+        price: { $gte: 100000, $lte: 300000 },
+      },
+      { price: 1, title: 1, _id: 1 },
+      2,
+      2,
+    );
+    expect(LandingModel.countProductList).toHaveBeenCalledWith({
+      isEnable: true,
+      category: 'category-id',
+      subCategory: 'sub-category-id',
+      brand: 'brand-id',
+      price: { $gte: 100000, $lte: 300000 },
+    });
   });
 
   test('formats enabled brands by their enabled-product count', async () => {

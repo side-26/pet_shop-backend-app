@@ -11,6 +11,7 @@ import {
   getMostPopularPetsController,
   getMostPopularProductsController,
   getPetBySlugController,
+  getProductListController,
   getProductBySlugController,
   getRecentlyUpdatedPetsController,
 } from './landing.controller.js';
@@ -53,6 +54,22 @@ router.get(
      #swagger.description = 'Returns up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. A product selected for an earlier type is excluded from later types.'
      #swagger.responses[200] = { description: 'Distinct featured products' } */
   getFeaturedProductsController,
+);
+router.get(
+  ROUTES.landing.productList,
+  /* #swagger.summary = 'Get enabled products with landing filters'
+     #swagger.path = '/landing/products'
+     #swagger.description = 'Returns enabled products filtered by category, sub-category, brand, and inclusive raw-price range. Sort supports most-valued, less-valued, most-sales, and less-sales; results are paginated.'
+     #swagger.parameters['category'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}$' }
+     #swagger.parameters['subCategory'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}$' }
+     #swagger.parameters['brand'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}$' }
+     #swagger.parameters['priceFrom'] = { in: 'query', type: 'number', minimum: 0 }
+     #swagger.parameters['priceTo'] = { in: 'query', type: 'number', minimum: 0 }
+     #swagger.parameters['sort'] = { in: 'query', type: 'string', enum: ['most-valued', 'less-valued', 'most-sales', 'less-sales'], default: 'most-sales' }
+     #swagger.parameters['page'] = { in: 'query', type: 'integer', minimum: 1, default: 1 }
+     #swagger.parameters['limit'] = { in: 'query', type: 'integer', minimum: 1, maximum: 100, default: 20 }
+     #swagger.responses[200] = { description: 'Filtered, paginated enabled products' } */
+  getProductListController,
 );
 router.get(
   ROUTES.landing.popularBrands,

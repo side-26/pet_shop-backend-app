@@ -8,7 +8,11 @@ import { setErrorResponse } from '#utils/helpers.js';
 import { calculateDiscountedPrice } from '#utils/price.helpers.js';
 
 import { LandingModel } from './landing.model.js';
-import { FEATURED_PRODUCT_TAGS, LANDING_LIMITS } from './landing.constants.js';
+import {
+  FEATURED_PRODUCT_TAGS,
+  LANDING_LIMITS,
+  LANDING_PRODUCT_LIST_SORT_ORDERS,
+} from './landing.constants.js';
 
 const formatPetType = (petType) => ({
   id: petType._id,
@@ -29,7 +33,7 @@ const formatProduct = (product) => ({
   discountPrice: product.price * (product.discountPercentage / 100),
 });
 
-const formatPopularProduct = (product) => ({
+const formatLandingProductCard = (product) => ({
   ...formatProduct(product),
   slug: product.slug,
   discountPrice: calculateDiscountedPrice(
@@ -37,6 +41,25 @@ const formatPopularProduct = (product) => ({
     product.discountPercentage,
   ),
 });
+
+const buildProductListFilter = ({
+  category,
+  subCategory,
+  brand,
+  priceFrom,
+  priceTo,
+}) => {
+  const filter = { isEnable: true };
+  if (category) filter.category = category;
+  if (subCategory) filter.subCategory = subCategory;
+  if (brand) filter.brand = brand;
+  if (priceFrom !== undefined || priceTo !== undefined) {
+    filter.price = {};
+    if (priceFrom !== undefined) filter.price.$gte = priceFrom;
+    if (priceTo !== undefined) filter.price.$lte = priceTo;
+  }
+  return filter;
+};
 
 const formatPopularBrand = ({ brand, productCount }) => ({
   id: brand._id,
@@ -54,6 +77,38 @@ const orderPetsById = (pets, ids) => {
 };
 
 export class LandingService {
+  static async getProductList(query) {
+    const { page, limit, sort } = query;
+    const filter = buildProductListFilter(query);
+    const skip = (page - 1) * limit;
+    const [products, totalItems] = await Promise.all([
+      LandingModel.findProductList(
+        filter,
+        LANDING_PRODUCT_LIST_SORT_ORDERS[sort],
+        skip,
+        limit,
+      ),
+      LandingModel.countProductList(filter),
+    ]);
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    return {
+      result: products.map(formatLandingProductCard),
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+        hasNextPage,
+        hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null,
+      },
+    };
+  }
+
   static async getPetBySlug(slug) {
     const pet = await LandingModel.findPetBySlug(slug);
     if (!pet) {
@@ -125,7 +180,7 @@ export class LandingService {
 
   static async getMostPopularProducts() {
     const products = await LandingModel.findMostPopularProducts();
-    return products.map(formatPopularProduct);
+    return products.map(formatLandingProductCard);
   }
 
   static async getMostPopularBrands() {
