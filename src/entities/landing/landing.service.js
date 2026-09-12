@@ -5,6 +5,7 @@ import {
 } from '#entities/pets/pets.helpers.js';
 import { formatCustomerProductDetail } from '#entities/products/products.helpers.js';
 import { setErrorResponse } from '#utils/helpers.js';
+import { calculateDiscountedPrice } from '#utils/price.helpers.js';
 
 import { LandingModel } from './landing.model.js';
 import { FEATURED_PRODUCT_TAGS, LANDING_LIMITS } from './landing.constants.js';
@@ -31,6 +32,10 @@ const formatProduct = (product) => ({
 const formatPopularProduct = (product) => ({
   ...formatProduct(product),
   slug: product.slug,
+  discountPrice: calculateDiscountedPrice(
+    product.price,
+    product.discountPercentage,
+  ),
 });
 
 const orderPetsById = (pets, ids) => {

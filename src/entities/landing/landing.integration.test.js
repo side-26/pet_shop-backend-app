@@ -170,6 +170,9 @@ describe('Landing API', () => {
       'product-2',
       'product-1',
     ]);
+    expect(popular.body.data.map(({ discountPrice }) => discountPrice)).toEqual(
+      [60000, 70000, 80000, 90000],
+    );
     expect(popularPets.body.data.map(({ title }) => title)).toEqual([
       'حیوان-0',
       'حیوان-1',

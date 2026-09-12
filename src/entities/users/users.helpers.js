@@ -1,3 +1,5 @@
+import { calculateDiscountAmount } from '#utils/price.helpers.js';
+
 export const formatUserFullName = (
   user,
   firstNameKey = 'firstName',
@@ -21,7 +23,7 @@ export const calculateCartPrices = (items = []) =>
         totalPrice: prices.totalPrice + itemTotal,
         discountPrice:
           prices.discountPrice +
-          itemTotal * (cartItem.item.discountPercentage / 100),
+          calculateDiscountAmount(itemTotal, cartItem.item.discountPercentage),
       };
     },
     { totalPrice: 0, discountPrice: 0 },

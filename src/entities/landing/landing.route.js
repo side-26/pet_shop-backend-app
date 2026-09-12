@@ -41,7 +41,7 @@ router.get(
 router.get(
   '/landing/products/popular',
   /* #swagger.summary = 'Get four most popular products'
-     #swagger.description = 'Returns up to four enabled products ordered by sales volume, including the main image thumbnail, slug, product price, discount percentage, and calculated discount amount.'
+     #swagger.description = 'Returns up to four enabled products ordered by sales volume, including the main image thumbnail, slug, product price, discount percentage, and final discounted price.'
      #swagger.responses[200] = { description: 'Most popular products' } */
   getMostPopularProductsController,
 );

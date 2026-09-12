@@ -228,7 +228,7 @@ describe('LandingService', () => {
       expected,
     ]);
     await expect(LandingService.getMostPopularProducts()).resolves.toEqual([
-      { ...expected, slug: product.slug },
+      { ...expected, slug: product.slug, discountPrice: 160000 },
     ]);
     expect(LandingModel.findMostDiscountedProducts).toHaveBeenCalledWith(2);
   });
