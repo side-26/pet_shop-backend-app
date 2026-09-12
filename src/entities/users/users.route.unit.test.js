@@ -50,6 +50,7 @@ jest.mock('./users.controller.js', () => ({
   getUserByIdController: jest.fn(),
   getWishlistItemsController: jest.fn(),
   loginUserController: jest.fn(),
+  logoutUserController: jest.fn(),
   refreshTokenController: jest.fn(),
   registerUserController: jest.fn(),
   resetUserPasswordController: jest.fn(),
@@ -61,9 +62,13 @@ jest.mock('./users.controller.js', () => ({
 import express from 'express';
 
 import { RATE_LIMIT, ROUTES } from '#configs/constants.js';
+import { authenticated } from '#middlewares/auth.middleware.js';
 
 import { RateLimiter } from '../../infrastructure/redis/rateLimit/rateLimit.core.js';
-import { loginUserController } from './users.controller.js';
+import {
+  loginUserController,
+  logoutUserController,
+} from './users.controller.js';
 import usersRouter from './users.route.js';
 
 describe('users route policies', () => {
@@ -87,6 +92,9 @@ describe('users route policies', () => {
     const paginatedRoute = registeredRoutes.find(
       ([path]) => path === ROUTES.users.getAllPaginate,
     );
+    const logoutRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.users.logout,
+    );
     const standardRoutes = registeredRoutes.filter(
       ([path]) =>
         path !== ROUTES.users.login && path !== ROUTES.users.getAllPaginate,
@@ -106,8 +114,8 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
       window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
     });
-    expect(registeredRoutes).toHaveLength(26);
-    expect(standardRoutes).toHaveLength(24);
+    expect(registeredRoutes).toHaveLength(27);
+    expect(standardRoutes).toHaveLength(25);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
     });
@@ -116,6 +124,12 @@ describe('users route policies', () => {
       ROUTES.users.login,
       loginRateLimitMiddleware,
       loginUserController,
+    ]);
+    expect(logoutRoute).toEqual([
+      ROUTES.users.logout,
+      standardRateLimitMiddleware,
+      authenticated,
+      logoutUserController,
     ]);
   });
 });

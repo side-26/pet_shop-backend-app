@@ -20,6 +20,17 @@ end
 return redis.call('DEL', KEYS[1])
 `;
 
+const DELETE_SESSION_SCRIPT = `
+local deleted = redis.call('DEL', KEYS[1])
+redis.call('SREM', KEYS[2], ARGV[1])
+
+if redis.call('SCARD', KEYS[2]) == 0 then
+  redis.call('DEL', KEYS[2])
+end
+
+return deleted
+`;
+
 const normalizeRequiredValue = (value, message) => {
   const normalizedValue = value?.toString().trim();
 
@@ -82,6 +93,25 @@ export class RedisAuthSessionStore {
     const storedUserId = await this.#client.hGet(key, 'userId');
 
     return storedUserId === normalizedUserId;
+  }
+
+  async deleteBySession({ sessionId, userId }) {
+    const normalizedSessionId = normalizeRequiredValue(
+      sessionId,
+      'شناسه نشست برای حذف نشست ورود در Redis الزامی است',
+    );
+    const normalizedUserId = normalizeRequiredValue(
+      userId,
+      'شناسه کاربر برای حذف نشست ورود در Redis الزامی است',
+    );
+
+    await this.#client.eval(DELETE_SESSION_SCRIPT, {
+      keys: [
+        createUserAuthSessionKey(normalizedSessionId),
+        createUserAuthSessionsKey(normalizedUserId),
+      ],
+      arguments: [normalizedSessionId],
+    });
   }
 
   async deleteByUserId(userId) {

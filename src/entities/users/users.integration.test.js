@@ -57,6 +57,7 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
 jest.mock('../../infrastructure/redis/auth/redisAuthSession.store.js', () => ({
   RedisAuthSessionStore: jest.fn(() => ({
     create: jest.fn().mockResolvedValue(),
+    deleteBySession: jest.fn().mockResolvedValue(),
     deleteByUserId: jest.fn().mockResolvedValue(),
     isOwnedBy: jest.fn().mockResolvedValue(true),
   })),
@@ -74,6 +75,7 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
 
     req.user = {
       userId: global.__TEST_USER_ID__,
+      sessionId: 'test-session-id',
       role:
         global.__TEST_USER_ROLE__ ||
         jest.requireActual('#configs/constants.js').ROLES.ADMIN,
@@ -1119,6 +1121,25 @@ describe('User API - Integration Tests', () => {
         .set('Authorization', 'Bearer token');
 
       expect(res.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+  });
+
+  describe('POST /api/users/logout', () => {
+    test('invalidates the authenticated device session', async () => {
+      const res = await request(app)
+        .post('/api/users/logout')
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.message).toBe('با موفقیت از حساب کاربری خارج شدید');
+    });
+
+    test('rejects an unauthenticated logout', async () => {
+      global.__TEST_UNAUTHENTICATED__ = true;
+
+      const res = await request(app).post('/api/users/logout');
+
+      expect(res.status).toBe(STATUES.UN_AUTHORIZED);
     });
   });
 

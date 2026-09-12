@@ -103,15 +103,18 @@ jest.mock('../../infrastructure/redis/otp/redisOtp.store.js', () => {
 
 jest.mock('../../infrastructure/redis/auth/redisAuthSession.store.js', () => {
   const create = jest.fn();
+  const deleteBySession = jest.fn();
   const deleteByUserId = jest.fn();
   const isOwnedBy = jest.fn();
 
   return {
     __mockRedisAuthSessionCreate: create,
+    __mockRedisAuthSessionDeleteBySession: deleteBySession,
     __mockRedisAuthSessionDeleteByUserId: deleteByUserId,
     __mockRedisAuthSessionIsOwnedBy: isOwnedBy,
     RedisAuthSessionStore: jest.fn(() => ({
       create,
+      deleteBySession,
       deleteByUserId,
       isOwnedBy,
     })),
@@ -191,6 +194,7 @@ import { formatImageFile } from '#utils/image.helpers.js';
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import {
   __mockRedisAuthSessionCreate as mockRedisAuthSessionCreate,
+  __mockRedisAuthSessionDeleteBySession as mockRedisAuthSessionDeleteBySession,
   __mockRedisAuthSessionDeleteByUserId as mockRedisAuthSessionDeleteByUserId,
   __mockRedisAuthSessionIsOwnedBy as mockRedisAuthSessionIsOwnedBy,
 } from '../../infrastructure/redis/auth/redisAuthSession.store.js';
@@ -282,6 +286,7 @@ describe('UserService - Unit Tests', () => {
     mockRedisTemporaryTokenDelete.mockResolvedValue(true);
     mockRedisOtpReleaseReservation.mockResolvedValue(true);
     mockRedisAuthSessionCreate.mockResolvedValue();
+    mockRedisAuthSessionDeleteBySession.mockResolvedValue();
     mockRedisAuthSessionDeleteByUserId.mockResolvedValue();
     mockRedisAuthSessionIsOwnedBy.mockResolvedValue(true);
   });
@@ -1045,6 +1050,20 @@ describe('UserService - Unit Tests', () => {
     await expect(UserService.refreshAccessToken(undefined)).rejects.toThrow(
       'توکن نامعتبر است',
     );
+  });
+
+  test('logout invalidates only the authenticated session', async () => {
+    await expect(
+      UserService.logout({
+        userId: mockUser._id,
+        sessionId: 'request-id',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(mockRedisAuthSessionDeleteBySession).toHaveBeenCalledWith({
+      userId: mockUser._id,
+      sessionId: 'request-id',
+    });
   });
 
   // =========================================================

@@ -1,4 +1,4 @@
-import { METHODS } from './constants.js';
+import { METHODS, ROUTES } from './constants.js';
 
 const { get, post, put, patch, delete: deleteMethod } = METHODS;
 
@@ -10,6 +10,7 @@ export const API_ROUTE_METHODS = [
   { path: '/users/reset-password', methods: [post] },
   { path: '/users/login', methods: [post] },
   { path: '/users/refresh-token', methods: [post] },
+  { path: ROUTES.users.logout, methods: [post] },
   { path: '/users/edit-info', methods: [put] },
   { path: '/images', methods: [post, deleteMethod] },
   { path: '/users/addresses', methods: [get, post] },

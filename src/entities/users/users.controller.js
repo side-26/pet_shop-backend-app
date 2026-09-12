@@ -175,6 +175,18 @@ export const refreshTokenController = async (req, res, next) => {
   }
 };
 
+export const logoutUserController = async (req, res, next) => {
+  try {
+    await UserService.logout(req.user);
+
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'با موفقیت از حساب کاربری خارج شدید',
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const addUserAddressController = async (req, res, next) => {
   try {
     const body = returnFormValidation(addUserAddressSchema, req.body);

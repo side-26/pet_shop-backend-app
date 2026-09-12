@@ -102,4 +102,18 @@ describe('Redis auth-session store', () => {
       arguments: [USER_AUTH_SESSION.KEY_NAMESPACE],
     });
   });
+
+  test('atomically deletes one session and removes it from its user index', async () => {
+    const store = new RedisAuthSessionStore();
+
+    await store.deleteBySession({
+      sessionId: 'session-id',
+      userId: 'user-id',
+    });
+
+    expect(client.eval).toHaveBeenCalledWith(expect.any(String), {
+      keys: ['auth-session:users:session-id', 'auth-sessions:user:user-id'],
+      arguments: ['session-id'],
+    });
+  });
 });

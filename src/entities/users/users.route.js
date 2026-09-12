@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { RATE_LIMIT, ROLES } from '#configs/constants.js';
+import { RATE_LIMIT, ROLES, ROUTES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadAvatar } from '#middlewares/upload.middleware.js';
@@ -26,6 +26,7 @@ import {
   getUserAddressListController,
   getWishlistItemsController,
   loginUserController,
+  logoutUserController,
   refreshTokenController,
   registerUserController,
   sendUserOtpController,
@@ -220,6 +221,26 @@ router.post(
   '/users/refresh-token',
   standardUserRateLimit,
   refreshTokenController,
+);
+
+router.post(
+  ROUTES.users.logout,
+  standardUserRateLimit,
+  authenticated,
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Log out the current device session'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.responses[200] = {
+      description: 'Current session invalidated successfully',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/SuccessResponse' } } }
+    }
+    #swagger.responses[401] = {
+      description: 'Authentication or login session is invalid',
+      content: { "application/json": { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+    }
+  */
+  logoutUserController,
 );
 
 router.put(

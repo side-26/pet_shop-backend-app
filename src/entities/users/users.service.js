@@ -512,6 +512,12 @@ export class UserService {
     await redisAuthSessionStore.deleteByUserId(userId);
   }
 
+  static async logout(actor) {
+    const { userId, sessionId } = getUserSessionClaims(actor);
+
+    await redisAuthSessionStore.deleteBySession({ sessionId, userId });
+  }
+
   // =========================================================
   // UPDATE USER
   // =========================================================
