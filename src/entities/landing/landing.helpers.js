@@ -15,16 +15,11 @@ export const parseLandingProductFilters = (query) => ({
     min: query.priceFrom,
     max: query.priceTo,
   },
-  available: query.available,
   isEnable: query.isEnable,
 });
 
 export const buildLandingProductFilter = ({ filters, excludeFilter }) => {
-  const filter = { isEnable: true };
-
-  if (excludeFilter !== 'isEnable' && filters.isEnable === false) {
-    filter._id = { $exists: false };
-  }
+  const filter = {};
 
   for (const field of PRODUCT_FILTER_FIELDS) {
     if (excludeFilter !== field && filters[field]?.length) {
@@ -42,8 +37,9 @@ export const buildLandingProductFilter = ({ filters, excludeFilter }) => {
     };
   }
 
-  if (excludeFilter !== 'available' && filters.available === true) {
-    filter.quantity = { $gt: 0 };
+  if (excludeFilter !== 'isEnable') {
+    if (filters.isEnable === false) filter._id = { $exists: false };
+    filter.isEnable = true;
   }
 
   return filter;
@@ -81,14 +77,6 @@ export const formatLandingProductFilters = (facetData, references) => {
     if (definition.key === 'price') {
       const [range] = facetData.price || [];
       return { ...definition, min: range?.min ?? 0, max: range?.max ?? 0 };
-    }
-
-    if (definition.key === 'available') {
-      const [{ count = 0 } = {}] = facetData.available || [];
-      return {
-        ...definition,
-        options: [{ value: true, label: definition.label, count }],
-      };
     }
 
     if (definition.key === 'isEnable') {

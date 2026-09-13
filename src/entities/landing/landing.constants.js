@@ -60,18 +60,11 @@ export const LANDING_PRODUCT_FILTER_DEFINITIONS = [
     unit: 'تومان',
   },
   {
-    key: 'available',
-    label: 'فقط کالاهای موجود',
-    type: FILTER_TYPES.BOOLEAN,
-    source: 'quantity',
-    order: 5,
-  },
-  {
     key: 'isEnable',
     label: 'فقط کالاهای موجود',
     type: FILTER_TYPES.BOOLEAN,
     source: 'isEnable',
-    order: 6,
+    order: 5,
   },
 ];
 

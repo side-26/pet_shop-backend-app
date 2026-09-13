@@ -12,19 +12,17 @@ describe('landing product-list helpers', () => {
       brand: ['brand-id'],
       priceFrom: 100,
       priceTo: 200,
-      available: true,
       isEnable: false,
     });
 
     expect(
       buildLandingProductFilter({ filters, excludeFilter: 'brand' }),
     ).toEqual({
-      isEnable: true,
       category: { $in: ['category-id'] },
       subCategory: { $in: ['sub-category-id'] },
       price: { $gte: 100, $lte: 200 },
-      quantity: { $gt: 0 },
       _id: { $exists: false },
+      isEnable: true,
     });
   });
 
@@ -36,7 +34,6 @@ describe('landing product-list helpers', () => {
           subCategory: [{ _id: 'sub-category-id', count: 1 }],
           brand: [{ _id: 'brand-id', count: 2 }],
           price: [],
-          available: [{ count: 1 }],
           isEnable: [{ count: 2 }],
         },
         {

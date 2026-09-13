@@ -6190,7 +6190,7 @@
     "/landing/products": {
       "get": {
         "summary": "Get enabled products with dynamic landing filters",
-        "description": "Returns enabled products with disjunctive category, sub-category, brand, price, availability, and enabled-status facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts. As a public catalog endpoint, isEnable=false returns no records.",
+        "description": "Returns enabled products with disjunctive category, sub-category, brand, price, and enabled-status facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts. As a public catalog endpoint, isEnable=false returns no records.",
         "parameters": [
           {
             "name": "category",
@@ -6230,13 +6230,6 @@
             "minimum": 0,
             "schema": {
               "type": "number"
-            }
-          },
-          {
-            "name": "available",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
             }
           },
           {

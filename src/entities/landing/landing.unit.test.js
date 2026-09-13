@@ -250,7 +250,6 @@ describe('LandingService', () => {
       subCategory: [],
       brand: [{ _id: 'brand-id', count: 3 }],
       price: [{ min: 100000, max: 300000 }],
-      available: [{ count: 2 }],
       isEnable: [{ count: 3 }],
     });
     LandingModel.findFacetCategories.mockResolvedValue([]);
@@ -295,10 +294,6 @@ describe('LandingService', () => {
         }),
         expect.objectContaining({ key: 'price', min: 100000, max: 300000 }),
         expect.objectContaining({
-          key: 'available',
-          options: [{ value: true, label: 'فقط کالاهای موجود', count: 2 }],
-        }),
-        expect.objectContaining({
           key: 'isEnable',
           options: [
             { value: true, label: 'فعال', count: 3 },
@@ -310,57 +305,49 @@ describe('LandingService', () => {
     });
     expect(LandingModel.findProductList).toHaveBeenCalledWith(
       {
-        isEnable: true,
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },
         price: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
       },
       { price: 1, title: 1, _id: 1 },
       2,
       2,
     );
     expect(LandingModel.countProductList).toHaveBeenCalledWith({
-      isEnable: true,
       category: { $in: ['category-id'] },
       subCategory: { $in: ['sub-category-id'] },
       brand: { $in: ['brand-id'] },
       price: { $gte: 100000, $lte: 300000 },
+      isEnable: true,
     });
     expect(LandingModel.findProductFacetData).toHaveBeenCalledWith({
       category: {
-        isEnable: true,
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },
         price: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
       },
       subCategory: {
-        isEnable: true,
         category: { $in: ['category-id'] },
         brand: { $in: ['brand-id'] },
         price: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
       },
       brand: {
-        isEnable: true,
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
         price: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
       },
       price: {
-        isEnable: true,
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },
-      },
-      available: {
         isEnable: true,
-        category: { $in: ['category-id'] },
-        subCategory: { $in: ['sub-category-id'] },
-        brand: { $in: ['brand-id'] },
-        price: { $gte: 100000, $lte: 300000 },
       },
       isEnable: {
-        isEnable: true,
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },

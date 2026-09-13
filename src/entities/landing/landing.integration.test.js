@@ -321,8 +321,8 @@ describe('Landing API', () => {
       },
     ]);
 
-    const [response, mostSales, availableOnly, disabledOnly, invalidRange] =
-      await Promise.all([
+    const [response, mostSales, disabledOnly, invalidRange] = await Promise.all(
+      [
         request(app)
           .get('/api/landing/products')
           .query({
@@ -342,15 +342,13 @@ describe('Landing API', () => {
             brand: String(matchingBrand._id),
             sort: 'most-sales',
           }),
-        request(app)
-          .get('/api/landing/products')
-          .query({ category: String(category), available: true }),
         request(app).get('/api/landing/products').query({ isEnable: false }),
         request(app).get('/api/landing/products').query({
           priceFrom: 300,
           priceTo: 100,
         }),
-      ]);
+      ],
+    );
 
     expect(response.status).toBe(STATUES.SUCCESS);
     expect(response.body.data.result.map(({ slug }) => slug)).toEqual([
@@ -369,6 +367,13 @@ describe('Landing API', () => {
     expect(response.body.data.result[0]).toEqual(
       expect.objectContaining({ discountPrice: 100, slug: 'filtered-low' }),
     );
+    expect(response.body.data.filters.map(({ key }) => key)).toEqual([
+      'category',
+      'subCategory',
+      'brand',
+      'price',
+      'isEnable',
+    ]);
     expect(response.body.data).toEqual(
       expect.objectContaining({
         filters: expect.arrayContaining([
@@ -387,10 +392,6 @@ describe('Landing API', () => {
           }),
           expect.objectContaining({ key: 'price', min: 100, max: 300 }),
           expect.objectContaining({
-            key: 'available',
-            options: [{ value: true, label: 'فقط کالاهای موجود', count: 1 }],
-          }),
-          expect.objectContaining({
             key: 'isEnable',
             options: [
               { value: true, label: 'فعال', count: 2 },
@@ -404,9 +405,6 @@ describe('Landing API', () => {
     expect(mostSales.body.data.result.map(({ slug }) => slug)).toEqual([
       'filtered-high',
       'filtered-low',
-    ]);
-    expect(availableOnly.body.data.result.map(({ slug }) => slug)).toEqual([
-      'filtered-high',
     ]);
     expect(disabledOnly.status).toBe(STATUES.SUCCESS);
     expect(disabledOnly.body.data.result).toEqual([]);

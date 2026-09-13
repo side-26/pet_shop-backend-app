@@ -64,11 +64,6 @@ export class LandingModel {
               },
             },
           ],
-          available: [
-            { $match: toAggregationFilter(filters.available) },
-            { $match: { quantity: { $gt: 0 } } },
-            { $count: 'count' },
-          ],
           isEnable: [
             { $match: toAggregationFilter(filters.isEnable) },
             { $count: 'count' },
