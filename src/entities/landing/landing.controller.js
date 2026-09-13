@@ -8,6 +8,7 @@ import {
 import {
   landingLimitSchema,
   landingProductListQuerySchema,
+  landingPetListQuerySchema,
   landingSlugSchema,
 } from './landing.schema.js';
 import { LandingService } from './landing.service.js';
@@ -59,6 +60,16 @@ export const getProductListController = async (req, res, next) => {
       req.query,
     );
     const data = await LandingService.getProductList(query);
+    setSuccessResponse(res, STATUES.SUCCESS, { data });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getPetListController = async (req, res, next) => {
+  try {
+    const query = returnFormValidation(landingPetListQuerySchema, req.query);
+    const data = await LandingService.getPetList(query);
     setSuccessResponse(res, STATUES.SUCCESS, { data });
   } catch (error) {
     onCatchPromiseController(error, next);

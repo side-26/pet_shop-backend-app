@@ -10,7 +10,10 @@ import { calculateDiscountedPrice } from '#utils/price.helpers.js';
 
 import {
   buildLandingProductFilter,
+  buildLandingPetFilter,
   formatLandingProductFilters,
+  formatLandingPetFilters,
+  parseLandingPetFilters,
   parseLandingProductFilters,
 } from './landing.helpers.js';
 import { LandingModel } from './landing.model.js';
@@ -66,6 +69,43 @@ const orderPetsById = (pets, ids) => {
 };
 
 export class LandingService {
+  static async getPetList(query) {
+    const filters = parseLandingPetFilters(query);
+    const filter = buildLandingPetFilter({ filters });
+    const facetFilters = Object.fromEntries(
+      ['petType', 'breed', 'price', 'isEnable'].map((key) => [
+        key,
+        buildLandingPetFilter({ filters, excludeFilter: key }),
+      ]),
+    );
+    const skip = (query.page - 1) * query.limit;
+    const [pets, totalItems, facetData] = await Promise.all([
+      LandingModel.findPetList(
+        filter,
+        LANDING_PRODUCT_LIST_SORT_ORDERS[query.sort],
+        skip,
+        query.limit,
+      ),
+      LandingModel.countPetList(filter),
+      LandingModel.findPetFacetData(facetFilters),
+    ]);
+    const ids = (key) => (facetData?.[key] || []).map(({ _id }) => _id);
+    const [petTypes, breeds] = await Promise.all([
+      LandingModel.findFacetPetTypes(ids('petType')),
+      LandingModel.findFacetBreeds(ids('breed')),
+    ]);
+    return createPaginationResponse({
+      result: pets.map(formatCustomerPetListItem),
+      totalItems,
+      page: query.page,
+      pageSize: query.limit,
+      filters: formatLandingPetFilters(facetData || {}, {
+        petTypes: petTypes || [],
+        breeds: breeds || [],
+      }),
+      sort: { current: query.sort, options: LANDING_PRODUCT_LIST_SORT_OPTIONS },
+    });
+  }
   static async getProductList(query) {
     const { page, limit, sort } = query;
     const filters = parseLandingProductFilters(query);

@@ -89,6 +89,62 @@ export class LandingModel {
     );
   }
 
+  static findPetList(filter, sort, skip, limit) {
+    return PetModel.find(filter).sort(sort).skip(skip).limit(limit);
+  }
+  static countPetList(filter) {
+    return PetModel.countDocuments(filter);
+  }
+  static findPetFacetData(filters) {
+    const convert = (filter) =>
+      Object.fromEntries(
+        Object.entries(filter).map(([key, value]) => [
+          key,
+          value?.$in
+            ? { $in: value.$in.map((id) => new mongoose.Types.ObjectId(id)) }
+            : value,
+        ]),
+      );
+    const count = (filter, field) => [
+      { $match: convert(filter) },
+      { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+    ];
+    return PetModel.aggregate([
+      {
+        $facet: {
+          petType: count(filters.petType, 'petType'),
+          breed: count(filters.breed, 'breed'),
+          price: [
+            { $match: convert(filters.price) },
+            {
+              $group: {
+                _id: null,
+                min: { $min: '$price' },
+                max: { $max: '$price' },
+              },
+            },
+          ],
+          isEnable: [
+            { $match: convert(filters.isEnable) },
+            { $count: 'count' },
+          ],
+        },
+      },
+    ]).then(([facets]) => facets);
+  }
+  static findFacetPetTypes(ids) {
+    return PetTypeModel.find({ _id: { $in: ids }, isEnabled: true }).select(
+      '_id title',
+    );
+  }
+  static findFacetBreeds(ids) {
+    return PetModel.db
+      .model('Breeds')
+      .find({ _id: { $in: ids } })
+      .select('_id title');
+  }
+
   static findPetBySlug(slug) {
     return PetModel.findOne({ slug, inEnable: true }).populate([
       { path: 'petType' },

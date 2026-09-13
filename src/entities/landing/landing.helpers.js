@@ -1,4 +1,7 @@
-import { LANDING_PRODUCT_FILTER_DEFINITIONS } from './landing.constants.js';
+import {
+  LANDING_PET_FILTER_DEFINITIONS,
+  LANDING_PRODUCT_FILTER_DEFINITIONS,
+} from './landing.constants.js';
 
 const PRODUCT_FILTER_FIELDS = ['category', 'subCategory', 'brand'];
 
@@ -43,6 +46,59 @@ export const buildLandingProductFilter = ({ filters, excludeFilter }) => {
   }
 
   return filter;
+};
+
+export const parseLandingPetFilters = (query) => ({
+  petType: toFilterValues(query.petType),
+  breed: toFilterValues(query.breed),
+  price: { min: query.priceFrom, max: query.priceTo },
+  isEnable: query.isEnable,
+});
+export const buildLandingPetFilter = ({ filters, excludeFilter }) => {
+  const filter = {};
+  for (const field of ['petType', 'breed'])
+    if (excludeFilter !== field && filters[field]?.length)
+      filter[field] = { $in: filters[field] };
+  if (
+    excludeFilter !== 'price' &&
+    (filters.price.min !== undefined || filters.price.max !== undefined)
+  )
+    filter.price = {
+      ...(filters.price.min !== undefined && { $gte: filters.price.min }),
+      ...(filters.price.max !== undefined && { $lte: filters.price.max }),
+    };
+  if (excludeFilter !== 'isEnable') {
+    if (filters.isEnable === false) filter._id = { $exists: false };
+    filter.inEnable = true;
+  }
+  return filter;
+};
+export const formatLandingPetFilters = (facetData, references) => {
+  const maps = {
+    petType: createOptionMap(references.petTypes, ({ title }) => title),
+    breed: createOptionMap(references.breeds, ({ title }) => title),
+  };
+  return LANDING_PET_FILTER_DEFINITIONS.map((definition) => {
+    if (definition.key === 'price') {
+      const [range] = facetData.price || [];
+      return { ...definition, min: range?.min ?? 0, max: range?.max ?? 0 };
+    }
+    if (definition.key === 'isEnable') {
+      const [{ count = 0 } = {}] = facetData.isEnable || [];
+      return {
+        ...definition,
+        options: [
+          { value: true, label: 'فعال', count },
+          { value: false, label: 'غیرفعال', count: 0 },
+        ],
+      };
+    }
+    return formatMultiSelectFacet(
+      definition,
+      facetData[definition.key] || [],
+      maps[definition.key],
+    );
+  });
 };
 
 const createOptionMap = (items, getLabel) =>

@@ -71,3 +71,23 @@ export const landingProductListQuerySchema = object({
     path: ['priceFrom'],
   },
 );
+
+export const landingPetListQuerySchema = object({
+  petType: objectIdListSchema.optional(),
+  breed: objectIdListSchema.optional(),
+  priceFrom: coerce.number().min(0).optional(),
+  priceTo: coerce.number().min(0).optional(),
+  isEnable: booleanQuerySchema.optional(),
+  sort: enumValue(Object.values(LANDING_PRODUCT_LIST_SORTS))
+    .optional()
+    .default(LANDING_PRODUCT_LIST_SORTS.MOST_SALES),
+  page: coerce.number().int().min(1).optional().default(1),
+  limit: coerce.number().int().min(1).max(100).optional().default(20),
+}).refine(
+  ({ priceFrom, priceTo }) =>
+    priceFrom === undefined || priceTo === undefined || priceFrom <= priceTo,
+  {
+    message: 'حداقل قیمت نمی‌تواند بیشتر از حداکثر قیمت باشد',
+    path: ['priceFrom'],
+  },
+);

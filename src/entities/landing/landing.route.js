@@ -10,6 +10,7 @@ import {
   getMostDiscountedProductsController,
   getMostPopularPetsController,
   getMostPopularProductsController,
+  getPetListController,
   getPetBySlugController,
   getProductListController,
   getProductBySlugController,
@@ -18,6 +19,18 @@ import {
 
 const router = express.Router();
 
+router.get(
+  '/landing/pets-paginate',
+  /* #swagger.summary = 'Get enabled pets with dynamic landing filters'
+     #swagger.parameters['petType'] = { in: 'query', type: 'string' }
+     #swagger.parameters['breed'] = { in: 'query', type: 'string' }
+     #swagger.parameters['priceFrom'] = { in: 'query', type: 'number', minimum: 0 }
+     #swagger.parameters['priceTo'] = { in: 'query', type: 'number', minimum: 0 }
+     #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean' }
+     #swagger.parameters['sort'] = { in: 'query', type: 'string', enum: ['most-valued', 'less-valued', 'most-sales', 'less-sales'], default: 'most-sales' }
+     #swagger.responses[200] = { description: 'Filtered, paginated enabled pets with filters and sort metadata' } */
+  getPetListController,
+);
 router.get(
   '/landing/pet-types',
   /* #swagger.summary = 'Get four featured pet types'

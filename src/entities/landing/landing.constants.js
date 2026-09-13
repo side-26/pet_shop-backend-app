@@ -83,6 +83,38 @@ export const LANDING_PRODUCT_LIST_SORT_ORDERS = {
   },
 };
 
+export const LANDING_PET_FILTER_DEFINITIONS = [
+  {
+    key: 'petType',
+    label: 'نوع حیوان',
+    type: FILTER_TYPES.MULTI_SELECT,
+    source: 'petType',
+    order: 1,
+  },
+  {
+    key: 'breed',
+    label: 'نژاد',
+    type: FILTER_TYPES.MULTI_SELECT,
+    source: 'breed',
+    order: 2,
+  },
+  {
+    key: 'price',
+    label: 'قیمت',
+    type: FILTER_TYPES.RANGE,
+    source: 'price',
+    order: 3,
+    unit: 'تومان',
+  },
+  {
+    key: 'isEnable',
+    label: 'فعال',
+    type: FILTER_TYPES.BOOLEAN,
+    source: 'inEnable',
+    order: 4,
+  },
+];
+
 export const FEATURED_PRODUCT_TAGS = {
   MOST_PURCHASED: 'mostPurchased',
   MOST_DISCOUNTED: 'mostDiscounted',
