@@ -251,6 +251,7 @@ describe('LandingService', () => {
       brand: [{ _id: 'brand-id', count: 3 }],
       price: [{ min: 100000, max: 300000 }],
       available: [{ count: 2 }],
+      isEnable: [{ count: 3 }],
     });
     LandingModel.findFacetCategories.mockResolvedValue([]);
     LandingModel.findFacetSubCategories.mockResolvedValue([]);
@@ -296,6 +297,13 @@ describe('LandingService', () => {
         expect.objectContaining({
           key: 'available',
           options: [{ value: true, label: 'فقط کالاهای موجود', count: 2 }],
+        }),
+        expect.objectContaining({
+          key: 'isEnable',
+          options: [
+            { value: true, label: 'فعال', count: 3 },
+            { value: false, label: 'غیرفعال', count: 0 },
+          ],
         }),
       ]),
       sort: expect.objectContaining({ current: 'less-valued' }),
@@ -345,6 +353,13 @@ describe('LandingService', () => {
         brand: { $in: ['brand-id'] },
       },
       available: {
+        isEnable: true,
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        price: { $gte: 100000, $lte: 300000 },
+      },
+      isEnable: {
         isEnable: true,
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },

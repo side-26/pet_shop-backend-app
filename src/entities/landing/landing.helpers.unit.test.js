@@ -13,6 +13,7 @@ describe('landing product-list helpers', () => {
       priceFrom: 100,
       priceTo: 200,
       available: true,
+      isEnable: false,
     });
 
     expect(
@@ -23,6 +24,7 @@ describe('landing product-list helpers', () => {
       subCategory: { $in: ['sub-category-id'] },
       price: { $gte: 100, $lte: 200 },
       quantity: { $gt: 0 },
+      _id: { $exists: false },
     });
   });
 
@@ -35,6 +37,7 @@ describe('landing product-list helpers', () => {
           brand: [{ _id: 'brand-id', count: 2 }],
           price: [],
           available: [{ count: 1 }],
+          isEnable: [{ count: 2 }],
         },
         {
           categories: [{ _id: 'category-id', title: 'غذا' }],
@@ -49,6 +52,13 @@ describe('landing product-list helpers', () => {
           options: [{ value: 'brand-id', label: 'برند', count: 2 }],
         }),
         expect.objectContaining({ key: 'price', min: 0, max: 0 }),
+        expect.objectContaining({
+          key: 'isEnable',
+          options: [
+            { value: true, label: 'فعال', count: 2 },
+            { value: false, label: 'غیرفعال', count: 0 },
+          ],
+        }),
       ]),
     );
   });

@@ -16,10 +16,15 @@ export const parseLandingProductFilters = (query) => ({
     max: query.priceTo,
   },
   available: query.available,
+  isEnable: query.isEnable,
 });
 
 export const buildLandingProductFilter = ({ filters, excludeFilter }) => {
   const filter = { isEnable: true };
+
+  if (excludeFilter !== 'isEnable' && filters.isEnable === false) {
+    filter._id = { $exists: false };
+  }
 
   for (const field of PRODUCT_FILTER_FIELDS) {
     if (excludeFilter !== field && filters[field]?.length) {
@@ -83,6 +88,17 @@ export const formatLandingProductFilters = (facetData, references) => {
       return {
         ...definition,
         options: [{ value: true, label: definition.label, count }],
+      };
+    }
+
+    if (definition.key === 'isEnable') {
+      const [{ count = 0 } = {}] = facetData.isEnable || [];
+      return {
+        ...definition,
+        options: [
+          { value: true, label: 'فعال', count },
+          { value: false, label: 'غیرفعال', count: 0 },
+        ],
       };
     }
 

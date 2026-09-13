@@ -66,6 +66,13 @@ export const LANDING_PRODUCT_FILTER_DEFINITIONS = [
     source: 'quantity',
     order: 5,
   },
+  {
+    key: 'isEnable',
+    label: 'وضعیت فعال',
+    type: FILTER_TYPES.BOOLEAN,
+    source: 'isEnable',
+    order: 6,
+  },
 ];
 
 export const LANDING_PRODUCT_LIST_SORT_ORDERS = {

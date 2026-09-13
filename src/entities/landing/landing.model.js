@@ -69,6 +69,10 @@ export class LandingModel {
             { $match: { quantity: { $gt: 0 } } },
             { $count: 'count' },
           ],
+          isEnable: [
+            { $match: toAggregationFilter(filters.isEnable) },
+            { $count: 'count' },
+          ],
         },
       },
     ]).then(([facets]) => facets);

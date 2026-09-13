@@ -52,6 +52,7 @@ export const landingProductListQuerySchema = object({
   priceFrom: coerce.number().min(0).optional(),
   priceTo: coerce.number().min(0).optional(),
   available: booleanQuerySchema.optional(),
+  isEnable: booleanQuerySchema.optional(),
   sort: enumValue(Object.values(LANDING_PRODUCT_LIST_SORTS))
     .optional()
     .default(LANDING_PRODUCT_LIST_SORTS.MOST_SALES),

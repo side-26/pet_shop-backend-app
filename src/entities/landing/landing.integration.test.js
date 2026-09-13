@@ -321,7 +321,7 @@ describe('Landing API', () => {
       },
     ]);
 
-    const [response, mostSales, availableOnly, invalidRange] =
+    const [response, mostSales, availableOnly, disabledOnly, invalidRange] =
       await Promise.all([
         request(app)
           .get('/api/landing/products')
@@ -345,6 +345,7 @@ describe('Landing API', () => {
         request(app)
           .get('/api/landing/products')
           .query({ category: String(category), available: true }),
+        request(app).get('/api/landing/products').query({ isEnable: false }),
         request(app).get('/api/landing/products').query({
           priceFrom: 300,
           priceTo: 100,
@@ -389,6 +390,13 @@ describe('Landing API', () => {
             key: 'available',
             options: [{ value: true, label: 'فقط کالاهای موجود', count: 1 }],
           }),
+          expect.objectContaining({
+            key: 'isEnable',
+            options: [
+              { value: true, label: 'فعال', count: 2 },
+              { value: false, label: 'غیرفعال', count: 0 },
+            ],
+          }),
         ]),
         sort: expect.objectContaining({ current: 'less-valued' }),
       }),
@@ -400,6 +408,8 @@ describe('Landing API', () => {
     expect(availableOnly.body.data.result.map(({ slug }) => slug)).toEqual([
       'filtered-high',
     ]);
+    expect(disabledOnly.status).toBe(STATUES.SUCCESS);
+    expect(disabledOnly.body.data.result).toEqual([]);
     expect(invalidRange.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 

@@ -59,13 +59,14 @@ router.get(
   ROUTES.landing.productList,
   /* #swagger.summary = 'Get enabled products with dynamic landing filters'
      #swagger.path = '/landing/products'
-     #swagger.description = 'Returns enabled products with disjunctive category, sub-category, brand, price, and availability facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts.'
+     #swagger.description = 'Returns enabled products with disjunctive category, sub-category, brand, price, availability, and enabled-status facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts. As a public catalog endpoint, isEnable=false returns no records.'
      #swagger.parameters['category'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$' }
      #swagger.parameters['subCategory'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$' }
      #swagger.parameters['brand'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$' }
      #swagger.parameters['priceFrom'] = { in: 'query', type: 'number', minimum: 0 }
      #swagger.parameters['priceTo'] = { in: 'query', type: 'number', minimum: 0 }
      #swagger.parameters['available'] = { in: 'query', type: 'boolean' }
+     #swagger.parameters['isEnable'] = { in: 'query', type: 'boolean', description: 'Public catalog status filter; false returns no records.' }
      #swagger.parameters['sort'] = { in: 'query', type: 'string', enum: ['most-valued', 'less-valued', 'most-sales', 'less-sales'], default: 'most-sales' }
      #swagger.parameters['page'] = { in: 'query', type: 'integer', minimum: 1, default: 1 }
      #swagger.parameters['limit'] = { in: 'query', type: 'integer', minimum: 1, maximum: 100, default: 20 }
