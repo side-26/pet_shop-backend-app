@@ -16,6 +16,58 @@ export const LANDING_PRODUCT_LIST_SORTS = {
   LESS_SALES: 'less-sales',
 };
 
+export const LANDING_PRODUCT_LIST_SORT_OPTIONS = [
+  { value: LANDING_PRODUCT_LIST_SORTS.MOST_SALES, label: 'پرفروش‌ترین' },
+  { value: LANDING_PRODUCT_LIST_SORTS.LESS_SALES, label: 'کم‌فروش‌ترین' },
+  { value: LANDING_PRODUCT_LIST_SORTS.LESS_VALUED, label: 'ارزان‌ترین' },
+  { value: LANDING_PRODUCT_LIST_SORTS.MOST_VALUED, label: 'گران‌ترین' },
+];
+
+export const FILTER_TYPES = {
+  MULTI_SELECT: 'multi-select',
+  RANGE: 'range',
+  BOOLEAN: 'boolean',
+};
+
+export const LANDING_PRODUCT_FILTER_DEFINITIONS = [
+  {
+    key: 'category',
+    label: 'دسته‌بندی',
+    type: FILTER_TYPES.MULTI_SELECT,
+    source: 'category',
+    order: 1,
+  },
+  {
+    key: 'subCategory',
+    label: 'زیردسته‌بندی',
+    type: FILTER_TYPES.MULTI_SELECT,
+    source: 'subCategory',
+    order: 2,
+  },
+  {
+    key: 'brand',
+    label: 'برند',
+    type: FILTER_TYPES.MULTI_SELECT,
+    source: 'brand',
+    order: 3,
+  },
+  {
+    key: 'price',
+    label: 'قیمت',
+    type: FILTER_TYPES.RANGE,
+    source: 'price',
+    order: 4,
+    unit: 'تومان',
+  },
+  {
+    key: 'available',
+    label: 'فقط کالاهای موجود',
+    type: FILTER_TYPES.BOOLEAN,
+    source: 'quantity',
+    order: 5,
+  },
+];
+
 export const LANDING_PRODUCT_LIST_SORT_ORDERS = {
   [LANDING_PRODUCT_LIST_SORTS.MOST_VALUED]: { price: -1, title: 1, _id: 1 },
   [LANDING_PRODUCT_LIST_SORTS.LESS_VALUED]: { price: 1, title: 1, _id: 1 },

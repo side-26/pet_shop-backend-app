@@ -7,6 +7,7 @@ This folder contains shared helpers that are not owned by one entity.
 ## Important Files
 
 - `helpers.js` — response builders, body checks, pagination, Zod validation, static serving, controller error forwarding, and separate access/refresh JWT verification.
+- `pagination.helpers.js` — canonical paginated-result metadata builder, with optional filter and sort metadata.
 - `image.helpers.js` — image format normalization, compression quality selection, conversion, and sub-10 KB WebP Data URL blur-placeholder creation.
 - `richText.helpers.js` — parses JSON-serialized rich-text values received through multipart form fields while preserving plain-text compatibility.
 - `price.helpers.js` — calculates discount amounts and final discounted prices for shared cart and catalog responses.

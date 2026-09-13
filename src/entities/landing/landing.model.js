@@ -1,9 +1,13 @@
+import mongoose from 'mongoose';
+
 import { MANAGEMENT_ROLES, USER_ITEM_TYPES } from '#configs/constants.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
+import { CategoryModel } from '#entities/categories/categories.model.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
+import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { UserModel } from '#entities/users/users.model.js';
 
 import { LANDING_LIMITS } from './landing.constants.js';
@@ -15,6 +19,75 @@ export class LandingModel {
 
   static countProductList(filter) {
     return ProductModel.countDocuments(filter);
+  }
+
+  static findProductFacetData(filters) {
+    const toAggregationFilter = (filter) =>
+      Object.fromEntries(
+        Object.entries(filter).map(([key, value]) => {
+          if (value?.$in) {
+            return [
+              key,
+              {
+                $in: value.$in.map((id) => new mongoose.Types.ObjectId(id)),
+              },
+            ];
+          }
+          return [key, value];
+        }),
+      );
+    const createCountFacet = (filter, field) => [
+      { $match: filter },
+      { $group: { _id: `$${field}`, count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+    ];
+
+    return ProductModel.aggregate([
+      {
+        $facet: {
+          category: createCountFacet(
+            toAggregationFilter(filters.category),
+            'category',
+          ),
+          subCategory: createCountFacet(
+            toAggregationFilter(filters.subCategory),
+            'subCategory',
+          ),
+          brand: createCountFacet(toAggregationFilter(filters.brand), 'brand'),
+          price: [
+            { $match: toAggregationFilter(filters.price) },
+            {
+              $group: {
+                _id: null,
+                min: { $min: '$price' },
+                max: { $max: '$price' },
+              },
+            },
+          ],
+          available: [
+            { $match: toAggregationFilter(filters.available) },
+            { $match: { quantity: { $gt: 0 } } },
+            { $count: 'count' },
+          ],
+        },
+      },
+    ]).then(([facets]) => facets);
+  }
+
+  static findFacetCategories(ids) {
+    return CategoryModel.find({ _id: { $in: ids }, isEnable: true }).select(
+      '_id title',
+    );
+  }
+
+  static findFacetSubCategories(ids) {
+    return SubCategoryModel.find({ _id: { $in: ids } }).select('_id title');
+  }
+
+  static findFacetBrands(ids) {
+    return BrandModel.find({ _id: { $in: ids }, isEnable: true }).select(
+      '_id title title_fa',
+    );
   }
 
   static findPetBySlug(slug) {

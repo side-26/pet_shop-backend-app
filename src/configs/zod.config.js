@@ -68,6 +68,7 @@ const persianFieldNames = {
   weight: 'وزن',
   healthStatus: 'وضعیت سلامت',
   availability: 'در دسترس بودن',
+  available: 'فقط کالاهای موجود',
   price: 'قیمت',
   priceFrom: 'حداقل قیمت',
   priceTo: 'حداکثر قیمت',

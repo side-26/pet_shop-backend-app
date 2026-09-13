@@ -5,13 +5,21 @@ import {
 } from '#entities/pets/pets.helpers.js';
 import { formatCustomerProductDetail } from '#entities/products/products.helpers.js';
 import { setErrorResponse } from '#utils/helpers.js';
+import { createPaginationResponse } from '#utils/pagination.helpers.js';
 import { calculateDiscountedPrice } from '#utils/price.helpers.js';
 
+import {
+  buildLandingProductFilter,
+  formatLandingProductFilters,
+  parseLandingProductFilters,
+} from './landing.helpers.js';
 import { LandingModel } from './landing.model.js';
 import {
   FEATURED_PRODUCT_TAGS,
   LANDING_LIMITS,
+  LANDING_PRODUCT_FILTER_DEFINITIONS,
   LANDING_PRODUCT_LIST_SORT_ORDERS,
+  LANDING_PRODUCT_LIST_SORT_OPTIONS,
 } from './landing.constants.js';
 
 const formatPetType = (petType) => ({
@@ -42,25 +50,6 @@ const formatLandingProductCard = (product) => ({
   ),
 });
 
-const buildProductListFilter = ({
-  category,
-  subCategory,
-  brand,
-  priceFrom,
-  priceTo,
-}) => {
-  const filter = { isEnable: true };
-  if (category) filter.category = category;
-  if (subCategory) filter.subCategory = subCategory;
-  if (brand) filter.brand = brand;
-  if (priceFrom !== undefined || priceTo !== undefined) {
-    filter.price = {};
-    if (priceFrom !== undefined) filter.price.$gte = priceFrom;
-    if (priceTo !== undefined) filter.price.$lte = priceTo;
-  }
-  return filter;
-};
-
 const formatPopularBrand = ({ brand, productCount }) => ({
   id: brand._id,
   title: brand.title,
@@ -79,9 +68,16 @@ const orderPetsById = (pets, ids) => {
 export class LandingService {
   static async getProductList(query) {
     const { page, limit, sort } = query;
-    const filter = buildProductListFilter(query);
+    const filters = parseLandingProductFilters(query);
+    const filter = buildLandingProductFilter({ filters });
     const skip = (page - 1) * limit;
-    const [products, totalItems] = await Promise.all([
+    const facetFilters = Object.fromEntries(
+      LANDING_PRODUCT_FILTER_DEFINITIONS.map(({ key }) => [
+        key,
+        buildLandingProductFilter({ filters, excludeFilter: key }),
+      ]),
+    );
+    const [products, totalItems, facetData] = await Promise.all([
       LandingModel.findProductList(
         filter,
         LANDING_PRODUCT_LIST_SORT_ORDERS[sort],
@@ -89,24 +85,27 @@ export class LandingService {
         limit,
       ),
       LandingModel.countProductList(filter),
+      LandingModel.findProductFacetData(facetFilters),
     ]);
-    const totalPages = Math.ceil(totalItems / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
+    const facetIds = (key) => (facetData?.[key] || []).map(({ _id }) => _id);
+    const [categories, subCategories, brands] = await Promise.all([
+      LandingModel.findFacetCategories(facetIds('category')),
+      LandingModel.findFacetSubCategories(facetIds('subCategory')),
+      LandingModel.findFacetBrands(facetIds('brand')),
+    ]);
 
-    return {
+    return createPaginationResponse({
       result: products.map(formatLandingProductCard),
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems,
-        itemsPerPage: limit,
-        hasNextPage,
-        hasPrevPage,
-        nextPage: hasNextPage ? page + 1 : null,
-        prevPage: hasPrevPage ? page - 1 : null,
-      },
-    };
+      totalItems,
+      page,
+      pageSize: limit,
+      filters: formatLandingProductFilters(facetData || {}, {
+        categories: categories || [],
+        subCategories: subCategories || [],
+        brands: brands || [],
+      }),
+      sort: { current: sort, options: LANDING_PRODUCT_LIST_SORT_OPTIONS },
+    });
   }
 
   static async getPetBySlug(slug) {

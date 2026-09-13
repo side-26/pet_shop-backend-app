@@ -7,9 +7,25 @@ import {
   LANDING_PRODUCT_LIST_SORTS,
 } from './landing.constants.js';
 
-const { coerce, enum: enumValue, object, string } = z;
+const {
+  array,
+  boolean,
+  coerce,
+  enum: enumValue,
+  object,
+  preprocess,
+  string,
+} = z;
 
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
+const objectIdListSchema = preprocess((value) => {
+  if (Array.isArray(value)) return value.flatMap((item) => item.split(','));
+  return typeof value === 'string' ? value.split(',') : value;
+}, array(objectIdSchema).min(1));
+const booleanQuerySchema = preprocess(
+  (value) => (value === 'true' ? true : value === 'false' ? false : value),
+  boolean(),
+);
 
 export const landingSlugSchema = object({
   slug: string()
@@ -30,11 +46,12 @@ export const landingLimitSchema = object({
 });
 
 export const landingProductListQuerySchema = object({
-  category: objectIdSchema.optional(),
-  subCategory: objectIdSchema.optional(),
-  brand: objectIdSchema.optional(),
+  category: objectIdListSchema.optional(),
+  subCategory: objectIdListSchema.optional(),
+  brand: objectIdListSchema.optional(),
   priceFrom: coerce.number().min(0).optional(),
   priceTo: coerce.number().min(0).optional(),
+  available: booleanQuerySchema.optional(),
   sort: enumValue(Object.values(LANDING_PRODUCT_LIST_SORTS))
     .optional()
     .default(LANDING_PRODUCT_LIST_SORTS.MOST_SALES),

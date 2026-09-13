@@ -19,6 +19,10 @@ jest.mock('./landing.model.js', () => ({
     findProductBySlug: jest.fn(),
     findProductList: jest.fn(),
     countProductList: jest.fn(),
+    findProductFacetData: jest.fn(),
+    findFacetCategories: jest.fn(),
+    findFacetSubCategories: jest.fn(),
+    findFacetBrands: jest.fn(),
   },
 }));
 
@@ -241,6 +245,18 @@ describe('LandingService', () => {
       { ...product, slug: 'food' },
     ]);
     LandingModel.countProductList.mockResolvedValue(3);
+    LandingModel.findProductFacetData.mockResolvedValue({
+      category: [],
+      subCategory: [],
+      brand: [{ _id: 'brand-id', count: 3 }],
+      price: [{ min: 100000, max: 300000 }],
+      available: [{ count: 2 }],
+    });
+    LandingModel.findFacetCategories.mockResolvedValue([]);
+    LandingModel.findFacetSubCategories.mockResolvedValue([]);
+    LandingModel.findFacetBrands.mockResolvedValue([
+      { _id: 'brand-id', title: 'brand', title_fa: 'برند' },
+    ]);
 
     await expect(
       LandingService.getProductList({
@@ -271,13 +287,25 @@ describe('LandingService', () => {
         nextPage: null,
         prevPage: 1,
       },
+      filters: expect.arrayContaining([
+        expect.objectContaining({
+          key: 'brand',
+          options: [{ value: 'brand-id', label: 'برند', count: 3 }],
+        }),
+        expect.objectContaining({ key: 'price', min: 100000, max: 300000 }),
+        expect.objectContaining({
+          key: 'available',
+          options: [{ value: true, label: 'فقط کالاهای موجود', count: 2 }],
+        }),
+      ]),
+      sort: expect.objectContaining({ current: 'less-valued' }),
     });
     expect(LandingModel.findProductList).toHaveBeenCalledWith(
       {
         isEnable: true,
-        category: 'category-id',
-        subCategory: 'sub-category-id',
-        brand: 'brand-id',
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
         price: { $gte: 100000, $lte: 300000 },
       },
       { price: 1, title: 1, _id: 1 },
@@ -286,10 +314,43 @@ describe('LandingService', () => {
     );
     expect(LandingModel.countProductList).toHaveBeenCalledWith({
       isEnable: true,
-      category: 'category-id',
-      subCategory: 'sub-category-id',
-      brand: 'brand-id',
+      category: { $in: ['category-id'] },
+      subCategory: { $in: ['sub-category-id'] },
+      brand: { $in: ['brand-id'] },
       price: { $gte: 100000, $lte: 300000 },
+    });
+    expect(LandingModel.findProductFacetData).toHaveBeenCalledWith({
+      category: {
+        isEnable: true,
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        price: { $gte: 100000, $lte: 300000 },
+      },
+      subCategory: {
+        isEnable: true,
+        category: { $in: ['category-id'] },
+        brand: { $in: ['brand-id'] },
+        price: { $gte: 100000, $lte: 300000 },
+      },
+      brand: {
+        isEnable: true,
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        price: { $gte: 100000, $lte: 300000 },
+      },
+      price: {
+        isEnable: true,
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+      },
+      available: {
+        isEnable: true,
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        price: { $gte: 100000, $lte: 300000 },
+      },
     });
   });
 

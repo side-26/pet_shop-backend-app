@@ -290,6 +290,7 @@ describe('Landing API', () => {
         subCategory,
         brand: matchingBrand._id,
         price: 300,
+        quantity: 5,
         salesVolume: 20,
         slug: 'filtered-high',
       },
@@ -320,31 +321,35 @@ describe('Landing API', () => {
       },
     ]);
 
-    const [response, mostSales, invalidRange] = await Promise.all([
-      request(app)
-        .get('/api/landing/products')
-        .query({
-          category: String(category),
-          subCategory: String(subCategory),
-          brand: String(matchingBrand._id),
-          priceFrom: 100,
-          priceTo: 300,
-          sort: 'less-valued',
-          page: 1,
-          limit: 1,
+    const [response, mostSales, availableOnly, invalidRange] =
+      await Promise.all([
+        request(app)
+          .get('/api/landing/products')
+          .query({
+            category: String(category),
+            subCategory: String(subCategory),
+            brand: String(matchingBrand._id),
+            priceFrom: 100,
+            priceTo: 300,
+            sort: 'less-valued',
+            page: 1,
+            limit: 1,
+          }),
+        request(app)
+          .get('/api/landing/products')
+          .query({
+            category: String(category),
+            brand: String(matchingBrand._id),
+            sort: 'most-sales',
+          }),
+        request(app)
+          .get('/api/landing/products')
+          .query({ category: String(category), available: true }),
+        request(app).get('/api/landing/products').query({
+          priceFrom: 300,
+          priceTo: 100,
         }),
-      request(app)
-        .get('/api/landing/products')
-        .query({
-          category: String(category),
-          brand: String(matchingBrand._id),
-          sort: 'most-sales',
-        }),
-      request(app).get('/api/landing/products').query({
-        priceFrom: 300,
-        priceTo: 100,
-      }),
-    ]);
+      ]);
 
     expect(response.status).toBe(STATUES.SUCCESS);
     expect(response.body.data.result.map(({ slug }) => slug)).toEqual([
@@ -363,9 +368,37 @@ describe('Landing API', () => {
     expect(response.body.data.result[0]).toEqual(
       expect.objectContaining({ discountPrice: 100, slug: 'filtered-low' }),
     );
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        filters: expect.arrayContaining([
+          expect.objectContaining({
+            key: 'brand',
+            options: expect.arrayContaining([
+              expect.objectContaining({
+                value: String(matchingBrand._id),
+                count: 2,
+              }),
+              expect.objectContaining({
+                value: String(otherBrand._id),
+                count: 1,
+              }),
+            ]),
+          }),
+          expect.objectContaining({ key: 'price', min: 100, max: 300 }),
+          expect.objectContaining({
+            key: 'available',
+            options: [{ value: true, label: 'فقط کالاهای موجود', count: 1 }],
+          }),
+        ]),
+        sort: expect.objectContaining({ current: 'less-valued' }),
+      }),
+    );
     expect(mostSales.body.data.result.map(({ slug }) => slug)).toEqual([
       'filtered-high',
       'filtered-low',
+    ]);
+    expect(availableOnly.body.data.result.map(({ slug }) => slug)).toEqual([
+      'filtered-high',
     ]);
     expect(invalidRange.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });

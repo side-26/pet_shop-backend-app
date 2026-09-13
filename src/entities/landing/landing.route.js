@@ -57,18 +57,19 @@ router.get(
 );
 router.get(
   ROUTES.landing.productList,
-  /* #swagger.summary = 'Get enabled products with landing filters'
+  /* #swagger.summary = 'Get enabled products with dynamic landing filters'
      #swagger.path = '/landing/products'
-     #swagger.description = 'Returns enabled products filtered by category, sub-category, brand, and inclusive raw-price range. Sort supports most-valued, less-valued, most-sales, and less-sales; results are paginated.'
-     #swagger.parameters['category'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}$' }
-     #swagger.parameters['subCategory'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}$' }
-     #swagger.parameters['brand'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}$' }
+     #swagger.description = 'Returns enabled products with disjunctive category, sub-category, brand, price, and availability facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts.'
+     #swagger.parameters['category'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$' }
+     #swagger.parameters['subCategory'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$' }
+     #swagger.parameters['brand'] = { in: 'query', type: 'string', pattern: '^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$' }
      #swagger.parameters['priceFrom'] = { in: 'query', type: 'number', minimum: 0 }
      #swagger.parameters['priceTo'] = { in: 'query', type: 'number', minimum: 0 }
+     #swagger.parameters['available'] = { in: 'query', type: 'boolean' }
      #swagger.parameters['sort'] = { in: 'query', type: 'string', enum: ['most-valued', 'less-valued', 'most-sales', 'less-sales'], default: 'most-sales' }
      #swagger.parameters['page'] = { in: 'query', type: 'integer', minimum: 1, default: 1 }
      #swagger.parameters['limit'] = { in: 'query', type: 'integer', minimum: 1, maximum: 100, default: 20 }
-     #swagger.responses[200] = { description: 'Filtered, paginated enabled products' } */
+     #swagger.responses[200] = { description: 'Filtered, paginated enabled products with filters and sort metadata' } */
   getProductListController,
 );
 router.get(
