@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { ROUTES } from '#configs/constants.js';
+import { optionallyAuthenticated } from '#middlewares/auth.middleware.js';
 
 import {
   getAllPetTypesController,
@@ -135,6 +136,7 @@ router.get(
      #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
      #swagger.responses[200] = { description: 'Product detail' }
      #swagger.responses[404] = { description: 'Product not found' } */
+  optionallyAuthenticated,
   getProductBySlugController,
 );
 

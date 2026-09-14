@@ -1,5 +1,6 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
@@ -290,24 +291,28 @@ export class ProductService {
           product: id,
           user: userId,
         }).session(session);
+        if (previous) {
+          setErrorResponse(STATUES.CONFLICT, {
+            message: 'شما پیش‌تر به این محصول امتیاز داده‌اید',
+          });
+        }
         const count = product.userRateCount || 0;
-        const sum =
-          product.userRate * count - (previous?.value || 0) + userRate;
-        const nextCount = previous ? count : count + 1;
+        const hasPurchased = await OrderModel.exists({
+          user: userId,
+          items: { $elemMatch: { item: id, itemType: 'product' } },
+        }).session(session);
+        if (!hasPurchased) {
+          setErrorResponse(STATUES.NO_ACCESS, {
+            message: 'امتیازدهی فقط پس از خرید محصول امکان‌پذیر است',
+          });
+        }
+        const sum = product.userRate * count + userRate;
+        const nextCount = count + 1;
         product.userRate = sum / nextCount;
         product.userRateCount = nextCount;
-        await ProductRatingModel.findOneAndUpdate(
-          { product: id, user: userId },
-          {
-            $set: { value: userRate },
-            $setOnInsert: { product: id, user: userId },
-          },
-          {
-            upsert: true,
-            returnDocument: 'after',
-            runValidators: true,
-            session,
-          },
+        await ProductRatingModel.create(
+          [{ product: id, user: userId, value: userRate }],
+          { session },
         );
         await product.save({ session });
       });

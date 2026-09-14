@@ -4,6 +4,8 @@ import {
   formatCustomerPetListItem,
 } from '#entities/pets/pets.helpers.js';
 import { formatCustomerProductDetail } from '#entities/products/products.helpers.js';
+import { ProductRatingModel } from '#entities/products/productRatings.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { setErrorResponse } from '#utils/helpers.js';
 import { createPaginationResponse } from '#utils/pagination.helpers.js';
 import { calculateDiscountedPrice } from '#utils/price.helpers.js';
@@ -280,7 +282,7 @@ export class LandingService {
     return featuredProducts;
   }
 
-  static async getProductBySlug(slug) {
+  static async getProductBySlug(slug, userId) {
     const product = await LandingModel.findProductBySlug(slug);
     if (!product) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -288,6 +290,19 @@ export class LandingService {
         code: ERROR_CODES.PRODUCT_NOT_FOUND,
       });
     }
-    return formatCustomerProductDetail(product);
+    const data = formatCustomerProductDetail(product);
+    if (!userId) return { ...data, canVote: false, hasRated: false };
+    const [hasPurchased, hasRated] = await Promise.all([
+      OrderModel.exists({
+        user: userId,
+        items: { $elemMatch: { item: product._id, itemType: 'product' } },
+      }),
+      ProductRatingModel.exists({ product: product._id, user: userId }),
+    ]);
+    return {
+      ...data,
+      hasRated: Boolean(hasRated),
+      canVote: Boolean(hasPurchased) && !hasRated,
+    };
   }
 }

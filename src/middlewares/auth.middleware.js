@@ -34,3 +34,8 @@ export const authenticated = async (req, res, next) => {
     next(error);
   }
 };
+
+export const optionallyAuthenticated = (req, res, next) => {
+  if (!req.get('Authorization')) return next();
+  return authenticated(req, res, next);
+};

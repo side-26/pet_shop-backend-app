@@ -96,7 +96,7 @@ export const getPetListController = async (req, res, next) => {
 const getCatalogItemBySlug = async (req, res, next, serviceMethod) => {
   try {
     const { slug } = returnFormValidation(landingSlugSchema, req.params);
-    const data = await LandingService[serviceMethod](slug);
+    const data = await LandingService[serviceMethod](slug, req.user?.userId);
     setSuccessResponse(res, STATUES.SUCCESS, { data });
   } catch (error) {
     onCatchPromiseController(error, next);
