@@ -137,18 +137,9 @@ export class ProductService {
       : currentProduct.subCategory;
     await this.validateRelations(categoryId, brandId, subCategoryId || null);
 
-    const quantity = data.weights
-      ? data.weights.reduce((total, weight) => total + weight.quantity, 0)
-      : undefined;
     const product = await ProductModel.findByIdAndUpdate(
       id,
-      {
-        $set: {
-          ...data,
-          ...(quantity === undefined ? {} : { quantity }),
-          updatedBy: userId,
-        },
-      },
+      { $set: { ...data, updatedBy: userId } },
       { returnDocument: 'after', runValidators: true },
     );
     if (!product) {
@@ -263,6 +254,17 @@ export class ProductService {
   static async replacePropertyDefinitions(id, propertyDefinitions, userId) {
     const product = await this.findById(id);
     product.propertyDefinitions = propertyDefinitions;
+    product.updatedBy = userId;
+    return product.save();
+  }
+
+  static async replaceWeights(id, weights, userId) {
+    const product = await this.findById(id);
+    product.weights = weights;
+    product.quantity = weights.reduce(
+      (total, weight) => total + weight.quantity,
+      0,
+    );
     product.updatedBy = userId;
     return product.save();
   }
@@ -445,5 +447,14 @@ export class ProductService {
 
   static formatPropertyDefinitions(product) {
     return formatProductPropertyDefinitions(product);
+  }
+
+  static formatWeights(product) {
+    return (product.weights || []).map(({ _id, metric, quantity, value }) => ({
+      id: _id,
+      metric,
+      quantity,
+      value,
+    }));
   }
 }

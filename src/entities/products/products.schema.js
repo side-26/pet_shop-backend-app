@@ -141,7 +141,6 @@ export const createProductZodSchema = object({
   category: objectIdSchema,
   brand: objectIdSchema,
   subCategory: objectIdSchema.nullable().optional(),
-  weights: weightsSchema.optional().default([]),
 });
 const productMainInfoFields = {
   title: titleSchema,
@@ -149,7 +148,6 @@ const productMainInfoFields = {
   description: descriptionSchema,
   category: objectIdSchema,
   subCategory: objectIdSchema.nullable(),
-  weights: weightsSchema,
 };
 
 export const updateProductMainInfoZodSchema = object({
@@ -162,7 +160,6 @@ export const updateProductMainInfoZodSchema = object({
     description: true,
     category: true,
     subCategory: true,
-    weights: true,
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: 'حداقل یک فیلد باید ارسال شود',
@@ -171,6 +168,10 @@ export const updateProductZodSchema = updateProductMainInfoZodSchema;
 export const replaceProductPropertyDefinitionsZodSchema = object({
   id: objectIdSchema,
   propertyDefinitions: propertyDefinitionsSchema,
+});
+export const replaceProductWeightsZodSchema = object({
+  id: objectIdSchema,
+  weights: weightsSchema,
 });
 export const updateProductUserRateZodSchema = object({
   userRate: number().min(0).max(5).multipleOf(0.1),

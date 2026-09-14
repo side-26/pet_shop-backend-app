@@ -22,11 +22,13 @@ import {
   getProductMainInfoController,
   getProductPriceController,
   getProductPropertyDefinitionsController,
+  getProductWeightsController,
   updateProductController,
   updateProductImagesController,
   updateProductMainInfoController,
   updateProductPriceController,
   replaceProductPropertyDefinitionsController,
+  replaceProductWeightsController,
   updateProductUserRateController,
 } from './products.controller.js';
 
@@ -41,6 +43,13 @@ router.get('/products/customer/:id', getCustomerProductController);
 router.get(
   '/products/property-definitions/:id',
   getProductPropertyDefinitionsController,
+);
+router.get('/products/weights/:id', getProductWeightsController);
+router.put(
+  '/products/range',
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  replaceProductWeightsController,
 );
 router.put(
   '/products/property-definitions',

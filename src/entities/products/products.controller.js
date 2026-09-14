@@ -14,6 +14,7 @@ import {
   updateProductPriceZodSchema,
   updateProductZodSchema,
   replaceProductPropertyDefinitionsZodSchema,
+  replaceProductWeightsZodSchema,
   updateProductUserRateZodSchema,
 } from './products.schema.js';
 import { ProductService } from './products.service.js';
@@ -148,6 +149,29 @@ export const replaceProductPropertyDefinitionsController = async (
 
 export const getProductPropertyDefinitionsController = (req, res, next) =>
   getProductSection(req, res, next, 'findById', 'formatPropertyDefinitions');
+
+export const replaceProductWeightsController = async (req, res, next) => {
+  try {
+    const { id, weights } = returnFormValidation(
+      replaceProductWeightsZodSchema,
+      req.body,
+    );
+    const product = await ProductService.replaceWeights(
+      id,
+      weights,
+      getUserId(req.user),
+    );
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'وزن‌های محصول با موفقیت ویرایش شد',
+      data: { id: product._id, weights: ProductService.formatWeights(product) },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getProductWeightsController = (req, res, next) =>
+  getProductSection(req, res, next, 'findById', 'formatWeights');
 
 export const updateProductUserRateController = async (req, res, next) => {
   try {

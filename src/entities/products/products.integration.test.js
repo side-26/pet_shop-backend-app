@@ -194,6 +194,35 @@ describe('Product API', () => {
     ).toBeLessThan(10 * 1024);
   });
 
+  test('manages weights only through the dedicated range endpoint', async () => {
+    const created = await multipartProduct(request(app).post('/api/products'), {
+      ...productData,
+    });
+    const weights = [
+      { metric: 'KG', quantity: 4, value: 1.5 },
+      { quantity: 6, value: 3 },
+    ];
+
+    const replaced = await request(app)
+      .put('/api/products/range')
+      .set('x-test-role', ROLES.SELLER)
+      .send({ id: created.body.data.id, weights });
+    expect(replaced.status).toBe(STATUES.SUCCESS);
+    expect(replaced.body.data.weights).toMatchObject([
+      { metric: 'KG', quantity: 4, value: 1.5 },
+      { metric: 'KG', quantity: 6, value: 3 },
+    ]);
+
+    const listed = await request(app).get(
+      `/api/products/weights/${created.body.data.id}`,
+    );
+    expect(listed.status).toBe(STATUES.SUCCESS);
+    expect(listed.body.data).toMatchObject(replaced.body.data.weights);
+    expect((await ProductModel.findById(created.body.data.id)).quantity).toBe(
+      10,
+    );
+  });
+
   test('rejects missing required fields and ignores create-only restricted inputs', async () => {
     const missing = await request(app)
       .post('/api/products')
