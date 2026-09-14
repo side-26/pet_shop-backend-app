@@ -24,7 +24,7 @@ References `CategoryModel`, `BrandModel`, and `SubCategoryModel`; routes use aut
 - Generate product slugs server-side from the title and product ID; create products enabled with zero price and discount, then manage status and pricing through their dedicated APIs.
 - Management reads and updates main information, images, and prices through `/products/:id/main-info`, `/products/:id/images`, and `/products/:id/price`.
 - Product quantity is derived from weight records and adjusted atomically at checkout; weights are read through `GET /products/weights/:id` and replaced through management-only `PUT /products/range`, never catalog create/update APIs. Cart product entries select a weight, and order snapshots preserve its metric and value.
-- Product property definitions are read/replaced through dedicated endpoints, never ordinary create/update. Customer-only product-rating updates accept a value from 0 to 5 in 0.1 increments.
+- Product property definitions are read/replaced through dedicated endpoints, never ordinary create/update. Customer-only product-rating updates accept a value from 0 to 5 in 0.1 increments; a unique per-customer rating record maintains the cached product average and count transactionally.
 - The internal `salesVolume` counter defaults to zero and is returned only for entries in the management paginated list; it is not accepted by catalog create/update APIs or returned by detail and section routes.
 - Reuse shared pagination, statuses, errors, and product limits.
 

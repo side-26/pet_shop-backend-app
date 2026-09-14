@@ -180,10 +180,17 @@ export const updateProductUserRateController = async (req, res, next) => {
       updateProductUserRateZodSchema,
       req.body,
     );
-    const product = await ProductService.updateUserRate(id, userRate);
+    const product = await ProductService.updateUserRate(
+      id,
+      userRate,
+      getUserId(req.user),
+    );
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: 'امتیاز محصول با موفقیت ویرایش شد',
-      data: { userRate: product.userRate },
+      data: {
+        userRate: product.userRate,
+        userRateCount: product.userRateCount,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);

@@ -19,6 +19,7 @@ import {
   formatProductPrice,
 } from './products.helpers.js';
 import { ProductModel } from './products.model.js';
+import { ProductRatingModel } from './productRatings.model.js';
 
 const populateRelations = async (documents) =>
   ProductModel.populate(documents, [
@@ -269,18 +270,56 @@ export class ProductService {
     return product.save();
   }
 
-  static async updateUserRate(id, userRate) {
-    const product = await ProductModel.findOneAndUpdate(
-      { _id: id, isEnable: true },
-      { $set: { userRate } },
-      { returnDocument: 'after', runValidators: true },
-    );
-    if (!product) {
-      setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'محصول یافت نشد',
-        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+  static async updateUserRate(id, userRate, userId) {
+    const session = await ProductModel.db.startSession();
+    let transactionError;
+    let product;
+    try {
+      await session.withTransaction(async () => {
+        product = await ProductModel.findOne({
+          _id: id,
+          isEnable: true,
+        }).session(session);
+        if (!product) {
+          setErrorResponse(STATUES.NOT_FOUND, {
+            message: 'محصول یافت نشد',
+            code: ERROR_CODES.PRODUCT_NOT_FOUND,
+          });
+        }
+        const previous = await ProductRatingModel.findOne({
+          product: id,
+          user: userId,
+        }).session(session);
+        const count = product.userRateCount || 0;
+        const sum =
+          product.userRate * count - (previous?.value || 0) + userRate;
+        const nextCount = previous ? count : count + 1;
+        product.userRate = sum / nextCount;
+        product.userRateCount = nextCount;
+        await ProductRatingModel.findOneAndUpdate(
+          { product: id, user: userId },
+          {
+            $set: { value: userRate },
+            $setOnInsert: { product: id, user: userId },
+          },
+          {
+            upsert: true,
+            returnDocument: 'after',
+            runValidators: true,
+            session,
+          },
+        );
+        await product.save({ session });
       });
+    } catch (error) {
+      transactionError = error;
     }
+    try {
+      await session.endSession();
+    } catch (error) {
+      if (!transactionError) throw error;
+    }
+    if (transactionError) throw transactionError;
     return product;
   }
 

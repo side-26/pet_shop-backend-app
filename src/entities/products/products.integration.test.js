@@ -223,6 +223,28 @@ describe('Product API', () => {
     );
   });
 
+  test('keeps an accurate customer rating average when a customer changes a vote', async () => {
+    const created = await multipartProduct(request(app).post('/api/products'), {
+      ...productData,
+    });
+    const first = await request(app)
+      .patch(`/api/products/${created.body.data.id}/user-rate`)
+      .set('x-test-role', ROLES.CUSTOMER)
+      .send({ userRate: 4 });
+    expect(first.status).toBe(STATUES.SUCCESS);
+    expect(first.body.data).toMatchObject({ userRate: 4, userRateCount: 1 });
+
+    const replacement = await request(app)
+      .patch(`/api/products/${created.body.data.id}/user-rate`)
+      .set('x-test-role', ROLES.CUSTOMER)
+      .send({ userRate: 2 });
+    expect(replacement.status).toBe(STATUES.SUCCESS);
+    expect(replacement.body.data).toMatchObject({
+      userRate: 2,
+      userRateCount: 1,
+    });
+  });
+
   test('rejects missing required fields and ignores create-only restricted inputs', async () => {
     const missing = await request(app)
       .post('/api/products')

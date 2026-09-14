@@ -4988,12 +4988,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {},
         "tags": [
           "/products"
         ]
