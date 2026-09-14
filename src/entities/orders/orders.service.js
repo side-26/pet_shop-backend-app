@@ -88,18 +88,22 @@ export class OrderService {
     };
   }
 
-  static async createWithUniqueIdentifiers(snapshot) {
+  static async createWithUniqueIdentifiers(snapshot, session) {
     for (
       let attempt = 0;
       attempt < ORDER_IDENTIFIER.MAX_GENERATION_ATTEMPTS;
       attempt += 1
     ) {
       try {
-        return await OrderModel.create({
+        const orderData = {
           ...snapshot,
           orderNumber: generateNumericOrderIdentifier(),
           trackingCode: generateNumericOrderIdentifier(),
-        });
+        };
+        if (!session) return await OrderModel.create(orderData);
+
+        const [order] = await OrderModel.create([orderData], { session });
+        return order;
       } catch (error) {
         if (error?.code !== 11000) throw error;
       }
@@ -112,28 +116,42 @@ export class OrderService {
 
   static async createOrderFromCart(actor, paymentTrackingId) {
     const userId = this.getAuthenticatedUserId(actor);
-    const [cart, user] = await Promise.all([
-      UserService.getCartItems(actor),
-      UserService.findById(userId),
-    ]);
-    this.validateCart(cart);
-    const address = this.findAddress(user, cart.userAddress);
-    if (!address) {
-      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
-        message: 'نشانی انتخاب‌شده برای سفارش معتبر نیست',
-        code: ERROR_CODES.ORDER_INVALID_CART,
+    const session = await OrderModel.db.startSession();
+    let transactionError;
+    let order;
+    try {
+      await session.withTransaction(async () => {
+        // The transaction callback is intentionally sequential: its read,
+        // snapshot insert, and cart clear form one checkout boundary.
+        const cart = await UserService.getCartItems(actor, session);
+        const user = await UserService.findById(userId, true, session);
+        this.validateCart(cart);
+        const address = this.findAddress(user, cart.userAddress);
+        if (!address) {
+          setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+            message: 'نشانی انتخاب‌شده برای سفارش معتبر نیست',
+            code: ERROR_CODES.ORDER_INVALID_CART,
+          });
+        }
+
+        order = await this.createWithUniqueIdentifiers(
+          this.buildOrderSnapshot(userId, cart, address, paymentTrackingId),
+          session,
+        );
+        await UserService.emptyCart(actor, session);
       });
+    } catch (error) {
+      transactionError = error;
     }
 
-    const order = await this.createWithUniqueIdentifiers(
-      this.buildOrderSnapshot(userId, cart, address, paymentTrackingId),
-    );
     try {
-      await UserService.emptyCart(actor);
-    } catch (error) {
-      await OrderModel.findByIdAndDelete(order._id).catch(() => undefined);
-      throw error;
+      await session.endSession();
+    } catch (sessionError) {
+      if (!transactionError) throw sessionError;
+      if (!transactionError.cause) transactionError.cause = sessionError;
     }
+
+    if (transactionError) throw transactionError;
     return order;
   }
 

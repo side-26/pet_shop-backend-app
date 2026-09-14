@@ -2,7 +2,7 @@
 
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 
 // Load environment variables
 dotenv.config();
@@ -24,8 +24,12 @@ const createIsolatedTestDatabaseUri = (databaseUri) => {
 jest.setTimeout(60000);
 
 beforeAll(async () => {
-  // If MONGODB_TEST_URI is set, use it (real DB)
-  if (process.env.MONGODB_TEST_URI) {
+  // External test databases must be transaction-capable replica sets. Keep
+  // the default test environment self-contained and transaction-capable.
+  if (
+    process.env.MONGODB_TEST_URI &&
+    process.env.MONGODB_TEST_USE_EXTERNAL === 'true'
+  ) {
     const testDatabaseUri = createIsolatedTestDatabaseUri(
       process.env.MONGODB_TEST_URI,
     );
@@ -34,9 +38,11 @@ beforeAll(async () => {
   } else {
     // Otherwise, fallback to in‑memory (will download binary)
     console.warn(
-      '⚠️ MONGODB_TEST_URI not set, using in-memory MongoDB (may download binary)',
+      '⚠️ Using an in-memory MongoDB replica set for transaction-capable tests (may download binary)',
     );
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await MongoMemoryReplSet.create({
+      replSet: { count: 1, storageEngine: 'wiredTiger' },
+    });
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
   }

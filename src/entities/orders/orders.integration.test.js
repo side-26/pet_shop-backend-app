@@ -215,6 +215,18 @@ describe('Order API', () => {
     expect(await OrderModel.countDocuments()).toBe(0);
   });
 
+  test('allows only one concurrent checkout to consume a Cart', async () => {
+    const product = await createCatalogItem(ProductModel, 'concurrent-order');
+    await prepareCart([{ item: product, itemType: 'product', quantity: 1 }]);
+
+    const [first, second] = await Promise.all([createOrder(), createOrder()]);
+    const statuses = [first.status, second.status].sort((a, b) => a - b);
+
+    expect(statuses).toEqual([STATUES.CREATED, STATUES.BAD_FORM_VALIDATION]);
+    expect(await OrderModel.countDocuments({ user: user._id })).toBe(1);
+    expect((await UserModel.findById(user._id)).cart.items).toHaveLength(0);
+  });
+
   test('user cannot read another user Order', async () => {
     const product = await createCatalogItem(ProductModel, 'private-order');
     await prepareCart([{ item: product, itemType: 'product', quantity: 1 }]);

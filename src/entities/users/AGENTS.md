@@ -40,5 +40,5 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - The service owns security-sensitive account and token behavior.
 - Addresses are embedded user data with configured limits.
 - The structured cart stores checkout metadata and server-calculated pricing around Product/Pet items; wishlist entries reference the same entity types without quantity.
-- A finalized Cart is transformed into an immutable Order snapshot before its contents and calculated prices are cleared.
+- A finalized Cart is transformed into an immutable Order snapshot and its contents and calculated prices are cleared in the same MongoDB transaction.
 - Routes mix public authentication endpoints and protected administration/profile endpoints.

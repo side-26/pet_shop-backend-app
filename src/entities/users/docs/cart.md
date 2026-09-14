@@ -53,4 +53,4 @@ Emptying is idempotent and deliberately preserves address, shipping, and payment
 
 ## Order transformation
 
-Successful payment transforms the finalized Cart into an immutable Order snapshot, then clears only Cart items and calculated item pricing. Order creation and lifecycle details are documented in [`../../orders/docs/order-lifecycle.md`](../../orders/docs/order-lifecycle.md).
+Successful payment transforms the finalized Cart into an immutable Order snapshot, then clears only Cart items and calculated prices within the same MongoDB transaction. Order creation and lifecycle details are documented in [`../../orders/docs/order-lifecycle.md`](../../orders/docs/order-lifecycle.md).

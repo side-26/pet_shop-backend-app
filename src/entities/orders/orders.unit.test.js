@@ -25,8 +25,8 @@ jest.mock('#utils/helpers.js', () => ({
 
 jest.mock('./orders.model.js', () => ({
   OrderModel: {
+    db: { startSession: jest.fn() },
     create: jest.fn(),
-    findByIdAndDelete: jest.fn(),
     findOne: jest.fn(),
     findByIdAndUpdate: jest.fn(),
     populate: jest.fn(),
@@ -83,16 +83,26 @@ describe('OrderService', () => {
     instalmentCompany: null,
   };
 
-  beforeEach(() => jest.clearAllMocks());
+  let session;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn(),
+    };
+    OrderModel.db.startSession.mockResolvedValue(session);
+  });
 
   test('creates an immutable Order snapshot and empties the Cart', async () => {
     UserService.getCartItems.mockResolvedValue(cart);
     UserService.findById.mockResolvedValue({ addresses: [address] });
     UserService.emptyCart.mockResolvedValue({ items: [] });
-    OrderModel.create.mockImplementation(async (data) => ({
-      _id: 'order-id',
-      ...data,
-    }));
+    OrderModel.create.mockImplementation(async (data) => {
+      const orderData = Array.isArray(data) ? data[0] : data;
+      const order = { _id: 'order-id', ...orderData };
+      return Array.isArray(data) ? [order] : order;
+    });
 
     const order = await OrderService.createOrderFromCart(actor, 'PAY-123');
 
@@ -110,7 +120,7 @@ describe('OrderService', () => {
       sourceId: addressId,
       detailAddress: address.detailAddress,
     });
-    expect(UserService.emptyCart).toHaveBeenCalledWith(actor);
+    expect(UserService.emptyCart).toHaveBeenCalledWith(actor, session);
   });
 
   test('rejects an empty Cart without creating an Order', async () => {
@@ -122,16 +132,16 @@ describe('OrderService', () => {
     expect(OrderModel.create).not.toHaveBeenCalled();
   });
 
-  test('removes the Order as compensation when Cart clearing fails', async () => {
+  test('ends the transaction session when Cart clearing fails', async () => {
     UserService.getCartItems.mockResolvedValue(cart);
     UserService.findById.mockResolvedValue({ addresses: [address] });
-    OrderModel.create.mockResolvedValue({ _id: 'order-id' });
+    OrderModel.create.mockResolvedValue([{ _id: 'order-id' }]);
     UserService.emptyCart.mockRejectedValue(new Error('clear failed'));
-    OrderModel.findByIdAndDelete.mockReturnValue({ catch: jest.fn() });
+    session.endSession.mockRejectedValue(new Error('session cleanup failed'));
     await expect(
       OrderService.createOrderFromCart(actor, 'PAY-123'),
     ).rejects.toThrow('clear failed');
-    expect(OrderModel.findByIdAndDelete).toHaveBeenCalledWith('order-id');
+    expect(session.endSession).toHaveBeenCalledTimes(1);
   });
 
   test('does not empty Cart when Order persistence fails', async () => {

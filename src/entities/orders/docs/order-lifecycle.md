@@ -6,7 +6,7 @@ After successful payment verification, `POST /api/orders` receives the gateway's
 
 Each item preserves its original reference plus quantity, price, discount percentage, title, main image, and thumbnail. The full selected address is copied with its source subdocument ID. Order totals, shipping price, delivery date, payment type, and checkout shipping information are copied. Later Cart, address, Product, or Pet changes cannot change the Order.
 
-Cart contents and calculated prices are cleared only after Order persistence succeeds. If clearing fails, the newly created Order is removed as compensation and the Cart remains available.
+Cart reads, recalculation, snapshot persistence, and cart clearing run in one MongoDB transaction. Concurrent checkout attempts cannot snapshot the same cart twice: one transaction commits, while a conflicting attempt retries against the now-empty cart and fails validation. An aborted transaction leaves both the Order and Cart unchanged. This requires a MongoDB deployment with transaction support (a replica set or sharded cluster).
 
 ## Identifiers
 

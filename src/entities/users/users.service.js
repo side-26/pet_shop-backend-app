@@ -59,14 +59,16 @@ export class UserService {
     return UserModel.findOne(filter);
   }
 
-  static async findById(userId, throwOnNotFound = true) {
+  static async findById(userId, throwOnNotFound = true, session) {
     if (!userId) {
       setErrorResponse(STATUES.BAD_REQUEST, {
         message: 'ورودی معتبر نیست',
       });
     }
 
-    const user = await UserModel.findById(userId.toString());
+    let query = UserModel.findById(userId.toString());
+    if (session) query = query.session(session);
+    const user = await query;
 
     if (!user && throwOnNotFound) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -791,12 +793,14 @@ export class UserService {
       : PetService.findCustomerById(itemId);
   }
 
-  static async recalculateCart(userId) {
-    const user = await UserModel.findById(userId).populate({
+  static async recalculateCart(userId, session) {
+    let query = UserModel.findById(userId).populate({
       path: 'cart.items.item',
       select:
         'title mainImage mainImageThumbnail price discountPercentage isEnable inEnable slug',
     });
+    if (session) query = query.session(session);
+    const user = await query;
     if (!user) {
       setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
     }
@@ -810,7 +814,7 @@ export class UserService {
           'cart.discountPrice': prices.discountPrice,
         },
       },
-      { runValidators: true },
+      { runValidators: true, ...(session ? { session } : {}) },
     );
     user.cart.totalPrice = prices.totalPrice;
     user.cart.discountPrice = prices.discountPrice;
@@ -875,12 +879,12 @@ export class UserService {
     return this.recalculateCart(userId);
   }
 
-  static async getCartItems(actor) {
+  static async getCartItems(actor, session) {
     const userId = this.getAuthenticatedUserId(actor);
-    return this.recalculateCart(userId);
+    return this.recalculateCart(userId, session);
   }
 
-  static async emptyCart(actor) {
+  static async emptyCart(actor, session) {
     const userId = this.getAuthenticatedUserId(actor);
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
@@ -891,7 +895,11 @@ export class UserService {
           'cart.discountPrice': 0,
         },
       },
-      { returnDocument: 'after', runValidators: true },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      },
     );
     if (!updatedUser) {
       setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
