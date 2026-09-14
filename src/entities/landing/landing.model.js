@@ -90,7 +90,11 @@ export class LandingModel {
   }
 
   static findPetList(filter, sort, skip, limit) {
-    return PetModel.find(filter).sort(sort).skip(skip).limit(limit);
+    return PetModel.find(filter)
+      .populate([{ path: 'petType' }, { path: 'breed' }])
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
   }
   static countPetList(filter) {
     return PetModel.countDocuments(filter);

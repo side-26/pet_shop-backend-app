@@ -108,7 +108,7 @@ export const LANDING_PET_FILTER_DEFINITIONS = [
   },
   {
     key: 'isEnable',
-    label: 'فعال',
+    label: 'نمایش حیوانات موجود',
     type: FILTER_TYPES.BOOLEAN,
     source: 'inEnable',
     order: 4,
