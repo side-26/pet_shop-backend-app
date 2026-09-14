@@ -14,6 +14,10 @@ jest.mock('#entities/users/users.service.js', () => ({
   },
 }));
 
+jest.mock('#entities/products/products.service.js', () => ({
+  ProductService: { decrementWeightStock: jest.fn() },
+}));
+
 jest.mock('#utils/helpers.js', () => ({
   getPaginationData: jest.fn(),
   setErrorResponse: jest.fn((statusCode, options = {}) => {
@@ -34,6 +38,7 @@ jest.mock('./orders.model.js', () => ({
 }));
 
 import { UserService } from '#entities/users/users.service.js';
+import { ProductService } from '#entities/products/products.service.js';
 import { getPaginationData } from '#utils/helpers.js';
 
 import { OrderModel } from './orders.model.js';
@@ -70,9 +75,13 @@ describe('OrderService', () => {
           price: 100,
           discountPercentage: 10,
           isEnable: true,
+          weights: {
+            id: jest.fn(() => ({ metric: 'KG', value: 2 })),
+          },
         },
         itemType: 'product',
         quantity: 2,
+        weight: '65a4de97aff1fbb38c437955',
       },
     ],
     userAddress: addressId,
@@ -121,6 +130,12 @@ describe('OrderService', () => {
       detailAddress: address.detailAddress,
     });
     expect(UserService.emptyCart).toHaveBeenCalledWith(actor, session);
+    expect(ProductService.decrementWeightStock).toHaveBeenCalledWith(
+      cart.items[0].item._id,
+      cart.items[0].weight,
+      cart.items[0].quantity,
+      session,
+    );
   });
 
   test('rejects an empty Cart without creating an Order', async () => {

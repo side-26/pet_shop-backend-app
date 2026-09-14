@@ -1658,6 +1658,7 @@ describe('UserService - Unit Tests', () => {
       itemId: mockUser.cart.items[0].item._id,
       itemType: 'product',
       quantity: 3,
+      weightId: '65a4de97aff1fbb38c437959',
     };
     const recalculatedUser = {
       ...mockUser,
@@ -1666,7 +1667,10 @@ describe('UserService - Unit Tests', () => {
         items: [{ ...mockUser.cart.items[0], quantity: 5 }],
       },
     };
-    ProductService.findCustomerById.mockResolvedValue({ _id: data.itemId });
+    ProductService.findCustomerById.mockResolvedValue({
+      _id: data.itemId,
+      weights: { id: jest.fn(() => ({ _id: data.weightId })) },
+    });
     UserModel.findOneAndUpdate.mockResolvedValue(recalculatedUser);
     UserModel.findById.mockReturnValue({
       populate: jest.fn().mockResolvedValue(recalculatedUser),

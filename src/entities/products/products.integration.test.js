@@ -161,7 +161,7 @@ describe('Product API', () => {
     );
     expect(withSubCategory.status).toBe(STATUES.CREATED);
     expect(withSubCategory.body.data).toMatchObject({
-      quantity: productData.quantity,
+      quantity: 0,
       price: 0,
       discountPercentage: 0,
       isEnable: true,
@@ -292,7 +292,7 @@ describe('Product API', () => {
       title: 'Updated food',
       category: { title: 'Food' },
       subCategory: { title: 'Dry Food' },
-      quantity: 9,
+      quantity: 12,
       summary: 'Updated summary',
       description: 'Updated product description.',
     });
@@ -363,7 +363,7 @@ describe('Product API', () => {
     ).toBe(STATUES.SUCCESS);
     const list = await request(app)
       .get(
-        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=275000&quantity=9&isEnable=true`,
+        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=275000&quantity=12&isEnable=true`,
       )
       .set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);

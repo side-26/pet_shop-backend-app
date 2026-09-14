@@ -58,6 +58,9 @@ export const formatManagementProduct = (product) => {
       ? SubCategoryService.format(value.subCategory)
       : relationId(value.subCategory) || null,
     quantity: value.quantity,
+    weights: value.weights || [],
+    userRate: value.userRate,
+    propertyDefinitions: value.propertyDefinitions || [],
     price: value.price,
     discountPercentage: value.discountPercentage,
     isEnable: value.isEnable,
@@ -84,6 +87,8 @@ export const formatCustomerProductListItem = (product) => {
     summary: value.summary,
     description: value.description,
     quantity: value.quantity,
+    weights: value.weights || [],
+    userRate: value.userRate,
     price: value.price,
     discountPercentage: value.discountPercentage,
     isEnable: value.isEnable,
@@ -105,6 +110,8 @@ export const formatCustomerProductDetail = (product) => {
     summary: value.summary,
     description: value.description,
     quantity: value.quantity,
+    weights: value.weights || [],
+    userRate: value.userRate,
     price: value.price,
     discountPercentage: value.discountPercentage,
     isEnable: value.isEnable,
@@ -148,7 +155,13 @@ export const formatProductMainInfo = (product) => {
       ? SubCategoryService.format(value.subCategory)
       : relationId(value.subCategory) || null,
     quantity: value.quantity,
+    weights: value.weights || [],
     summary: value.summary,
     description: value.description,
   };
 };
+
+export const formatProductPropertyDefinitions = (product) =>
+  (valueOf(product).propertyDefinitions || []).map((definition) => ({
+    ...definition,
+  }));

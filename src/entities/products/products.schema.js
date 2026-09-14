@@ -10,6 +10,7 @@ const {
   coerce,
   enum: enumValue,
   object,
+  number,
   preprocess,
   string,
   unknown,
@@ -32,6 +33,57 @@ const descriptionSchema = preprocess(
   unknown().refine((value) => value !== undefined),
 );
 const quantitySchema = coerce.number().int().min(0);
+const weightSchema = object({
+  metric: string().trim().min(1).max(20).optional().default('KG'),
+  quantity: quantitySchema,
+  value: number().positive(),
+});
+const weightsSchema = array(weightSchema).max(PRODUCT_LIMITS.MAX_WEIGHTS);
+const propertyDefinitionSchema = object({
+  key: string()
+    .trim()
+    .regex(/^[a-z][a-zA-Z0-9]*$/),
+  label: string().trim().min(1).max(80),
+  valueType: enumValue(['string', 'number', 'boolean', 'date', 'enum']),
+  required: boolean().optional().default(false),
+  options: array(string().trim().min(1)).min(1).optional(),
+  min: number().optional(),
+  max: number().optional(),
+  defaultValue: unknown().optional(),
+}).superRefine((definition, context) => {
+  if (definition.valueType === 'enum' && !definition.options?.length) {
+    context.addIssue({
+      code: 'custom',
+      path: ['options'],
+      message: 'ویژگی‌های انتخابی باید حداقل یک گزینه داشته باشند',
+    });
+  }
+  if (
+    definition.min !== undefined &&
+    definition.max !== undefined &&
+    definition.min > definition.max
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['min'],
+      message: 'حداقل مقدار نمی‌تواند از حداکثر مقدار بیشتر باشد',
+    });
+  }
+});
+const propertyDefinitionsSchema = array(propertyDefinitionSchema)
+  .max(50)
+  .superRefine((definitions, context) => {
+    const keys = new Set();
+    definitions.forEach((definition, index) => {
+      if (keys.has(definition.key))
+        context.addIssue({
+          code: 'custom',
+          path: [index, 'key'],
+          message: 'کلید ویژگی‌ها باید یکتا باشد',
+        });
+      keys.add(definition.key);
+    });
+  });
 const salesVolumeSchema = coerce.number().int().min(0);
 const priceSchema = coerce.number().min(0);
 const discountPercentageSchema = coerce
@@ -59,6 +111,9 @@ const productFields = {
   brand: objectIdSchema,
   subCategory: objectIdSchema.nullable(),
   quantity: quantitySchema,
+  weights: weightsSchema,
+  userRate: number().min(0).max(5).multipleOf(0.1),
+  propertyDefinitions: propertyDefinitionsSchema,
   salesVolume: salesVolumeSchema,
   price: priceSchema,
   discountPercentage: discountPercentageSchema,
@@ -71,6 +126,9 @@ export const productPersistedZodSchema = object({
   images: productFields.images.optional().default([]),
   subCategory: productFields.subCategory.optional(),
   quantity: quantitySchema.optional().default(0),
+  weights: weightsSchema.optional().default([]),
+  userRate: number().min(0).max(5).multipleOf(0.1).optional().default(0),
+  propertyDefinitions: propertyDefinitionsSchema.optional().default([]),
   salesVolume: salesVolumeSchema.optional().default(0),
   price: priceSchema.optional().default(0),
   discountPercentage: discountPercentageSchema.optional().default(0),
@@ -83,7 +141,7 @@ export const createProductZodSchema = object({
   category: objectIdSchema,
   brand: objectIdSchema,
   subCategory: objectIdSchema.nullable().optional(),
-  quantity: quantitySchema.optional().default(0),
+  weights: weightsSchema.optional().default([]),
 });
 const productMainInfoFields = {
   title: titleSchema,
@@ -91,7 +149,7 @@ const productMainInfoFields = {
   description: descriptionSchema,
   category: objectIdSchema,
   subCategory: objectIdSchema.nullable(),
-  quantity: quantitySchema,
+  weights: weightsSchema,
 };
 
 export const updateProductMainInfoZodSchema = object({
@@ -104,12 +162,19 @@ export const updateProductMainInfoZodSchema = object({
     description: true,
     category: true,
     subCategory: true,
-    quantity: true,
+    weights: true,
   })
   .refine((value) => Object.keys(value).length > 0, {
     message: 'حداقل یک فیلد باید ارسال شود',
   });
 export const updateProductZodSchema = updateProductMainInfoZodSchema;
+export const replaceProductPropertyDefinitionsZodSchema = object({
+  id: objectIdSchema,
+  propertyDefinitions: propertyDefinitionsSchema,
+});
+export const updateProductUserRateZodSchema = object({
+  userRate: number().min(0).max(5).multipleOf(0.1),
+});
 export const updateProductImagesZodSchema = object({}).strict();
 export const updateProductPriceZodSchema = object({
   price: priceSchema,

@@ -309,6 +309,7 @@ describe('ProductService', () => {
       brand: brandId,
       subCategory: subCategoryId,
       quantity: data.quantity,
+      weights: [],
       summary: undefined,
       description: data.description,
     });

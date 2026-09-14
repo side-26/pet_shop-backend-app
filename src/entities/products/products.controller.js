@@ -13,6 +13,8 @@ import {
   updateProductMainInfoZodSchema,
   updateProductPriceZodSchema,
   updateProductZodSchema,
+  replaceProductPropertyDefinitionsZodSchema,
+  updateProductUserRateZodSchema,
 } from './products.schema.js';
 import { ProductService } from './products.service.js';
 
@@ -116,6 +118,53 @@ export const updateProductMainInfoController = (req, res, next) =>
     'updateMainInfo',
     'formatMainInfo',
   );
+
+export const replaceProductPropertyDefinitionsController = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const { id, propertyDefinitions } = returnFormValidation(
+      replaceProductPropertyDefinitionsZodSchema,
+      req.body,
+    );
+    const product = await ProductService.replacePropertyDefinitions(
+      id,
+      propertyDefinitions,
+      getUserId(req.user),
+    );
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'ویژگی‌های محصول با موفقیت ویرایش شد',
+      data: {
+        id: product._id,
+        propertyDefinitions: ProductService.formatPropertyDefinitions(product),
+      },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getProductPropertyDefinitionsController = (req, res, next) =>
+  getProductSection(req, res, next, 'findById', 'formatPropertyDefinitions');
+
+export const updateProductUserRateController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(productIdSchema, req.params);
+    const { userRate } = returnFormValidation(
+      updateProductUserRateZodSchema,
+      req.body,
+    );
+    const product = await ProductService.updateUserRate(id, userRate);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'امتیاز محصول با موفقیت ویرایش شد',
+      data: { userRate: product.userRate },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
 
 export const getManagementProductController = async (req, res, next) => {
   try {

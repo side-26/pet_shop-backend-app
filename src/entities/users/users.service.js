@@ -787,17 +787,24 @@ export class UserService {
       : PetService.findById(itemId);
   }
 
-  static validateCartReferencedItem(itemId, itemType) {
-    return itemType === USER_ITEM_TYPES.PRODUCT
-      ? ProductService.findCustomerById(itemId)
-      : PetService.findCustomerById(itemId);
+  static async validateCartReferencedItem(itemId, itemType, weightId) {
+    const item =
+      itemType === USER_ITEM_TYPES.PRODUCT
+        ? await ProductService.findCustomerById(itemId)
+        : await PetService.findCustomerById(itemId);
+    if (itemType === USER_ITEM_TYPES.PRODUCT && !item.weights.id(weightId)) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'وزن انتخاب‌شده برای محصول معتبر نیست',
+      });
+    }
+    return item;
   }
 
   static async recalculateCart(userId, session) {
     let query = UserModel.findById(userId).populate({
       path: 'cart.items.item',
       select:
-        'title mainImage mainImageThumbnail price discountPercentage isEnable inEnable slug',
+        'title mainImage mainImageThumbnail price discountPercentage isEnable inEnable slug weights',
     });
     if (session) query = query.session(session);
     const user = await query;
@@ -821,14 +828,15 @@ export class UserService {
     return user.cart;
   }
 
-  static async addCartItem(actor, { itemId, itemType, quantity }) {
+  static async addCartItem(actor, { itemId, itemType, quantity, weightId }) {
     const userId = this.getAuthenticatedUserId(actor);
-    await this.validateCartReferencedItem(itemId, itemType);
+    await this.validateCartReferencedItem(itemId, itemType, weightId);
+    const weight = weightId || null;
 
     const existingItemUpdate = await UserModel.findOneAndUpdate(
       {
         _id: userId,
-        'cart.items': { $elemMatch: { item: itemId, itemType } },
+        'cart.items': { $elemMatch: { item: itemId, itemType, weight } },
       },
       { $inc: { 'cart.items.$.quantity': quantity } },
       { returnDocument: 'after', runValidators: true },
@@ -839,17 +847,19 @@ export class UserService {
         {
           _id: userId,
           'cart.items': {
-            $not: { $elemMatch: { item: itemId, itemType } },
+            $not: { $elemMatch: { item: itemId, itemType, weight } },
           },
         },
-        { $push: { 'cart.items': { item: itemId, itemType, quantity } } },
+        {
+          $push: { 'cart.items': { item: itemId, itemType, quantity, weight } },
+        },
         { returnDocument: 'after', runValidators: true },
       );
       if (!updatedUser) {
         const concurrentlyAddedItemUpdate = await UserModel.findOneAndUpdate(
           {
             _id: userId,
-            'cart.items': { $elemMatch: { item: itemId, itemType } },
+            'cart.items': { $elemMatch: { item: itemId, itemType, weight } },
           },
           { $inc: { 'cart.items.$.quantity': quantity } },
           { returnDocument: 'after', runValidators: true },

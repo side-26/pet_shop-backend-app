@@ -21,10 +21,13 @@ import {
   getProductImagesController,
   getProductMainInfoController,
   getProductPriceController,
+  getProductPropertyDefinitionsController,
   updateProductController,
   updateProductImagesController,
   updateProductMainInfoController,
   updateProductPriceController,
+  replaceProductPropertyDefinitionsController,
+  updateProductUserRateController,
 } from './products.controller.js';
 
 const router = express.Router();
@@ -35,6 +38,22 @@ router.get(
   getCustomerProductListController,
 );
 router.get('/products/customer/:id', getCustomerProductController);
+router.get(
+  '/products/property-definitions/:id',
+  getProductPropertyDefinitionsController,
+);
+router.put(
+  '/products/property-definitions',
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  replaceProductPropertyDefinitionsController,
+);
+router.patch(
+  '/products/:id/user-rate',
+  authenticated,
+  roleMiddleware(ROLES.CUSTOMER),
+  updateProductUserRateController,
+);
 router.get(
   '/products/paginate',
   /* #swagger.parameters['title'] = { in: 'query', type: 'string' }

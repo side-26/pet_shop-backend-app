@@ -10,6 +10,14 @@ export const snapshotOrderItem = (cartItem) => ({
   item: cartItem.item._id,
   itemType: cartItem.itemType,
   quantity: cartItem.quantity,
+  ...(cartItem.itemType === 'product'
+    ? {
+        weight: (() => {
+          const weight = cartItem.item.weights.id(cartItem.weight);
+          return { metric: weight.metric, value: weight.value };
+        })(),
+      }
+    : {}),
   price: cartItem.item.price,
   discountPercentage: cartItem.item.discountPercentage,
   title: cartItem.item.title,

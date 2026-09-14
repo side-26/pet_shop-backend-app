@@ -46,6 +46,29 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
     quantity: { type: Number, required: true, min: 0, default: 0 },
+    weights: {
+      type: [
+        {
+          metric: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 20,
+            default: 'KG',
+          },
+          quantity: {
+            type: Number,
+            required: true,
+            min: 0,
+            validate: Number.isInteger,
+          },
+          value: { type: Number, required: true, min: 0 },
+        },
+      ],
+      default: [],
+    },
+    userRate: { type: Number, required: true, min: 0, max: 5, default: 0 },
+    propertyDefinitions: { type: [mongoose.Schema.Types.Mixed], default: [] },
     salesVolume: { type: Number, required: true, min: 0, default: 0 },
     price: { type: Number, required: true, min: 0, default: 0 },
     discountPercentage: {
@@ -101,6 +124,12 @@ productSchema.pre('validate', function () {
 });
 
 productSchema.pre('save', function () {
+  if (this.isModified('weights')) {
+    this.quantity = this.weights.reduce(
+      (total, weight) => total + weight.quantity,
+      0,
+    );
+  }
   validateProductData(
     productPersistedZodSchema,
     {
@@ -114,6 +143,9 @@ productSchema.pre('save', function () {
       brand: this.brand?.toString(),
       subCategory: this.subCategory?.toString(),
       quantity: this.quantity,
+      weights: this.weights,
+      userRate: this.userRate,
+      propertyDefinitions: this.propertyDefinitions,
       salesVolume: this.salesVolume,
       price: this.price,
       discountPercentage: this.discountPercentage,
@@ -135,6 +167,18 @@ productSchema.pre('findOneAndUpdate', function () {
     data,
     'اعتبارسنجی ویرایش محصول ناموفق بود',
   );
+});
+
+productSchema.pre('findOneAndUpdate', function () {
+  const update = this.getUpdate();
+  const weights = update?.$set?.weights || update?.weights;
+  if (weights) {
+    const quantity = weights.reduce(
+      (total, weight) => total + weight.quantity,
+      0,
+    );
+    this.set({ quantity });
+  }
 });
 
 productSchema.index({ isEnable: 1, category: 1, brand: 1, subCategory: 1 });

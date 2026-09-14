@@ -228,6 +228,18 @@ export const schemas = {
       title: { type: 'string' },
       summary: { type: 'string' },
       description: { description: 'Rich-text JSON value.' },
+      weights: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['quantity', 'value'],
+          properties: {
+            metric: { type: 'string', default: 'KG' },
+            quantity: { type: 'integer', minimum: 0 },
+            value: { type: 'number', exclusiveMinimum: 0 },
+          },
+        },
+      },
       category: { type: 'string' },
       brand: { type: 'string' },
       subCategory: { type: 'string', nullable: true },
@@ -569,6 +581,10 @@ export const schemas = {
             item: { type: 'object' },
             itemType: { type: 'string', enum: ['product', 'pet'] },
             quantity: { type: 'integer', minimum: 1 },
+            weightId: {
+              type: 'string',
+              description: 'Required when itemType is product.',
+            },
           },
         },
       },

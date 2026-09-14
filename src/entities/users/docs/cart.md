@@ -24,7 +24,7 @@ The `InstalmentCompany` entity does not exist. The nullable ObjectId intentional
 
 ## Items and quantity
 
-Each item has its own embedded `_id`, an `item` reference, `itemType` (`product` or `pet`), and positive integer `quantity`. The model dynamically resolves the reference to `Products` or `Pets`. A cart contains at most one `(item, itemType)` pair. Re-adding that pair atomically increases the existing quantity by the requested quantity.
+Each item has its own embedded `_id`, an `item` reference, `itemType` (`product` or `pet`), and positive integer `quantity`. Product entries additionally require the selected product-weight subdocument ID; Pet entries must not have one. The model dynamically resolves the reference to `Products` or `Pets`. A cart contains at most one `(item, itemType, weight)` pair. Re-adding that pair atomically increases the existing quantity by the requested quantity.
 
 Only enabled customer-visible Products and Pets can be added. Missing references already present in a cart are tolerated during recalculation and contribute nothing, preventing deleted catalog data from crashing cart reads.
 
@@ -40,7 +40,7 @@ discountPrice = Σ(item.price × quantity × item.discountPercentage / 100)
 
 `discountPrice` is the amount discounted, not the post-discount price. Shipping is excluded from both values. A future payable value can be calculated as `totalPrice - discountPrice + shippingPrice`; it is not persisted.
 
-The add schema accepts only `itemId`, `itemType`, and `quantity`. Client-provided totals or checkout metadata are stripped by validation, so server-calculated values always win.
+The add schema accepts `itemId`, `itemType`, `quantity`, and required `weightId` for products. Client-provided totals or checkout metadata are stripped by validation, so server-calculated values always win.
 
 ## API
 

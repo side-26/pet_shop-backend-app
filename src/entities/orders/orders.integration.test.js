@@ -93,6 +93,18 @@ describe('Order API', () => {
       category: new mongoose.Types.ObjectId(),
       petType: new mongoose.Types.ObjectId(),
       breed: new mongoose.Types.ObjectId(),
+      ...(Model === ProductModel
+        ? {
+            weights: [
+              {
+                _id: new mongoose.Types.ObjectId(),
+                metric: 'KG',
+                quantity: 10,
+                value: 1,
+              },
+            ],
+          }
+        : {}),
       ...overrides,
     };
     await Model.collection.insertOne(item);
@@ -109,6 +121,7 @@ describe('Order API', () => {
             item: item._id,
             itemType,
             quantity,
+            weight: itemType === 'product' ? item.weights[0]._id : null,
           })),
           'cart.userAddress': currentUser.addresses[0]._id,
           'cart.deliveringDateToShipping': new Date('2026-09-01'),

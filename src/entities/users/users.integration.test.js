@@ -1936,6 +1936,18 @@ describe('User API - Integration Tests', () => {
         category: new mongoose.Types.ObjectId(),
         petType: new mongoose.Types.ObjectId(),
         breed: new mongoose.Types.ObjectId(),
+        ...(Model === ProductModel
+          ? {
+              weights: [
+                {
+                  _id: new mongoose.Types.ObjectId(),
+                  metric: 'KG',
+                  quantity: 10,
+                  value: 1,
+                },
+              ],
+            }
+          : {}),
         ...overrides,
       };
       await Model.collection.insertOne(item);
@@ -1969,7 +1981,14 @@ describe('User API - Integration Tests', () => {
       const addResponse = await request(app)
         .post('/api/cart/add')
         .set('Authorization', 'Bearer token')
-        .send({ itemId: referenced._id.toString(), itemType, quantity: 5 });
+        .send({
+          itemId: referenced._id.toString(),
+          itemType,
+          quantity: 5,
+          ...(itemType === 'product'
+            ? { weightId: referenced.weights[0]._id.toString() }
+            : {}),
+        });
 
       expect(addResponse.status).toBe(STATUES.CREATED);
       expect(addResponse.body.data).toMatchObject({
@@ -1984,7 +2003,14 @@ describe('User API - Integration Tests', () => {
       await request(app)
         .post('/api/cart/add')
         .set('Authorization', 'Bearer token')
-        .send({ itemId: referenced._id.toString(), itemType, quantity: 7 });
+        .send({
+          itemId: referenced._id.toString(),
+          itemType,
+          quantity: 7,
+          ...(itemType === 'product'
+            ? { weightId: referenced.weights[0]._id.toString() }
+            : {}),
+        });
 
       const listResponse = await request(app)
         .get('/api/cart/all')
@@ -2043,6 +2069,7 @@ describe('User API - Integration Tests', () => {
           itemId: product._id.toString(),
           itemType: 'product',
           quantity: 2,
+          weightId: product.weights[0]._id.toString(),
           totalPrice: 1,
           discountPrice: 999999,
         });
@@ -2073,6 +2100,7 @@ describe('User API - Integration Tests', () => {
           itemId: product._id.toString(),
           itemType: 'product',
           quantity: 2,
+          weightId: product.weights[0]._id.toString(),
         });
       await ProductModel.collection.updateOne(
         { _id: product._id },
@@ -2127,7 +2155,14 @@ describe('User API - Integration Tests', () => {
         const missingItem = await request(app)
           .post('/api/cart/add')
           .set('Authorization', 'Bearer token')
-          .send({ itemId, itemType, quantity: 1 });
+          .send({
+            itemId,
+            itemType,
+            quantity: 1,
+            ...(itemType === 'product'
+              ? { weightId: new mongoose.Types.ObjectId().toString() }
+              : {}),
+          });
         expect(missingItem.status).toBe(STATUES.NOT_FOUND);
       }
     });

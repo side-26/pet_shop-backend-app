@@ -89,13 +89,36 @@ export const userAddressIdSchema = object({
   addressId: mongoObjectIdSchema,
 });
 
-export const addCartItemSchema = object({
+const cartItemFields = {
   itemId: mongoObjectIdSchema,
   itemType: zEnum([...Object.values(USER_ITEM_TYPES)]),
   quantity: number().int().min(1),
-});
+  weightId: mongoObjectIdSchema.optional(),
+};
 
-export const addWishlistItemSchema = addCartItemSchema.omit({ quantity: true });
+export const addCartItemSchema = object(cartItemFields).superRefine(
+  (value, context) => {
+    if (value.itemType === USER_ITEM_TYPES.PRODUCT && !value.weightId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['weightId'],
+        message: 'وزن محصول الزامی است',
+      });
+    }
+    if (value.itemType !== USER_ITEM_TYPES.PRODUCT && value.weightId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['weightId'],
+        message: 'وزن فقط برای محصول قابل انتخاب است',
+      });
+    }
+  },
+);
+
+export const addWishlistItemSchema = object(cartItemFields).omit({
+  quantity: true,
+  weightId: true,
+});
 
 export const cartEntryIdSchema = object({ id: mongoObjectIdSchema });
 

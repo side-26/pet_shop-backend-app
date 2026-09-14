@@ -15,6 +15,7 @@ import {
   formatManagementProductListItem,
   formatProductImages,
   formatProductMainInfo,
+  formatProductPropertyDefinitions,
   formatProductPrice,
 } from './products.helpers.js';
 import { ProductModel } from './products.model.js';
@@ -136,9 +137,18 @@ export class ProductService {
       : currentProduct.subCategory;
     await this.validateRelations(categoryId, brandId, subCategoryId || null);
 
+    const quantity = data.weights
+      ? data.weights.reduce((total, weight) => total + weight.quantity, 0)
+      : undefined;
     const product = await ProductModel.findByIdAndUpdate(
       id,
-      { $set: { ...data, updatedBy: userId } },
+      {
+        $set: {
+          ...data,
+          ...(quantity === undefined ? {} : { quantity }),
+          updatedBy: userId,
+        },
+      },
       { returnDocument: 'after', runValidators: true },
     );
     if (!product) {
@@ -245,6 +255,55 @@ export class ProductService {
       setErrorResponse(STATUES.NOT_FOUND, {
         message: 'محصول یافت نشد',
         code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    return product;
+  }
+
+  static async replacePropertyDefinitions(id, propertyDefinitions, userId) {
+    const product = await this.findById(id);
+    product.propertyDefinitions = propertyDefinitions;
+    product.updatedBy = userId;
+    return product.save();
+  }
+
+  static async updateUserRate(id, userRate) {
+    const product = await ProductModel.findOneAndUpdate(
+      { _id: id, isEnable: true },
+      { $set: { userRate } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    return product;
+  }
+
+  static async decrementWeightStock(id, weightId, quantity, session) {
+    const product = await ProductModel.findOneAndUpdate(
+      {
+        _id: id,
+        isEnable: true,
+        weights: {
+          $elemMatch: { _id: weightId, quantity: { $gte: quantity } },
+        },
+      },
+      {
+        $inc: {
+          'weights.$.quantity': -quantity,
+          quantity: -quantity,
+          salesVolume: quantity,
+        },
+      },
+      { returnDocument: 'after', runValidators: true, session },
+    );
+    if (!product) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'موجودی وزن انتخاب‌شده کافی نیست یا محصول در دسترس نیست',
+        code: ERROR_CODES.INSUFFICIENT_PRODUCT_STOCK,
       });
     }
     return product;
@@ -382,5 +441,9 @@ export class ProductService {
 
   static formatMainInfo(product) {
     return formatProductMainInfo(product);
+  }
+
+  static formatPropertyDefinitions(product) {
+    return formatProductPropertyDefinitions(product);
   }
 }

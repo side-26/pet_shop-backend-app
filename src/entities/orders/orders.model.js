@@ -7,6 +7,14 @@ import {
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 
+const weightSnapshotSchema = new mongoose.Schema(
+  {
+    metric: { type: String, required: true, trim: true },
+    value: { type: Number, required: true, min: 0 },
+  },
+  { _id: false },
+);
+
 const orderItemSchema = new mongoose.Schema(
   {
     item: {
@@ -27,6 +35,7 @@ const orderItemSchema = new mongoose.Schema(
       min: 1,
       validate: Number.isInteger,
     },
+    weight: { type: weightSnapshotSchema, default: undefined },
     price: { type: Number, required: true, min: 0 },
     discountPercentage: { type: Number, required: true, min: 0, max: 100 },
     title: { type: String, required: true, trim: true },

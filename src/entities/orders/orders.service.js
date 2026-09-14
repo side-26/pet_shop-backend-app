@@ -6,6 +6,7 @@ import {
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 import { UserService } from '#entities/users/users.service.js';
+import { ProductService } from '#entities/products/products.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
@@ -40,7 +41,9 @@ export class OrderService {
           ? entry.item.isEnable !== true
           : entry.item.inEnable !== true) ||
         !Number.isInteger(entry.quantity) ||
-        entry.quantity < 1,
+        entry.quantity < 1 ||
+        (entry.itemType === USER_ITEM_TYPES.PRODUCT &&
+          (!entry.weight || !entry.item.weights?.id(entry.weight))),
     );
     if (
       hasInvalidItem ||
@@ -53,6 +56,19 @@ export class OrderService {
         message: 'سبد خرید برای ثبت سفارش کامل یا معتبر نیست',
         code: ERROR_CODES.ORDER_INVALID_CART,
       });
+    }
+  }
+
+  static async decrementProductInventory(cart, session) {
+    for (const entry of cart.items) {
+      if (entry.itemType === USER_ITEM_TYPES.PRODUCT) {
+        await ProductService.decrementWeightStock(
+          entry.item._id,
+          entry.weight,
+          entry.quantity,
+          session,
+        );
+      }
     }
   }
 
@@ -126,6 +142,7 @@ export class OrderService {
         const cart = await UserService.getCartItems(actor, session);
         const user = await UserService.findById(userId, true, session);
         this.validateCart(cart);
+        await this.decrementProductInventory(cart, session);
         const address = this.findAddress(user, cart.userAddress);
         if (!address) {
           setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
