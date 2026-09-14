@@ -45,6 +45,10 @@ export const landingLimitSchema = object({
     .default(LANDING_LIMITS.FEATURED_PRODUCTS),
 });
 
+export const landingSearchQuerySchema = object({
+  search: string().trim().min(1).max(LANDING_LIMITS.SEARCH_QUERY_MAX_LENGTH),
+});
+
 export const landingProductListQuerySchema = object({
   category: objectIdListSchema.optional(),
   subCategory: objectIdListSchema.optional(),

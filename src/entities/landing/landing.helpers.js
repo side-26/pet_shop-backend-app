@@ -5,6 +5,9 @@ import {
 
 const PRODUCT_FILTER_FIELDS = ['category', 'subCategory', 'brand'];
 
+export const createLandingSearchRegex = (search) =>
+  new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
 const toFilterValues = (value) => {
   if (Array.isArray(value)) return value;
   return typeof value === 'string' ? value.split(',') : value;

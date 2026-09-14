@@ -23,6 +23,8 @@ jest.mock('./landing.model.js', () => ({
     findFacetCategories: jest.fn(),
     findFacetSubCategories: jest.fn(),
     findFacetBrands: jest.fn(),
+    findSearchProducts: jest.fn(),
+    findSearchPets: jest.fn(),
   },
 }));
 
@@ -99,6 +101,29 @@ const highestPricedPet = {
 
 describe('LandingService', () => {
   beforeEach(() => jest.clearAllMocks());
+
+  test('combines compact product and pet search matches in title order', async () => {
+    const search = /گربه/i;
+    const productMatch = {
+      title: 'غذای گربه',
+      mainImage: 'https://cdn.example.com/food.webp',
+      thumbnailImage: 'data:image/webp;base64,AAAA',
+    };
+    const petMatch = {
+      title: 'گربه پرشین',
+      mainImage: 'https://cdn.example.com/persian.webp',
+      thumbnailImage: 'data:image/webp;base64,BBBB',
+    };
+    LandingModel.findSearchProducts.mockResolvedValue([productMatch]);
+    LandingModel.findSearchPets.mockResolvedValue([petMatch]);
+
+    await expect(LandingService.searchCatalog(search)).resolves.toEqual([
+      productMatch,
+      petMatch,
+    ]);
+    expect(LandingModel.findSearchProducts).toHaveBeenCalledWith(search, 20);
+    expect(LandingModel.findSearchPets).toHaveBeenCalledWith(search, 20);
+  });
 
   test('formats the bounded featured pet types section', async () => {
     LandingModel.findFeaturedPetTypes.mockResolvedValue([petType]);

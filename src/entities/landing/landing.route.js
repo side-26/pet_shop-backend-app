@@ -15,9 +15,21 @@ import {
   getProductListController,
   getProductBySlugController,
   getRecentlyUpdatedPetsController,
+  searchCatalogController,
 } from './landing.controller.js';
 
 const router = express.Router();
+
+router.get(
+  ROUTES.landing.search,
+  /* #swagger.summary = 'Search enabled pets and products'
+     #swagger.path = '/landing/search'
+     #swagger.description = 'Searches enabled products by title, category title, or sub-category title and enabled pets by title, pet-type title, or breed title. Returns at most 20 compact items.'
+     #swagger.parameters['search'] = { in: 'query', required: true, type: 'string', minLength: 1, maxLength: 100 }
+     #swagger.responses[200] = { description: 'Matching compact catalog items with title, mainImage, and thumbnailImage' }
+     #swagger.responses[422] = { description: 'Search query validation error' } */
+  searchCatalogController,
+);
 
 router.get(
   '/landing/pets-paginate',

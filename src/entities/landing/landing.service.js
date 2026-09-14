@@ -69,6 +69,16 @@ const orderPetsById = (pets, ids) => {
 };
 
 export class LandingService {
+  static async searchCatalog(search) {
+    const [products, pets] = await Promise.all([
+      LandingModel.findSearchProducts(search, LANDING_LIMITS.SEARCH_RESULTS),
+      LandingModel.findSearchPets(search, LANDING_LIMITS.SEARCH_RESULTS),
+    ]);
+    return [...products, ...pets]
+      .sort((first, second) => first.title.localeCompare(second.title, 'fa'))
+      .slice(0, LANDING_LIMITS.SEARCH_RESULTS);
+  }
+
   static async getPetList(query) {
     const filters = parseLandingPetFilters(query);
     const filter = buildLandingPetFilter({ filters });

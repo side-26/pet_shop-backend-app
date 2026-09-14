@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 import { MANAGEMENT_ROLES, USER_ITEM_TYPES } from '#configs/constants.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
+import { BreedModel } from '#entities/breeds/breeds.model.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
@@ -351,6 +352,92 @@ export class LandingModel {
       { path: 'category' },
       { path: 'brand' },
       { path: 'subCategory' },
+    ]);
+  }
+
+  static findSearchProducts(search, limit) {
+    return ProductModel.aggregate([
+      { $match: { isEnable: true } },
+      {
+        $lookup: {
+          from: CategoryModel.collection.name,
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category',
+        },
+      },
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: SubCategoryModel.collection.name,
+          localField: 'subCategory',
+          foreignField: '_id',
+          as: 'subCategory',
+        },
+      },
+      { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { title: search },
+            { 'category.title': search },
+            { 'subCategory.title': search },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          mainImage: 1,
+          thumbnailImage: '$mainImageThumbnail',
+        },
+      },
+      { $sort: { title: 1 } },
+      { $limit: limit },
+    ]);
+  }
+
+  static findSearchPets(search, limit) {
+    return PetModel.aggregate([
+      { $match: { inEnable: true } },
+      {
+        $lookup: {
+          from: PetTypeModel.collection.name,
+          localField: 'petType',
+          foreignField: '_id',
+          as: 'petType',
+        },
+      },
+      { $unwind: { path: '$petType', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: BreedModel.collection.name,
+          localField: 'breed',
+          foreignField: '_id',
+          as: 'breed',
+        },
+      },
+      { $unwind: { path: '$breed', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { title: search },
+            { 'petType.title': search },
+            { 'breed.title': search },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          mainImage: 1,
+          thumbnailImage: '$mainImageThumbnail',
+        },
+      },
+      { $sort: { title: 1 } },
+      { $limit: limit },
     ]);
   }
 }

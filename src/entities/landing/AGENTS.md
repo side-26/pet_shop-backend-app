@@ -7,6 +7,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 ## Endpoints
 
 - `GET /landing/pet-types` — up to four enabled pet types, ordered by creation date, each with its main image, thumbnail, and summary.
+- `GET /landing/search?search=TEXT` — up to twenty enabled Products and Pets matched by catalog or requested taxonomy title; every item is limited to `title`, `mainImage`, and `thumbnailImage`.
 - `GET /landing/products/discounted?limit=COUNT` — enabled products ordered by discount percentage, with the main image thumbnail, source price, discount percentage, and response-only calculated discount amount; `limit` defaults to four and is capped at 100.
 - `GET /landing/pet-types/all` — every enabled pet type, ordered by creation date, each with its main image, thumbnail, and summary.
 - `GET /landing/products/popular` — up to four enabled products, ordered by sales volume, with the main image thumbnail, slug, source price, discount percentage, and response-only final discounted price.
@@ -22,6 +23,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 ## Rules
 
 - All endpoints are public and return only enabled catalog records.
+- Search matches Product title, Category title, and SubCategory title; and Pet title, PetType title, and Breed title. Product results require `isEnable: true` and Pet results require `inEnable: true`.
 - Slug detail endpoints validate the path parameter and reuse the catalog entities' full customer-detail formatters, including populated taxonomy and brand relations.
 - Featured section limits are centralized in `landing.constants.js`.
 - Landing product summaries calculate `discountPrice` as `price * (discountPercentage / 100)` without persisting it to product documents.

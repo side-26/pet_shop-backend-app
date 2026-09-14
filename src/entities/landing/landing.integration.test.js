@@ -189,6 +189,146 @@ describe('Landing API', () => {
     expect(invalidLimit.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 
+  test('searches enabled catalog and taxonomy titles with compact results', async () => {
+    const search = 'عبارت یکتا';
+    const brand = await BrandModel.findOne();
+    const petType = await PetTypeModel.create({
+      title: `${search} نوع`,
+      mainImage: 'https://cdn.example.com/search-pet-type.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
+    const otherPetType = await PetTypeModel.create({
+      title: 'نوع دیگر',
+      mainImage: 'https://cdn.example.com/other-pet-type.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
+    const breed = await BreedModel.create({
+      title: `${search} نژاد`,
+      petType: otherPetType._id,
+      country: 'ایران',
+      ageAverage: '10 سال',
+      size: 2,
+      activityLevel: 2,
+      mainImage: 'https://cdn.example.com/search-breed.webp',
+      thumbnailImage: 'data:image/webp;base64,AAAA',
+      enable: true,
+    });
+    const category = await CategoryModel.create({
+      title: `${search} دسته`,
+      petType: petType._id,
+      mainImage: 'https://cdn.example.com/search-category.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
+    });
+    const subCategory = await SubCategoryModel.create({
+      title: `${search} زیردسته`,
+      category: category._id,
+    });
+    const productAttributes = {
+      mainImage: 'https://cdn.example.com/search-product.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات محصول جستجو',
+      category: category._id,
+      brand: brand._id,
+    };
+    const petAttributes = {
+      mainImage: 'https://cdn.example.com/search-pet.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات حیوان جستجو',
+      inEnable: true,
+    };
+    await ProductModel.create([
+      {
+        ...productAttributes,
+        title: `${search} محصول`,
+        slug: 'search-product',
+      },
+      {
+        ...productAttributes,
+        title: 'محصول دسته',
+        slug: 'search-category-product',
+      },
+      {
+        ...productAttributes,
+        title: 'محصول زیردسته',
+        subCategory: subCategory._id,
+        slug: 'search-subcategory-product',
+      },
+      {
+        ...productAttributes,
+        title: `${search} محصول پنهان`,
+        isEnable: false,
+        slug: 'hidden-search-product',
+      },
+    ]);
+    await PetModel.create([
+      {
+        ...petAttributes,
+        title: `${search} حیوان`,
+        petType: otherPetType._id,
+        breed: breed._id,
+        slug: 'search-pet',
+      },
+      {
+        ...petAttributes,
+        title: 'حیوان نوع',
+        petType: petType._id,
+        breed: breed._id,
+        slug: 'search-pet-type',
+      },
+      {
+        ...petAttributes,
+        title: 'حیوان نژاد',
+        petType: otherPetType._id,
+        breed: breed._id,
+        slug: 'search-breed',
+      },
+      {
+        ...petAttributes,
+        title: `${search} حیوان پنهان`,
+        petType: petType._id,
+        breed: breed._id,
+        inEnable: false,
+        slug: 'hidden-search-pet',
+      },
+    ]);
+
+    const [response, invalid] = await Promise.all([
+      request(app).get('/api/landing/search').query({ search }),
+      request(app).get('/api/landing/search'),
+    ]);
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.data.map(({ title }) => title)).toEqual(
+      expect.arrayContaining([
+        `${search} محصول`,
+        'محصول دسته',
+        'محصول زیردسته',
+        `${search} حیوان`,
+        'حیوان نوع',
+        'حیوان نژاد',
+      ]),
+    );
+    expect(response.body.data).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: `${search} محصول پنهان` }),
+        expect.objectContaining({ title: `${search} حیوان پنهان` }),
+      ]),
+    );
+    expect(response.body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: expect.any(String),
+          mainImage: expect.any(String),
+          thumbnailImage: expect.any(String),
+        }),
+      ]),
+    );
+    expect(
+      response.body.data.every((item) => Object.keys(item).length === 3),
+    ).toBe(true);
+    expect(invalid.status).toBe(STATUES.BAD_FORM_VALIDATION);
+  });
+
   test('never returns disabled records from public landing routes', async () => {
     const hiddenProduct = await ProductModel.create({
       title: 'محصول پنهان',
