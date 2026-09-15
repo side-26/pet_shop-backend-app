@@ -63,6 +63,13 @@ const productSchema = new mongoose.Schema(
             validate: Number.isInteger,
           },
           value: { type: Number, required: true, min: 0 },
+          price: { type: Number, required: true, min: 0 },
+          discountPercentage: {
+            type: Number,
+            required: true,
+            min: PRODUCT_LIMITS.MIN_DISCOUNT_PERCENTAGE,
+            max: PRODUCT_LIMITS.MAX_DISCOUNT_PERCENTAGE,
+          },
         },
       ],
       default: [],
@@ -71,8 +78,8 @@ const productSchema = new mongoose.Schema(
     userRateCount: { type: Number, required: true, min: 0, default: 0 },
     propertyDefinitions: { type: [mongoose.Schema.Types.Mixed], default: [] },
     salesVolume: { type: Number, required: true, min: 0, default: 0 },
-    price: { type: Number, required: true, min: 0, default: 0 },
-    discountPercentage: {
+    minimumPayablePrice: { type: Number, required: true, min: 0, default: 0 },
+    maximumDiscountPercentage: {
       type: Number,
       required: true,
       min: PRODUCT_LIMITS.MIN_DISCOUNT_PERCENTAGE,
@@ -109,6 +116,21 @@ const validateProductData = (schema, data, message) => {
   }
 };
 
+const getDerivedWeightValues = (weights = []) => ({
+  quantity: weights.reduce((total, weight) => total + weight.quantity, 0),
+  minimumPayablePrice: weights.length
+    ? Math.min(
+        ...weights.map(
+          ({ price, discountPercentage }) =>
+            price * (1 - discountPercentage / 100),
+        ),
+      )
+    : 0,
+  maximumDiscountPercentage: weights.length
+    ? Math.max(...weights.map(({ discountPercentage }) => discountPercentage))
+    : 0,
+});
+
 productSchema.pre('validate', function () {
   if (!this.slug && this.title) {
     const generatedSlug = this.title
@@ -126,10 +148,7 @@ productSchema.pre('validate', function () {
 
 productSchema.pre('save', function () {
   if (this.isModified('weights')) {
-    this.quantity = this.weights.reduce(
-      (total, weight) => total + weight.quantity,
-      0,
-    );
+    Object.assign(this, getDerivedWeightValues(this.weights));
   }
   validateProductData(
     productPersistedZodSchema,
@@ -149,8 +168,8 @@ productSchema.pre('save', function () {
       userRateCount: this.userRateCount,
       propertyDefinitions: this.propertyDefinitions,
       salesVolume: this.salesVolume,
-      price: this.price,
-      discountPercentage: this.discountPercentage,
+      minimumPayablePrice: this.minimumPayablePrice,
+      maximumDiscountPercentage: this.maximumDiscountPercentage,
       isEnable: this.isEnable,
       slug: this.slug,
     },
@@ -158,7 +177,7 @@ productSchema.pre('save', function () {
   );
 });
 
-productSchema.pre('findOneAndUpdate', function () {
+productSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function () {
   const update = this.getUpdate();
   const data = { ...(update?.$set || update || {}) };
   if (data.category) data.category = data.category.toString();
@@ -171,19 +190,17 @@ productSchema.pre('findOneAndUpdate', function () {
   );
 });
 
-productSchema.pre('findOneAndUpdate', function () {
+productSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function () {
   const update = this.getUpdate();
   const weights = update?.$set?.weights || update?.weights;
   if (weights) {
-    const quantity = weights.reduce(
-      (total, weight) => total + weight.quantity,
-      0,
-    );
-    this.set({ quantity });
+    this.set(getDerivedWeightValues(weights));
   }
 });
 
 productSchema.index({ isEnable: 1, category: 1, brand: 1, subCategory: 1 });
+productSchema.index({ isEnable: 1, minimumPayablePrice: 1 });
+productSchema.index({ isEnable: 1, maximumDiscountPercentage: -1 });
 productSchema.index({ title: 'text', summary: 'text' });
 
 export const ProductModel = mongoose.model('Products', productSchema);

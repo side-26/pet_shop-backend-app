@@ -37,7 +37,7 @@ export const buildLandingProductFilter = ({ filters, excludeFilter }) => {
     excludeFilter !== 'price' &&
     (filters.price.min !== undefined || filters.price.max !== undefined)
   ) {
-    filter.price = {
+    filter.minimumPayablePrice = {
       ...(filters.price.min !== undefined && { $gte: filters.price.min }),
       ...(filters.price.max !== undefined && { $lte: filters.price.max }),
     };

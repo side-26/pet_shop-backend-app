@@ -101,6 +101,8 @@ describe('Order API', () => {
                 metric: 'KG',
                 quantity: 10,
                 value: 1,
+                price: 100,
+                discountPercentage: 10,
               },
             ],
           }

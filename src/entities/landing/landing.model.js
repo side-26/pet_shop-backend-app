@@ -60,8 +60,8 @@ export class LandingModel {
             {
               $group: {
                 _id: null,
-                min: { $min: '$price' },
-                max: { $max: '$price' },
+                min: { $min: '$minimumPayablePrice' },
+                max: { $max: '$minimumPayablePrice' },
               },
             },
           ],
@@ -240,7 +240,7 @@ export class LandingModel {
 
   static findMostDiscountedProducts(limit) {
     return ProductModel.find({ isEnable: true })
-      .sort({ discountPercentage: -1, title: 1, _id: 1 })
+      .sort({ maximumDiscountPercentage: -1, title: 1, _id: 1 })
       .limit(limit);
   }
 
@@ -314,14 +314,14 @@ export class LandingModel {
     return ProductModel.findOne({
       _id: { $nin: excludedIds },
       isEnable: true,
-    }).sort({ discountPercentage: -1, title: 1, _id: 1 });
+    }).sort({ maximumDiscountPercentage: -1, title: 1, _id: 1 });
   }
 
   static findCheapestProduct(excludedIds) {
     return ProductModel.findOne({
       _id: { $nin: excludedIds },
       isEnable: true,
-    }).sort({ price: 1, title: 1, _id: 1 });
+    }).sort({ minimumPayablePrice: 1, title: 1, _id: 1 });
   }
 
   static findMostWishlistedProduct(excludedIds) {

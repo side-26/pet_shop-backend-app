@@ -43,8 +43,15 @@ const baseProductData = {
   summary: 'Healthy daily food',
   description: 'Complete dry food for adult cats.',
   quantity: 12,
-  price: 250000,
-  discountPercentage: 10,
+  weights: [
+    {
+      metric: 'KG',
+      quantity: 12,
+      value: 1,
+      price: 250000,
+      discountPercentage: 10,
+    },
+  ],
   isEnable: true,
   slug: 'premium-cat-food',
 };
@@ -151,7 +158,7 @@ describe('Product API', () => {
     };
   });
 
-  test('creates products with generated status, slug, and price defaults', async () => {
+  test('creates products with generated status, slug, and empty weights', async () => {
     const withSubCategory = await multipartProduct(
       request(app).post('/api/products'),
       {
@@ -162,8 +169,6 @@ describe('Product API', () => {
     expect(withSubCategory.status).toBe(STATUES.CREATED);
     expect(withSubCategory.body.data).toMatchObject({
       quantity: 0,
-      price: 0,
-      discountPercentage: 0,
       isEnable: true,
     });
     expect(withSubCategory.body.data.slug).toMatch(
@@ -199,8 +204,14 @@ describe('Product API', () => {
       ...productData,
     });
     const weights = [
-      { metric: 'KG', quantity: 4, value: 1.5 },
-      { quantity: 6, value: 3 },
+      {
+        metric: 'KG',
+        quantity: 4,
+        value: 1.5,
+        price: 120000,
+        discountPercentage: 10,
+      },
+      { quantity: 6, value: 3, price: 220000, discountPercentage: 15 },
     ];
 
     const replaced = await request(app)
@@ -363,23 +374,35 @@ describe('Product API', () => {
       'https://cdn.example.com/products/main/generated.webp',
     ]);
     const priceUpdated = await request(app)
-      .put(`/api/products/${product._id}/price`)
+      .put('/api/products/range')
       .set(seller)
-      .send({ price: 275000, discountPercentage: 15 });
-    expect(priceUpdated.body.data).toEqual({
-      price: 275000,
-      discountPercentage: 15,
-    });
+      .send({
+        id: product._id.toString(),
+        weights: [
+          {
+            metric: 'KG',
+            quantity: 12,
+            value: 1,
+            price: 275000,
+            discountPercentage: 15,
+          },
+        ],
+      });
+    expect(priceUpdated.body.data.weights).toEqual([
+      expect.objectContaining({ price: 275000, discountPercentage: 15 }),
+    ]);
     const images = await request(app)
       .get(`/api/products/${product._id}/images`)
       .set(seller);
     expect(images.body.data.imagesList).toEqual([
       'https://cdn.example.com/products/main/generated.webp',
     ]);
-    const price = await request(app)
-      .get(`/api/products/${product._id}/price`)
+    const weights = await request(app)
+      .get(`/api/products/weights/${product._id}`)
       .set(seller);
-    expect(price.body.data).toEqual({ price: 275000, discountPercentage: 15 });
+    expect(weights.body.data).toEqual([
+      expect.objectContaining({ price: 275000, discountPercentage: 15 }),
+    ]);
     expect(
       (
         await request(app)
@@ -403,7 +426,7 @@ describe('Product API', () => {
     ).toBe(STATUES.SUCCESS);
     const list = await request(app)
       .get(
-        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=275000&quantity=12&isEnable=true`,
+        `/api/products/paginate?title=updated&category=${category._id}&subCategory=${subCategory._id}&price=233750&quantity=12&isEnable=true`,
       )
       .set(seller);
     expect(list.status).toBe(STATUES.SUCCESS);

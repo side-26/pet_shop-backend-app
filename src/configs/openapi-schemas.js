@@ -230,18 +230,6 @@ export const schemas = {
       title: { type: 'string' },
       summary: { type: 'string' },
       description: { description: 'Rich-text JSON value.' },
-      weights: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: ['quantity', 'value'],
-          properties: {
-            metric: { type: 'string', default: 'KG' },
-            quantity: { type: 'integer', minimum: 0 },
-            value: { type: 'number', exclusiveMinimum: 0 },
-          },
-        },
-      },
       category: { type: 'string' },
       brand: { type: 'string' },
       subCategory: { type: 'string', nullable: true },
@@ -286,11 +274,25 @@ export const schemas = {
       },
     },
   },
-  ProductPriceUpdateBody: {
+  ProductWeightsReplaceBody: {
     type: 'object',
+    required: ['id', 'weights'],
     properties: {
-      price: { type: 'number', minimum: 0 },
-      discountPercentage: { type: 'number', minimum: 0, maximum: 100 },
+      id: { type: 'string' },
+      weights: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['quantity', 'value', 'price', 'discountPercentage'],
+          properties: {
+            metric: { type: 'string', default: 'KG' },
+            quantity: { type: 'integer', minimum: 0 },
+            value: { type: 'number', exclusiveMinimum: 0 },
+            price: { type: 'number', minimum: 0 },
+            discountPercentage: { type: 'number', minimum: 0, maximum: 100 },
+          },
+        },
+      },
     },
   },
   ProductBaseInfoUpdateBody: {

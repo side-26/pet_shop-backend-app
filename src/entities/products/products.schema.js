@@ -33,10 +33,17 @@ const descriptionSchema = preprocess(
   unknown().refine((value) => value !== undefined),
 );
 const quantitySchema = coerce.number().int().min(0);
+const priceSchema = coerce.number().min(0);
+const discountPercentageSchema = coerce
+  .number()
+  .min(PRODUCT_LIMITS.MIN_DISCOUNT_PERCENTAGE)
+  .max(PRODUCT_LIMITS.MAX_DISCOUNT_PERCENTAGE);
 const weightSchema = object({
   metric: string().trim().min(1).max(20).optional().default('KG'),
   quantity: quantitySchema,
   value: number().positive(),
+  price: priceSchema,
+  discountPercentage: discountPercentageSchema,
 });
 const weightsSchema = array(weightSchema).max(PRODUCT_LIMITS.MAX_WEIGHTS);
 const propertyDefinitionSchema = object({
@@ -85,11 +92,6 @@ const propertyDefinitionsSchema = array(propertyDefinitionSchema)
     });
   });
 const salesVolumeSchema = coerce.number().int().min(0);
-const priceSchema = coerce.number().min(0);
-const discountPercentageSchema = coerce
-  .number()
-  .min(PRODUCT_LIMITS.MIN_DISCOUNT_PERCENTAGE)
-  .max(PRODUCT_LIMITS.MAX_DISCOUNT_PERCENTAGE);
 const slugSchema = string()
   .trim()
   .min(2)
@@ -116,8 +118,8 @@ const productFields = {
   userRateCount: coerce.number().int().min(0),
   propertyDefinitions: propertyDefinitionsSchema,
   salesVolume: salesVolumeSchema,
-  price: priceSchema,
-  discountPercentage: discountPercentageSchema,
+  minimumPayablePrice: priceSchema,
+  maximumDiscountPercentage: discountPercentageSchema,
   isEnable: booleanSchema,
   slug: slugSchema,
 };
@@ -132,8 +134,8 @@ export const productPersistedZodSchema = object({
   userRateCount: coerce.number().int().min(0).optional().default(0),
   propertyDefinitions: propertyDefinitionsSchema.optional().default([]),
   salesVolume: salesVolumeSchema.optional().default(0),
-  price: priceSchema.optional().default(0),
-  discountPercentage: discountPercentageSchema.optional().default(0),
+  minimumPayablePrice: priceSchema.optional().default(0),
+  maximumDiscountPercentage: discountPercentageSchema.optional().default(0),
 });
 
 export const createProductZodSchema = object({
@@ -179,14 +181,6 @@ export const updateProductUserRateZodSchema = object({
   userRate: number().min(0).max(5).multipleOf(0.1),
 });
 export const updateProductImagesZodSchema = object({}).strict();
-export const updateProductPriceZodSchema = object({
-  price: priceSchema,
-  discountPercentage: discountPercentageSchema,
-})
-  .partial()
-  .refine((value) => Object.keys(value).length > 0, {
-    message: 'حداقل یک فیلد باید ارسال شود',
-  });
 export const productModelUpdateZodSchema = object(productFields).partial();
 export const productIdSchema = object({ id: objectIdSchema });
 

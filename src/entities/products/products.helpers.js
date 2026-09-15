@@ -5,6 +5,33 @@ import { SubCategoryService } from '#entities/subCategories/subCategories.servic
 export const escapeProductRegex = (value = '') =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+export const getProductDisplayPricing = (product) => {
+  const weights = product?.weights || [];
+  if (!weights.length) return { price: 0, discountPercentage: 0 };
+  const selected = weights.reduce(
+    (selected, weight) => {
+      const payablePrice = weight.price * (1 - weight.discountPercentage / 100);
+      return payablePrice < selected.payablePrice
+        ? {
+            price: weight.price,
+            discountPercentage: weight.discountPercentage,
+            payablePrice,
+          }
+        : selected;
+    },
+    {
+      price: weights[0].price,
+      discountPercentage: weights[0].discountPercentage,
+      payablePrice:
+        weights[0].price * (1 - weights[0].discountPercentage / 100),
+    },
+  );
+  return {
+    price: selected.price,
+    discountPercentage: selected.discountPercentage,
+  };
+};
+
 export const buildProductFilter = (
   {
     title: filterTitle,
@@ -26,7 +53,7 @@ export const buildProductFilter = (
   if (category) filter.category = category;
   if (subCategory) filter.subCategory = subCategory;
   if (quantity !== undefined) filter.quantity = quantity;
-  if (price !== undefined) filter.price = price;
+  if (price !== undefined) filter.minimumPayablePrice = price;
   if (title) {
     filter.title = { $regex: escapeProductRegex(title), $options: 'i' };
   }
@@ -40,6 +67,7 @@ const relationId = (relation) => relation?._id || relation;
 export const formatManagementProduct = (product) => {
   if (!product) return null;
   const value = valueOf(product);
+  const pricing = getProductDisplayPricing(value);
   return {
     id: value._id,
     title: value.title,
@@ -62,8 +90,7 @@ export const formatManagementProduct = (product) => {
     userRate: value.userRate,
     userRateCount: value.userRateCount,
     propertyDefinitions: value.propertyDefinitions || [],
-    price: value.price,
-    discountPercentage: value.discountPercentage,
+    ...pricing,
     isEnable: value.isEnable,
     slug: value.slug,
     createdBy: value.createdBy,
@@ -80,6 +107,7 @@ export const formatManagementProductListItem = (product) => ({
 
 export const formatCustomerProductListItem = (product) => {
   const value = valueOf(product);
+  const pricing = getProductDisplayPricing(value);
   return {
     id: value._id,
     title: value.title,
@@ -91,8 +119,7 @@ export const formatCustomerProductListItem = (product) => {
     weights: value.weights || [],
     userRate: value.userRate,
     userRateCount: value.userRateCount,
-    price: value.price,
-    discountPercentage: value.discountPercentage,
+    ...pricing,
     isEnable: value.isEnable,
     slug: value.slug,
     category: value.category?.title,
@@ -103,6 +130,7 @@ export const formatCustomerProductListItem = (product) => {
 
 export const formatCustomerProductDetail = (product) => {
   const value = valueOf(product);
+  const pricing = getProductDisplayPricing(value);
   return {
     id: value._id,
     title: value.title,
@@ -115,8 +143,7 @@ export const formatCustomerProductDetail = (product) => {
     weights: value.weights || [],
     userRate: value.userRate,
     userRateCount: value.userRateCount,
-    price: value.price,
-    discountPercentage: value.discountPercentage,
+    ...pricing,
     isEnable: value.isEnable,
     slug: value.slug,
     category: CategoryService.format(value.category),
@@ -133,14 +160,6 @@ export const formatProductImages = (product) => {
     mainImage: value.mainImage,
     mainImageThumbnail: value.mainImageThumbnail,
     imagesList: value.images || [],
-  };
-};
-
-export const formatProductPrice = (product) => {
-  const value = valueOf(product);
-  return {
-    price: value.price,
-    discountPercentage: value.discountPercentage,
   };
 };
 

@@ -20,13 +20,11 @@ import {
   getManagementProductListController,
   getProductImagesController,
   getProductMainInfoController,
-  getProductPriceController,
   getProductPropertyDefinitionsController,
   getProductWeightsController,
   updateProductController,
   updateProductImagesController,
   updateProductMainInfoController,
-  updateProductPriceController,
   replaceProductPropertyDefinitionsController,
   replaceProductWeightsController,
   updateProductUserRateController,
@@ -47,6 +45,8 @@ router.get(
 router.get('/products/weights/:id', getProductWeightsController);
 router.put(
   '/products/range',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductWeightsReplaceBody' } } } } */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   replaceProductWeightsController,
@@ -87,12 +87,6 @@ router.get(
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getProductImagesController,
-);
-router.get(
-  '/products/:id/price',
-  authenticated,
-  roleMiddleware(MANAGEMENT_ROLES),
-  getProductPriceController,
 );
 router.get(
   '/products/:id/main-info',
@@ -142,14 +136,6 @@ router.put(
   roleMiddleware(MANAGEMENT_ROLES),
   uploadProductUpdateImages,
   updateProductImagesController,
-);
-router.put(
-  '/products/:id/price',
-  /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductPriceUpdateBody' } } } } */
-  authenticated,
-  roleMiddleware(MANAGEMENT_ROLES),
-  updateProductPriceController,
 );
 router.patch(
   '/products/:id/enable',

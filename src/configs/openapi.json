@@ -4985,6 +4985,21 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductWeightsReplaceBody"
+              }
+            }
+          }
+        },
         "tags": ["/products"]
       }
     },
@@ -5225,97 +5240,6 @@
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/ProductImagesUpdateBody"
-              }
-            }
-          }
-        },
-        "tags": ["/products"]
-      }
-    },
-    "/products/{id}/price": {
-      "get": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "405": {
-            "description": "Method not allowed",
-            "headers": {
-              "Allow": {
-                "schema": {
-                  "type": "string"
-                },
-                "example": "GET, PUT"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": ""
-          }
-        },
-        "tags": ["/products"]
-      },
-      "put": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "405": {
-            "description": "Method not allowed",
-            "headers": {
-              "Allow": {
-                "schema": {
-                  "type": "string"
-                },
-                "example": "GET, PUT"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductPriceUpdateBody"
               }
             }
           }
@@ -7324,27 +7248,6 @@
           "description": {
             "description": "Rich-text JSON value."
           },
-          "weights": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["quantity", "value"],
-              "properties": {
-                "metric": {
-                  "type": "string",
-                  "default": "KG"
-                },
-                "quantity": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "value": {
-                  "type": "number",
-                  "exclusiveMinimum": 0
-                }
-              }
-            }
-          },
           "category": {
             "type": "string"
           },
@@ -7426,17 +7329,42 @@
           }
         }
       },
-      "ProductPriceUpdateBody": {
+      "ProductWeightsReplaceBody": {
         "type": "object",
+        "required": ["id", "weights"],
         "properties": {
-          "price": {
-            "type": "number",
-            "minimum": 0
+          "id": {
+            "type": "string"
           },
-          "discountPercentage": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100
+          "weights": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["quantity", "value", "price", "discountPercentage"],
+              "properties": {
+                "metric": {
+                  "type": "string",
+                  "default": "KG"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "value": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "discountPercentage": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            }
           }
         }
       },

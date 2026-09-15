@@ -18,12 +18,19 @@ export const calculateCartPrices = (items = []) =>
     (prices, cartItem) => {
       if (!cartItem.item) return prices;
 
-      const itemTotal = cartItem.item.price * cartItem.quantity;
+      const weight =
+        cartItem.itemType === 'product'
+          ? cartItem.item.weights?.id(cartItem.weight)
+          : null;
+      const price = weight?.price ?? cartItem.item.price;
+      const discountPercentage =
+        weight?.discountPercentage ?? cartItem.item.discountPercentage;
+      const itemTotal = price * cartItem.quantity;
       return {
         totalPrice: prices.totalPrice + itemTotal,
         discountPrice:
           prices.discountPrice +
-          calculateDiscountAmount(itemTotal, cartItem.item.discountPercentage),
+          calculateDiscountAmount(itemTotal, discountPercentage),
       };
     },
     { totalPrice: 0, discountPrice: 0 },

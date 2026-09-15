@@ -1944,6 +1944,8 @@ describe('User API - Integration Tests', () => {
                   metric: 'KG',
                   quantity: 10,
                   value: 1,
+                  price: 100,
+                  discountPercentage: 10,
                 },
               ],
             }
@@ -2065,7 +2067,7 @@ describe('User API - Integration Tests', () => {
       expect(addResponse.status).toBe(STATUES.CREATED);
       expect(addResponse.body.data).toMatchObject({
         totalPrice: 500,
-        discountPrice: 0,
+        discountPrice: itemType === 'product' ? 50 : 0,
       });
       expect(addResponse.body.data.items[0]).toMatchObject({
         itemType,
@@ -2090,7 +2092,7 @@ describe('User API - Integration Tests', () => {
       expect(listResponse.body.data.items).toHaveLength(1);
       expect(listResponse.body.data).toMatchObject({
         totalPrice: 1200,
-        discountPrice: 0,
+        discountPrice: itemType === 'product' ? 120 : 0,
       });
       expect(listResponse.body.data.items[0]).toMatchObject({
         itemType,
@@ -2176,7 +2178,12 @@ describe('User API - Integration Tests', () => {
         });
       await ProductModel.collection.updateOne(
         { _id: product._id },
-        { $set: { price: 150, discountPercentage: 20 } },
+        {
+          $set: {
+            'weights.0.price': 150,
+            'weights.0.discountPercentage': 20,
+          },
+        },
       );
       await UserModel.updateOne(
         { _id: testUser._id },

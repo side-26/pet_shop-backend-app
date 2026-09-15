@@ -20,7 +20,7 @@ describe('landing product-list helpers', () => {
     ).toEqual({
       category: { $in: ['category-id'] },
       subCategory: { $in: ['sub-category-id'] },
-      price: { $gte: 100, $lte: 200 },
+      minimumPayablePrice: { $gte: 100, $lte: 200 },
       _id: { $exists: false },
       isEnable: true,
     });

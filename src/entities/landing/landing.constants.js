@@ -71,8 +71,16 @@ export const LANDING_PRODUCT_FILTER_DEFINITIONS = [
 ];
 
 export const LANDING_PRODUCT_LIST_SORT_ORDERS = {
-  [LANDING_PRODUCT_LIST_SORTS.MOST_VALUED]: { price: -1, title: 1, _id: 1 },
-  [LANDING_PRODUCT_LIST_SORTS.LESS_VALUED]: { price: 1, title: 1, _id: 1 },
+  [LANDING_PRODUCT_LIST_SORTS.MOST_VALUED]: {
+    minimumPayablePrice: -1,
+    title: 1,
+    _id: 1,
+  },
+  [LANDING_PRODUCT_LIST_SORTS.LESS_VALUED]: {
+    minimumPayablePrice: 1,
+    title: 1,
+    _id: 1,
+  },
   [LANDING_PRODUCT_LIST_SORTS.MOST_SALES]: {
     salesVolume: -1,
     title: 1,

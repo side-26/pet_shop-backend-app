@@ -11,7 +11,6 @@ import {
   productQuerySchema,
   updateProductImagesZodSchema,
   updateProductMainInfoZodSchema,
-  updateProductPriceZodSchema,
   updateProductZodSchema,
   replaceProductPropertyDefinitionsZodSchema,
   replaceProductWeightsZodSchema,
@@ -100,15 +99,6 @@ export const updateProductImagesController = (req, res, next) =>
     req.files?.mainImage?.[0],
     req.files?.images || [],
     true,
-  );
-export const updateProductPriceController = (req, res, next) =>
-  updateProductSection(
-    req,
-    res,
-    next,
-    updateProductPriceZodSchema,
-    'updatePrice',
-    'formatPrice',
   );
 export const updateProductMainInfoController = (req, res, next) =>
   updateProductSection(
@@ -240,8 +230,6 @@ const getProductSection = async (req, res, next, method, formatter) => {
 
 export const getProductImagesController = (req, res, next) =>
   getProductSection(req, res, next, 'findImagesById', 'formatImages');
-export const getProductPriceController = (req, res, next) =>
-  getProductSection(req, res, next, 'findPriceById', 'formatPrice');
 export const getProductMainInfoController = (req, res, next) =>
   getProductSection(req, res, next, 'findMainInfoById', 'formatMainInfo');
 

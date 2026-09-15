@@ -17,7 +17,6 @@ import {
   formatProductImages,
   formatProductMainInfo,
   formatProductPropertyDefinitions,
-  formatProductPrice,
 } from './products.helpers.js';
 import { ProductModel } from './products.model.js';
 import { ProductRatingModel } from './productRatings.model.js';
@@ -237,22 +236,6 @@ export class ProductService {
     return product;
   }
 
-  static async updatePrice(id, data, userId) {
-    await this.findById(id);
-    const product = await ProductModel.findByIdAndUpdate(
-      id,
-      { $set: { ...data, updatedBy: userId } },
-      { returnDocument: 'after', runValidators: true },
-    );
-    if (!product) {
-      setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'محصول یافت نشد',
-        code: ERROR_CODES.PRODUCT_NOT_FOUND,
-      });
-    }
-    return product;
-  }
-
   static async replacePropertyDefinitions(id, propertyDefinitions, userId) {
     const product = await this.findById(id);
     product.propertyDefinitions = propertyDefinitions;
@@ -407,10 +390,6 @@ export class ProductService {
     return this.findById(id);
   }
 
-  static findPriceById(id) {
-    return this.findById(id);
-  }
-
   static async findMainInfoById(id) {
     const product = await this.findById(id);
     return populateRelations(product);
@@ -421,7 +400,8 @@ export class ProductService {
       ...buildProductFilter(queryParams),
       page: queryParams.page,
       limit: queryParams.limit,
-      sort: queryParams.sort,
+      sort:
+        queryParams.sort === 'price' ? 'minimumPayablePrice' : queryParams.sort,
     };
     const result = await getPaginationData(ProductModel, filter, '', (error) =>
       setErrorResponse(STATUES.OTHER_PROBLEM, {
@@ -438,7 +418,8 @@ export class ProductService {
       ...buildProductFilter(queryParams, true),
       page: queryParams.page,
       limit: queryParams.limit,
-      sort: queryParams.sort,
+      sort:
+        queryParams.sort === 'price' ? 'minimumPayablePrice' : queryParams.sort,
     };
     const result = await getPaginationData(ProductModel, filter, '', (error) =>
       setErrorResponse(STATUES.OTHER_PROBLEM, {
@@ -481,10 +462,6 @@ export class ProductService {
     return formatProductImages(product);
   }
 
-  static formatPrice(product) {
-    return formatProductPrice(product);
-  }
-
   static formatMainInfo(product) {
     return formatProductMainInfo(product);
   }
@@ -494,11 +471,15 @@ export class ProductService {
   }
 
   static formatWeights(product) {
-    return (product.weights || []).map(({ _id, metric, quantity, value }) => ({
-      id: _id,
-      metric,
-      quantity,
-      value,
-    }));
+    return (product.weights || []).map(
+      ({ _id, metric, quantity, value, price, discountPercentage }) => ({
+        id: _id,
+        metric,
+        quantity,
+        value,
+        price,
+        discountPercentage,
+      }),
+    );
   }
 }

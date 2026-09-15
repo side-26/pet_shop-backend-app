@@ -3,7 +3,10 @@ import {
   formatCustomerPetDetail,
   formatCustomerPetListItem,
 } from '#entities/pets/pets.helpers.js';
-import { formatCustomerProductDetail } from '#entities/products/products.helpers.js';
+import {
+  formatCustomerProductDetail,
+  getProductDisplayPricing,
+} from '#entities/products/products.helpers.js';
 import { ProductRatingModel } from '#entities/products/productRatings.model.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { setErrorResponse } from '#utils/helpers.js';
@@ -35,25 +38,31 @@ const formatPetType = (petType) => ({
   summary: petType.description,
 });
 
-const formatProduct = (product) => ({
-  id: product._id,
-  title: product.title,
-  mainImage: product.mainImage,
-  mainImageThumbnail: product.mainImageThumbnail,
-  summary: product.summary,
-  price: product.price,
-  discountPercentage: product.discountPercentage,
-  discountPrice: product.price * (product.discountPercentage / 100),
-});
+const formatProduct = (product) => {
+  const pricing = getProductDisplayPricing(product);
+  return {
+    id: product._id,
+    title: product.title,
+    mainImage: product.mainImage,
+    mainImageThumbnail: product.mainImageThumbnail,
+    summary: product.summary,
+    price: pricing.price,
+    discountPercentage: pricing.discountPercentage,
+    discountPrice: pricing.price * (pricing.discountPercentage / 100),
+  };
+};
 
-const formatLandingProductCard = (product) => ({
-  ...formatProduct(product),
-  slug: product.slug,
-  discountPrice: calculateDiscountedPrice(
-    product.price,
-    product.discountPercentage,
-  ),
-});
+const formatLandingProductCard = (product) => {
+  const pricing = getProductDisplayPricing(product);
+  return {
+    ...formatProduct(product),
+    slug: product.slug,
+    discountPrice: calculateDiscountedPrice(
+      pricing.price,
+      pricing.discountPercentage,
+    ),
+  };
+};
 
 const formatLandingProductPetType = (petType) => {
   if (!petType) return null;

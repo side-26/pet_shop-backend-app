@@ -218,23 +218,21 @@ describe('ProductService', () => {
     );
   });
 
-  test('updatePrice changes only price fields', async () => {
+  test('replaceWeights changes variant pricing and inventory together', async () => {
     ProductModel.findById.mockResolvedValue(product);
-    ProductModel.findByIdAndUpdate.mockResolvedValue({
-      ...product,
-      price: 100,
-      discountPercentage: 5,
-    });
-    await ProductService.updatePrice(
-      id,
-      { price: 100, discountPercentage: 5 },
-      userId,
-    );
-    expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
-      id,
-      { $set: { price: 100, discountPercentage: 5, updatedBy: userId } },
-      { returnDocument: 'after', runValidators: true },
-    );
+    product.save = jest.fn().mockResolvedValue(product);
+    const weights = [
+      {
+        metric: 'KG',
+        value: 1,
+        quantity: 4,
+        price: 100,
+        discountPercentage: 5,
+      },
+    ];
+    await ProductService.replaceWeights(id, weights, userId);
+    expect(product).toMatchObject({ weights, quantity: 4, updatedBy: userId });
+    expect(product.save).toHaveBeenCalled();
   });
 
   test('setEnableStatus, enable, and disable update visibility', async () => {
@@ -286,10 +284,9 @@ describe('ProductService', () => {
     ]);
   });
 
-  test('section getters return product image and price data', async () => {
+  test('section getters return product image and main-info data', async () => {
     ProductModel.findById.mockResolvedValue(product);
     await expect(ProductService.findImagesById(id)).resolves.toBe(product);
-    await expect(ProductService.findPriceById(id)).resolves.toBe(product);
     await expect(ProductService.findMainInfoById(id)).resolves.toBe(product);
     expect(ProductModel.populate).toHaveBeenCalledWith(product, [
       { path: 'category' },
@@ -299,17 +296,13 @@ describe('ProductService', () => {
     expect(ProductService.formatImages(product)).toMatchObject({
       imagesList: data.images,
     });
-    expect(ProductService.formatPrice(product)).toEqual({
-      price: data.price,
-      discountPercentage: data.discountPercentage,
-    });
-    expect(ProductService.formatMainInfo(product)).toEqual({
+    expect(ProductService.formatMainInfo(product)).toMatchObject({
       title: data.title,
       category: categoryId,
       brand: brandId,
       subCategory: subCategoryId,
-      quantity: data.quantity,
-      weights: [],
+      quantity: 4,
+      weights: [expect.objectContaining({ price: 100, discountPercentage: 5 })],
       summary: undefined,
       description: data.description,
     });
@@ -363,7 +356,7 @@ describe('ProductService', () => {
         title: { $regex: 'Premium\\+', $options: 'i' },
         category: categoryId,
         subCategory: subCategoryId,
-        price: 250000,
+        minimumPayablePrice: 250000,
         quantity: 5,
         isEnable: false,
         page: 1,

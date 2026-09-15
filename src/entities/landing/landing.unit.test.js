@@ -47,6 +47,21 @@ jest.mock('#entities/products/products.helpers.js', () => ({
     title: product.title,
     category: product.category,
   })),
+  getProductDisplayPricing: jest.fn((product) => {
+    const weights = product.weights || [];
+    if (!weights.length) {
+      return {
+        price: product.price || 0,
+        discountPercentage: product.discountPercentage || 0,
+      };
+    }
+    return weights.reduce((selected, weight) =>
+      weight.price * (1 - weight.discountPercentage / 100) <
+      selected.price * (1 - selected.discountPercentage / 100)
+        ? weight
+        : selected,
+    );
+  }),
 }));
 
 import { LandingModel } from './landing.model.js';
@@ -350,10 +365,10 @@ describe('LandingService', () => {
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },
-        price: { $gte: 100000, $lte: 300000 },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
         isEnable: true,
       },
-      { price: 1, title: 1, _id: 1 },
+      { minimumPayablePrice: 1, title: 1, _id: 1 },
       2,
       2,
     );
@@ -361,26 +376,26 @@ describe('LandingService', () => {
       category: { $in: ['category-id'] },
       subCategory: { $in: ['sub-category-id'] },
       brand: { $in: ['brand-id'] },
-      price: { $gte: 100000, $lte: 300000 },
+      minimumPayablePrice: { $gte: 100000, $lte: 300000 },
       isEnable: true,
     });
     expect(LandingModel.findProductFacetData).toHaveBeenCalledWith({
       category: {
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },
-        price: { $gte: 100000, $lte: 300000 },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
         isEnable: true,
       },
       subCategory: {
         category: { $in: ['category-id'] },
         brand: { $in: ['brand-id'] },
-        price: { $gte: 100000, $lte: 300000 },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
         isEnable: true,
       },
       brand: {
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
-        price: { $gte: 100000, $lte: 300000 },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
         isEnable: true,
       },
       price: {
@@ -393,7 +408,7 @@ describe('LandingService', () => {
         category: { $in: ['category-id'] },
         subCategory: { $in: ['sub-category-id'] },
         brand: { $in: ['brand-id'] },
-        price: { $gte: 100000, $lte: 300000 },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
       },
     });
   });

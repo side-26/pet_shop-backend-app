@@ -68,9 +68,15 @@ describe('Landing API', () => {
         summary: `خلاصه محصول-${index}`,
         category: new mongoose.Types.ObjectId(),
         brand: brand._id,
-        quantity: 10,
-        price: 100000,
-        discountPercentage: index * 10,
+        weights: [
+          {
+            metric: 'KG',
+            quantity: 10,
+            value: 1,
+            price: 100000,
+            discountPercentage: index * 10,
+          },
+        ],
         salesVolume: index * 5,
         slug: `product-${index}`,
       })),
@@ -417,7 +423,15 @@ describe('Landing API', () => {
         category,
         subCategory,
         brand: matchingBrand._id,
-        price: 100,
+        weights: [
+          {
+            metric: 'KG',
+            quantity: 1,
+            value: 1,
+            price: 100,
+            discountPercentage: 0,
+          },
+        ],
         salesVolume: 10,
         slug: 'filtered-low',
       },
@@ -429,8 +443,15 @@ describe('Landing API', () => {
         category,
         subCategory,
         brand: matchingBrand._id,
-        price: 300,
-        quantity: 5,
+        weights: [
+          {
+            metric: 'KG',
+            quantity: 5,
+            value: 1,
+            price: 300,
+            discountPercentage: 0,
+          },
+        ],
         salesVolume: 20,
         slug: 'filtered-high',
       },
@@ -442,7 +463,15 @@ describe('Landing API', () => {
         category,
         subCategory,
         brand: otherBrand._id,
-        price: 200,
+        weights: [
+          {
+            metric: 'KG',
+            quantity: 1,
+            value: 1,
+            price: 200,
+            discountPercentage: 0,
+          },
+        ],
         salesVolume: 30,
         slug: 'other-brand',
       },
@@ -454,7 +483,15 @@ describe('Landing API', () => {
         category,
         subCategory,
         brand: matchingBrand._id,
-        price: 50,
+        weights: [
+          {
+            metric: 'KG',
+            quantity: 1,
+            value: 1,
+            price: 50,
+            discountPercentage: 0,
+          },
+        ],
         salesVolume: 100,
         isEnable: false,
         slug: 'disabled-filtered',
@@ -668,19 +705,79 @@ describe('Landing API', () => {
     await Promise.all([
       ProductModel.updateOne(
         { _id: purchased._id },
-        { $set: { salesVolume: 100, discountPercentage: 90, price: 100 } },
+        {
+          $set: {
+            salesVolume: 100,
+            minimumPayablePrice: 10,
+            maximumDiscountPercentage: 90,
+            weights: [
+              {
+                metric: 'KG',
+                quantity: 10,
+                value: 1,
+                price: 100,
+                discountPercentage: 90,
+              },
+            ],
+          },
+        },
       ),
       ProductModel.updateOne(
         { _id: discounted._id },
-        { $set: { salesVolume: 90, discountPercentage: 80, price: 1_000 } },
+        {
+          $set: {
+            salesVolume: 90,
+            minimumPayablePrice: 200,
+            maximumDiscountPercentage: 80,
+            weights: [
+              {
+                metric: 'KG',
+                quantity: 10,
+                value: 1,
+                price: 1_000,
+                discountPercentage: 80,
+              },
+            ],
+          },
+        },
       ),
       ProductModel.updateOne(
         { _id: cheapest._id },
-        { $set: { salesVolume: 80, discountPercentage: 70, price: 10 } },
+        {
+          $set: {
+            salesVolume: 80,
+            minimumPayablePrice: 3,
+            maximumDiscountPercentage: 70,
+            weights: [
+              {
+                metric: 'KG',
+                quantity: 10,
+                value: 1,
+                price: 10,
+                discountPercentage: 70,
+              },
+            ],
+          },
+        },
       ),
       ProductModel.updateOne(
         { _id: wishlisted._id },
-        { $set: { salesVolume: 70, discountPercentage: 60, price: 200 } },
+        {
+          $set: {
+            salesVolume: 70,
+            minimumPayablePrice: 80,
+            maximumDiscountPercentage: 60,
+            weights: [
+              {
+                metric: 'KG',
+                quantity: 10,
+                value: 1,
+                price: 200,
+                discountPercentage: 60,
+              },
+            ],
+          },
+        },
       ),
       UserModel.create([
         {
