@@ -12,13 +12,15 @@ The Users module owns each authenticated user's cart. Cart endpoints derive the 
 - `items`: embedded polymorphic Product/Pet entries.
 - `discountPrice`: server-calculated monetary discount; default `0`.
 - `userAddress`: nullable ObjectId of a selected embedded user address.
-- `deliveringDateToShipping`: nullable handover date.
+- `deliveryQuote`: a short-lived set of mock Iranian delivery options for the selected address.
+- `deliveryWindow`: the selected start/end interval, Tehran timezone, price, label, and provider.
+- `deliveringDateToShipping`: compatibility field set to the selected window start.
 - `shippingPrice`: shipping cost, separate from item pricing; default `0`.
 - `shippingInfo`: provider `name`, `trackingCode`, and nullable `estimateDeliveryDate`.
 - `paymentType`: `1` for direct payment or `2` for installments; default `1`.
 - `instalmentCompany`: nullable ObjectId reserved for future integration.
 
-User addresses are embedded subdocuments rather than a separate model. No cart-metadata update endpoint is part of the current workflow, so clients cannot currently assign `userAddress`, shipping fields, payment metadata, or calculated prices. A future metadata operation must verify that `userAddress` belongs to the authenticated user's `addresses` collection.
+User addresses are embedded subdocuments rather than a separate model. `POST /api/cart/delivery-windows` verifies an owned address and non-empty cart, persists a fifteen-minute quote, and returns four simulated options. `PATCH /api/cart/delivery-window` accepts only an option from that active quote and assigns its address, interval, provider, and server-calculated price. Item or address changes invalidate the quote and selection.
 
 The `InstalmentCompany` entity does not exist. The nullable ObjectId intentionally has no Mongoose `ref`; direct payment always clears it to `null`. No incomplete company lookup or relationship behavior is implemented.
 
@@ -47,7 +49,9 @@ The add schema accepts `itemId`, `itemType`, `quantity`, and required `weightId`
 - `POST /api/cart/add` adds a new item or increases an existing quantity.
 - `DELETE /api/cart/delete/:id` deletes by embedded cart-item `_id` and recalculates pricing.
 - `GET /api/cart/all` populates useful Product/Pet fields and refreshes pricing.
-- `DELETE /api/cart/empty` clears `items`, `totalPrice`, and `discountPrice`.
+- `POST /api/cart/delivery-windows` creates delivery options for an owned Iranian address.
+- `PATCH /api/cart/delivery-window` selects an unexpired quoted option.
+- `DELETE /api/cart/empty` clears items, prices, and all delivery quote/selection metadata.
 
 Emptying is idempotent and deliberately preserves address, shipping, and payment selections because no existing business rule requires erasing checkout metadata.
 

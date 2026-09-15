@@ -85,7 +85,25 @@ describe('OrderService', () => {
       },
     ],
     userAddress: addressId,
-    deliveringDateToShipping: new Date('2026-09-01'),
+    deliveryWindow: {
+      id: 'window-id',
+      startsAt: new Date('2099-09-01T05:30:00.000Z'),
+      endsAt: new Date('2099-09-01T08:30:00.000Z'),
+      countryCode: 'IR',
+      timezone: 'Asia/Tehran',
+      label: 'بازه آزمایشی',
+      shippingPrice: 50,
+      provider: 'mock-iran-shipping',
+    },
+    deliveryQuote: {
+      id: 'quote-id',
+      addressId,
+      expiresAt: new Date('2099-08-31T00:00:00.000Z'),
+      countryCode: 'IR',
+      timezone: 'Asia/Tehran',
+      options: [{ id: 'window-id' }],
+    },
+    deliveringDateToShipping: new Date('2099-09-01T05:30:00.000Z'),
     shippingPrice: 50,
     shippingInfo: {},
     paymentType: 1,
@@ -129,6 +147,7 @@ describe('OrderService', () => {
       sourceId: addressId,
       detailAddress: address.detailAddress,
     });
+    expect(order.deliveryWindow).toEqual(cart.deliveryWindow);
     expect(UserService.emptyCart).toHaveBeenCalledWith(actor, session);
     expect(ProductService.decrementWeightStock).toHaveBeenCalledWith(
       cart.items[0].item._id,
@@ -144,6 +163,19 @@ describe('OrderService', () => {
     await expect(
       OrderService.createOrderFromCart(actor, 'PAY-123'),
     ).rejects.toThrow('سبد خرید خالی است');
+    expect(OrderModel.create).not.toHaveBeenCalled();
+  });
+
+  test('rejects checkout when the delivery quote has expired', async () => {
+    UserService.getCartItems.mockResolvedValue({
+      ...cart,
+      deliveryQuote: { ...cart.deliveryQuote, expiresAt: new Date(0) },
+    });
+    UserService.findById.mockResolvedValue({ addresses: [address] });
+
+    await expect(
+      OrderService.createOrderFromCart(actor, 'PAY-123'),
+    ).rejects.toThrow('سبد خرید برای ثبت سفارش کامل یا معتبر نیست');
     expect(OrderModel.create).not.toHaveBeenCalled();
   });
 

@@ -10,6 +10,7 @@ This folder isolates external API adapters and location reference-data endpoints
 - [`locations/AGENTS.md`](./locations/AGENTS.md) — MongoDB-backed province and city lookup data.
 - [`reverseGeocoding/AGENTS.md`](./reverseGeocoding/AGENTS.md) — authenticated coordinate lookup through Neshan.
 - [`otpCode/AGENTS.md`](./otpCode/AGENTS.md) — public OTP-code requests through Melipayamak.
+- [`shipping/AGENTS.md`](./shipping/AGENTS.md) — provider-independent Iranian delivery-window quotes backed by a deterministic mock carrier.
 
 ## Flow
 

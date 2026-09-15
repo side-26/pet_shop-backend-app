@@ -12,6 +12,7 @@ import {
   addUserAddressSchema,
   addWishlistItemSchema,
   cartEntryIdSchema,
+  createDeliveryQuoteSchema,
   editUserAddressSchema,
   userAddressIdSchema,
   userRefreshTokenSchema,
@@ -22,6 +23,7 @@ import {
   userVerifyOtpSchema,
   userUpdatePersonalInfoSchema,
   userZodSchema,
+  selectDeliveryWindowSchema,
   wishlistEntryIdSchema,
 } from './users.schema.js';
 
@@ -243,6 +245,32 @@ export const deleteCartItemController = async (req, res, next) => {
 export const getCartItemsController = async (req, res, next) => {
   try {
     const cart = await UserService.getCartItems(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const createDeliveryQuoteController = async (req, res, next) => {
+  try {
+    const { addressId } = returnFormValidation(
+      createDeliveryQuoteSchema,
+      req.body,
+    );
+    const quote = await UserService.createDeliveryQuote(req.user, addressId);
+    setSuccessResponse(res, STATUES.CREATED, { data: quote });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const selectDeliveryWindowController = async (req, res, next) => {
+  try {
+    const selection = returnFormValidation(
+      selectDeliveryWindowSchema,
+      req.body,
+    );
+    const cart = await UserService.selectDeliveryWindow(req.user, selection);
     setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
   } catch (error) {
     onCatchPromiseController(error, next);

@@ -1956,7 +1956,7 @@ describe('User API - Integration Tests', () => {
 
     test('creates the structured cart with safe checkout defaults', async () => {
       const user = await UserModel.findById(testUser._id);
-      expect(user.cart).toMatchObject({
+      expect(user.cart.toObject()).toMatchObject({
         totalPrice: 0,
         items: [],
         discountPrice: 0,
@@ -1971,6 +1971,78 @@ describe('User API - Integration Tests', () => {
         trackingCode: '',
         estimateDeliveryDate: null,
       });
+    });
+
+    test('quotes and selects a stable Tehran delivery window, then rejects expiry', async () => {
+      const product = await createReferencedItem(
+        ProductModel,
+        'delivery-window-product',
+      );
+      await UserModel.updateOne(
+        { _id: testUser._id },
+        { $push: { addresses: createAddressBody({ province: 'تهران' }) } },
+      );
+      const user = await UserModel.findById(testUser._id);
+      const addressId = user.addresses[0]._id.toString();
+      await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send({
+          itemId: product._id.toString(),
+          itemType: 'product',
+          quantity: 2,
+          weightId: product.weights[0]._id.toString(),
+        });
+
+      const quoteResponse = await request(app)
+        .post('/api/cart/delivery-windows')
+        .set('Authorization', 'Bearer token')
+        .send({ addressId });
+
+      expect(quoteResponse.status).toBe(STATUES.CREATED);
+      expect(quoteResponse.body.data).toMatchObject({
+        addressId,
+        countryCode: 'IR',
+        timezone: 'Asia/Tehran',
+      });
+      expect(quoteResponse.body.data.options).toHaveLength(4);
+      expect(quoteResponse.body.data.options[0]).toMatchObject({
+        timezone: 'Asia/Tehran',
+        countryCode: 'IR',
+        provider: 'mock-iran-shipping',
+        shippingPrice: 85000,
+      });
+
+      const selectedOption = quoteResponse.body.data.options[0];
+      const selectionResponse = await request(app)
+        .patch('/api/cart/delivery-window')
+        .set('Authorization', 'Bearer token')
+        .send({
+          quoteId: quoteResponse.body.data.id,
+          deliveryWindowId: selectedOption.id,
+        });
+      expect(selectionResponse.status).toBe(STATUES.SUCCESS);
+      expect(selectionResponse.body.data).toMatchObject({
+        userAddress: addressId,
+        deliveryWindow: selectedOption,
+        shippingPrice: selectedOption.shippingPrice,
+      });
+
+      await UserModel.updateOne(
+        { _id: testUser._id },
+        { $set: { 'cart.deliveryQuote.expiresAt': new Date(0) } },
+      );
+      const expiredResponse = await request(app)
+        .patch('/api/cart/delivery-window')
+        .set('Authorization', 'Bearer token')
+        .send({
+          quoteId: quoteResponse.body.data.id,
+          deliveryWindowId: selectedOption.id,
+        });
+      expect(expiredResponse.status).toBe(STATUES.BAD_FORM_VALIDATION);
+      expect(expiredResponse.body.message).toBe(
+        'مهلت پیشنهاد زمان ارسال پایان یافته است',
+      );
     });
 
     test.each([
@@ -2088,7 +2160,7 @@ describe('User API - Integration Tests', () => {
       });
     });
 
-    test('recalculates current prices on read and empty resets only content pricing', async () => {
+    test('recalculates current prices on read and empty resets checkout metadata', async () => {
       const product = await createReferencedItem(ProductModel, 'repriced', {
         price: 100,
         discountPercentage: 10,
@@ -2127,7 +2199,7 @@ describe('User API - Integration Tests', () => {
         items: [],
         totalPrice: 0,
         discountPrice: 0,
-        shippingPrice: 50,
+        shippingPrice: 0,
       });
       const secondEmpty = await request(app)
         .delete('/api/cart/empty')

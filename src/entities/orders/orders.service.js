@@ -2,6 +2,7 @@ import {
   CART_PAYMENT_TYPES,
   ERROR_CODES,
   ORDER_IDENTIFIER,
+  SHIPPING,
   STATUES,
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
@@ -48,8 +49,21 @@ export class OrderService {
     if (
       hasInvalidItem ||
       !cart.userAddress ||
+      !cart.deliveryWindow ||
+      !cart.deliveryQuote ||
+      cart.deliveryQuote.id === undefined ||
+      cart.deliveryQuote.expiresAt <= new Date() ||
+      cart.deliveryQuote.countryCode !== SHIPPING.COUNTRY_CODE ||
+      cart.deliveryQuote.timezone !== SHIPPING.TIME_ZONE ||
+      cart.deliveryQuote.addressId.toString() !== cart.userAddress.toString() ||
+      !cart.deliveryQuote.options.some(
+        ({ id }) => id === cart.deliveryWindow.id,
+      ) ||
+      cart.deliveryWindow.countryCode !== SHIPPING.COUNTRY_CODE ||
+      cart.deliveryWindow.timezone !== SHIPPING.TIME_ZONE ||
       !cart.deliveringDateToShipping ||
       typeof cart.shippingPrice !== 'number' ||
+      cart.shippingPrice !== cart.deliveryWindow.shippingPrice ||
       !Object.values(CART_PAYMENT_TYPES).includes(cart.paymentType)
     ) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
@@ -89,6 +103,10 @@ export class OrderService {
       items: cart.items.map(snapshotOrderItem),
       discountPrice: cart.discountPrice,
       userAddress: snapshotUserAddress(address),
+      deliveryWindow:
+        typeof cart.deliveryWindow.toObject === 'function'
+          ? cart.deliveryWindow.toObject()
+          : { ...cart.deliveryWindow },
       deliveringDateToShipping: cart.deliveringDateToShipping,
       shippingPrice: cart.shippingPrice,
       shippingInfo: {

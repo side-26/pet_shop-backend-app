@@ -18,6 +18,7 @@ Owns immutable purchase snapshots created from authenticated users' finalized ca
 - Orders are historical snapshots, never live Cart or catalog pricing views.
 - Cart recalculation, Order snapshot creation, and cart clearing share one MongoDB transaction; deployments must use a replica set or sharded cluster.
 - Only `deliveryState` and `shippingInfo` are mutable, and only through Admin/Seller routes.
+- Checkout requires an unexpired quoted delivery window and snapshots that complete interval into the Order.
 - User reads are always scoped to the authenticated user.
 - Both user and management lists reuse shared pagination.
 - See [`docs/order-lifecycle.md`](./docs/order-lifecycle.md) for lifecycle and future work.

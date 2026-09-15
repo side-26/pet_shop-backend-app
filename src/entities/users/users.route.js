@@ -12,6 +12,7 @@ import {
   addWishlistItemController,
   changeUserPasswordController,
   createUserController,
+  createDeliveryQuoteController,
   disableUserController,
   deleteCartItemController,
   deleteUserByIdController,
@@ -30,6 +31,7 @@ import {
   refreshTokenController,
   registerUserController,
   sendUserOtpController,
+  selectDeliveryWindowController,
   resetUserPasswordController,
   editUserAddressController,
   updateUserPersonalInfoController,
@@ -313,6 +315,38 @@ router.get(
     #swagger.responses[200] = { description: 'Current cart', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { $ref: '#/components/schemas/Cart' } } } } } }
   */
   getCartItemsController,
+);
+router.post(
+  '/cart/delivery-windows',
+  standardUserRateLimit,
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = 'Create mock delivery-window options for an Iranian address'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/CreateDeliveryQuoteBody' } } } }
+    #swagger.responses[201] = { description: 'Delivery-window quote created', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { $ref: '#/components/schemas/DeliveryQuote' } } } } } }
+    #swagger.responses[404] = { description: 'Address not found' }
+    #swagger.responses[422] = { description: 'Empty cart or validation error' }
+    #swagger.responses[429] = { description: 'Too many requests' }
+  */
+  createDeliveryQuoteController,
+);
+router.patch(
+  '/cart/delivery-window',
+  standardUserRateLimit,
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = 'Select one delivery window from the active quote'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/SelectDeliveryWindowBody' } } } }
+    #swagger.responses[200] = { description: 'Delivery window selected' }
+    #swagger.responses[404] = { description: 'Quote or delivery window not found' }
+    #swagger.responses[422] = { description: 'Expired quote or validation error' }
+    #swagger.responses[429] = { description: 'Too many requests' }
+  */
+  selectDeliveryWindowController,
 );
 router.delete(
   '/cart/empty',

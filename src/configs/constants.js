@@ -21,6 +21,10 @@ export const ROUTES = {
     changePassword: '/users/changePassword',
     userCart: '/users/profile/cart',
   },
+  cart: {
+    deliveryWindows: '/cart/delivery-windows',
+    deliveryWindow: '/cart/delivery-window',
+  },
   profile: {
     login: '/profile/login',
     updateProfile: '/profile/update',
@@ -116,6 +120,25 @@ export const ORDER_IDENTIFIER = {
   MAX_GENERATION_ATTEMPTS: 5,
 };
 
+export const SHIPPING = {
+  PROVIDER: 'mock-iran-shipping',
+  COUNTRY_CODE: 'IR',
+  TIME_ZONE: 'Asia/Tehran',
+  UTC_OFFSET_MINUTES: 210,
+  QUOTE_TTL_MS: 15 * 60 * 1000,
+  MIN_LEAD_DAYS: 2,
+  SEARCH_DAYS: 8,
+  WINDOW_COUNT: 4,
+  TEHRAN_BASE_PRICE: 80000,
+  OTHER_PROVINCE_BASE_PRICE: 120000,
+  EXTRA_ITEM_PRICE: 5000,
+  TIME_RANGES: [
+    { startHour: 9, endHour: 12 },
+    { startHour: 14, endHour: 18 },
+    { startHour: 18, endHour: 21 },
+  ],
+};
+
 export const BREED_LEVELS = [0, 1, 2, 3, 4];
 
 export const PET_LIMITS = {
@@ -172,6 +195,11 @@ export const ERROR_CODES = {
   USER_ADDRESS_NOT_FOUND: 'USER_ADDRESS_NOT_FOUND',
   USER_RECEIVER_INFO_INCOMPLETE: 'USER_RECEIVER_INFO_INCOMPLETE',
   USER_CART_ITEM_NOT_FOUND: 'USER_CART_ITEM_NOT_FOUND',
+  SHIPPING_EMPTY_CART: 'SHIPPING_EMPTY_CART',
+  SHIPPING_ADDRESS_NOT_FOUND: 'SHIPPING_ADDRESS_NOT_FOUND',
+  SHIPPING_QUOTE_NOT_FOUND: 'SHIPPING_QUOTE_NOT_FOUND',
+  SHIPPING_QUOTE_EXPIRED: 'SHIPPING_QUOTE_EXPIRED',
+  SHIPPING_WINDOW_NOT_FOUND: 'SHIPPING_WINDOW_NOT_FOUND',
   USER_WISHLIST_ITEM_NOT_FOUND: 'USER_WISHLIST_ITEM_NOT_FOUND',
   USER_WISHLIST_ITEM_ALREADY_EXISTS: 'USER_WISHLIST_ITEM_ALREADY_EXISTS',
 };

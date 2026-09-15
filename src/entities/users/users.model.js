@@ -6,6 +6,10 @@ import {
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 
+import {
+  deliveryQuoteSchema,
+  deliveryWindowSchema,
+} from '../../integrations/shipping/shipping.schemas.js';
 import { userZodSchema } from './users.schema.js';
 
 const addressSchema = new mongoose.Schema({
@@ -79,6 +83,8 @@ const cartSchema = new mongoose.Schema(
     items: { type: [cartItemSchema], default: [] },
     discountPrice: { type: Number, default: 0, min: 0 },
     userAddress: { type: mongoose.Schema.Types.ObjectId, default: null },
+    deliveryQuote: { type: deliveryQuoteSchema, default: null },
+    deliveryWindow: { type: deliveryWindowSchema, default: null },
     deliveringDateToShipping: { type: Date, default: null },
     shippingPrice: { type: Number, default: 0, min: 0 },
     shippingInfo: { type: shippingInfoSchema, default: () => ({}) },

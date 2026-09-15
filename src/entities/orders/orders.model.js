@@ -7,6 +7,8 @@ import {
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 
+import { deliveryWindowSchema } from '../../integrations/shipping/shipping.schemas.js';
+
 const weightSnapshotSchema = new mongoose.Schema(
   {
     metric: { type: String, required: true, trim: true },
@@ -99,6 +101,7 @@ const orderSchema = new mongoose.Schema(
     items: { type: [orderItemSchema], required: true },
     discountPrice: { type: Number, required: true, min: 0 },
     userAddress: { type: addressSnapshotSchema, required: true },
+    deliveryWindow: { type: deliveryWindowSchema, required: true },
     deliveringDateToShipping: { type: Date, required: true },
     shippingPrice: { type: Number, required: true, min: 0 },
     shippingInfo: {

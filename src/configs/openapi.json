@@ -1175,6 +1175,185 @@
         ]
       }
     },
+    "/cart/delivery-windows": {
+      "post": {
+        "tags": ["/cart"],
+        "summary": "Create mock delivery-window options for an Iranian address",
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Delivery-window quote created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeliveryQuote"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Address not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Empty cart or validation error"
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeliveryQuoteBody"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cart/delivery-window": {
+      "patch": {
+        "tags": ["/cart"],
+        "summary": "Select one delivery window from the active quote",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Delivery window selected"
+          },
+          "404": {
+            "description": "Quote or delivery window not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Expired quote or validation error"
+          },
+          "429": {
+            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 3
+              },
+              "RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 360
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectDeliveryWindowBody"
+              }
+            }
+          }
+        }
+      }
+    },
     "/cart/empty": {
       "delete": {
         "tags": ["/cart"],
@@ -7919,6 +8098,34 @@
         "required": ["itemId", "itemType", "quantity"],
         "additionalProperties": false
       },
+      "CreateDeliveryQuoteBody": {
+        "type": "object",
+        "properties": {
+          "addressId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{24}$"
+          }
+        },
+        "required": ["addressId"],
+        "additionalProperties": false
+      },
+      "SelectDeliveryWindowBody": {
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "deliveryWindowId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": ["quoteId", "deliveryWindowId"],
+        "additionalProperties": false
+      },
       "CreateOrderBody": {
         "type": "object",
         "properties": {
@@ -8054,6 +8261,22 @@
             "type": "string",
             "nullable": true
           },
+          "deliveryQuote": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryQuote"
+              }
+            ],
+            "nullable": true
+          },
+          "deliveryWindow": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryWindow"
+              }
+            ],
+            "nullable": true
+          },
           "deliveringDateToShipping": {
             "type": "string",
             "format": "date-time",
@@ -8085,6 +8308,87 @@
           "instalmentCompany": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "DeliveryWindow": {
+        "type": "object",
+        "required": [
+          "id",
+          "startsAt",
+          "endsAt",
+          "countryCode",
+          "timezone",
+          "label",
+          "shippingPrice",
+          "provider"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "countryCode": {
+            "type": "string",
+            "enum": ["IR"]
+          },
+          "timezone": {
+            "type": "string",
+            "enum": ["Asia/Tehran"]
+          },
+          "label": {
+            "type": "string"
+          },
+          "shippingPrice": {
+            "type": "number",
+            "minimum": 0
+          },
+          "provider": {
+            "type": "string"
+          }
+        }
+      },
+      "DeliveryQuote": {
+        "type": "object",
+        "required": [
+          "id",
+          "addressId",
+          "expiresAt",
+          "countryCode",
+          "timezone",
+          "options"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "addressId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "countryCode": {
+            "type": "string",
+            "enum": ["IR"]
+          },
+          "timezone": {
+            "type": "string",
+            "enum": ["Asia/Tehran"]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryWindow"
+            }
           }
         }
       },
@@ -8133,6 +8437,9 @@
           },
           "userAddress": {
             "type": "object"
+          },
+          "deliveryWindow": {
+            "$ref": "#/components/schemas/DeliveryWindow"
           },
           "shippingInfo": {
             "type": "object"

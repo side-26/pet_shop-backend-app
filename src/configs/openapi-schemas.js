@@ -3,7 +3,9 @@ import { z } from 'zod';
 import {
   addCartItemSchema,
   addUserAddressSchema,
+  createDeliveryQuoteSchema,
   editUserAddressSchema,
+  selectDeliveryWindowSchema,
   userChangePasswordFormBodyValidation,
   userRegisterSchema,
   userSendOtpSchema,
@@ -524,6 +526,8 @@ export const schemas = {
   EditUserAddressBody: toOpenApi(editUserAddressSchema),
   ChangeUserPasswordBody: toOpenApi(userChangePasswordFormBodyValidation),
   AddCartItemBody: toOpenApi(addCartItemSchema),
+  CreateDeliveryQuoteBody: toOpenApi(createDeliveryQuoteSchema),
+  SelectDeliveryWindowBody: toOpenApi(selectDeliveryWindowSchema),
   CreateOrderBody: toOpenApi(createOrderSchema),
   UpdateOrderDeliveryStateBody: toOpenApi(updateDeliveryStateSchema),
   UpdateOrderShippingInfoBody: {
@@ -590,6 +594,14 @@ export const schemas = {
       },
       discountPrice: { type: 'number' },
       userAddress: { type: 'string', nullable: true },
+      deliveryQuote: {
+        oneOf: [{ $ref: '#/components/schemas/DeliveryQuote' }],
+        nullable: true,
+      },
+      deliveryWindow: {
+        oneOf: [{ $ref: '#/components/schemas/DeliveryWindow' }],
+        nullable: true,
+      },
       deliveringDateToShipping: {
         type: 'string',
         format: 'date-time',
@@ -612,6 +624,51 @@ export const schemas = {
       instalmentCompany: { type: 'string', nullable: true },
     },
   },
+  DeliveryWindow: {
+    type: 'object',
+    required: [
+      'id',
+      'startsAt',
+      'endsAt',
+      'countryCode',
+      'timezone',
+      'label',
+      'shippingPrice',
+      'provider',
+    ],
+    properties: {
+      id: { type: 'string' },
+      startsAt: { type: 'string', format: 'date-time' },
+      endsAt: { type: 'string', format: 'date-time' },
+      countryCode: { type: 'string', enum: ['IR'] },
+      timezone: { type: 'string', enum: ['Asia/Tehran'] },
+      label: { type: 'string' },
+      shippingPrice: { type: 'number', minimum: 0 },
+      provider: { type: 'string' },
+    },
+  },
+  DeliveryQuote: {
+    type: 'object',
+    required: [
+      'id',
+      'addressId',
+      'expiresAt',
+      'countryCode',
+      'timezone',
+      'options',
+    ],
+    properties: {
+      id: { type: 'string' },
+      addressId: { type: 'string' },
+      expiresAt: { type: 'string', format: 'date-time' },
+      countryCode: { type: 'string', enum: ['IR'] },
+      timezone: { type: 'string', enum: ['Asia/Tehran'] },
+      options: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/DeliveryWindow' },
+      },
+    },
+  },
   Order: {
     type: 'object',
     properties: {
@@ -627,6 +684,7 @@ export const schemas = {
       paymentType: { type: 'integer', enum: [1, 2] },
       items: { type: 'array', items: { type: 'object' } },
       userAddress: { type: 'object' },
+      deliveryWindow: { $ref: '#/components/schemas/DeliveryWindow' },
       shippingInfo: { type: 'object' },
       createdAt: { type: 'string', format: 'date-time' },
     },

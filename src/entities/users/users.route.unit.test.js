@@ -34,6 +34,7 @@ jest.mock('./users.controller.js', () => ({
   addUserAddressController: jest.fn(),
   addWishlistItemController: jest.fn(),
   changeUserPasswordController: jest.fn(),
+  createDeliveryQuoteController: jest.fn(),
   createUserController: jest.fn(),
   deleteCartItemController: jest.fn(),
   deleteUserByIdController: jest.fn(),
@@ -55,6 +56,7 @@ jest.mock('./users.controller.js', () => ({
   registerUserController: jest.fn(),
   resetUserPasswordController: jest.fn(),
   sendUserOtpController: jest.fn(),
+  selectDeliveryWindowController: jest.fn(),
   updateUserPersonalInfoController: jest.fn(),
   verifyUserOtpController: jest.fn(),
 }));
@@ -66,8 +68,10 @@ import { authenticated } from '#middlewares/auth.middleware.js';
 
 import { RateLimiter } from '../../infrastructure/redis/rateLimit/rateLimit.core.js';
 import {
+  createDeliveryQuoteController,
   loginUserController,
   logoutUserController,
+  selectDeliveryWindowController,
 } from './users.controller.js';
 import usersRouter from './users.route.js';
 
@@ -95,6 +99,12 @@ describe('users route policies', () => {
     const logoutRoute = registeredRoutes.find(
       ([path]) => path === ROUTES.users.logout,
     );
+    const deliveryQuoteRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.cart.deliveryWindows,
+    );
+    const deliverySelectionRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.cart.deliveryWindow,
+    );
     const standardRoutes = registeredRoutes.filter(
       ([path]) =>
         path !== ROUTES.users.login && path !== ROUTES.users.getAllPaginate,
@@ -114,8 +124,8 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
       window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
     });
-    expect(registeredRoutes).toHaveLength(27);
-    expect(standardRoutes).toHaveLength(25);
+    expect(registeredRoutes).toHaveLength(29);
+    expect(standardRoutes).toHaveLength(27);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
     });
@@ -130,6 +140,18 @@ describe('users route policies', () => {
       standardRateLimitMiddleware,
       authenticated,
       logoutUserController,
+    ]);
+    expect(deliveryQuoteRoute).toEqual([
+      ROUTES.cart.deliveryWindows,
+      standardRateLimitMiddleware,
+      authenticated,
+      createDeliveryQuoteController,
+    ]);
+    expect(deliverySelectionRoute).toEqual([
+      ROUTES.cart.deliveryWindow,
+      standardRateLimitMiddleware,
+      authenticated,
+      selectDeliveryWindowController,
     ]);
   });
 });

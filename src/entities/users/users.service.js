@@ -41,6 +41,7 @@ import {
   createUserTemporaryTokenRateLimitKey,
   RedisOtpStore,
 } from '../../infrastructure/redis/otp/redisOtp.store.js';
+import { shippingService } from '../../integrations/shipping/shipping.service.js';
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import { UserModel } from './users.model.js';
 import { calculateCartPrices, formatUserFullName } from './users.helpers.js';
@@ -49,6 +50,18 @@ import { userAddressSchema } from './users.schema.js';
 const redisOtpStore = new RedisOtpStore();
 const redisAuthSessionStore = new RedisAuthSessionStore();
 const sixDigitOtpPattern = new RegExp(`^\\d{${USER_OTP.CODE_LENGTH}}$`);
+const CART_DELIVERY_RESET = {
+  'cart.deliveryQuote': null,
+  'cart.deliveryWindow': null,
+  'cart.userAddress': null,
+  'cart.deliveringDateToShipping': null,
+  'cart.shippingPrice': 0,
+  'cart.shippingInfo': {
+    name: '',
+    trackingCode: '',
+    estimateDeliveryDate: null,
+  },
+};
 
 export class UserService {
   // =========================================================
@@ -762,7 +775,12 @@ export class UserService {
 
     const updatedUser = await UserModel.findOneAndUpdate(
       { _id: userId, 'addresses._id': addressId },
-      { $set: { 'addresses.$': { ...validatedAddress, _id: addressId } } },
+      {
+        $set: {
+          'addresses.$': { ...validatedAddress, _id: addressId },
+          ...CART_DELIVERY_RESET,
+        },
+      },
       { returnDocument: 'after', runValidators: true },
     );
     if (!updatedUser) {
@@ -773,6 +791,97 @@ export class UserService {
     }
 
     return updatedUser.addresses.id(addressId);
+  }
+
+  static async createDeliveryQuote(actor, addressId) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
+    if (!user.cart.items.length) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'سبد خرید برای دریافت زمان ارسال خالی است',
+        code: ERROR_CODES.SHIPPING_EMPTY_CART,
+      });
+    }
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نشانی ارسال یافت نشد',
+        code: ERROR_CODES.SHIPPING_ADDRESS_NOT_FOUND,
+      });
+    }
+
+    const quote = shippingService.createDeliveryQuote({
+      cartId: userId,
+      address,
+      items: user.cart.items,
+    });
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          'cart.deliveryQuote': quote,
+          'cart.deliveryWindow': null,
+          'cart.userAddress': addressId,
+          'cart.deliveringDateToShipping': null,
+          'cart.shippingPrice': 0,
+          'cart.shippingInfo': CART_DELIVERY_RESET['cart.shippingInfo'],
+        },
+      },
+      { runValidators: true },
+    );
+    return quote;
+  }
+
+  static async selectDeliveryWindow(actor, { quoteId, deliveryWindowId }) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
+    const quote = user.cart.deliveryQuote;
+    if (!quote || quote.id !== quoteId) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'پیشنهاد زمان ارسال یافت نشد',
+        code: ERROR_CODES.SHIPPING_QUOTE_NOT_FOUND,
+      });
+    }
+    if (quote.expiresAt <= new Date()) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'مهلت پیشنهاد زمان ارسال پایان یافته است',
+        code: ERROR_CODES.SHIPPING_QUOTE_EXPIRED,
+      });
+    }
+    const deliveryWindow = quote.options.find(
+      ({ id }) => id === deliveryWindowId,
+    );
+    if (!deliveryWindow) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'بازه زمانی ارسال یافت نشد',
+        code: ERROR_CODES.SHIPPING_WINDOW_NOT_FOUND,
+      });
+    }
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      {
+        _id: userId,
+        'cart.deliveryQuote.id': quoteId,
+        'cart.deliveryQuote.expiresAt': { $gt: new Date() },
+      },
+      {
+        $set: {
+          'cart.deliveryWindow': deliveryWindow,
+          'cart.deliveringDateToShipping': deliveryWindow.startsAt,
+          'cart.shippingPrice': deliveryWindow.shippingPrice,
+          'cart.shippingInfo.name': deliveryWindow.provider,
+          'cart.shippingInfo.estimateDeliveryDate': deliveryWindow.endsAt,
+        },
+      },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'مهلت پیشنهاد زمان ارسال پایان یافته است',
+        code: ERROR_CODES.SHIPPING_QUOTE_EXPIRED,
+      });
+    }
+    return updatedUser.cart;
   }
 
   static async getAddresses(actor) {
@@ -838,7 +947,10 @@ export class UserService {
         _id: userId,
         'cart.items': { $elemMatch: { item: itemId, itemType, weight } },
       },
-      { $inc: { 'cart.items.$.quantity': quantity } },
+      {
+        $inc: { 'cart.items.$.quantity': quantity },
+        $set: CART_DELIVERY_RESET,
+      },
       { returnDocument: 'after', runValidators: true },
     );
 
@@ -852,6 +964,7 @@ export class UserService {
         },
         {
           $push: { 'cart.items': { item: itemId, itemType, quantity, weight } },
+          $set: CART_DELIVERY_RESET,
         },
         { returnDocument: 'after', runValidators: true },
       );
@@ -861,7 +974,10 @@ export class UserService {
             _id: userId,
             'cart.items': { $elemMatch: { item: itemId, itemType, weight } },
           },
-          { $inc: { 'cart.items.$.quantity': quantity } },
+          {
+            $inc: { 'cart.items.$.quantity': quantity },
+            $set: CART_DELIVERY_RESET,
+          },
           { returnDocument: 'after', runValidators: true },
         );
         if (!concurrentlyAddedItemUpdate) {
@@ -877,7 +993,10 @@ export class UserService {
     const userId = this.getAuthenticatedUserId(actor);
     const updatedUser = await UserModel.findOneAndUpdate(
       { _id: userId, 'cart.items._id': cartEntryId },
-      { $pull: { 'cart.items': { _id: cartEntryId } } },
+      {
+        $pull: { 'cart.items': { _id: cartEntryId } },
+        $set: CART_DELIVERY_RESET,
+      },
       { returnDocument: 'after', runValidators: true },
     );
     if (!updatedUser) {
@@ -903,6 +1022,7 @@ export class UserService {
           'cart.items': [],
           'cart.totalPrice': 0,
           'cart.discountPrice': 0,
+          ...CART_DELIVERY_RESET,
         },
       },
       {

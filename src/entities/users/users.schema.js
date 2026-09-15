@@ -122,6 +122,15 @@ export const addWishlistItemSchema = object(cartItemFields).omit({
 
 export const cartEntryIdSchema = object({ id: mongoObjectIdSchema });
 
+export const createDeliveryQuoteSchema = object({
+  addressId: mongoObjectIdSchema,
+}).strict();
+
+export const selectDeliveryWindowSchema = object({
+  quoteId: string().trim().min(1).max(100),
+  deliveryWindowId: string().trim().min(1).max(100),
+}).strict();
+
 export const wishlistEntryIdSchema = cartEntryIdSchema;
 
 export const userIdSchema = cartEntryIdSchema;

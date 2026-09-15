@@ -113,6 +113,18 @@ describe('Order API', () => {
 
   const prepareCart = async (entries) => {
     const currentUser = await UserModel.findById(user._id);
+    const startsAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    const endsAt = new Date(startsAt.getTime() + 3 * 60 * 60 * 1000);
+    const deliveryWindow = {
+      id: 'integration-window',
+      startsAt,
+      endsAt,
+      countryCode: 'IR',
+      timezone: 'Asia/Tehran',
+      label: 'بازه آزمایشی',
+      shippingPrice: 50,
+      provider: 'mock-iran-shipping',
+    };
     await UserModel.updateOne(
       { _id: user._id },
       {
@@ -124,7 +136,16 @@ describe('Order API', () => {
             weight: itemType === 'product' ? item.weights[0]._id : null,
           })),
           'cart.userAddress': currentUser.addresses[0]._id,
-          'cart.deliveringDateToShipping': new Date('2026-09-01'),
+          'cart.deliveryQuote': {
+            id: 'integration-quote',
+            addressId: currentUser.addresses[0]._id,
+            expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            countryCode: 'IR',
+            timezone: 'Asia/Tehran',
+            options: [deliveryWindow],
+          },
+          'cart.deliveryWindow': deliveryWindow,
+          'cart.deliveringDateToShipping': startsAt,
           'cart.shippingPrice': 50,
           'cart.paymentType': 1,
         },
@@ -178,6 +199,7 @@ describe('Order API', () => {
       paymentType: 1,
       deliveryState: 0,
       paymentTrackingId: 'PAYMENT-123',
+      deliveryWindow: expect.objectContaining({ id: 'integration-window' }),
     });
     expect(response.body.data.items).toHaveLength(2);
     expect(response.body.data.trackingCode).toMatch(/^\d{9}$/);

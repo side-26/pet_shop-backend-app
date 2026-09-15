@@ -25,6 +25,8 @@ export const API_ROUTE_METHODS = [
   { path: '/cart/add', methods: [post] },
   { path: '/cart/delete/:id', methods: [deleteMethod] },
   { path: '/cart/all', methods: [get] },
+  { path: ROUTES.cart.deliveryWindows, methods: [post] },
+  { path: ROUTES.cart.deliveryWindow, methods: [patch] },
   { path: '/cart/empty', methods: [deleteMethod] },
   { path: '/wishlist/add', methods: [post] },
   { path: '/wishlist/delete/:id', methods: [deleteMethod] },

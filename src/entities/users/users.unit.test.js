@@ -55,6 +55,10 @@ jest.mock('#entities/pets/pets.service.js', () => ({
   PetService: { findById: jest.fn(), findCustomerById: jest.fn() },
 }));
 
+jest.mock('../../integrations/shipping/shipping.service.js', () => ({
+  shippingService: { createDeliveryQuote: jest.fn() },
+}));
+
 jest.mock('../../integrations/otpCode/otpCode.service.js', () => ({
   OtpCodeService: { send: jest.fn() },
 }));
@@ -192,6 +196,7 @@ import { getPaginationData, verifyRefreshToken } from '#utils/helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
+import { shippingService } from '../../integrations/shipping/shipping.service.js';
 import {
   __mockRedisAuthSessionCreate as mockRedisAuthSessionCreate,
   __mockRedisAuthSessionDeleteBySession as mockRedisAuthSessionDeleteBySession,
@@ -1615,13 +1620,15 @@ describe('UserService - Unit Tests', () => {
       expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
         { _id: mockUser._id, 'addresses._id': addressId },
         {
-          $set: {
+          $set: expect.objectContaining({
             'addresses.$': expect.objectContaining({
               _id: addressId,
               plate: '25',
               city: address.city,
             }),
-          },
+            'cart.deliveryQuote': null,
+            'cart.deliveryWindow': null,
+          }),
         },
         { returnDocument: 'after', runValidators: true },
       );
@@ -1686,7 +1693,7 @@ describe('UserService - Unit Tests', () => {
     expect(ProductService.findCustomerById).toHaveBeenCalledWith(data.itemId);
     expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ _id: mockActor.userId }),
-      { $inc: { 'cart.items.$.quantity': 3 } },
+      expect.objectContaining({ $inc: { 'cart.items.$.quantity': 3 } }),
       expect.any(Object),
     );
     expect(UserModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
@@ -1764,20 +1771,112 @@ describe('UserService - Unit Tests', () => {
     );
   });
 
-  test('emptyCart resets items and calculated prices while preserving metadata', async () => {
+  test('creates and persists delivery-window options for an owned address', async () => {
+    const address = { _id: '65a4de97aff1fbb38c437953' };
+    const quote = {
+      id: 'quote-id',
+      options: [{ id: 'window-id' }],
+    };
+    mockUser.addresses = { id: jest.fn(() => address) };
+    UserModel.findById.mockResolvedValue(mockUser);
+    shippingService.createDeliveryQuote.mockReturnValue(quote);
+    UserModel.updateOne.mockResolvedValue({ acknowledged: true });
+
+    await expect(
+      UserService.createDeliveryQuote(mockActor, address._id),
+    ).resolves.toBe(quote);
+    expect(shippingService.createDeliveryQuote).toHaveBeenCalledWith({
+      cartId: mockActor.userId,
+      address,
+      items: mockUser.cart.items,
+    });
+    expect(UserModel.updateOne).toHaveBeenCalledWith(
+      { _id: mockActor.userId },
+      expect.objectContaining({
+        $set: expect.objectContaining({ 'cart.deliveryQuote': quote }),
+      }),
+      { runValidators: true },
+    );
+  });
+
+  test('rejects delivery quotes for an empty cart', async () => {
+    mockUser.cart.items = [];
+    UserModel.findById.mockResolvedValue(mockUser);
+
+    await expect(
+      UserService.createDeliveryQuote(mockActor, '65a4de97aff1fbb38c437953'),
+    ).rejects.toThrow('سبد خرید برای دریافت زمان ارسال خالی است');
+    expect(shippingService.createDeliveryQuote).not.toHaveBeenCalled();
+  });
+
+  test('selects an active quoted delivery window', async () => {
+    const deliveryWindow = {
+      id: 'window-id',
+      startsAt: new Date(Date.now() + 86400000),
+      endsAt: new Date(Date.now() + 90000000),
+      shippingPrice: 80000,
+      provider: 'mock-iran-shipping',
+    };
+    mockUser.cart.deliveryQuote = {
+      id: 'quote-id',
+      expiresAt: new Date(Date.now() + 60000),
+      options: [deliveryWindow],
+    };
+    UserModel.findById.mockResolvedValue(mockUser);
+    UserModel.findOneAndUpdate.mockResolvedValue({ cart: mockUser.cart });
+
+    await expect(
+      UserService.selectDeliveryWindow(mockActor, {
+        quoteId: 'quote-id',
+        deliveryWindowId: deliveryWindow.id,
+      }),
+    ).resolves.toBe(mockUser.cart);
+    expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        _id: mockActor.userId,
+        'cart.deliveryQuote.id': 'quote-id',
+      }),
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          'cart.deliveryWindow': deliveryWindow,
+          'cart.shippingPrice': deliveryWindow.shippingPrice,
+        }),
+      }),
+      expect.objectContaining({ returnDocument: 'after' }),
+    );
+  });
+
+  test('rejects an expired delivery quote', async () => {
+    mockUser.cart.deliveryQuote = {
+      id: 'quote-id',
+      expiresAt: new Date(0),
+      options: [{ id: 'window-id' }],
+    };
+    UserModel.findById.mockResolvedValue(mockUser);
+
+    await expect(
+      UserService.selectDeliveryWindow(mockActor, {
+        quoteId: 'quote-id',
+        deliveryWindowId: 'window-id',
+      }),
+    ).rejects.toThrow('مهلت پیشنهاد زمان ارسال پایان یافته است');
+    expect(UserModel.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  test('emptyCart resets items, calculated prices, and delivery metadata', async () => {
     UserModel.findByIdAndUpdate.mockResolvedValue({
       cart: {
         items: [],
         totalPrice: 0,
         discountPrice: 0,
-        shippingPrice: 500,
+        shippingPrice: 0,
       },
     });
     await expect(UserService.emptyCart(mockActor)).resolves.toMatchObject({
       items: [],
       totalPrice: 0,
       discountPrice: 0,
-      shippingPrice: 500,
+      shippingPrice: 0,
     });
   });
 

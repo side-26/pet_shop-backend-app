@@ -34,6 +34,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - Persist uploaded images as complete public URLs.
 - Only authenticated admins may permanently delete a user through `DELETE /api/users/:id`; successful deletion also attempts to remove the user's stored avatar without reversing the database deletion when storage cleanup fails.
 - Cart and wishlist operations always derive ownership from the authenticated actor. See [`docs/cart.md`](./docs/cart.md) and [`docs/cart-and-wishlist.md`](./docs/cart-and-wishlist.md).
+- Cart delivery options come from the provider-independent shipping integration, are limited to Iran, use Tehran timezone metadata, expire after fifteen minutes, and are invalidated by item or address changes.
 
 ## Summary
 
