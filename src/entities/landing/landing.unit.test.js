@@ -45,6 +45,7 @@ jest.mock('#entities/products/products.helpers.js', () => ({
   formatCustomerProductDetail: jest.fn((product) => ({
     id: product._id,
     title: product.title,
+    category: product.category,
   })),
 }));
 
@@ -87,7 +88,15 @@ const fullProduct = {
   mainImageThumbnail: 'data:image/webp;base64,AAAA',
   images: ['https://cdn.example.com/food-gallery.webp'],
   description: 'توضیحات محصول',
-  category: { _id: 'category-id', title: 'غذا' },
+  category: {
+    _id: 'category-id',
+    title: 'غذا',
+    petType: {
+      ...petType,
+      displayName: 'گربه',
+      propertyDefinitions: [{ label: 'سن', value: 'age' }],
+    },
+  },
   subCategory: { _id: 'subcategory-id', title: 'غذای خشک' },
   quantity: 1,
   isEnable: true,
@@ -222,6 +231,14 @@ describe('LandingService', () => {
     ).resolves.toEqual(
       expect.objectContaining({
         title: fullProduct.title,
+        category: expect.objectContaining({
+          petType: {
+            id: petType._id,
+            title: petType.title,
+            displayName: petType.title,
+            propertyDefinitions: [{ label: 'سن', value: 'age' }],
+          },
+        }),
       }),
     );
     expect(LandingModel.findPetBySlug).toHaveBeenCalledWith(pet.slug);

@@ -18,7 +18,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 - `GET /landing/pets/popular` — up to five enabled pets ranked by non-management wishlist frequency; it falls back to sales volume when no enabled pets are wishlisted and supplements sparse results with the highest-priced enabled pets.
 - `GET /landing/pets/recent` — up to five enabled, in-stock pets that were updated or enabled by a user, ordered by their most recent update and supplemented with highest-priced available pets when needed.
 - `GET /landing/pets/:slug` — full customer-safe detail for an enabled pet.
-- `GET /landing/products/:slug` — full customer-safe detail for an enabled product.
+- `GET /landing/products/:slug` — full customer-safe detail for an enabled product, including `category.petType` with only `id`, `title`, `displayName`, and `propertyDefinitions`.
 
 ## Rules
 

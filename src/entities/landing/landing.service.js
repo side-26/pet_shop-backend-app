@@ -55,6 +55,17 @@ const formatLandingProductCard = (product) => ({
   ),
 });
 
+const formatLandingProductPetType = (petType) => {
+  if (!petType) return null;
+
+  return {
+    id: petType._id,
+    title: petType.title,
+    displayName: petType.displayName || petType.title,
+    propertyDefinitions: petType.propertyDefinitions || [],
+  };
+};
+
 const formatPopularBrand = ({ brand, productCount }) => ({
   id: brand._id,
   title: brand.title,
@@ -291,6 +302,9 @@ export class LandingService {
       });
     }
     const data = formatCustomerProductDetail(product);
+    data.category.petType = formatLandingProductPetType(
+      product.category?.petType,
+    );
     if (!userId) return { ...data, canVote: false, hasRated: false };
     const [hasPurchased, hasRated] = await Promise.all([
       OrderModel.exists({

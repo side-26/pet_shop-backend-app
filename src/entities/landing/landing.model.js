@@ -349,7 +349,14 @@ export class LandingModel {
 
   static findProductBySlug(slug) {
     return ProductModel.findOne({ slug, isEnable: true }).populate([
-      { path: 'category' },
+      {
+        path: 'category',
+        populate: {
+          path: 'petType',
+          select: 'title propertyDefinitions',
+          match: { isEnabled: true },
+        },
+      },
       { path: 'brand' },
       { path: 'subCategory' },
     ]);

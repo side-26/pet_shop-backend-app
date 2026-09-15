@@ -6568,7 +6568,7 @@
     "/landing/products/{slug}": {
       "get": {
         "summary": "Get an enabled product by slug",
-        "description": "Returns the full customer-safe product detail for an enabled product.",
+        "description": "Returns the full customer-safe product detail for an enabled product, including its category pet type with only id, title, displayName, and propertyDefinitions.",
         "parameters": [
           {
             "name": "slug",

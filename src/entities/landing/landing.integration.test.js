@@ -880,11 +880,27 @@ describe('Landing API', () => {
     expect(productResponse.body.data).toEqual(
       expect.objectContaining({
         slug: 'dog-food',
-        category: expect.objectContaining({ title: 'غذا' }),
+        category: expect.objectContaining({
+          title: 'غذا',
+          petType: {
+            id: String(petType._id),
+            title: 'سگ',
+            displayName: 'سگ',
+            propertyDefinitions: [],
+          },
+        }),
         brand: expect.objectContaining({ title: 'برند غذای سگ' }),
         subCategory: expect.objectContaining({ title: 'غذای خشک' }),
       }),
     );
+    await PetTypeModel.findByIdAndUpdate(petType._id, {
+      isEnabled: false,
+    });
+    const disabledPetTypeResponse = await request(app).get(
+      '/api/landing/products/dog-food',
+    );
+    expect(disabledPetTypeResponse.status).toBe(200);
+    expect(disabledPetTypeResponse.body.data.category.petType).toBeNull();
     expect(hiddenPetResponse.status).toBe(404);
     expect(invalidResponse.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });

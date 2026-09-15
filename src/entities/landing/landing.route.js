@@ -132,7 +132,7 @@ router.get(
 router.get(
   '/landing/products/:slug',
   /* #swagger.summary = 'Get an enabled product by slug'
-     #swagger.description = 'Returns the full customer-safe product detail for an enabled product.'
+     #swagger.description = 'Returns the full customer-safe product detail for an enabled product, including its category pet type with only id, title, displayName, and propertyDefinitions.'
      #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
      #swagger.responses[200] = { description: 'Product detail' }
      #swagger.responses[404] = { description: 'Product not found' } */
