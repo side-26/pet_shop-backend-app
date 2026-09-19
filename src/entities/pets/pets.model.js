@@ -40,6 +40,8 @@ const petSchema = new mongoose.Schema(
       index: true,
     },
     quantity: { type: Number, required: true, min: 0, default: 0 },
+    userRate: { type: Number, required: true, min: 0, max: 5, default: 0 },
+    userRateCount: { type: Number, required: true, min: 0, default: 0 },
     salesVolume: { type: Number, required: true, min: 0, default: 0 },
     price: { type: Number, required: true, min: 0, default: 0 },
     discountPercentage: {
@@ -92,6 +94,8 @@ petSchema.pre('save', function () {
       petType: this.petType?.toString(),
       breed: this.breed?.toString(),
       quantity: this.quantity,
+      userRate: this.userRate,
+      userRateCount: this.userRateCount,
       salesVolume: this.salesVolume,
       price: this.price,
       discountPercentage: this.discountPercentage,

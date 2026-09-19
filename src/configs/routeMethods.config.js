@@ -58,6 +58,7 @@ export const API_ROUTE_METHODS = [
   { path: '/pets/paginate', methods: [get] },
   { path: '/pets/manage/:id', methods: [get] },
   { path: '/pets/:id', methods: [put, deleteMethod] },
+  { path: '/pets/:id/user-rate', methods: [patch] },
   { path: '/pets/:id/images', methods: [get, put] },
   { path: '/pets/:id/price', methods: [get, put] },
   { path: '/pets/:id/base-info', methods: [get] },

@@ -169,6 +169,8 @@ describe('Pet API', () => {
     expect(response.status).toBe(STATUES.CREATED);
     expect(response.body.data).toMatchObject({
       quantity: 0,
+      userRate: 0,
+      userRateCount: 0,
       price: 0,
       discountPercentage: 0,
     });
@@ -193,6 +195,23 @@ describe('Pet API', () => {
       .post('/api/pets')
       .send({ ...petData, discountPercentage: 101 });
     expect(percentage.status).toBe(STATUES.BAD_FORM_VALIDATION);
+  });
+
+  test('allows only customers to submit one purchased-pet rating', async () => {
+    const pet = await PetModel.create(petData);
+    const [notPurchased, invalid] = await Promise.all([
+      request(app)
+        .patch(`/api/pets/${pet._id}/user-rate`)
+        .set('x-test-role', ROLES.CUSTOMER)
+        .send({ userRate: 4 }),
+      request(app)
+        .patch(`/api/pets/${pet._id}/user-rate`)
+        .set('x-test-role', ROLES.CUSTOMER)
+        .send({ userRate: 4.05 }),
+    ]);
+
+    expect(notPurchased.status).toBe(STATUES.NO_ACCESS);
+    expect(invalid.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 
   test('rejects invalid PetType, invalid Breed, and mismatched relations', async () => {

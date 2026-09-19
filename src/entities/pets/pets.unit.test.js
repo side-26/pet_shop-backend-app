@@ -19,6 +19,10 @@ jest.mock('#entities/breeds/breeds.model.js', () => ({
   BreedModel: { findById: jest.fn() },
 }));
 
+jest.mock('#entities/orders/orders.model.js', () => ({
+  OrderModel: { exists: jest.fn() },
+}));
+
 jest.mock('./pets.model.js', () => ({
   PetModel: {
     findOne: jest.fn(),
@@ -27,7 +31,12 @@ jest.mock('./pets.model.js', () => ({
     findByIdAndUpdate: jest.fn(),
     findByIdAndDelete: jest.fn(),
     populate: jest.fn(),
+    db: { startSession: jest.fn() },
   },
+}));
+
+jest.mock('./petRatings.model.js', () => ({
+  PetRatingModel: { findOne: jest.fn(), create: jest.fn() },
 }));
 
 jest.mock('#services/mainImage.service.js', () => ({
@@ -42,10 +51,12 @@ jest.mock('#services/mainImage.service.js', () => ({
 
 import { getPaginationData } from '#utils/helpers.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
 
 import { PetModel } from './pets.model.js';
+import { PetRatingModel } from './petRatings.model.js';
 import { PetService } from './pets.service.js';
 
 const id = '65a4de97aff1fbb38c437111';
@@ -273,6 +284,43 @@ describe('PetService', () => {
       },
       { returnDocument: 'after', runValidators: true },
     );
+  });
+
+  test('records one purchased-pet rating and updates its aggregate', async () => {
+    const ratedPet = {
+      ...pet,
+      userRate: 4,
+      userRateCount: 2,
+      save: jest.fn(),
+    };
+    const session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn(),
+    };
+    PetModel.db.startSession.mockResolvedValue(session);
+    PetModel.findOne.mockReturnValue({
+      session: jest.fn().mockResolvedValue(ratedPet),
+    });
+    PetRatingModel.findOne.mockReturnValue({
+      session: jest.fn().mockResolvedValue(null),
+    });
+    OrderModel.exists.mockReturnValue({
+      session: jest.fn().mockResolvedValue({ _id: 'order-id' }),
+    });
+
+    await expect(PetService.updateUserRate(id, 5, userId)).resolves.toBe(
+      ratedPet,
+    );
+    expect(ratedPet).toMatchObject({
+      userRate: 4.333333333333333,
+      userRateCount: 3,
+    });
+    expect(PetRatingModel.create).toHaveBeenCalledWith(
+      [{ pet: id, user: userId, value: 5 }],
+      { session },
+    );
+    expect(ratedPet.save).toHaveBeenCalledWith({ session });
+    expect(session.endSession).toHaveBeenCalled();
   });
 
   test('setEnableStatus, enable, and disable update visibility', async () => {

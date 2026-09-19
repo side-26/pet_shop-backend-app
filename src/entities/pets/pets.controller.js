@@ -13,6 +13,7 @@ import {
   updatePetBaseInfoZodSchema,
   updatePetImagesZodSchema,
   updatePetPriceZodSchema,
+  updatePetUserRateZodSchema,
 } from './pets.schema.js';
 import { PetService } from './pets.service.js';
 
@@ -95,6 +96,27 @@ export const updatePetPriceController = (req, res, next) =>
     'updatePrice',
     'formatPrice',
   );
+
+export const updatePetUserRateController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(petIdSchema, req.params);
+    const { userRate } = returnFormValidation(
+      updatePetUserRateZodSchema,
+      req.body,
+    );
+    const pet = await PetService.updateUserRate(
+      id,
+      userRate,
+      getUserId(req.user),
+    );
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'امتیاز حیوان با موفقیت ویرایش شد',
+      data: { userRate: pet.userRate, userRateCount: pet.userRateCount },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
 
 export const getManagementPetController = async (req, res, next) => {
   try {

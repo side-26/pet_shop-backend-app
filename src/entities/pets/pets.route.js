@@ -23,6 +23,7 @@ import {
   getPetPriceController,
   updatePetImagesController,
   updatePetPriceController,
+  updatePetUserRateController,
   updatePetController,
 } from './pets.controller.js';
 
@@ -43,6 +44,16 @@ router.get(
   getCustomerPetPaginateController,
 );
 router.get('/pets/customer/:id', getCustomerPetController);
+router.patch(
+  '/pets/:id/user-rate',
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: 'object', required: ['userRate'], properties: { userRate: { type: 'number', minimum: 0, maximum: 5, multipleOf: 0.1 } } } } } }
+     #swagger.responses[200] = { description: 'Pet rating updated' }
+     #swagger.responses[403] = { description: 'A customer can rate only a purchased pet, once' } */
+  authenticated,
+  roleMiddleware(ROLES.CUSTOMER),
+  updatePetUserRateController,
+);
 router.get(
   '/pets/paginate',
   /* #swagger.parameters['title'] = { in: 'query', type: 'string' }

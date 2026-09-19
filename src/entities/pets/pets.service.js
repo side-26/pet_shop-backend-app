@@ -1,5 +1,6 @@
-import { ERROR_CODES, STATUES } from '#configs/constants.js';
+import { ERROR_CODES, STATUES, USER_ITEM_TYPES } from '#configs/constants.js';
 import { BreedModel } from '#entities/breeds/breeds.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
 import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
@@ -17,6 +18,7 @@ import {
   formatPetPrice,
 } from './pets.helpers.js';
 import { PetModel } from './pets.model.js';
+import { PetRatingModel } from './petRatings.model.js';
 
 const populateRelations = async (documents) =>
   PetModel.populate(documents, [{ path: 'petType' }, { path: 'breed' }]);
@@ -236,6 +238,57 @@ export class PetService {
         code: ERROR_CODES.PET_NOT_FOUND,
       });
     }
+    return pet;
+  }
+
+  static async updateUserRate(id, userRate, userId) {
+    const session = await PetModel.db.startSession();
+    let transactionError;
+    let pet;
+    try {
+      await session.withTransaction(async () => {
+        pet = await PetModel.findOne({ _id: id, inEnable: true }).session(
+          session,
+        );
+        if (!pet)
+          setErrorResponse(STATUES.NOT_FOUND, {
+            message: 'حیوان یافت نشد',
+            code: ERROR_CODES.PET_NOT_FOUND,
+          });
+        const previous = await PetRatingModel.findOne({
+          pet: id,
+          user: userId,
+        }).session(session);
+        if (previous)
+          setErrorResponse(STATUES.CONFLICT, {
+            message: 'شما پیش‌تر به این حیوان امتیاز داده‌اید',
+          });
+        const hasPurchased = await OrderModel.exists({
+          user: userId,
+          items: { $elemMatch: { item: id, itemType: USER_ITEM_TYPES.PET } },
+        }).session(session);
+        if (!hasPurchased)
+          setErrorResponse(STATUES.NO_ACCESS, {
+            message: 'امتیازدهی فقط پس از خرید حیوان امکان‌پذیر است',
+          });
+        const nextCount = (pet.userRateCount || 0) + 1;
+        pet.userRate = (pet.userRate * (nextCount - 1) + userRate) / nextCount;
+        pet.userRateCount = nextCount;
+        await PetRatingModel.create(
+          [{ pet: id, user: userId, value: userRate }],
+          { session },
+        );
+        await pet.save({ session });
+      });
+    } catch (error) {
+      transactionError = error;
+    }
+    try {
+      await session.endSession();
+    } catch (error) {
+      if (!transactionError) throw error;
+    }
+    if (transactionError) throw transactionError;
     return pet;
   }
 

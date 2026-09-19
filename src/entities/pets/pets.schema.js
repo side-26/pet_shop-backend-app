@@ -10,6 +10,7 @@ const {
   coerce,
   enum: enumValue,
   object,
+  number,
   preprocess,
   string,
   unknown,
@@ -68,6 +69,8 @@ const petFields = {
   petType: objectIdSchema,
   breed: objectIdSchema,
   quantity: quantitySchema,
+  userRate: number().min(0).max(5),
+  userRateCount: coerce.number().int().min(0),
   salesVolume: salesVolumeSchema,
   price: priceSchema,
   discountPercentage: discountPercentageSchema,
@@ -79,6 +82,8 @@ export const petPersistedZodSchema = object({
   ...petFields,
   images: petFields.images.optional().default([]),
   quantity: quantitySchema.optional().default(0),
+  userRate: number().min(0).max(5).optional().default(0),
+  userRateCount: coerce.number().int().min(0).optional().default(0),
   salesVolume: salesVolumeSchema.optional().default(0),
   price: priceSchema.optional().default(0),
   discountPercentage: discountPercentageSchema.optional().default(0),
@@ -88,6 +93,8 @@ const petRequestFields = { ...petFields };
 delete petRequestFields.mainImage;
 delete petRequestFields.mainImageThumbnail;
 delete petRequestFields.salesVolume;
+delete petRequestFields.userRate;
+delete petRequestFields.userRateCount;
 
 export const createPetZodSchema = object({
   ...petRequestFields,
@@ -117,6 +124,9 @@ export const updatePetPriceZodSchema = object({
   .refine((value) => Object.keys(value).length > 0, {
     message: 'حداقل یک فیلد باید ارسال شود',
   });
+export const updatePetUserRateZodSchema = object({
+  userRate: number().min(0).max(5).multipleOf(0.1),
+});
 export const petModelUpdateZodSchema = object(petFields).partial();
 export const petIdSchema = object({ id: objectIdSchema });
 

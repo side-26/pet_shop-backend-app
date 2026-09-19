@@ -9,6 +9,7 @@ Owns the pet catalog and its separate customer-facing and management-facing view
 - `pets.model.js` — pet persistence, limits, Zod-backed hooks, filters, and text indexes.
 - `pets.service.js` — pet-type/breed validation, CRUD, main/gallery image upload, replacement, and deletion, enable/disable, filtered pagination, and view formatting.
 - `pets.schema.js` — create, base-info, image, price, id, and management/customer query validation.
+- `petRatings.model.js` — one customer rating per pet and its unique persistence constraint.
 - `pets.controller.js`, `pets.route.js`, and `pets.helpers.js` — route orchestration and customer/management filters and projections.
 - Colocated tests cover public and management behavior.
 
@@ -24,6 +25,7 @@ References `PetTypeModel` and `BreedModel`; routes use authentication, role chec
 - On creation, accept `mainImage` and up to five `images` multipart files, optimize and upload them concurrently, persist their complete public URLs, and generate `mainImageThumbnail` server-side as a WebP Base64 Data URL.
 - Management pagination is exposed at `GET /pets/paginate` and filters by `title`, `petType`, `breed`, `quantity`, and `isEnable`.
 - Customer full-data pagination is exposed at `GET /pets/customer/paginate`, always restricts results to `inEnable: true`, and filters by `title`, `petType`, `breed`, and inclusive `priceRange=MIN-MAX`.
+- Customers can rate a purchased enabled pet once through `PATCH /pets/:id/user-rate`; the cached average and count are stored as `userRate` and `userRateCount`.
 - Every paginated pet response uses `data: { result, pagination }`; never place `pagination` beside `data`.
 - Management reads and updates base information, images, and prices through `/pets/:id/base-info`, `/pets/:id/images`, and `/pets/:id/price`; the generic `PUT /pets/:id` updates base information only.
 - The internal `salesVolume` counter defaults to zero and is returned only for entries in the management paginated list; it is not accepted by catalog create/update APIs or returned by detail and section routes.

@@ -79,6 +79,7 @@ const persianFieldNames = {
   weightId: 'شناسه وزن',
   metric: 'واحد وزن',
   userRate: 'امتیاز کاربران',
+  userRateCount: 'تعداد امتیاز کاربران',
   healthStatus: 'وضعیت سلامت',
   availability: 'در دسترس بودن',
   price: 'قیمت',
