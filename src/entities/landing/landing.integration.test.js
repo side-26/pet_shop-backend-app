@@ -160,6 +160,9 @@ describe('Landing API', () => {
     expect(
       discounted.body.data.map(({ discountPrice }) => discountPrice),
     ).toEqual([40000, 30000]);
+    expect(
+      discounted.body.data.map(({ minimumFinalPrice }) => minimumFinalPrice),
+    ).toEqual([60000, 70000]);
     expect(discounted.body.data[0].mainImageThumbnail).toBe(
       'data:image/webp;base64,AAAA',
     );
@@ -179,6 +182,9 @@ describe('Landing API', () => {
     expect(popular.body.data.map(({ discountPrice }) => discountPrice)).toEqual(
       [60000, 70000, 80000, 90000],
     );
+    expect(
+      popular.body.data.map(({ minimumFinalPrice }) => minimumFinalPrice),
+    ).toEqual([60000, 70000, 80000, 90000]);
     expect(popularPets.body.data.map(({ title }) => title)).toEqual([
       'حیوان-0',
       'حیوان-1',
@@ -542,7 +548,11 @@ describe('Landing API', () => {
       prevPage: null,
     });
     expect(response.body.data.result[0]).toEqual(
-      expect.objectContaining({ discountPrice: 100, slug: 'filtered-low' }),
+      expect.objectContaining({
+        discountPrice: 100,
+        minimumFinalPrice: 100,
+        slug: 'filtered-low',
+      }),
     );
     expect(response.body.data.filters.map(({ key }) => key)).toEqual([
       'category',
@@ -864,6 +874,9 @@ describe('Landing API', () => {
     expect(
       new Set(response.body.data.map(({ product }) => String(product.id))).size,
     ).toBe(4);
+    response.body.data.forEach(({ product }, index) => {
+      expect(product.minimumFinalPrice).toBeCloseTo([10, 200, 3, 80][index]);
+    });
   });
 
   test('supplements a sparse recent-pet section with highest-priced available pets', async () => {

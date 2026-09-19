@@ -32,6 +32,15 @@ export const getProductDisplayPricing = (product) => {
   };
 };
 
+export const getMinimumFinalPrice = (product) => {
+  if (Number.isFinite(product?.minimumPayablePrice)) {
+    return product.minimumPayablePrice;
+  }
+
+  const { price, discountPercentage } = getProductDisplayPricing(product);
+  return price * (1 - discountPercentage / 100);
+};
+
 export const buildProductFilter = (
   {
     title: filterTitle,
