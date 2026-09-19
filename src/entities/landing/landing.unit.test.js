@@ -70,6 +70,12 @@ jest.mock('#entities/products/products.helpers.js', () => ({
     const discountPercentage = product.discountPercentage || 0;
     return price * (1 - discountPercentage / 100);
   }),
+  getMinimumQuantity: jest.fn((product) => {
+    const weights = product.weights || [];
+    return weights.length
+      ? Math.min(...weights.map(({ quantity }) => quantity))
+      : 0;
+  }),
 }));
 
 import { LandingModel } from './landing.model.js';
@@ -296,6 +302,7 @@ describe('LandingService', () => {
       discountPercentage: product.discountPercentage,
       discountPrice: 40000,
       minimumFinalPrice: 160000,
+      minimumQuantity: 0,
     };
     await expect(LandingService.getMostDiscountedProducts(2)).resolves.toEqual([
       expected,
@@ -342,6 +349,7 @@ describe('LandingService', () => {
           slug: 'food',
           discountPrice: 160000,
           minimumFinalPrice: 160000,
+          minimumQuantity: 0,
         }),
       ],
       pagination: {

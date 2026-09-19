@@ -6,6 +6,7 @@ import {
 import {
   formatCustomerProductDetail,
   getMinimumFinalPrice,
+  getMinimumQuantity,
   getProductDisplayPricing,
 } from '#entities/products/products.helpers.js';
 import { ProductRatingModel } from '#entities/products/productRatings.model.js';
@@ -51,6 +52,7 @@ const formatProduct = (product) => {
     discountPercentage: pricing.discountPercentage,
     discountPrice: pricing.price * (pricing.discountPercentage / 100),
     minimumFinalPrice: getMinimumFinalPrice(product),
+    minimumQuantity: getMinimumQuantity(product),
   };
 };
 

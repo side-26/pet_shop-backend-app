@@ -6333,7 +6333,7 @@
     "/landing/products/discounted": {
       "get": {
         "summary": "Get the most discounted products",
-        "description": "Returns enabled products ordered by discount percentage, including the main image thumbnail, product price, discount percentage, calculated discount amount, and minimum final price across weights. The optional limit defaults to four and is capped at 100.",
+        "description": "Returns enabled products ordered by discount percentage, including the main image thumbnail, product price, discount percentage, calculated discount amount, minimum final price, and minimum quantity across weights. The optional limit defaults to four and is capped at 100.",
         "parameters": [
           {
             "name": "limit",
@@ -6405,7 +6405,7 @@
     "/landing/products/popular": {
       "get": {
         "summary": "Get four most popular products",
-        "description": "Returns up to four enabled products ordered by sales volume, including the main image thumbnail, slug, product price, discount percentage, final discounted price, and minimum final price across weights.",
+        "description": "Returns up to four enabled products ordered by sales volume, including the main image thumbnail, slug, product price, discount percentage, final discounted price, minimum final price, and minimum quantity across weights.",
         "responses": {
           "200": {
             "description": "Most popular products"
@@ -6435,7 +6435,7 @@
     "/landing/products/featured": {
       "get": {
         "summary": "Get distinct featured products",
-        "description": "Returns up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. Each product includes its minimum final price across weights. A product selected for an earlier type is excluded from later types.",
+        "description": "Returns up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted. Each product includes its minimum final price and minimum quantity across weights. A product selected for an earlier type is excluded from later types.",
         "responses": {
           "200": {
             "description": "Distinct featured products"
@@ -6465,7 +6465,7 @@
     "/landing/products": {
       "get": {
         "summary": "Get enabled products with dynamic landing filters",
-        "description": "Returns enabled products with their minimum final price across weights and disjunctive category, sub-category, brand, price, and enabled-status facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts. As a public catalog endpoint, isEnable=false returns no records.",
+        "description": "Returns enabled products with their minimum final price and minimum quantity across weights, plus disjunctive category, sub-category, brand, price, and enabled-status facets. Multi-select filter values are comma-separated IDs; each facet excludes its own selected value while calculating option counts. As a public catalog endpoint, isEnable=false returns no records.",
         "parameters": [
           {
             "name": "category",

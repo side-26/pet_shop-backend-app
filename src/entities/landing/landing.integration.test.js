@@ -71,7 +71,7 @@ describe('Landing API', () => {
         weights: [
           {
             metric: 'KG',
-            quantity: 10,
+            quantity: index + 1,
             value: 1,
             price: 100000,
             discountPercentage: index * 10,
@@ -163,6 +163,9 @@ describe('Landing API', () => {
     expect(
       discounted.body.data.map(({ minimumFinalPrice }) => minimumFinalPrice),
     ).toEqual([60000, 70000]);
+    expect(
+      discounted.body.data.map(({ minimumQuantity }) => minimumQuantity),
+    ).toEqual([5, 4]);
     expect(discounted.body.data[0].mainImageThumbnail).toBe(
       'data:image/webp;base64,AAAA',
     );
@@ -185,6 +188,9 @@ describe('Landing API', () => {
     expect(
       popular.body.data.map(({ minimumFinalPrice }) => minimumFinalPrice),
     ).toEqual([60000, 70000, 80000, 90000]);
+    expect(
+      popular.body.data.map(({ minimumQuantity }) => minimumQuantity),
+    ).toEqual([5, 4, 3, 2]);
     expect(popularPets.body.data.map(({ title }) => title)).toEqual([
       'حیوان-0',
       'حیوان-1',
@@ -551,6 +557,7 @@ describe('Landing API', () => {
       expect.objectContaining({
         discountPrice: 100,
         minimumFinalPrice: 100,
+        minimumQuantity: 1,
         slug: 'filtered-low',
       }),
     );
@@ -728,6 +735,13 @@ describe('Landing API', () => {
                 price: 100,
                 discountPercentage: 90,
               },
+              {
+                metric: 'KG',
+                quantity: 2,
+                value: 2,
+                price: 200,
+                discountPercentage: 0,
+              },
             ],
           },
         },
@@ -877,6 +891,9 @@ describe('Landing API', () => {
     response.body.data.forEach(({ product }, index) => {
       expect(product.minimumFinalPrice).toBeCloseTo([10, 200, 3, 80][index]);
     });
+    expect(
+      response.body.data.map(({ product }) => product.minimumQuantity),
+    ).toEqual([2, 10, 10, 10]);
   });
 
   test('supplements a sparse recent-pet section with highest-priced available pets', async () => {

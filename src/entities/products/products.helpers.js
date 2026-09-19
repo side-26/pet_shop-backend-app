@@ -41,6 +41,13 @@ export const getMinimumFinalPrice = (product) => {
   return price * (1 - discountPercentage / 100);
 };
 
+export const getMinimumQuantity = (product) => {
+  const weights = product?.weights || [];
+  return weights.length
+    ? Math.min(...weights.map(({ quantity }) => quantity))
+    : 0;
+};
+
 export const buildProductFilter = (
   {
     title: filterTitle,
