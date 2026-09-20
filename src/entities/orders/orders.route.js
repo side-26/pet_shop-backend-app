@@ -13,10 +13,12 @@ import {
   updateOrderShippingInfoController,
 } from './orders.controller.js';
 
+import { ORDER_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.post(
-  '/orders',
+  ORDER_ROUTES.orders,
   authenticated,
   /*
     #swagger.tags = ['Orders']
@@ -29,7 +31,7 @@ router.post(
   createOrderController,
 );
 router.get(
-  '/orders',
+  ORDER_ROUTES.orders,
   authenticated,
   /*
     #swagger.tags = ['Orders']
@@ -42,7 +44,7 @@ router.get(
   getUserOrdersController,
 );
 router.get(
-  '/orders/all',
+  ORDER_ROUTES.ordersAll,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   /*
@@ -58,7 +60,7 @@ router.get(
   getOrdersController,
 );
 router.patch(
-  '/orders/:id/delivery-state',
+  ORDER_ROUTES.ordersByIdDeliveryState,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   /*
@@ -74,7 +76,7 @@ router.patch(
   updateOrderDeliveryStateController,
 );
 router.patch(
-  '/orders/:id/shipping-info',
+  ORDER_ROUTES.ordersByIdShippingInfo,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   /*
@@ -90,7 +92,7 @@ router.patch(
   updateOrderShippingInfoController,
 );
 router.get(
-  '/orders/:id',
+  ORDER_ROUTES.ordersById,
   authenticated,
   /*
     #swagger.tags = ['Orders']

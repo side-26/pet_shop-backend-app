@@ -5,11 +5,12 @@ import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 
 import { getDashboardMetricsController } from './dashboard.controller.js';
+import { DASHBOARD_ROUTES } from './route.path.js';
 
 const router = express.Router();
 
 router.get(
-  '/dashboard/metrics',
+  DASHBOARD_ROUTES.dashboardMetrics,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   /*

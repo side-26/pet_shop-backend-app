@@ -32,6 +32,7 @@ Zod schemas validate request and model-update data. Public service functions are
 ## Modification Rules
 
 - Preserve the mandatory model/service/controller/route split and exact `<entity>.<layer>.js` naming.
+- Define every entity API path once in the sibling `route.path.js` module and reuse its exported map in both the router and `src/configs/routeMethods.config.js`.
 - Keep database queries and business rules in services, not controllers.
 - Keep entity-specific pure formatting/filter helpers in `<entity>.helpers.js`; promote cross-entity helpers to `src/utils`.
 - Update both unit and integration tests when a service function or endpoint changes.

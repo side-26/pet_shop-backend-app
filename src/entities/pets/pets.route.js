@@ -27,15 +27,17 @@ import {
   updatePetController,
 } from './pets.controller.js';
 
+import { PET_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.get(
-  '/pets',
+  PET_ROUTES.pets,
   /* #swagger.responses[200] = { description: 'Paginated customer pet list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   getCustomerPetListController,
 );
 router.get(
-  '/pets/customer/paginate',
+  PET_ROUTES.petsCustomerPaginate,
   /* #swagger.parameters['title'] = { in: 'query', type: 'string' }
      #swagger.parameters['petType'] = { in: 'query', type: 'string' }
      #swagger.parameters['breed'] = { in: 'query', type: 'string' }
@@ -43,9 +45,9 @@ router.get(
      #swagger.responses[200] = { description: 'Paginated customer pet list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   getCustomerPetPaginateController,
 );
-router.get('/pets/customer/:id', getCustomerPetController);
+router.get(PET_ROUTES.petsCustomerById, getCustomerPetController);
 router.patch(
-  '/pets/:id/user-rate',
+  PET_ROUTES.petsByIdUserRate,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: 'object', required: ['userRate'], properties: { userRate: { type: 'number', minimum: 0, maximum: 5, multipleOf: 0.1 } } } } } }
      #swagger.responses[200] = { description: 'Pet rating updated' }
@@ -55,7 +57,7 @@ router.patch(
   updatePetUserRateController,
 );
 router.get(
-  '/pets/paginate',
+  PET_ROUTES.petsPaginate,
   /* #swagger.parameters['title'] = { in: 'query', type: 'string' }
      #swagger.parameters['petType'] = { in: 'query', type: 'string' }
      #swagger.parameters['breed'] = { in: 'query', type: 'string' }
@@ -67,31 +69,31 @@ router.get(
   getManagementPetListController,
 );
 router.get(
-  '/pets/manage/:id',
+  PET_ROUTES.petsManageById,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getManagementPetController,
 );
 router.get(
-  '/pets/:id/images',
+  PET_ROUTES.petsByIdImages,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getPetImagesController,
 );
 router.get(
-  '/pets/:id/price',
+  PET_ROUTES.petsByIdPrice,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getPetPriceController,
 );
 router.get(
-  '/pets/:id/base-info',
+  PET_ROUTES.petsByIdBaseInfo,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getPetBaseInfoController,
 );
 router.post(
-  '/pets',
+  PET_ROUTES.pets,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetMainImageCreateBody' } } } } */
   authenticated,
@@ -100,7 +102,7 @@ router.post(
   createPetController,
 );
 router.put(
-  '/pets/:id',
+  PET_ROUTES.petsById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetBaseInfoUpdateBody' } } } } */
   authenticated,
@@ -108,7 +110,7 @@ router.put(
   updatePetController,
 );
 router.put(
-  '/pets/:id/images',
+  PET_ROUTES.petsByIdImages,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetImagesUpdateBody' } } } } */
   authenticated,
@@ -117,7 +119,7 @@ router.put(
   updatePetImagesController,
 );
 router.put(
-  '/pets/:id/price',
+  PET_ROUTES.petsByIdPrice,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetPriceUpdateBody' } } } } */
   authenticated,
@@ -125,19 +127,19 @@ router.put(
   updatePetPriceController,
 );
 router.patch(
-  '/pets/:id/enable',
+  PET_ROUTES.petsByIdEnable,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   enablePetController,
 );
 router.patch(
-  '/pets/:id/disable',
+  PET_ROUTES.petsByIdDisable,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   disablePetController,
 );
 router.delete(
-  '/pets/:id',
+  PET_ROUTES.petsById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   deletePetController,

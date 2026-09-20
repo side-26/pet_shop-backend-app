@@ -19,15 +19,17 @@ import {
   updateBreedController,
 } from './breeds.controller.js';
 
+import { BREED_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.get(
-  '/breeds/property-definitions/:id',
+  BREED_ROUTES.breedsPropertyDefinitionsById,
   getBreedPropertyDefinitionsController,
 );
-router.get('/breeds/slug/:slug', getBreedBySlugController);
+router.get(BREED_ROUTES.breedsSlugBySlug, getBreedBySlugController);
 router.put(
-  '/breeds/range',
+  BREED_ROUTES.breedsRange,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/BreedPropertyDefinitionsBody' } } } } */
   authenticated,
@@ -36,7 +38,7 @@ router.put(
 );
 
 router.get(
-  '/breeds/paginate',
+  BREED_ROUTES.breedsPaginate,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.parameters['title'] = { in: 'query', description: 'Case-insensitive breed title filter', type: 'string' }
      #swagger.parameters['petType'] = { in: 'query', description: 'Pet type identifier', type: 'string' }
@@ -49,7 +51,7 @@ router.get(
   getAllBreedsWithPaginationController,
 );
 router.get(
-  '/breeds',
+  BREED_ROUTES.breeds,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.parameters['petType'] = { in: 'query', description: 'Pet type identifier used to filter breeds', type: 'string' }
      #swagger.responses[200] = { description: 'Breed list filtered by pet type when provided' } */
@@ -58,13 +60,13 @@ router.get(
   getAllBreedsController,
 );
 router.get(
-  '/breeds/:id',
+  BREED_ROUTES.breedsById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   getBreedController,
 );
 router.post(
-  '/breeds',
+  BREED_ROUTES.breeds,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BreedMultipartBody' } } } } */
   authenticated,
@@ -73,7 +75,7 @@ router.post(
   createBreedController,
 );
 router.put(
-  '/breeds/:id',
+  BREED_ROUTES.breedsById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BreedUpdateMultipartBody' } } } } */
   authenticated,
@@ -82,19 +84,19 @@ router.put(
   updateBreedController,
 );
 router.patch(
-  '/breeds/:id/enable',
+  BREED_ROUTES.breedsByIdEnable,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   enableBreedController,
 );
 router.patch(
-  '/breeds/:id/disable',
+  BREED_ROUTES.breedsByIdDisable,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   disableBreedController,
 );
 router.delete(
-  '/breeds/:id',
+  BREED_ROUTES.breedsById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   deleteBreedController,

@@ -4308,20 +4308,65 @@
     "/pets/{id}/user-rate": {
       "patch": {
         "description": "",
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
-          "200": { "description": "Pet rating updated" },
-          "403": { "description": "A customer can rate only a purchased pet, once" },
+          "200": {
+            "description": "Pet rating updated"
+          },
+          "403": {
+            "description": "A customer can rate only a purchased pet, once"
+          },
           "405": {
             "description": "Method not allowed",
-            "headers": { "Allow": { "schema": { "type": "string" }, "example": "PATCH" } },
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "type": "object", "required": ["userRate"], "properties": { "userRate": { "type": "number", "minimum": 0, "maximum": 5, "multipleOf": 0.1 } } } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userRate"],
+                "properties": {
+                  "userRate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 5,
+                    "multipleOf": 0.1
+                  }
+                }
+              }
+            }
+          }
         },
         "tags": ["/pets"]
       }
@@ -6684,6 +6729,24 @@
           },
           "404": {
             "description": "Pet not found"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "GET"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         },
         "tags": ["/landing"]

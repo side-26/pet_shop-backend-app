@@ -16,24 +16,26 @@ import {
   updateBrandController,
 } from './brands.controller.js';
 
+import { BRAND_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.get(
-  '/brands',
+  BRAND_ROUTES.brands,
   /* #swagger.security = [{ "bearerAuth": [] }] */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getAllBrandsController,
 );
 router.get(
-  '/brands/enabled',
+  BRAND_ROUTES.brandsEnabled,
   /* #swagger.security = [{ "bearerAuth": [] }] */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getEnabledBrandsController,
 );
 router.get(
-  '/brands/:id',
+  BRAND_ROUTES.brandsById,
   /* #swagger.security = [{ "bearerAuth": [] }] */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
@@ -41,7 +43,7 @@ router.get(
 );
 
 router.post(
-  '/brands',
+  BRAND_ROUTES.brands,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BrandMultipartBody' } } } } */
   authenticated,
@@ -50,7 +52,7 @@ router.post(
   createBrandController,
 );
 router.put(
-  '/brands/:id',
+  BRAND_ROUTES.brandsById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/BrandUpdateMultipartBody' } } } } */
   authenticated,
@@ -59,19 +61,19 @@ router.put(
   updateBrandController,
 );
 router.patch(
-  '/brands/:id/enable',
+  BRAND_ROUTES.brandsByIdEnable,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   enableBrandController,
 );
 router.patch(
-  '/brands/:id/disable',
+  BRAND_ROUTES.brandsByIdDisable,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   disableBrandController,
 );
 router.delete(
-  '/brands/:id',
+  BRAND_ROUTES.brandsById,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   deleteBrandController,

@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { RATE_LIMIT, ROLES, ROUTES } from '#configs/constants.js';
+import { RATE_LIMIT, ROLES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadAvatar } from '#middlewares/upload.middleware.js';
@@ -38,6 +38,8 @@ import {
   verifyUserOtpController,
 } from './users.controller.js';
 
+import { USER_ROUTES } from './route.path.js';
+
 const router = express.Router();
 const userRateLimiter = new RateLimiter('users');
 const standardUserRateLimit = userRateLimiter.limit({
@@ -54,7 +56,7 @@ const loginUserRateLimit = userRateLimiter.limit({
 });
 
 router.post(
-  '/users',
+  USER_ROUTES.users,
   standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
@@ -78,7 +80,7 @@ router.post(
 );
 
 router.post(
-  '/users/register',
+  USER_ROUTES.usersRegister,
   standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
@@ -105,7 +107,7 @@ router.post(
 );
 
 router.post(
-  '/users/send-otp',
+  USER_ROUTES.usersSendOtp,
   standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
@@ -135,7 +137,7 @@ router.post(
 );
 
 router.post(
-  '/users/verify',
+  USER_ROUTES.usersVerify,
   standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
@@ -162,9 +164,8 @@ router.post(
 );
 
 router.post(
-  '/users/login',
-  /*
-    #swagger.tags = ['Users']
+  USER_ROUTES.usersLogin,
+  /* #swagger.tags = ['Users']
     #swagger.summary = 'Login user'
     #swagger.requestBody = {
       required: true,
@@ -193,7 +194,7 @@ router.post(
 );
 
 router.post(
-  '/users/reset-password',
+  USER_ROUTES.usersResetPassword,
   standardUserRateLimit,
   /*
     #swagger.tags = ['Users']
@@ -220,13 +221,13 @@ router.post(
 );
 
 router.post(
-  '/users/refresh-token',
+  USER_ROUTES.usersRefreshToken,
   standardUserRateLimit,
   refreshTokenController,
 );
 
 router.post(
-  ROUTES.users.logout,
+  USER_ROUTES.usersLogout,
   standardUserRateLimit,
   authenticated,
   /*
@@ -246,7 +247,7 @@ router.post(
 );
 
 router.put(
-  '/users/edit-info',
+  USER_ROUTES.usersEditInfo,
   standardUserRateLimit,
   authenticated,
   uploadAvatar,
@@ -254,27 +255,27 @@ router.put(
 );
 
 router.post(
-  '/users/addresses',
+  USER_ROUTES.usersAddresses,
   standardUserRateLimit,
   authenticated,
   addUserAddressController,
 );
 
 router.patch(
-  '/users/addresses/:addressId',
+  USER_ROUTES.usersAddressesByAddressId,
   standardUserRateLimit,
   authenticated,
   editUserAddressController,
 );
 router.get(
-  '/users/addresses',
+  USER_ROUTES.usersAddresses,
   standardUserRateLimit,
   authenticated,
   getUserAddressListController,
 );
 
 router.post(
-  '/cart/add',
+  USER_ROUTES.cartAdd,
   standardUserRateLimit,
   authenticated,
   /*
@@ -290,7 +291,7 @@ router.post(
   addCartItemController,
 );
 router.delete(
-  '/cart/delete/:id',
+  USER_ROUTES.cartDeleteById,
   standardUserRateLimit,
   authenticated,
   /*
@@ -305,7 +306,7 @@ router.delete(
   deleteCartItemController,
 );
 router.get(
-  '/cart/all',
+  USER_ROUTES.cartAll,
   standardUserRateLimit,
   authenticated,
   /*
@@ -317,7 +318,7 @@ router.get(
   getCartItemsController,
 );
 router.post(
-  '/cart/delivery-windows',
+  USER_ROUTES.cartDeliveryWindows,
   standardUserRateLimit,
   authenticated,
   /*
@@ -333,7 +334,7 @@ router.post(
   createDeliveryQuoteController,
 );
 router.patch(
-  '/cart/delivery-window',
+  USER_ROUTES.cartDeliveryWindow,
   standardUserRateLimit,
   authenticated,
   /*
@@ -349,7 +350,7 @@ router.patch(
   selectDeliveryWindowController,
 );
 router.delete(
-  '/cart/empty',
+  USER_ROUTES.cartEmpty,
   standardUserRateLimit,
   authenticated,
   /*
@@ -362,26 +363,26 @@ router.delete(
 );
 
 router.post(
-  '/wishlist/add',
+  USER_ROUTES.wishlistAdd,
   standardUserRateLimit,
   authenticated,
   addWishlistItemController,
 );
 router.delete(
-  '/wishlist/delete/:id',
+  USER_ROUTES.wishlistDeleteById,
   standardUserRateLimit,
   authenticated,
   deleteWishlistItemController,
 );
 router.get(
-  '/wishlist/all',
+  USER_ROUTES.wishlistAll,
   standardUserRateLimit,
   authenticated,
   getWishlistItemsController,
 );
 
 router.put(
-  '/users/change-password',
+  USER_ROUTES.usersChangePassword,
   standardUserRateLimit,
   authenticated,
   /*
@@ -405,7 +406,7 @@ router.put(
 );
 
 router.put(
-  '/users/disable/:id',
+  USER_ROUTES.usersDisableById,
   standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
@@ -422,7 +423,7 @@ router.put(
 );
 
 router.put(
-  '/users/enable/:id',
+  USER_ROUTES.usersEnableById,
   standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
@@ -439,7 +440,7 @@ router.put(
 );
 
 router.get(
-  '/users/all',
+  USER_ROUTES.usersAll,
   standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
@@ -455,7 +456,7 @@ router.get(
 );
 
 router.get(
-  '/users/paginate',
+  USER_ROUTES.usersPaginate,
   paginatedUserListRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
@@ -474,7 +475,7 @@ router.get(
 );
 
 router.get(
-  '/users/current',
+  USER_ROUTES.usersCurrent,
   standardUserRateLimit,
   authenticated,
   /*
@@ -488,7 +489,7 @@ router.get(
 );
 
 router.get(
-  '/users/:id',
+  USER_ROUTES.usersById,
   standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
@@ -509,7 +510,7 @@ router.get(
 );
 
 router.delete(
-  '/users/:id',
+  USER_ROUTES.usersById,
   standardUserRateLimit,
   authenticated,
   roleMiddleware(ROLES.ADMIN),

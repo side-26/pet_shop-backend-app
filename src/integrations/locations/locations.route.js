@@ -5,9 +5,11 @@ import {
   getCitiesByProvinceIdController,
 } from './locations.controller.js';
 
+import { LOCATION_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
-router.get('/provinces', getAllProvincesController);
-router.get('/cities/:provinceId', getCitiesByProvinceIdController);
+router.get(LOCATION_ROUTES.provinces, getAllProvincesController);
+router.get(LOCATION_ROUTES.citiesByProvinceId, getCitiesByProvinceIdController);
 
 export default router;

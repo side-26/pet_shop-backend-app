@@ -14,38 +14,40 @@ import {
   updateSubCategoryController,
 } from './subCategories.controller.js';
 
+import { SUB_CATEGORY_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.post(
-  '/sub-categories',
+  SUB_CATEGORY_ROUTES.subCategories,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   createSubCategoryController,
 );
 
 router.put(
-  '/sub-categories/:id',
+  SUB_CATEGORY_ROUTES.subCategoriesById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   updateSubCategoryController,
 );
 
 router.delete(
-  '/sub-categories/:id',
+  SUB_CATEGORY_ROUTES.subCategoriesById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   deleteSubCategoryByIdController,
 );
 
 router.get(
-  '/sub-categories',
+  SUB_CATEGORY_ROUTES.subCategories,
   authenticated,
 
   getAllSubCategoriesController,
 );
 
 router.get(
-  '/sub-categories/:id',
+  SUB_CATEGORY_ROUTES.subCategoriesById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   getSubCategoryByIdController,

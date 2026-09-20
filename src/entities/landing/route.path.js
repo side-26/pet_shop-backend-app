@@ -1,0 +1,15 @@
+export const LANDING_ROUTES = {
+  landingSearch: '/landing/search',
+  landingPetsPaginate: '/landing/pets-paginate',
+  landingPetTypes: '/landing/pet-types',
+  landingProductsDiscounted: '/landing/products/discounted',
+  landingPetTypesAll: '/landing/pet-types/all',
+  landingProductsPopular: '/landing/products/popular',
+  landingProductsFeatured: '/landing/products/featured',
+  landingProducts: '/landing/products',
+  landingBrandsPopular: '/landing/brands/popular',
+  landingPetsPopular: '/landing/pets/popular',
+  landingPetsRecent: '/landing/pets/recent',
+  landingPetsBySlug: '/landing/pets/:slug',
+  landingProductsBySlug: '/landing/products/:slug',
+};

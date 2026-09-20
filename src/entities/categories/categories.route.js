@@ -16,6 +16,8 @@ import {
   updateCategoryController,
 } from './categories.controller.js';
 
+import { CATEGORY_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 // ============================================
@@ -23,7 +25,7 @@ const router = express.Router();
 // ============================================
 
 router.post(
-  '/categories',
+  CATEGORY_ROUTES.categories,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/CategoryMultipartBody' } } } } */
   authenticated,
@@ -37,7 +39,7 @@ router.post(
 // ============================================
 
 router.put(
-  '/categories/:id',
+  CATEGORY_ROUTES.categoriesById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/CategoryUpdateMultipartBody' } } } } */
   authenticated,
@@ -51,7 +53,7 @@ router.put(
 // ============================================
 
 router.put(
-  '/categories/enable/:id',
+  CATEGORY_ROUTES.categoriesEnableById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   enableCategoryByIdController,
@@ -62,7 +64,7 @@ router.put(
 // ============================================
 
 router.put(
-  '/categories/disable/:id',
+  CATEGORY_ROUTES.categoriesDisableById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   disableCategoryByIdController,
@@ -73,7 +75,7 @@ router.put(
 // ============================================
 
 router.delete(
-  '/categories/:id',
+  CATEGORY_ROUTES.categoriesById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   deleteCategoryByIdController,
@@ -83,14 +85,18 @@ router.delete(
 // READ ALL
 // ============================================
 
-router.get('/categories', authenticated, getAllCategoriesController);
+router.get(
+  CATEGORY_ROUTES.categories,
+  authenticated,
+  getAllCategoriesController,
+);
 
 // ============================================
 // READ ONE
 // ============================================
 
 router.get(
-  '/categories/:id',
+  CATEGORY_ROUTES.categoriesById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   getCategoryByIdController,

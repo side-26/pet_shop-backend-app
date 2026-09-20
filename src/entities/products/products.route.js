@@ -30,21 +30,23 @@ import {
   updateProductUserRateController,
 } from './products.controller.js';
 
+import { PRODUCT_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.get(
-  '/products',
+  PRODUCT_ROUTES.products,
   /* #swagger.responses[200] = { description: 'Paginated customer product list', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } } */
   getCustomerProductListController,
 );
-router.get('/products/customer/:id', getCustomerProductController);
+router.get(PRODUCT_ROUTES.productsCustomerById, getCustomerProductController);
 router.get(
-  '/products/property-definitions/:id',
+  PRODUCT_ROUTES.productsPropertyDefinitionsById,
   getProductPropertyDefinitionsController,
 );
-router.get('/products/weights/:id', getProductWeightsController);
+router.get(PRODUCT_ROUTES.productsWeightsById, getProductWeightsController);
 router.put(
-  '/products/range',
+  PRODUCT_ROUTES.productsRange,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductWeightsReplaceBody' } } } } */
   authenticated,
@@ -52,19 +54,19 @@ router.put(
   replaceProductWeightsController,
 );
 router.put(
-  '/products/property-definitions',
+  PRODUCT_ROUTES.productsPropertyDefinitions,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   replaceProductPropertyDefinitionsController,
 );
 router.patch(
-  '/products/:id/user-rate',
+  PRODUCT_ROUTES.productsByIdUserRate,
   authenticated,
   roleMiddleware(ROLES.CUSTOMER),
   updateProductUserRateController,
 );
 router.get(
-  '/products/paginate',
+  PRODUCT_ROUTES.productsPaginate,
   /* #swagger.parameters['title'] = { in: 'query', type: 'string' }
      #swagger.parameters['category'] = { in: 'query', type: 'string' }
      #swagger.parameters['subCategory'] = { in: 'query', type: 'string' }
@@ -77,26 +79,26 @@ router.get(
   getManagementProductListController,
 );
 router.get(
-  '/products/manage/:id',
+  PRODUCT_ROUTES.productsManageById,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getManagementProductController,
 );
 router.get(
-  '/products/:id/images',
+  PRODUCT_ROUTES.productsByIdImages,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getProductImagesController,
 );
 router.get(
-  '/products/:id/main-info',
+  PRODUCT_ROUTES.productsByIdMainInfo,
   /* #swagger.security = [{ "bearerAuth": [] }] */
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   getProductMainInfoController,
 );
 router.post(
-  '/products',
+  PRODUCT_ROUTES.products,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/MainImageCreateBody' } } } } */
   authenticated,
@@ -105,7 +107,7 @@ router.post(
   createProductController,
 );
 router.put(
-  '/products/:id',
+  PRODUCT_ROUTES.productsById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductBaseInfoUpdateBody' } } } } */
   authenticated,
@@ -113,7 +115,7 @@ router.put(
   updateProductController,
 );
 router.patch(
-  '/products/:id',
+  PRODUCT_ROUTES.productsById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductBaseInfoUpdateBody' } } } } */
   authenticated,
@@ -121,7 +123,7 @@ router.patch(
   editProductController,
 );
 router.put(
-  '/products/:id/main-info',
+  PRODUCT_ROUTES.productsByIdMainInfo,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ProductBaseInfoUpdateBody' } } } } */
   authenticated,
@@ -129,7 +131,7 @@ router.put(
   updateProductMainInfoController,
 );
 router.put(
-  '/products/:id/images',
+  PRODUCT_ROUTES.productsByIdImages,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/ProductImagesUpdateBody' } } } } */
   authenticated,
@@ -138,19 +140,19 @@ router.put(
   updateProductImagesController,
 );
 router.patch(
-  '/products/:id/enable',
+  PRODUCT_ROUTES.productsByIdEnable,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   enableProductController,
 );
 router.patch(
-  '/products/:id/disable',
+  PRODUCT_ROUTES.productsByIdDisable,
   authenticated,
   roleMiddleware(MANAGEMENT_ROLES),
   disableProductController,
 );
 router.delete(
-  '/products/:id',
+  PRODUCT_ROUTES.productsById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   deleteProductController,

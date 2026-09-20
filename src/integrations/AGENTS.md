@@ -19,6 +19,7 @@ External adapters use `route -> controller -> service -> client`; locally persis
 ## Modification Rules
 
 - Keep HTTP-provider details in client files and provider-independent rules/error mapping in services.
+- Define every integration API path once in its sibling `route.path.js` module and reuse its exported map in both the router and `src/configs/routeMethods.config.js`.
 - Validate request parameters with local Zod schemas where inputs exist.
 - Use shared integration constants and Persian application errors.
 - Update colocated unit and integration tests when contracts change.

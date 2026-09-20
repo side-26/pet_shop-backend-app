@@ -20,21 +20,23 @@ import {
   deletePetTypeController,
 } from './petTypes.controller.js';
 
+import { PET_TYPE_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 // Public routes
-router.get('/pet-types', getAllPetTypesController);
+router.get(PET_TYPE_ROUTES.petTypes, getAllPetTypesController);
 router.get(
-  '/pet-types/property-definitions/:id',
+  PET_TYPE_ROUTES.petTypesPropertyDefinitionsById,
   /* #swagger.description = 'Return a pet type property definition list.' */
   getPetTypePropertyDefinitionsController,
 );
-router.get('/pet-types/:id', getPetTypeByIdController);
-router.get('/pet-types/slug/:slug', getPetTypeBySlugController);
+router.get(PET_TYPE_ROUTES.petTypesById, getPetTypeByIdController);
+router.get(PET_TYPE_ROUTES.petTypesSlugBySlug, getPetTypeBySlugController);
 
 // Admin routes
 router.put(
-  '/pet-types/range',
+  PET_TYPE_ROUTES.petTypesRange,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PetTypePropertyDefinitionsBody' } } } } */
   authenticated,
@@ -42,7 +44,7 @@ router.put(
   replacePetTypePropertyDefinitionsController,
 );
 router.post(
-  '/pet-types',
+  PET_TYPE_ROUTES.petTypes,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetTypeMultipartBody' } } } } */
   authenticated,
@@ -51,7 +53,7 @@ router.post(
   createPetTypeController,
 );
 router.put(
-  '/pet-types/:id',
+  PET_TYPE_ROUTES.petTypesById,
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/PetTypeUpdateMultipartBody' } } } } */
   authenticated,
@@ -60,19 +62,19 @@ router.put(
   updatePetTypeController,
 );
 router.patch(
-  '/pet-types/:id/disable',
+  PET_TYPE_ROUTES.petTypesByIdDisable,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   disablePetTypeController,
 );
 router.patch(
-  '/pet-types/:id/enable',
+  PET_TYPE_ROUTES.petTypesByIdEnable,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   enablePetTypeController,
 );
 router.delete(
-  '/pet-types/:id',
+  PET_TYPE_ROUTES.petTypesById,
   authenticated,
   roleMiddleware(ROLES.ADMIN),
   deletePetTypeController,

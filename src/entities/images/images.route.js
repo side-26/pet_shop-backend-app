@@ -10,12 +10,13 @@ import {
   uploadImageController,
 } from './images.controller.js';
 
+import { IMAGE_ROUTES } from './route.path.js';
+
 const router = express.Router();
 
 router.post(
-  '/images',
-  /*
-    #swagger.tags = ['Images']
+  IMAGE_ROUTES.images,
+  /* #swagger.tags = ['Images']
     #swagger.summary = 'Upload an optimized management image'
     #swagger.security = [{ "bearerAuth": [] }]
     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { type: 'object', required: ['mainImage'], properties: { mainImage: { type: 'string', format: 'binary' } } } } } }
@@ -30,9 +31,8 @@ router.post(
 );
 
 router.delete(
-  '/images',
-  /*
-    #swagger.tags = ['Images']
+  IMAGE_ROUTES.images,
+  /* #swagger.tags = ['Images']
     #swagger.summary = 'Delete a management image from storage'
     #swagger.security = [{ "bearerAuth": [] }]
     #swagger.requestBody = { required: true, content: { "application/json": { schema: { type: 'object', required: ['imageUrl'], properties: { imageUrl: { type: 'string', format: 'uri' } } } } } }
