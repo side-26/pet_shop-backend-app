@@ -10,6 +10,7 @@ import { ORDER_ROUTES } from '#entities/orders/route.path.js';
 import { PET_ROUTES } from '#entities/pets/route.path.js';
 import { PET_TYPE_ROUTES } from '#entities/petTypes/route.path.js';
 import { PRODUCT_ROUTES } from '#entities/products/route.path.js';
+import { PROFILE_ROUTES } from '#entities/profile/route.path.js';
 import { SUB_CATEGORY_ROUTES } from '#entities/subCategories/route.path.js';
 import { USER_ROUTES } from '#entities/users/route.path.js';
 
@@ -28,6 +29,7 @@ export const API_ROUTE_METHODS = [
   { path: LANDING_ROUTES.landingProductsDiscounted, methods: [get] },
   { path: LANDING_ROUTES.landingProductsFeatured, methods: [get] },
   { path: LANDING_ROUTES.landingProductsPopular, methods: [get] },
+  { path: PROFILE_ROUTES.profileAccount, methods: [get] },
   { path: PET_ROUTES.petsCustomerPaginate, methods: [get] },
   { path: BRAND_ROUTES.brandsByIdDisable, methods: [patch] },
   { path: BRAND_ROUTES.brandsByIdEnable, methods: [patch] },

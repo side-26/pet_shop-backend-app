@@ -22,6 +22,7 @@ Each entity owns persistence, business logic, request orchestration, routes, val
 - [`orders/AGENTS.md`](./orders/AGENTS.md) — immutable Cart snapshots, user Order history, and management delivery workflows.
 - [`dashboard/AGENTS.md`](./dashboard/AGENTS.md) — admin-only cross-domain commerce and catalog metrics.
 - [`landing/AGENTS.md`](./landing/AGENTS.md) — public homepage catalog sections.
+- [`profile/AGENTS.md`](./profile/AGENTS.md) — authenticated customer account views without a dedicated collection.
 
 ## Flow
 
