@@ -7024,6 +7024,32 @@
         }
       }
     },
+    "/profile/reset-password": {
+      "post": {
+        "tags": ["/profile"],
+        "summary": "Reset the authenticated customer password",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangeUserPasswordBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password reset successfully" },
+          "401": { "description": "Authentication is invalid, or the account is disabled or deleted" },
+          "403": { "description": "Customer role required" },
+          "422": { "description": "Invalid password data or incorrect old password" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": { "Allow": { "schema": { "type": "string" }, "example": "POST" } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          }
+        }
+      }
+    },
     "/profile/addresses": {
       "get": {
         "tags": ["/profile"],

@@ -30,6 +30,7 @@ export const API_ROUTE_METHODS = [
   { path: LANDING_ROUTES.landingProductsFeatured, methods: [get] },
   { path: LANDING_ROUTES.landingProductsPopular, methods: [get] },
   { path: PROFILE_ROUTES.profileAccount, methods: [get] },
+  { path: PROFILE_ROUTES.profileResetPassword, methods: [post] },
   { path: PROFILE_ROUTES.profileAddresses, methods: [get, post] },
   {
     path: PROFILE_ROUTES.profileAddressById,

@@ -3,6 +3,13 @@ jest.mock('nanoid', () => ({
   nanoid: jest.fn(() => 'test-id'),
 }));
 
+jest.mock('../../infrastructure/redis/auth/redisAuthSession.store.js', () => ({
+  RedisAuthSessionStore: jest.fn(() => ({
+    deleteByUserId: jest.fn().mockResolvedValue(),
+    isOwnedBy: jest.fn().mockResolvedValue(true),
+  })),
+}));
+
 jest.mock('#middlewares/auth.middleware.js', () => ({
   authenticated: (req, res, next) => {
     void res;
@@ -17,6 +24,7 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
   },
 }));
 
+import bcrypt from 'bcryptjs';
 import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -234,5 +242,31 @@ describe('Profile API', () => {
     expect(detail.body.data._id).toBe(orderId.toString());
 
     await request(app).get(`/api/profile/orders/${otherOrderId}`).expect(404);
+  });
+
+  test('resets the authenticated customer password and invalidates sessions', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      phoneNumber: '09121234567',
+      password: await bcrypt.hash('old-password', 4),
+      isEnable: true,
+    });
+    global.__PROFILE_TEST_USER_ID__ = userId.toString();
+
+    const response = await request(app)
+      .post('/api/profile/reset-password')
+      .send({
+        oldPassword: 'old-password',
+        password: 'new-password',
+        repeatPassword: 'new-password',
+      })
+      .expect(200);
+
+    expect(response.body.message).toBe('کلمه عبور با موفقیت بازنشانی شد');
+    const updatedUser = await UserModel.findById(userId).select('+password');
+    await expect(
+      bcrypt.compare('new-password', updatedUser.password),
+    ).resolves.toBe(true);
   });
 });

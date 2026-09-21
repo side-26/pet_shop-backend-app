@@ -13,6 +13,7 @@ jest.mock('./profile.model.js', () => ({
 jest.mock('#entities/users/users.service.js', () => ({
   UserService: {
     addAddress: jest.fn(),
+    changePassword: jest.fn(),
     deleteAddress: jest.fn(),
     editAddress: jest.fn(),
     getAddresses: jest.fn(),
@@ -191,5 +192,19 @@ describe('ProfileService', () => {
       message: 'حساب کاربری غیرفعال است یا حذف شده است',
     });
     expect(OrderService.getUserOrders).not.toHaveBeenCalled();
+  });
+
+  test('resets the authenticated customer password through Users service', async () => {
+    const actor = { userId: 'user-id' };
+    const data = {
+      oldPassword: 'old-password',
+      password: 'new-password',
+      repeatPassword: 'new-password',
+    };
+    const user = { _id: 'user-id' };
+    UserService.changePassword.mockResolvedValue(user);
+
+    await expect(ProfileService.resetPassword(actor, data)).resolves.toBe(user);
+    expect(UserService.changePassword).toHaveBeenCalledWith(actor, data);
   });
 });

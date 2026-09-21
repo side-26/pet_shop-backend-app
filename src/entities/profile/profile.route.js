@@ -12,6 +12,7 @@ import {
   getAddressesController,
   getOrderByIdController,
   getOrdersController,
+  resetPasswordController,
   updateAddressController,
 } from './profile.controller.js';
 import { PROFILE_ROUTES } from './route.path.js';
@@ -29,6 +30,20 @@ router.get(
      #swagger.responses[401] = { description: 'Authentication is invalid, or the account is disabled or deleted' }
      #swagger.responses[403] = { description: 'Customer role required' } */
   getAccountController,
+);
+
+router.post(
+  PROFILE_ROUTES.profileResetPassword,
+  authenticated,
+  roleMiddleware(ROLES.CUSTOMER),
+  /* #swagger.summary = 'Reset the authenticated customer password'
+     #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ChangeUserPasswordBody' } } } }
+     #swagger.responses[200] = { description: 'Password reset successfully' }
+     #swagger.responses[401] = { description: 'Authentication is invalid, or the account is disabled or deleted' }
+     #swagger.responses[403] = { description: 'Customer role required' }
+     #swagger.responses[422] = { description: 'Invalid password data or incorrect old password' } */
+  resetPasswordController,
 );
 
 router.post(

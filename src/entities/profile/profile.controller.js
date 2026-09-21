@@ -2,6 +2,7 @@ import { STATUES } from '#configs/constants.js';
 import {
   addUserAddressSchema,
   editUserAddressSchema,
+  userChangePasswordFormBodyValidation,
   userAddressIdSchema,
 } from '#entities/users/users.schema.js';
 import {
@@ -102,6 +103,21 @@ export const getOrderByIdController = async (req, res, next) => {
     const { id } = returnFormValidation(orderIdSchema, req.params);
     const order = await ProfileService.getOrderById(req.user, id);
     setSuccessResponse(res, STATUES.SUCCESS, { data: order });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const resetPasswordController = async (req, res, next) => {
+  try {
+    const body = returnFormValidation(
+      userChangePasswordFormBodyValidation,
+      req.body,
+    );
+    await ProfileService.resetPassword(req.user, body);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'کلمه عبور با موفقیت بازنشانی شد',
+    });
   } catch (error) {
     onCatchPromiseController(error, next);
   }

@@ -75,4 +75,9 @@ export class ProfileService {
     await this.getAccount(actor);
     return OrderService.getUserOrder(actor, orderId);
   }
+
+  static async resetPassword(actor, data) {
+    await this.getAccount(actor);
+    return UserService.changePassword(actor, data);
+  }
 }
