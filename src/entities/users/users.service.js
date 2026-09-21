@@ -793,6 +793,35 @@ export class UserService {
     return updatedUser.addresses.id(addressId);
   }
 
+  static async deleteAddress(actor, addressId) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await this.findById(userId);
+    const existingAddress = user.addresses.id(addressId);
+    if (!existingAddress) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نشانی یافت نشد',
+        code: ERROR_CODES.USER_ADDRESS_NOT_FOUND,
+      });
+    }
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId, 'addresses._id': addressId },
+      {
+        $pull: { addresses: { _id: addressId } },
+        $set: CART_DELIVERY_RESET,
+      },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!updatedUser) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'نشانی یافت نشد',
+        code: ERROR_CODES.USER_ADDRESS_NOT_FOUND,
+      });
+    }
+
+    return existingAddress;
+  }
+
   static async createDeliveryQuote(actor, addressId) {
     const userId = this.getAuthenticatedUserId(actor);
     const user = await this.findById(userId);

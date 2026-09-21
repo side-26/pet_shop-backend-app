@@ -7023,6 +7023,248 @@
           }
         }
       }
+    },
+    "/profile/addresses": {
+      "get": {
+        "tags": ["/profile"],
+        "summary": "Get the authenticated customer addresses",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Customer address list" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "GET" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["/profile"],
+        "summary": "Create an authenticated customer address",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Created customer address" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "422": {
+            "description": "Invalid address data or address limit reached"
+          },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": { "type": "string" },
+                "example": "GET, POST"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/addresses/{addressId}": {
+      "get": {
+        "tags": ["/profile"],
+        "summary": "Get one authenticated customer address",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "addressId",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Customer address detail" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "404": { "description": "Address not found" },
+          "422": { "description": "Invalid address ID" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": { "type": "string" },
+                "example": "GET, PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["/profile"],
+        "summary": "Update one authenticated customer address",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "addressId",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Updated customer address" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "404": { "description": "Address not found" },
+          "422": { "description": "Invalid address data or ID" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": { "type": "string" },
+                "example": "GET, PATCH"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["/profile"],
+        "summary": "Delete one authenticated customer address",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "addressId",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Deleted customer address" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "404": { "description": "Address not found" },
+          "422": { "description": "Invalid address ID" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": {
+                "schema": { "type": "string" },
+                "example": "GET, PATCH, DELETE"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/orders": {
+      "get": {
+        "tags": ["/profile"],
+        "summary": "List authenticated customer orders",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Paginated customer orders" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "422": { "description": "Invalid order query" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "GET" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/orders/{id}": {
+      "get": {
+        "tags": ["/profile"],
+        "summary": "Get one authenticated customer order",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Owned order detail" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
+          "403": { "description": "Customer role required" },
+          "404": { "description": "Order not found" },
+          "422": { "description": "Invalid order ID" },
+          "405": {
+            "description": "Method not allowed",
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "GET" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

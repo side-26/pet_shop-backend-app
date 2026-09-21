@@ -1,3 +1,8 @@
+jest.mock('nanoid', () => ({
+  customAlphabet: jest.fn(() => () => '123456789'),
+  nanoid: jest.fn(() => 'test-id'),
+}));
+
 jest.mock('#middlewares/auth.middleware.js', () => ({
   authenticated: (req, res, next) => {
     void res;
@@ -17,6 +22,7 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 
 import { UserModel } from '#entities/users/users.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import profileRoutes from './profile.route.js';
@@ -26,12 +32,13 @@ describe('Profile API', () => {
 
   beforeAll(() => {
     app = express();
+    app.use(express.json());
     app.use('/api', profileRoutes);
     app.use(errorHandler);
   });
 
   beforeEach(async () => {
-    await UserModel.deleteMany({});
+    await Promise.all([UserModel.deleteMany({}), OrderModel.deleteMany({})]);
     global.__PROFILE_TEST_USER_ID__ = undefined;
     global.__PROFILE_TEST_USER_ROLE__ = undefined;
   });
@@ -97,5 +104,135 @@ describe('Profile API', () => {
       isSuccess: false,
       message: 'شما اجازه دسترسی به این بخش را ندارید',
     });
+  });
+
+  test('lists, reads, and updates only the authenticated customer addresses', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const addressId = new mongoose.Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      phoneNumber: '09121234567',
+      password: 'hash',
+      isEnable: true,
+      addresses: [
+        {
+          _id: addressId,
+          province: 'تهران',
+          city: 'تهران',
+          detailAddress: 'خیابان آزادی پلاک دوازده',
+          plate: '12',
+          unit: null,
+          postalCode: '1234567890',
+          receiverIsMe: false,
+          firstName: 'علی',
+          lastName: 'احمدی',
+          nationalCode: '0012345678',
+          phoneNumber: '09121234567',
+        },
+      ],
+    });
+    global.__PROFILE_TEST_USER_ID__ = userId.toString();
+
+    const list = await request(app).get('/api/profile/addresses').expect(200);
+    expect(list.body.totalRecords).toBe(1);
+    expect(list.body.data[0]._id).toBe(addressId.toString());
+
+    const detail = await request(app)
+      .get(`/api/profile/addresses/${addressId}`)
+      .expect(200);
+    expect(detail.body.data).toMatchObject({
+      _id: addressId.toString(),
+      plate: '12',
+    });
+
+    const updated = await request(app)
+      .patch(`/api/profile/addresses/${addressId}`)
+      .send({ plate: '25' })
+      .expect(200);
+    expect(updated.body.data).toMatchObject({
+      _id: addressId.toString(),
+      plate: '25',
+    });
+
+    await request(app)
+      .get(`/api/profile/addresses/${new mongoose.Types.ObjectId()}`)
+      .expect(404);
+  });
+
+  test('creates and deletes an authenticated customer address', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      phoneNumber: '09121234567',
+      password: 'hash',
+      isEnable: true,
+      addresses: [],
+    });
+    global.__PROFILE_TEST_USER_ID__ = userId.toString();
+    const address = {
+      province: 'تهران',
+      city: 'تهران',
+      detailAddress: 'خیابان آزادی پلاک دوازده',
+      plate: '12',
+      postalCode: '1234567890',
+      receiverIsMe: false,
+      firstName: 'علی',
+      lastName: 'احمدی',
+      nationalCode: '0012345678',
+      phoneNumber: '09121234567',
+    };
+
+    const created = await request(app)
+      .post('/api/profile/addresses')
+      .send(address)
+      .expect(201);
+    expect(created.body.data).toMatchObject(address);
+
+    await request(app)
+      .delete(`/api/profile/addresses/${created.body.data._id}`)
+      .expect(200);
+    const user = await UserModel.findById(userId);
+    expect(user.addresses).toHaveLength(0);
+  });
+
+  test('lists and reads only the authenticated customer order snapshots', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const otherUserId = new mongoose.Types.ObjectId();
+    const orderId = new mongoose.Types.ObjectId();
+    const otherOrderId = new mongoose.Types.ObjectId();
+    await Promise.all([
+      UserModel.collection.insertOne({
+        _id: userId,
+        phoneNumber: '09121234567',
+        password: 'hash',
+        isEnable: true,
+      }),
+      OrderModel.collection.insertMany([
+        {
+          _id: orderId,
+          user: userId,
+          orderNumber: '123456789',
+          trackingCode: '111111111',
+        },
+        {
+          _id: otherOrderId,
+          user: otherUserId,
+          orderNumber: '987654321',
+          trackingCode: '222222222',
+        },
+      ]),
+    ]);
+    global.__PROFILE_TEST_USER_ID__ = userId.toString();
+
+    const list = await request(app).get('/api/profile/orders').expect(200);
+    expect(list.body.data).toHaveLength(1);
+    expect(list.body.data[0]._id).toBe(orderId.toString());
+
+    const detail = await request(app)
+      .get(`/api/profile/orders/${orderId}`)
+      .expect(200);
+    expect(detail.body.data._id).toBe(orderId.toString());
+
+    await request(app).get(`/api/profile/orders/${otherOrderId}`).expect(404);
   });
 });

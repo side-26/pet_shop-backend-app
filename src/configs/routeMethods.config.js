@@ -30,6 +30,13 @@ export const API_ROUTE_METHODS = [
   { path: LANDING_ROUTES.landingProductsFeatured, methods: [get] },
   { path: LANDING_ROUTES.landingProductsPopular, methods: [get] },
   { path: PROFILE_ROUTES.profileAccount, methods: [get] },
+  { path: PROFILE_ROUTES.profileAddresses, methods: [get, post] },
+  {
+    path: PROFILE_ROUTES.profileAddressById,
+    methods: [get, patch, deleteMethod],
+  },
+  { path: PROFILE_ROUTES.profileOrders, methods: [get] },
+  { path: PROFILE_ROUTES.profileOrderById, methods: [get] },
   { path: PET_ROUTES.petsCustomerPaginate, methods: [get] },
   { path: BRAND_ROUTES.brandsByIdDisable, methods: [patch] },
   { path: BRAND_ROUTES.brandsByIdEnable, methods: [patch] },

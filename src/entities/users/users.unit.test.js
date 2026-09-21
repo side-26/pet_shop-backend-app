@@ -1654,6 +1654,29 @@ describe('UserService - Unit Tests', () => {
         address,
       ]);
     });
+
+    test('deleteAddress removes an owned address and resets selected delivery data', async () => {
+      const addressId = '65a4de97aff1fbb38c437951';
+      const existing = { ...address, _id: addressId };
+      mockUser.addresses = { id: jest.fn(() => existing) };
+      UserModel.findById.mockResolvedValue(mockUser);
+      UserModel.findOneAndUpdate.mockResolvedValue({ addresses: [] });
+
+      await expect(
+        UserService.deleteAddress(mockActor, addressId),
+      ).resolves.toEqual(existing);
+      expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: mockUser._id, 'addresses._id': addressId },
+        {
+          $pull: { addresses: { _id: addressId } },
+          $set: expect.objectContaining({
+            'cart.deliveryQuote': null,
+            'cart.deliveryWindow': null,
+          }),
+        },
+        { returnDocument: 'after', runValidators: true },
+      );
+    });
   });
 
   // =========================================================
