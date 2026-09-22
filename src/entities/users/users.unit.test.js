@@ -358,6 +358,30 @@ describe('UserService - Unit Tests', () => {
     expect(result).toBeNull();
   });
 
+  test('getCurrentUser returns the profile summary personal information', async () => {
+    const birthDate = new Date('1998-04-12T00:00:00.000Z');
+    const user = {
+      ...mockUser,
+      avatar: 'https://cdn.test/users/avatar.webp',
+      email: 'mahdi@example.com',
+      birthDate,
+    };
+    UserModel.findById.mockResolvedValue(user);
+
+    await expect(UserService.getCurrentUser(mockActor)).resolves.toEqual({
+      userId: mockUser._id,
+      firstName: mockUser.firstName,
+      lastName: mockUser.lastName,
+      phoneNumber: mockUser.phoneNumber,
+      role: mockUser.role,
+      avatar: user.avatar,
+      email: user.email,
+      nationalCode: mockUser.nationalCode,
+      age: mockUser.age,
+      birthDate,
+    });
+  });
+
   test('deleteById deletes the user and removes the stored avatar', async () => {
     const deletedUser = {
       ...mockUser,

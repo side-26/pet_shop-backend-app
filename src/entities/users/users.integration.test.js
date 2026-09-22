@@ -1144,6 +1144,37 @@ describe('User API - Integration Tests', () => {
   });
 
   // =========================================================
+  // GET /api/users/current
+  // =========================================================
+
+  describe('GET /api/users/current', () => {
+    test('returns the profile summary personal information', async () => {
+      testUser.email = 'mahdi@example.com';
+      testUser.avatar = 'https://cdn.example.test/users/avatar.webp';
+      testUser.birthDate = new Date('1998-04-12T00:00:00.000Z');
+      await testUser.save();
+
+      const res = await request(app)
+        .get('/api/users/current')
+        .set('Authorization', 'Bearer token');
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data).toEqual({
+        userId: testUser._id.toString(),
+        firstName: testUser.firstName,
+        lastName: testUser.lastName,
+        phoneNumber: testUser.phoneNumber,
+        role: testUser.role,
+        avatar: testUser.avatar,
+        email: testUser.email,
+        nationalCode: testUser.nationalCode,
+        age: testUser.age,
+        birthDate: '1998-04-12T00:00:00.000Z',
+      });
+    });
+  });
+
+  // =========================================================
   // PUT /api/users/edit-info
   // =========================================================
 

@@ -7032,12 +7032,20 @@
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": { "description": "Customer avatar deleted" },
-          "401": { "description": "Authentication is invalid, or the account is disabled or deleted" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
           "403": { "description": "Customer role required" },
           "405": {
             "description": "Method not allowed",
-            "headers": { "Allow": { "schema": { "type": "string" }, "example": "DELETE" } },
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "DELETE" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
           }
         }
       }
@@ -7051,19 +7059,31 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ChangeUserPasswordBody" }
+              "schema": {
+                "$ref": "#/components/schemas/ChangeUserPasswordBody"
+              }
             }
           }
         },
         "responses": {
           "200": { "description": "Password reset successfully" },
-          "401": { "description": "Authentication is invalid, or the account is disabled or deleted" },
+          "401": {
+            "description": "Authentication is invalid, or the account is disabled or deleted"
+          },
           "403": { "description": "Customer role required" },
-          "422": { "description": "Invalid password data or incorrect old password" },
+          "422": {
+            "description": "Invalid password data or incorrect old password"
+          },
           "405": {
             "description": "Method not allowed",
-            "headers": { "Allow": { "schema": { "type": "string" }, "example": "POST" } },
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+            "headers": {
+              "Allow": { "schema": { "type": "string" }, "example": "POST" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
           }
         }
       }
@@ -8209,7 +8229,11 @@
               "lastName",
               "phoneNumber",
               "role",
-              "avatar"
+              "avatar",
+              "email",
+              "nationalCode",
+              "age",
+              "birthDate"
             ],
             "properties": {
               "userId": {
@@ -8231,6 +8255,23 @@
               },
               "avatar": {
                 "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "nationalCode": {
+                "type": "string",
+                "pattern": "^\\d{10}$"
+              },
+              "age": {
+                "type": "integer",
+                "nullable": true
+              },
+              "birthDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
               }
             }
           }

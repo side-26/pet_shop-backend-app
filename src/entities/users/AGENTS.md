@@ -30,6 +30,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - Limit `/users/paginate` to nine requests per requester IP in a fixed three-minute Redis window.
 - Preserve the existing `/users/login` policy of three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims. The session ID is internal and is never returned in the response.
+- `GET /users/current` returns the authenticated account summary: `userId`, name, phone number, role, avatar, `email`, `nationalCode`, `age`, and `birthDate`.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.
 - `PUT /users/edit-info` accepts editable personal fields `firstName`, `lastName`, `email`, `nationalCode`, `age`, and `birthDate`; `avatar` is accepted only as the multipart file, never as a body URL. Customers may edit only themselves; admins may additionally provide `userId` to target another account.

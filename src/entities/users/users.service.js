@@ -110,6 +110,10 @@ export class UserService {
       phoneNumber: user.phoneNumber,
       role: user.role,
       avatar: user.avatar,
+      email: user.email,
+      nationalCode: user.nationalCode,
+      age: user.age,
+      birthDate: user.birthDate,
     };
   }
 
