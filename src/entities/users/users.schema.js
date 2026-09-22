@@ -21,6 +21,11 @@ const iranianPhoneNumberSchema = string().regex(/^09\d{9}$/);
 const nationalCodeSchema = string().regex(/^\d{10}$/);
 const postalCodeSchema = string().regex(/^\d{10}$/);
 const mongoObjectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
+const birthDateSchema = string()
+  .date()
+  .refine((birthDate) => new Date(`${birthDate}T00:00:00.000Z`) <= new Date(), {
+    message: 'تاریخ تولد نمی‌تواند در آینده باشد',
+  });
 
 export const userRegisterSchema = object({
   phoneNumber: iranianPhoneNumberSchema,
@@ -148,6 +153,7 @@ export const userZodSchema = object({
     .optional()
     .default(ROLES.CUSTOMER),
   age: number().nullable().optional(), // new field – number
+  birthDate: birthDateSchema.nullable().optional(),
   orders: array(any()).optional(), // defaults handled by Mongoose
   wishlist: array(any()).optional(),
 });
@@ -176,5 +182,5 @@ export const userUpdatePersonalInfoSchema = object({
     .regex(/^\d{10}$/)
     .optional(),
   age: coerce.number().int().min(4).optional(),
-  avatar: string().optional(),
-});
+  birthDate: birthDateSchema.nullable().optional(),
+}).strict();

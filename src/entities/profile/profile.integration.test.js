@@ -24,6 +24,15 @@ jest.mock('#middlewares/auth.middleware.js', () => ({
   },
 }));
 
+jest.mock('#services/objectStorage.service.js', () => ({
+  ObjectStorageService: {
+    deleteObject: jest.fn().mockResolvedValue(),
+    getObjectKeyFromUrl: jest.fn((url) =>
+      url.replace('https://cdn.example.test/', ''),
+    ),
+  },
+}));
+
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -32,6 +41,7 @@ import request from 'supertest';
 import { UserModel } from '#entities/users/users.model.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
+import { ObjectStorageService } from '#services/objectStorage.service.js';
 
 import profileRoutes from './profile.route.js';
 
@@ -62,6 +72,7 @@ describe('Profile API', () => {
       avatar: 'https://cdn.example.test/avatars/ali.webp',
       nationalCode: '0012345678',
       age: 30,
+      birthDate: new Date('1996-07-14T00:00:00.000Z'),
       password: 'hash',
       isEnable: true,
     });
@@ -80,8 +91,35 @@ describe('Profile API', () => {
         avatar: 'https://cdn.example.test/avatars/ali.webp',
         nationalCode: '0012345678',
         age: 30,
+        birthDate: '1996-07-14T00:00:00.000Z',
       },
     });
+  });
+
+  test('deletes only the authenticated customer current avatar', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const avatar = `https://cdn.example.test/users/${userId}/avatar/current.webp`;
+    await UserModel.collection.insertOne({
+      _id: userId,
+      phoneNumber: '09121234567',
+      password: 'hash',
+      avatar,
+      isEnable: true,
+    });
+    global.__PROFILE_TEST_USER_ID__ = userId.toString();
+
+    const response = await request(app)
+      .delete('/api/profile/avatar')
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      isSuccess: true,
+      data: { avatar: '' },
+    });
+    expect((await UserModel.findById(userId)).avatar).toBe('');
+    expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+      `users/${userId}/avatar/current.webp`,
+    );
   });
 
   test('returns 401 when the authenticated account is disabled', async () => {

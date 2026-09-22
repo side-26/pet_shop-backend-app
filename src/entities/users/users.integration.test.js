@@ -1163,6 +1163,8 @@ describe('User API - Integration Tests', () => {
           nationalCode: '1234567890',
 
           age: 26,
+
+          birthDate: '1998-04-12',
         })
         .set('Authorization', 'Bearer token');
 
@@ -1173,6 +1175,9 @@ describe('User API - Integration Tests', () => {
       expect(updatedUser.firstName).toBe('Ali');
 
       expect(updatedUser.age).toBe(26);
+      expect(updatedUser.birthDate.toISOString()).toBe(
+        '1998-04-12T00:00:00.000Z',
+      );
     });
 
     test('should update form fields and upload an avatar together', async () => {

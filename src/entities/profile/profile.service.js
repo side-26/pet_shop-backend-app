@@ -14,6 +14,7 @@ const formatAccount = (user) => ({
   avatar: user.avatar,
   nationalCode: user.nationalCode,
   age: user.age,
+  birthDate: user.birthDate,
 });
 
 export class ProfileService {
@@ -38,6 +39,11 @@ export class ProfileService {
   static async getAddresses(actor) {
     await this.getAccount(actor);
     return UserService.getAddresses(actor);
+  }
+
+  static async deleteAvatar(actor) {
+    await this.getAccount(actor);
+    return UserService.deleteOwnAvatar(actor);
   }
 
   static async getAddressById(actor, addressId) {

@@ -32,6 +32,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims. The session ID is internal and is never returned in the response.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Persist uploaded images as complete public URLs.
+- `PUT /users/edit-info` accepts editable personal fields `firstName`, `lastName`, `email`, `nationalCode`, `age`, and `birthDate`; `avatar` is accepted only as the multipart file, never as a body URL. Customers may edit only themselves; admins may additionally provide `userId` to target another account.
 - Only authenticated admins may permanently delete a user through `DELETE /api/users/:id`; successful deletion also attempts to remove the user's stored avatar without reversing the database deletion when storage cleanup fails.
 - Cart and wishlist operations always derive ownership from the authenticated actor. See [`docs/cart.md`](./docs/cart.md) and [`docs/cart-and-wishlist.md`](./docs/cart-and-wishlist.md).
 - Cart delivery options come from the provider-independent shipping integration, are limited to Iran, use Tehran timezone metadata, expire after fifteen minutes, and are invalidated by item or address changes.

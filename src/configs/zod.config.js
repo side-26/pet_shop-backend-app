@@ -18,6 +18,7 @@ const persianFieldNames = {
   confirmPassword: 'تکرار کلمه عبور',
   role: 'نقش کاربر',
   nationalCode: 'کد ملی',
+  birthDate: 'تاریخ تولد',
   address: 'آدرس',
   addresses: 'نشانی‌ها',
   city: 'شهر',

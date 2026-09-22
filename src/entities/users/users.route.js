@@ -251,6 +251,16 @@ router.put(
   standardUserRateLimit,
   authenticated,
   uploadAvatar,
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Update editable personal information'
+    #swagger.description = 'Updates firstName, lastName, email, nationalCode, age, and birthDate. avatar is accepted only as the optional multipart file, not as a body URL. Customers may update only themselves; admins may provide userId to target another account.'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/UpdateUserPersonalInfoBody' } } } }
+    #swagger.responses[200] = { description: 'Personal information updated' }
+    #swagger.responses[403] = { description: 'Customers cannot update another account' }
+    #swagger.responses[422] = { description: 'Invalid editable personal information or avatar file' }
+  */
   updateUserPersonalInfoController,
 );
 

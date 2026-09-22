@@ -26,6 +26,18 @@ export const getAccountController = async (req, res, next) => {
   }
 };
 
+export const deleteAvatarController = async (req, res, next) => {
+  try {
+    const user = await ProfileService.deleteAvatar(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'آواتار با موفقیت حذف شد',
+      data: { avatar: user.avatar },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const getAddressesController = async (req, res, next) => {
   try {
     const addresses = await ProfileService.getAddresses(req.user);

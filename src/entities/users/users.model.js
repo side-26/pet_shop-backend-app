@@ -136,6 +136,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     age: { type: Number, default: null },
+    birthDate: { type: Date, default: null },
     role: { type: String, default: 'customer' },
     orders: { type: [mongoose.Schema.Types.Mixed], default: [] },
     cart: { type: cartSchema, default: () => ({}) },
@@ -163,6 +164,9 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre('save', function () {
   const userData = this.toObject({ transform: false }); // ← include password
+  if (userData.birthDate instanceof Date) {
+    userData.birthDate = userData.birthDate.toISOString().slice(0, 10);
+  }
   const result = userZodSchema.safeParse(userData);
   if (!result.success) {
     const errorMessages = result.error.issues
@@ -176,6 +180,9 @@ userSchema.pre('findOneAndUpdate', function () {
   const update = this.getUpdate();
 
   if (update.$set) {
+    if (update.$set.birthDate instanceof Date) {
+      update.$set.birthDate = update.$set.birthDate.toISOString().slice(0, 10);
+    }
     // Use .partial() so only the provided fields are validated
     const result = userZodSchema.partial().safeParse(update.$set);
     if (!result.success) {

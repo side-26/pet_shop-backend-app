@@ -680,6 +680,35 @@ export class UserService {
     return updatedUser;
   }
 
+  static async deleteOwnAvatar(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const currentUser = await this.findById(userId);
+
+    if (!currentUser.avatar) {
+      return currentUser;
+    }
+
+    const updatedUser = await this.update(userId, { avatar: '' });
+
+    try {
+      const avatarKey = ObjectStorageService.getObjectKeyFromUrl(
+        currentUser.avatar,
+      );
+      await ObjectStorageService.deleteObject(avatarKey);
+    } catch (error) {
+      logger.app.error(
+        'حذف آواتار کاربر از فضای ذخیره‌سازی ناموفق بود',
+        error,
+        {
+          userId,
+          avatar: currentUser.avatar,
+        },
+      );
+    }
+
+    return updatedUser;
+  }
+
   static getAuthenticatedUserId(actor) {
     const userId = actor?.userId || actor?.id;
     if (!userId) {

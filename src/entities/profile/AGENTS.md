@@ -6,7 +6,8 @@ Provides authenticated customer-facing account views. It owns no MongoDB collect
 
 ## Endpoints
 
-- `GET /profile/account` — returns the authenticated enabled user’s personal information: ID, name, phone number, email, avatar, national code, and age.
+- `GET /profile/account` — returns the authenticated enabled user’s personal information: ID, name, phone number, email, avatar, national code, age, and birth date.
+- `DELETE /profile/avatar` — removes only the authenticated customer’s current avatar; it accepts no image URL.
 - `POST /profile/reset-password` — changes the authenticated customer password using the current password and invalidates all active login sessions.
 - `GET /profile/addresses` — returns the authenticated customer’s embedded address list.
 - `GET /profile/addresses/:addressId` — returns one address owned by the authenticated customer.

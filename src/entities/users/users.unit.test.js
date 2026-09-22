@@ -1263,6 +1263,53 @@ describe('UserService - Unit Tests', () => {
     );
   });
 
+  test('updatePersonalInfo persists a birth date', async () => {
+    const birthDate = '1998-04-12';
+    UserModel.findById.mockResolvedValue(mockUser);
+    UserModel.findByIdAndUpdate.mockResolvedValue({ ...mockUser, birthDate });
+
+    await expect(
+      UserService.updatePersonalInfo(mockActor, { birthDate }),
+    ).resolves.toMatchObject({ birthDate });
+
+    expect(UserModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      mockUser._id,
+      { $set: { birthDate } },
+      { returnDocument: 'after', runValidators: true },
+    );
+  });
+
+  test('deleteOwnAvatar clears only the authenticated user avatar', async () => {
+    const userWithAvatar = {
+      ...mockUser,
+      avatar: 'https://cdn.test/users/id/avatar/current.webp',
+    };
+    UserModel.findById.mockResolvedValue(userWithAvatar);
+    UserModel.findByIdAndUpdate.mockResolvedValue({
+      ...userWithAvatar,
+      avatar: '',
+    });
+    ObjectStorageService.getObjectKeyFromUrl.mockReturnValue(
+      'users/id/avatar/current.webp',
+    );
+    ObjectStorageService.deleteObject.mockResolvedValue();
+
+    await expect(UserService.deleteOwnAvatar(mockActor)).resolves.toMatchObject(
+      {
+        avatar: '',
+      },
+    );
+
+    expect(UserModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      mockActor.userId,
+      { $set: { avatar: '' } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    expect(ObjectStorageService.deleteObject).toHaveBeenCalledWith(
+      'users/id/avatar/current.webp',
+    );
+  });
+
   test('resolveProfileTargetUserId lets an admin target another user', () => {
     const targetUserId = '65a4de97aff1fbb38c437999';
 

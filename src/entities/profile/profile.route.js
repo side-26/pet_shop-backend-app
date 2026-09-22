@@ -6,6 +6,7 @@ import { roleMiddleware } from '#middlewares/role.middleware.js';
 
 import {
   createAddressController,
+  deleteAvatarController,
   deleteAddressController,
   getAccountController,
   getAddressByIdController,
@@ -30,6 +31,19 @@ router.get(
      #swagger.responses[401] = { description: 'Authentication is invalid, or the account is disabled or deleted' }
      #swagger.responses[403] = { description: 'Customer role required' } */
   getAccountController,
+);
+
+router.delete(
+  PROFILE_ROUTES.profileAvatar,
+  authenticated,
+  roleMiddleware(ROLES.CUSTOMER),
+  /* #swagger.summary = 'Delete the authenticated customer avatar'
+     #swagger.description = 'Removes only the avatar currently associated with the authenticated customer account; no image URL is accepted from the client.'
+     #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.responses[200] = { description: 'Customer avatar deleted' }
+     #swagger.responses[401] = { description: 'Authentication is invalid, or the account is disabled or deleted' }
+     #swagger.responses[403] = { description: 'Customer role required' } */
+  deleteAvatarController,
 );
 
 router.post(
