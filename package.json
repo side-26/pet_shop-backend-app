@@ -16,7 +16,8 @@
     "prestart": "npm run format && npm run lint",
     "start": "cross-env NODE_ENV=production node ./src/server.js",
     "prepare": "husky",
-    "openapi": "node ./src/configs/openapi.generate.js"
+    "openapi": "node ./src/configs/openapi.generate.js",
+    "migrate:province-coordinates": "node ./scripts/migrate-province-coordinates.js"
   },
   "keywords": [],
   "author": "",

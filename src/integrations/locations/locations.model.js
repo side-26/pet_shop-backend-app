@@ -4,6 +4,13 @@ const provinceSchema = new mongoose.Schema(
   {
     provinceId: { type: Number, required: true, unique: true },
     title: { type: String, trim: true },
+    latLng: {
+      type: [Number],
+      validate: {
+        validator: (value) => Array.isArray(value) && value.length === 2,
+        message: 'مختصات استان باید شامل عرض و طول جغرافیایی باشد',
+      },
+    },
   },
   { collection: 'provinces', strict: false },
 );

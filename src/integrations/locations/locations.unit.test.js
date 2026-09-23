@@ -24,12 +24,38 @@ describe('Locations service', () => {
     const query = createQuery(provinces);
     ProvinceModel.find.mockReturnValue(query);
 
-    await expect(LocationsService.getAllProvinces()).resolves.toEqual(
-      provinces,
-    );
+    await expect(LocationsService.getAllProvinces()).resolves.toEqual([
+      expect.objectContaining(provinces[0]),
+    ]);
     expect(ProvinceModel.find).toHaveBeenCalledWith({});
     expect(query.sort).toHaveBeenCalledWith({ title: 1 });
     expect(query.lean).toHaveBeenCalledTimes(1);
+  });
+
+  test('getAllProvinces returns the built-in reference data when the collection is empty', async () => {
+    const query = createQuery([]);
+    ProvinceModel.find.mockReturnValue(query);
+
+    const provinces = await LocationsService.getAllProvinces();
+
+    expect(provinces).toHaveLength(31);
+    expect(provinces).toContainEqual(
+      expect.objectContaining({ provinceId: 8, title: 'تهران' }),
+    );
+    expect(provinces.find(({ provinceId }) => provinceId === 8).latLng).toEqual(
+      [35.6892, 51.389],
+    );
+  });
+
+  test('adds missing coordinates to existing database province records', async () => {
+    const query = createQuery([{ provinceId: 21, title: 'کرمان' }]);
+    ProvinceModel.find.mockReturnValue(query);
+
+    await expect(LocationsService.getAllProvinces()).resolves.toContainEqual({
+      provinceId: 21,
+      title: 'کرمان',
+      latLng: [30.2839, 57.0834],
+    });
   });
 
   test('getCitiesByProvinceId filters cities by province and returns lean records', async () => {
