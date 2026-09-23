@@ -7275,7 +7275,28 @@
           }
         ],
         "responses": {
-          "200": { "description": "Paginated customer orders" },
+          "200": {
+            "description": "Returns { isSuccess: true, data: { result, pagination } } for the authenticated customer's paginated order snapshots.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["isSuccess", "data"],
+                  "properties": {
+                    "isSuccess": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "required": ["result", "pagination"],
+                      "properties": {
+                        "result": { "type": "array", "items": {} },
+                        "pagination": { "$ref": "#/components/schemas/Pagination" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "401": {
             "description": "Authentication is invalid, or the account is disabled or deleted"
           },

@@ -14,7 +14,7 @@ Provides authenticated customer-facing account views. It owns no MongoDB collect
 - `PATCH /profile/addresses/:addressId` — updates one owned address with the Users entity’s established validation and delivery-quote reset rules.
 - `POST /profile/addresses` — creates a new address owned by the authenticated customer.
 - `DELETE /profile/addresses/:addressId` — removes one owned address and invalidates selected delivery data.
-- `GET /profile/orders` — returns the authenticated customer’s paginated order snapshots.
+- `GET /profile/orders` — returns `{ isSuccess: true, data: { result, pagination } }` for the authenticated customer’s paginated order snapshots.
 - `GET /profile/orders/:id` — returns one order snapshot owned by the authenticated customer.
 
 ## Rules

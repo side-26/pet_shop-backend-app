@@ -271,8 +271,22 @@ describe('Profile API', () => {
     global.__PROFILE_TEST_USER_ID__ = userId.toString();
 
     const list = await request(app).get('/api/profile/orders').expect(200);
-    expect(list.body.data).toHaveLength(1);
-    expect(list.body.data[0]._id).toBe(orderId.toString());
+    expect(list.body).toEqual({
+      isSuccess: true,
+      data: {
+        result: [expect.objectContaining({ _id: orderId.toString() })],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 1,
+          itemsPerPage: 10,
+          hasNextPage: false,
+          hasPrevPage: false,
+          nextPage: null,
+          prevPage: null,
+        },
+      },
+    });
 
     const detail = await request(app)
       .get(`/api/profile/orders/${orderId}`)

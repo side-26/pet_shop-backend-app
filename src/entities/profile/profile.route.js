@@ -135,6 +135,7 @@ router.get(
   authenticated,
   roleMiddleware(ROLES.CUSTOMER),
   /* #swagger.summary = 'List authenticated customer orders'
+     #swagger.description = 'Returns `{ isSuccess: true, data: { result, pagination } }`, where `result` is the current page of immutable customer order snapshots.'
      #swagger.security = [{ "bearerAuth": [] }]
      #swagger.parameters['page'] = { in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } }
      #swagger.parameters['limit'] = { in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 } }

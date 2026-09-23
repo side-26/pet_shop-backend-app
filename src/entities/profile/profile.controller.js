@@ -102,8 +102,7 @@ export const getOrdersController = async (req, res, next) => {
     const query = returnFormValidation(orderQuerySchema, req.query);
     const result = await ProfileService.getOrders(req.user, query);
     setSuccessResponse(res, STATUES.SUCCESS, {
-      data: result.result,
-      pagination: result.pagination,
+      data: result,
     });
   } catch (error) {
     onCatchPromiseController(error, next);
