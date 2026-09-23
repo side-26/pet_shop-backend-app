@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { schemas } from './openapi-schemas.js';
-import { RATE_LIMIT } from './constants.js';
+import { RATE_LIMIT, STATUES } from './constants.js';
 import { API_ROUTE_METHODS } from './routeMethods.config.js';
 
 const configDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -71,7 +71,7 @@ const addMethodNotAllowedResponses = (openapiDocument) => {
       if (!pathItem[method]) return;
 
       pathItem[method].responses ??= {};
-      pathItem[method].responses['405'] = {
+      pathItem[method].responses[String(STATUES.METHOD_NOT_ALLOWED)] = {
         description: 'Method not allowed',
         headers: {
           Allow: {
@@ -107,7 +107,7 @@ const addReferenceConflictResponses = (openapiDocument) => {
     const operation = openapiDocument.paths?.[apiPath]?.delete;
     if (!operation) return;
     operation.responses ??= {};
-    operation.responses['409'] = {
+    operation.responses[String(STATUES.CONFLICT)] = {
       description:
         'The record is referenced by another entity and cannot be deleted.',
       content: {
@@ -187,7 +187,8 @@ const addUserRouteRateLimitResponses = (openapiDocument) => {
       if (!operation) return;
 
       operation.responses ??= {};
-      operation.responses['429'] = rateLimitResponse;
+      operation.responses[String(STATUES.TOO_MANY_REQUESTS)] =
+        rateLimitResponse;
     });
   });
 

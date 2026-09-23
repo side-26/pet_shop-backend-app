@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 
-import { RATE_LIMIT } from './constants.js';
+import { RATE_LIMIT, STATUES } from './constants.js';
 
 const openapiDocument = JSON.parse(
   readFileSync('src/configs/openapi.json', 'utf8'),
@@ -31,18 +31,22 @@ describe('users-router OpenAPI rate-limit contracts', () => {
     expect(userRouterOperations).toHaveLength(28);
 
     userRouterOperations.forEach(({ operation }) => {
-      expect(operation.responses['429']).toBeDefined();
+      expect(
+        operation.responses[String(STATUES.TOO_MANY_REQUESTS)],
+      ).toBeDefined();
     });
   });
 
   test('documents standard, paginated, login, and dynamic-route policies', () => {
     const standardResponse = getOperation('/users/{id}', 'get').responses[
-      '429'
+      String(STATUES.TOO_MANY_REQUESTS)
     ];
     const paginatedResponse = getOperation('/users/paginate', 'get').responses[
-      '429'
+      String(STATUES.TOO_MANY_REQUESTS)
     ];
-    const loginResponse = getOperation('/users/login', 'post').responses['429'];
+    const loginResponse = getOperation('/users/login', 'post').responses[
+      String(STATUES.TOO_MANY_REQUESTS)
+    ];
 
     expect(standardResponse.headers['RateLimit-Limit'].example).toBe(
       RATE_LIMIT.USER_MAX_REQUESTS,
@@ -70,13 +74,13 @@ describe('users-router OpenAPI rate-limit contracts', () => {
     expect(operation.security).toEqual([{ bearerAuth: [] }]);
     expect(operation.responses).toEqual(
       expect.objectContaining({
-        200: expect.any(Object),
-        401: expect.any(Object),
-        403: expect.any(Object),
-        404: expect.any(Object),
-        405: expect.any(Object),
-        422: expect.any(Object),
-        429: expect.any(Object),
+        [STATUES.SUCCESS]: expect.any(Object),
+        [STATUES.UN_AUTHORIZED]: expect.any(Object),
+        [STATUES.NO_ACCESS]: expect.any(Object),
+        [STATUES.NOT_FOUND]: expect.any(Object),
+        [STATUES.METHOD_NOT_ALLOWED]: expect.any(Object),
+        [STATUES.BAD_FORM_VALIDATION]: expect.any(Object),
+        [STATUES.TOO_MANY_REQUESTS]: expect.any(Object),
       }),
     );
   });
