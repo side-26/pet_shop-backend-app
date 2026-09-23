@@ -115,6 +115,10 @@ export const ORDER_STATUSES = {
 
 export const ORDER_DELIVERY_STATES = [0, 1, 2, 3];
 
+export const ORDER_DELIVERY_STATE = {
+  DELIVERED: 3,
+};
+
 export const ORDER_IDENTIFIER = {
   LENGTH: 9,
   MAX_GENERATION_ATTEMPTS: 5,

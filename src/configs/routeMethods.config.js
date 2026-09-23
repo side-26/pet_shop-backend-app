@@ -38,6 +38,7 @@ export const API_ROUTE_METHODS = [
     methods: [get, patch, deleteMethod],
   },
   { path: PROFILE_ROUTES.profileOrders, methods: [get] },
+  { path: PROFILE_ROUTES.profileOrderSummary, methods: [get] },
   { path: PROFILE_ROUTES.profileOrderById, methods: [get] },
   { path: PET_ROUTES.petsCustomerPaginate, methods: [get] },
   { path: BRAND_ROUTES.brandsByIdDisable, methods: [patch] },

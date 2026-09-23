@@ -31,6 +31,7 @@ jest.mock('./orders.model.js', () => ({
   OrderModel: {
     db: { startSession: jest.fn() },
     create: jest.fn(),
+    countDocuments: jest.fn(),
     findOne: jest.fn(),
     findByIdAndUpdate: jest.fn(),
     populate: jest.fn(),
@@ -38,6 +39,7 @@ jest.mock('./orders.model.js', () => ({
 }));
 
 import { UserService } from '#entities/users/users.service.js';
+import { STATUES } from '#configs/constants.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { getPaginationData } from '#utils/helpers.js';
 
@@ -245,6 +247,50 @@ describe('OrderService', () => {
       { page: 1, limit: 10, user: userId },
       '',
       expect.any(Function),
+    );
+  });
+
+  test('getUserOrderSummary returns counts and the latest purchase date', async () => {
+    const latestOrder = { createdAt: new Date('2026-08-09T00:00:00.000Z') };
+    OrderModel.countDocuments
+      .mockResolvedValueOnce(12)
+      .mockResolvedValueOnce(9);
+    OrderModel.findOne.mockReturnValue({
+      sort: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(latestOrder),
+    });
+
+    await expect(OrderService.getUserOrderSummary(actor)).resolves.toEqual({
+      orders: 12,
+      delivered: 9,
+      lastPurchase: latestOrder.createdAt,
+    });
+  });
+
+  test('getUserOrderSummary returns null latest purchase for a new customer', async () => {
+    OrderModel.countDocuments.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+    OrderModel.findOne.mockReturnValue({
+      sort: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(null),
+    });
+
+    await expect(OrderService.getUserOrderSummary(actor)).resolves.toEqual({
+      orders: 0,
+      delivered: 0,
+      lastPurchase: null,
+    });
+  });
+
+  test('getUserOrderSummary maps persistence failures to a service error', async () => {
+    OrderModel.countDocuments.mockRejectedValue(new Error('database down'));
+
+    await expect(OrderService.getUserOrderSummary(actor)).rejects.toMatchObject(
+      {
+        statusCode: STATUES.OTHER_PROBLEM,
+        message: 'دریافت خلاصه سفارش‌های کاربر ناموفق بود',
+      },
     );
   });
 

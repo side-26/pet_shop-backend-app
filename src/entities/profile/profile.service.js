@@ -77,6 +77,11 @@ export class ProfileService {
     return OrderService.getUserOrders(actor, query);
   }
 
+  static async getOrderSummary(actor) {
+    await this.getAccount(actor);
+    return OrderService.getUserOrderSummary(actor);
+  }
+
   static async getOrderById(actor, orderId) {
     await this.getAccount(actor);
     return OrderService.getUserOrder(actor, orderId);

@@ -12,6 +12,7 @@ import {
   getAddressByIdController,
   getAddressesController,
   getOrderByIdController,
+  getOrderSummaryController,
   getOrdersController,
   resetPasswordController,
   updateAddressController,
@@ -144,6 +145,19 @@ router.get(
      #swagger.responses[403] = { description: 'Customer role required' }
      #swagger.responses[422] = { description: 'Invalid order query' } */
   getOrdersController,
+);
+
+router.get(
+  PROFILE_ROUTES.profileOrderSummary,
+  authenticated,
+  roleMiddleware(ROLES.CUSTOMER),
+  /* #swagger.summary = 'Get the authenticated customer order summary'
+     #swagger.description = 'Returns order count, delivered-order count, and the latest purchase timestamp. `lastPurchase` is null when the customer has no orders.'
+     #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.responses[200] = { description: 'Customer order summary' }
+     #swagger.responses[401] = { description: 'Authentication is invalid, or the account is disabled or deleted' }
+     #swagger.responses[403] = { description: 'Customer role required' } */
+  getOrderSummaryController,
 );
 
 router.get(

@@ -2,6 +2,7 @@ import {
   CART_PAYMENT_TYPES,
   ERROR_CODES,
   ORDER_IDENTIFIER,
+  ORDER_DELIVERY_STATE,
   SHIPPING,
   STATUES,
   USER_ITEM_TYPES,
@@ -209,6 +210,35 @@ export class OrderService {
         message: 'دریافت سفارش‌های کاربر ناموفق بود',
       }),
     );
+  }
+
+  static async getUserOrderSummary(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const userFilter = { user: userId };
+    try {
+      const [orders, delivered, latestOrder] = await Promise.all([
+        OrderModel.countDocuments(userFilter),
+        OrderModel.countDocuments({
+          ...userFilter,
+          deliveryState: ORDER_DELIVERY_STATE.DELIVERED,
+        }),
+        OrderModel.findOne(userFilter)
+          .sort({ createdAt: -1 })
+          .select('createdAt')
+          .lean(),
+      ]);
+
+      return {
+        orders,
+        delivered,
+        lastPurchase: latestOrder?.createdAt || null,
+      };
+    } catch (error) {
+      setErrorResponse(STATUES.OTHER_PROBLEM, {
+        message: 'دریافت خلاصه سفارش‌های کاربر ناموفق بود',
+        error: String(error),
+      });
+    }
   }
 
   static async getOrders(query = {}) {

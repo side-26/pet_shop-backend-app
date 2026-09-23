@@ -109,6 +109,15 @@ export const getOrdersController = async (req, res, next) => {
   }
 };
 
+export const getOrderSummaryController = async (req, res, next) => {
+  try {
+    const summary = await ProfileService.getOrderSummary(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: summary });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const getOrderByIdController = async (req, res, next) => {
   try {
     const { id } = returnFormValidation(orderIdSchema, req.params);

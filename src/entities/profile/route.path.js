@@ -5,5 +5,6 @@ export const PROFILE_ROUTES = {
   profileAddresses: '/profile/addresses',
   profileAddressById: '/profile/addresses/:addressId',
   profileOrders: '/profile/orders',
+  profileOrderSummary: '/profile/orders/summary',
   profileOrderById: '/profile/orders/:id',
 };

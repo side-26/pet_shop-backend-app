@@ -205,6 +205,53 @@ describe('Profile API', () => {
       .expect(404);
   });
 
+  test('returns the authenticated customer order summary and null latest purchase when empty', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      phoneNumber: '09121234567',
+      password: 'hash',
+      isEnable: true,
+    });
+    global.__PROFILE_TEST_USER_ID__ = userId.toString();
+
+    const empty = await request(app)
+      .get('/api/profile/orders/summary')
+      .expect(200);
+    expect(empty.body).toEqual({
+      isSuccess: true,
+      data: { orders: 0, delivered: 0, lastPurchase: null },
+    });
+
+    const createdAt = new Date('2026-08-09T00:00:00.000Z');
+    await OrderModel.collection.insertMany([
+      {
+        user: userId,
+        deliveryState: 3,
+        createdAt,
+        trackingCode: '111111111',
+        orderNumber: '222222222',
+        paymentTrackingId: 'payment-1',
+      },
+      {
+        user: userId,
+        deliveryState: 1,
+        createdAt: new Date('2026-08-08'),
+        trackingCode: '333333333',
+        orderNumber: '444444444',
+        paymentTrackingId: 'payment-2',
+      },
+    ]);
+
+    const summary = await request(app)
+      .get('/api/profile/orders/summary')
+      .expect(200);
+    expect(summary.body).toEqual({
+      isSuccess: true,
+      data: { orders: 2, delivered: 1, lastPurchase: createdAt.toISOString() },
+    });
+  });
+
   test('creates and deletes an authenticated customer address', async () => {
     const userId = new mongoose.Types.ObjectId();
     await UserModel.collection.insertOne({

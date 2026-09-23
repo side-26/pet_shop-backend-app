@@ -21,7 +21,11 @@ jest.mock('#entities/users/users.service.js', () => ({
 }));
 
 jest.mock('#entities/orders/orders.service.js', () => ({
-  OrderService: { getUserOrder: jest.fn(), getUserOrders: jest.fn() },
+  OrderService: {
+    getUserOrder: jest.fn(),
+    getUserOrders: jest.fn(),
+    getUserOrderSummary: jest.fn(),
+  },
 }));
 
 import { STATUES } from '#configs/constants.js';
@@ -180,6 +184,15 @@ describe('ProfileService', () => {
     );
     expect(OrderService.getUserOrders).toHaveBeenCalledWith(actor, query);
     expect(OrderService.getUserOrder).toHaveBeenCalledWith(actor, 'order-id');
+  });
+
+  test('delegates customer order summary after verifying the account', async () => {
+    const actor = { userId: 'user-id' };
+    const summary = { orders: 12, delivered: 9, lastPurchase: new Date() };
+    OrderService.getUserOrderSummary.mockResolvedValue(summary);
+
+    await expect(ProfileService.getOrderSummary(actor)).resolves.toBe(summary);
+    expect(OrderService.getUserOrderSummary).toHaveBeenCalledWith(actor);
   });
 
   test('blocks delegated profile operations when the account is disabled', async () => {

@@ -15,6 +15,7 @@ Provides authenticated customer-facing account views. It owns no MongoDB collect
 - `POST /profile/addresses` — creates a new address owned by the authenticated customer.
 - `DELETE /profile/addresses/:addressId` — removes one owned address and invalidates selected delivery data.
 - `GET /profile/orders` — returns `{ isSuccess: true, data: { result, pagination } }` for the authenticated customer’s paginated order snapshots.
+- `GET /profile/orders/summary` — returns order count, delivered-order count, and the latest purchase timestamp; `lastPurchase` is `null` when no order exists.
 - `GET /profile/orders/:id` — returns one order snapshot owned by the authenticated customer.
 
 ## Rules
