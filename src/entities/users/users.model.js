@@ -16,6 +16,17 @@ const addressSchema = new mongoose.Schema({
   province: { type: String, required: true, trim: true },
   city: { type: String, required: true, trim: true },
   detailAddress: { type: String, required: true, trim: true },
+  latLng: {
+    type: [Number],
+    required: true,
+    validate: {
+      validator: (value) =>
+        Array.isArray(value) &&
+        value.length === 2 &&
+        value.every(Number.isFinite),
+      message: 'مختصات نشانی باید شامل دو عدد باشد',
+    },
+  },
   plate: { type: String, required: true, trim: true },
   unit: { type: String, default: null, trim: true },
   postalCode: {

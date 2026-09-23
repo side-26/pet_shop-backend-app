@@ -166,6 +166,7 @@ describe('Profile API', () => {
           province: 'تهران',
           city: 'تهران',
           detailAddress: 'خیابان آزادی پلاک دوازده',
+          latLng: [35.7, 51.4],
           plate: '12',
           unit: null,
           postalCode: '1234567890',
@@ -189,6 +190,7 @@ describe('Profile API', () => {
     expect(detail.body.data).toMatchObject({
       _id: addressId.toString(),
       plate: '12',
+      latLng: [35.7, 51.4],
     });
 
     const updated = await request(app)
@@ -266,6 +268,7 @@ describe('Profile API', () => {
       province: 'تهران',
       city: 'تهران',
       detailAddress: 'خیابان آزادی پلاک دوازده',
+      latLng: [35.7, 51.4],
       plate: '12',
       postalCode: '1234567890',
       receiverIsMe: false,

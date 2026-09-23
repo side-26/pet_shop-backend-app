@@ -24,6 +24,7 @@ const persianFieldNames = {
   city: 'شهر',
   province: 'استان',
   detailAddress: 'نشانی دقیق',
+  latLng: 'مختصات نشانی',
   plate: 'پلاک',
   unit: 'واحد',
   postalCode: 'کد پستی',

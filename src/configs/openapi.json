@@ -8399,6 +8399,14 @@
             "type": "string",
             "minLength": 5
           },
+          "latLng": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
           "plate": {
             "type": "string",
             "minLength": 1
@@ -8442,6 +8450,7 @@
           "province",
           "city",
           "detailAddress",
+          "latLng",
           "plate",
           "postalCode",
           "receiverIsMe"
@@ -8462,6 +8471,14 @@
           "detailAddress": {
             "type": "string",
             "minLength": 5
+          },
+          "latLng": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
           },
           "plate": {
             "type": "string",

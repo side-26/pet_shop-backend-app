@@ -56,6 +56,7 @@ describe('Order API', () => {
     province: 'Tehran',
     city: 'Tehran',
     detailAddress: 'Original delivery address',
+    latLng: [35.7219, 51.3347],
     plate: '12',
     unit: '3',
     postalCode: '1234567890',
@@ -226,7 +227,12 @@ describe('Order API', () => {
     );
     await UserModel.updateOne(
       { _id: user._id },
-      { $set: { 'addresses.0.detailAddress': 'Changed address' } },
+      {
+        $set: {
+          'addresses.0.detailAddress': 'Changed address',
+          'addresses.0.latLng': [35.6892, 51.389],
+        },
+      },
     );
     const response = await request(app)
       .get(`/api/orders/${orderId}`)
@@ -238,6 +244,7 @@ describe('Order API', () => {
     expect(response.body.data.userAddress.detailAddress).toBe(
       'Original delivery address',
     );
+    expect(response.body.data.userAddress.latLng).toEqual([35.7219, 51.3347]);
   });
 
   test('rejects empty Cart and missing paymentTrackingId without clearing Cart', async () => {

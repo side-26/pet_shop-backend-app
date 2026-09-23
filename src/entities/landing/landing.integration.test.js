@@ -843,6 +843,7 @@ describe('Landing API', () => {
           province: 'تهران',
           city: 'تهران',
           detailAddress: 'نشانی آزمایشی',
+          latLng: [35.6892, 51.389],
           plate: '۱',
           postalCode: '1234567890',
           receiverIsMe: true,

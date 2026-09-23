@@ -55,6 +55,7 @@ describe('OrderService', () => {
     province: 'Tehran',
     city: 'Tehran',
     detailAddress: 'Example address',
+    latLng: [35.7219, 51.3347],
     plate: '12',
     unit: null,
     postalCode: '1234567890',
@@ -148,6 +149,7 @@ describe('OrderService', () => {
     expect(order.userAddress).toMatchObject({
       sourceId: addressId,
       detailAddress: address.detailAddress,
+      latLng: address.latLng,
     });
     expect(order.deliveryWindow).toEqual(cart.deliveryWindow);
     expect(UserService.emptyCart).toHaveBeenCalledWith(actor, session);

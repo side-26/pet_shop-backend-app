@@ -30,6 +30,7 @@ export const snapshotUserAddress = (address) => ({
   province: address.province,
   city: address.city,
   detailAddress: address.detailAddress,
+  latLng: address.latLng,
   plate: address.plate,
   unit: address.unit ?? null,
   postalCode: address.postalCode,

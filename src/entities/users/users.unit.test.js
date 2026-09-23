@@ -1622,6 +1622,7 @@ describe('UserService - Unit Tests', () => {
       province: 'Tehran',
       city: 'Tehran',
       detailAddress: 'Example detailed address',
+      latLng: [35.7219, 51.3347],
       plate: '12',
       postalCode: '1234567890',
       receiverIsMe: false,
@@ -1701,6 +1702,35 @@ describe('UserService - Unit Tests', () => {
             'cart.deliveryWindow': null,
           }),
         },
+        { returnDocument: 'after', runValidators: true },
+      );
+    });
+
+    test('editAddress persists an updated latLng tuple', async () => {
+      const addressId = '65a4de97aff1fbb38c437951';
+      const existing = {
+        ...address,
+        _id: addressId,
+        toObject: jest.fn(() => ({ ...address, _id: addressId })),
+      };
+      const latLng = [35.6892, 51.389];
+      mockUser.addresses = { id: jest.fn(() => existing) };
+      UserModel.findById.mockResolvedValue(mockUser);
+      UserModel.findOneAndUpdate.mockResolvedValue({
+        addresses: {
+          id: jest.fn(() => ({ ...address, _id: addressId, latLng })),
+        },
+      });
+
+      await UserService.editAddress(mockActor, addressId, { latLng });
+
+      expect(UserModel.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: mockUser._id, 'addresses._id': addressId },
+        expect.objectContaining({
+          $set: expect.objectContaining({
+            'addresses.$': expect.objectContaining({ latLng }),
+          }),
+        }),
         { returnDocument: 'after', runValidators: true },
       );
     });

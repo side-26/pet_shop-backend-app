@@ -302,6 +302,7 @@ describe('User API - Integration Tests', () => {
     province: 'Tehran',
     city: 'Tehran',
     detailAddress: 'Example detailed address',
+    latLng: [35.7219, 51.3347],
     plate: '12',
     postalCode: '1234567890',
     receiverIsMe: false,
@@ -1428,16 +1429,32 @@ describe('User API - Integration Tests', () => {
       }
     });
 
-    test.each(['province', 'city', 'detailAddress', 'plate', 'postalCode'])(
-      'rejects an address missing %s',
-      async (field) => {
-        const body = createAddressBody();
-        delete body[field];
+    test.each([
+      'province',
+      'city',
+      'detailAddress',
+      'latLng',
+      'plate',
+      'postalCode',
+    ])('rejects an address missing %s', async (field) => {
+      const body = createAddressBody();
+      delete body[field];
 
+      const response = await request(app)
+        .post('/api/users/addresses')
+        .set('Authorization', 'Bearer token')
+        .send(body);
+      expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    test.each([[35.7219], [35.7219, '51.3347'], [35.7219, 51.3347, 1]])(
+      'rejects an address with an invalid latLng tuple',
+      async (latLng) => {
         const response = await request(app)
           .post('/api/users/addresses')
           .set('Authorization', 'Bearer token')
-          .send(body);
+          .send(createAddressBody({ latLng }));
+
         expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
       },
     );
@@ -1493,7 +1510,22 @@ describe('User API - Integration Tests', () => {
       const user = await UserModel.findById(testUser._id);
       expect(user.addresses.id(target._id).plate).toBe('25');
       expect(user.addresses.id(target._id).city).toBe('Tehran');
+      expect(user.addresses.id(target._id).latLng).toEqual([35.7219, 51.3347]);
       expect(user.addresses.id(untouched._id).plate).toBe('20');
+    });
+
+    test('updates an address latLng tuple', async () => {
+      testUser.addresses.push(createAddressBody());
+      await testUser.save();
+      const addressId = testUser.addresses[0]._id;
+
+      const response = await request(app)
+        .patch(`/api/users/addresses/${addressId}`)
+        .set('Authorization', 'Bearer token')
+        .send({ latLng: [35.6892, 51.389] });
+
+      expect(response.status).toBe(STATUES.SUCCESS);
+      expect(response.body.data.latLng).toEqual([35.6892, 51.389]);
     });
 
     test('switches receiver modes without retaining stale receiver data', async () => {
