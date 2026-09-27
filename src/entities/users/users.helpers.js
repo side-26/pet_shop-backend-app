@@ -50,6 +50,8 @@ export const formatCartItemDetails = (items = []) =>
 
       return {
         id: cartItem._id.toString(),
+        itemId: cartItem.item._id.toString(),
+        itemType: cartItem.itemType,
         title: cartItem.item.title,
         mainImage: cartItem.item.mainImage,
         mainThumbnailImage:
