@@ -2081,12 +2081,13 @@ describe('User API - Integration Tests', () => {
           itemType: 'product',
           quantity: 2,
           weightId: product.weights[0]._id.toString(),
+          idempotencyKey: 'delivery-cart-add',
         });
 
       const quoteResponse = await request(app)
         .post('/api/cart/delivery-windows')
         .set('Authorization', 'Bearer token')
-        .send({ addressId });
+        .send({ addressId, idempotencyKey: 'delivery-quote' });
 
       expect(quoteResponse.status).toBe(STATUES.CREATED);
       expect(quoteResponse.body.data).toMatchObject({
@@ -2109,6 +2110,7 @@ describe('User API - Integration Tests', () => {
         .send({
           quoteId: quoteResponse.body.data.id,
           deliveryWindowId: selectedOption.id,
+          idempotencyKey: 'delivery-window-select',
         });
       expect(selectionResponse.status).toBe(STATUES.SUCCESS);
       expect(selectionResponse.body.data).toMatchObject({
@@ -2127,6 +2129,7 @@ describe('User API - Integration Tests', () => {
         .send({
           quoteId: quoteResponse.body.data.id,
           deliveryWindowId: selectedOption.id,
+          idempotencyKey: 'delivery-window-expired',
         });
       expect(expiredResponse.status).toBe(STATUES.BAD_FORM_VALIDATION);
       expect(expiredResponse.body.message).toBe(
@@ -2146,6 +2149,7 @@ describe('User API - Integration Tests', () => {
           itemId: referenced._id.toString(),
           itemType,
           quantity: 5,
+          idempotencyKey: `${itemType}-cart-add-1`,
           ...(itemType === 'product'
             ? { weightId: referenced.weights[0]._id.toString() }
             : {}),
@@ -2168,6 +2172,7 @@ describe('User API - Integration Tests', () => {
           itemId: referenced._id.toString(),
           itemType,
           quantity: 7,
+          idempotencyKey: `${itemType}-cart-add-2`,
           ...(itemType === 'product'
             ? { weightId: referenced.weights[0]._id.toString() }
             : {}),
@@ -2191,7 +2196,8 @@ describe('User API - Integration Tests', () => {
 
       const deleteResponse = await request(app)
         .delete(`/api/cart/delete/${listResponse.body.data.items[0]._id}`)
-        .set('Authorization', 'Bearer token');
+        .set('Authorization', 'Bearer token')
+        .send({ idempotencyKey: `${itemType}-cart-delete` });
       expect(deleteResponse.status).toBe(STATUES.SUCCESS);
       expect(deleteResponse.body.data).toMatchObject({
         items: [],
@@ -2210,6 +2216,34 @@ describe('User API - Integration Tests', () => {
           quantity,
         });
       expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
+
+    test('replays a cart-add result without increasing quantity for the same idempotency key', async () => {
+      const product = await createReferencedItem(
+        ProductModel,
+        'idempotent-cart',
+      );
+      const payload = {
+        itemId: product._id.toString(),
+        itemType: 'product',
+        quantity: 2,
+        weightId: product.weights[0]._id.toString(),
+        idempotencyKey: 'cart-add-replay',
+      };
+
+      const first = await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send(payload);
+      const replay = await request(app)
+        .post('/api/cart/add')
+        .set('Authorization', 'Bearer token')
+        .send(payload);
+
+      expect(first.status).toBe(STATUES.CREATED);
+      expect(replay.status).toBe(first.status);
+      expect(replay.body.data).toEqual(first.body.data);
+      expect(replay.body.data.items[0].quantity).toBe(2);
     });
 
     test('calculates mixed Product/Pet totals and discounts from current database prices', async () => {
@@ -2233,11 +2267,17 @@ describe('User API - Integration Tests', () => {
           weightId: product.weights[0]._id.toString(),
           totalPrice: 1,
           discountPrice: 999999,
+          idempotencyKey: 'mixed-cart-product',
         });
       await request(app)
         .post('/api/cart/add')
         .set('Authorization', 'Bearer token')
-        .send({ itemId: pet._id.toString(), itemType: 'pet', quantity: 3 });
+        .send({
+          itemId: pet._id.toString(),
+          itemType: 'pet',
+          quantity: 3,
+          idempotencyKey: 'mixed-cart-pet',
+        });
 
       const response = await request(app)
         .get('/api/cart/all')
@@ -2262,6 +2302,7 @@ describe('User API - Integration Tests', () => {
           itemType: 'product',
           quantity: 2,
           weightId: product.weights[0]._id.toString(),
+          idempotencyKey: 'repriced-cart-add',
         });
       await ProductModel.collection.updateOne(
         { _id: product._id },
@@ -2288,7 +2329,8 @@ describe('User API - Integration Tests', () => {
 
       const emptied = await request(app)
         .delete('/api/cart/empty')
-        .set('Authorization', 'Bearer token');
+        .set('Authorization', 'Bearer token')
+        .send({ idempotencyKey: 'empty-cart-first' });
       expect(emptied.body.data).toMatchObject({
         items: [],
         totalPrice: 0,
@@ -2297,7 +2339,8 @@ describe('User API - Integration Tests', () => {
       });
       const secondEmpty = await request(app)
         .delete('/api/cart/empty')
-        .set('Authorization', 'Bearer token');
+        .set('Authorization', 'Bearer token')
+        .send({ idempotencyKey: 'empty-cart-second' });
       expect(secondEmpty.status).toBe(STATUES.SUCCESS);
     });
 
@@ -2325,6 +2368,7 @@ describe('User API - Integration Tests', () => {
             itemId,
             itemType,
             quantity: 1,
+            idempotencyKey: `missing-${itemType}-cart-item`,
             ...(itemType === 'product'
               ? { weightId: new mongoose.Types.ObjectId().toString() }
               : {}),
@@ -2395,7 +2439,8 @@ describe('User API - Integration Tests', () => {
       const [cartResponse, wishlistResponse] = await Promise.all([
         request(app)
           .delete(`/api/cart/delete/${id}`)
-          .set('Authorization', 'Bearer token'),
+          .set('Authorization', 'Bearer token')
+          .send({ idempotencyKey: 'missing-cart-item' }),
         request(app)
           .delete(`/api/wishlist/delete/${id}`)
           .set('Authorization', 'Bearer token'),

@@ -103,24 +103,27 @@ const cartItemFields = {
   weightId: mongoObjectIdSchema.optional(),
 };
 
-export const addCartItemSchema = object(cartItemFields).superRefine(
-  (value, context) => {
-    if (value.itemType === USER_ITEM_TYPES.PRODUCT && !value.weightId) {
-      context.addIssue({
-        code: 'custom',
-        path: ['weightId'],
-        message: 'وزن محصول الزامی است',
-      });
-    }
-    if (value.itemType !== USER_ITEM_TYPES.PRODUCT && value.weightId) {
-      context.addIssue({
-        code: 'custom',
-        path: ['weightId'],
-        message: 'وزن فقط برای محصول قابل انتخاب است',
-      });
-    }
-  },
-);
+const idempotencyKeySchema = string().trim().min(1).max(128);
+
+export const addCartItemSchema = object({
+  ...cartItemFields,
+  idempotencyKey: idempotencyKeySchema,
+}).superRefine((value, context) => {
+  if (value.itemType === USER_ITEM_TYPES.PRODUCT && !value.weightId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['weightId'],
+      message: 'وزن محصول الزامی است',
+    });
+  }
+  if (value.itemType !== USER_ITEM_TYPES.PRODUCT && value.weightId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['weightId'],
+      message: 'وزن فقط برای محصول قابل انتخاب است',
+    });
+  }
+});
 
 export const addWishlistItemSchema = object(cartItemFields).omit({
   quantity: true,
@@ -129,13 +132,19 @@ export const addWishlistItemSchema = object(cartItemFields).omit({
 
 export const cartEntryIdSchema = object({ id: mongoObjectIdSchema });
 
+export const cartIdempotencyKeySchema = object({
+  idempotencyKey: idempotencyKeySchema,
+}).strict();
+
 export const createDeliveryQuoteSchema = object({
   addressId: mongoObjectIdSchema,
+  idempotencyKey: idempotencyKeySchema,
 }).strict();
 
 export const selectDeliveryWindowSchema = object({
   quoteId: string().trim().min(1).max(100),
   deliveryWindowId: string().trim().min(1).max(100),
+  idempotencyKey: idempotencyKeySchema,
 }).strict();
 
 export const wishlistEntryIdSchema = cartEntryIdSchema;

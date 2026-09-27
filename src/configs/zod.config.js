@@ -43,6 +43,7 @@ const persianFieldNames = {
 
   itemId: 'شناسه آیتم',
   itemType: 'نوع آیتم',
+  idempotencyKey: 'کلید تکرارناپذیری',
   totalPrice: 'قیمت کل سبد خرید',
   discountPrice: 'مبلغ تخفیف سبد خرید',
   userAddress: 'نشانی سبد خرید',

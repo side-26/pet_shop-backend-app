@@ -112,6 +112,16 @@ const cartSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const cartIdempotencyRecordSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true, trim: true },
+    operation: { type: String, required: true, trim: true },
+    statusCode: { type: Number, required: true },
+    data: { type: mongoose.Schema.Types.Mixed, required: true },
+  },
+  { _id: false, timestamps: true },
+);
+
 cartSchema.pre('validate', function () {
   if (this.paymentType === CART_PAYMENT_TYPES.DIRECT) {
     this.instalmentCompany = null;
@@ -151,6 +161,10 @@ const userSchema = new mongoose.Schema(
     role: { type: String, default: 'customer' },
     orders: { type: [mongoose.Schema.Types.Mixed], default: [] },
     cart: { type: cartSchema, default: () => ({}) },
+    cartIdempotencyRecords: {
+      type: [cartIdempotencyRecordSchema],
+      default: [],
+    },
     wishlist: { type: [wishlistItemSchema], default: [] },
   },
   {

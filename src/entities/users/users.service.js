@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid';
 
 import {
   ERROR_CODES,
+  CART_IDEMPOTENCY,
   IMAGE_FORMATS,
   ROLES,
   STATUES,
@@ -721,6 +722,45 @@ export class UserService {
       });
     }
     return userId;
+  }
+
+  static async executeCartMutation(actor, { idempotencyKey, operation, run }) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await UserModel.findOne(
+      {
+        _id: userId,
+        cartIdempotencyRecords: {
+          $elemMatch: { key: idempotencyKey, operation },
+        },
+      },
+      { 'cartIdempotencyRecords.$': 1 },
+    );
+    const existing = user?.cartIdempotencyRecords?.find(
+      (record) =>
+        record.key === idempotencyKey && record.operation === operation,
+    );
+    if (existing) {
+      return { statusCode: existing.statusCode, data: existing.data };
+    }
+
+    const data = await run();
+    const statusCode =
+      operation === 'add' || operation === 'delivery-quote'
+        ? STATUES.CREATED
+        : STATUES.SUCCESS;
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          cartIdempotencyRecords: {
+            $each: [{ key: idempotencyKey, operation, statusCode, data }],
+            $slice: -CART_IDEMPOTENCY.MAX_PROCESSED_KEYS,
+          },
+        },
+      },
+      { runValidators: true },
+    );
+    return { statusCode, data };
   }
 
   static resolveAddressReceiver(user, address) {

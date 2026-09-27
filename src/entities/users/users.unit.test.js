@@ -1784,6 +1784,31 @@ describe('UserService - Unit Tests', () => {
   // CART
   // =========================================================
 
+  test('returns the stored cart result for a repeated idempotency key', async () => {
+    const storedData = { items: [], totalPrice: 0, discountPrice: 0 };
+    UserModel.findOne.mockResolvedValue({
+      cartIdempotencyRecords: [
+        {
+          key: 'cart-request-1',
+          operation: 'empty',
+          statusCode: STATUES.SUCCESS,
+          data: storedData,
+        },
+      ],
+    });
+    const run = jest.fn();
+
+    await expect(
+      UserService.executeCartMutation(mockActor, {
+        idempotencyKey: 'cart-request-1',
+        operation: 'empty',
+        run,
+      }),
+    ).resolves.toEqual({ statusCode: STATUES.SUCCESS, data: storedData });
+
+    expect(run).not.toHaveBeenCalled();
+  });
+
   test('addCartItem validates a product, increments quantity, and recalculates pricing', async () => {
     const data = {
       itemId: mockUser.cart.items[0].item._id,

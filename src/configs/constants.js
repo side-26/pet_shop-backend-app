@@ -212,6 +212,10 @@ export const USER_ADDRESS_LIMITS = {
   MAX_ADDRESSES: 5,
 };
 
+export const CART_IDEMPOTENCY = {
+  MAX_PROCESSED_KEYS: 100,
+};
+
 export const USER_ITEM_TYPES = {
   PRODUCT: 'product',
   PET: 'pet',

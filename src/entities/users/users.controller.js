@@ -12,6 +12,7 @@ import {
   addUserAddressSchema,
   addWishlistItemSchema,
   cartEntryIdSchema,
+  cartIdempotencyKeySchema,
   createDeliveryQuoteSchema,
   editUserAddressSchema,
   userAddressIdSchema,
@@ -225,8 +226,12 @@ export const getUserAddressListController = async (req, res, next) => {
 export const addCartItemController = async (req, res, next) => {
   try {
     const body = returnFormValidation(addCartItemSchema, req.body);
-    const cart = await UserService.addCartItem(req.user, body);
-    setSuccessResponse(res, STATUES.CREATED, { data: cart });
+    const result = await UserService.executeCartMutation(req.user, {
+      idempotencyKey: body.idempotencyKey,
+      operation: 'add',
+      run: () => UserService.addCartItem(req.user, body),
+    });
+    setSuccessResponse(res, result.statusCode, { data: result.data });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
@@ -235,8 +240,16 @@ export const addCartItemController = async (req, res, next) => {
 export const deleteCartItemController = async (req, res, next) => {
   try {
     const { id } = returnFormValidation(cartEntryIdSchema, req.params);
-    const items = await UserService.deleteCartItem(req.user, id);
-    setSuccessResponse(res, STATUES.SUCCESS, { data: items });
+    const { idempotencyKey } = returnFormValidation(
+      cartIdempotencyKeySchema,
+      req.body,
+    );
+    const result = await UserService.executeCartMutation(req.user, {
+      idempotencyKey,
+      operation: 'delete-item',
+      run: () => UserService.deleteCartItem(req.user, id),
+    });
+    setSuccessResponse(res, result.statusCode, { data: result.data });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
@@ -253,12 +266,16 @@ export const getCartItemsController = async (req, res, next) => {
 
 export const createDeliveryQuoteController = async (req, res, next) => {
   try {
-    const { addressId } = returnFormValidation(
+    const { addressId, idempotencyKey } = returnFormValidation(
       createDeliveryQuoteSchema,
       req.body,
     );
-    const quote = await UserService.createDeliveryQuote(req.user, addressId);
-    setSuccessResponse(res, STATUES.CREATED, { data: quote });
+    const result = await UserService.executeCartMutation(req.user, {
+      idempotencyKey,
+      operation: 'delivery-quote',
+      run: () => UserService.createDeliveryQuote(req.user, addressId),
+    });
+    setSuccessResponse(res, result.statusCode, { data: result.data });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
@@ -270,8 +287,12 @@ export const selectDeliveryWindowController = async (req, res, next) => {
       selectDeliveryWindowSchema,
       req.body,
     );
-    const cart = await UserService.selectDeliveryWindow(req.user, selection);
-    setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
+    const result = await UserService.executeCartMutation(req.user, {
+      idempotencyKey: selection.idempotencyKey,
+      operation: 'delivery-window',
+      run: () => UserService.selectDeliveryWindow(req.user, selection),
+    });
+    setSuccessResponse(res, result.statusCode, { data: result.data });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
@@ -279,8 +300,16 @@ export const selectDeliveryWindowController = async (req, res, next) => {
 
 export const emptyCartController = async (req, res, next) => {
   try {
-    const cart = await UserService.emptyCart(req.user);
-    setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
+    const { idempotencyKey } = returnFormValidation(
+      cartIdempotencyKeySchema,
+      req.body,
+    );
+    const result = await UserService.executeCartMutation(req.user, {
+      idempotencyKey,
+      operation: 'empty',
+      run: () => UserService.emptyCart(req.user),
+    });
+    setSuccessResponse(res, result.statusCode, { data: result.data });
   } catch (error) {
     onCatchPromiseController(error, next);
   }
