@@ -7,10 +7,13 @@ import {
   securityHeadersMiddleware,
 } from '#middlewares/security.middleware.js';
 
-const createApp = (limit = 2) => {
+const createApp = (limit = 2, rateLimitOptions = {}) => {
   const app = express();
   app.use(securityHeadersMiddleware);
-  app.use('/api', createRateLimiter({ windowMs: 60_000, limit }));
+  app.use(
+    '/api',
+    createRateLimiter({ windowMs: 60_000, limit, ...rateLimitOptions }),
+  );
   app.get('/api/health', (_req, res) => res.status(STATUES.SUCCESS).json({}));
   return app;
 };
@@ -43,5 +46,13 @@ describe('security middleware', () => {
     expect(response.headers).toHaveProperty('ratelimit');
     expect(response.headers).toHaveProperty('retry-after');
     expect(response.headers).not.toHaveProperty('x-ratelimit-limit');
+  });
+
+  it('uses the shared 429 status when a limiter option has another status', async () => {
+    const app = createApp(1, { statusCode: STATUES.UN_AUTHORIZED });
+
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
+
+    await request(app).get('/api/health').expect(STATUES.TOO_MANY_REQUESTS);
   });
 });

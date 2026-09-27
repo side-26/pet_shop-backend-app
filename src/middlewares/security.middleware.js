@@ -13,8 +13,8 @@ export const createRateLimiter = (overrides = {}) =>
     standardHeaders: RATE_LIMIT.STANDARD_HEADERS,
     legacyHeaders: false,
     statusCode: STATUES.TOO_MANY_REQUESTS,
-    handler: (_req, res, _next, options) => {
-      res.status(options.statusCode).json({
+    handler: (_req, res) => {
+      res.status(STATUES.TOO_MANY_REQUESTS).json({
         isSuccess: false,
         message: RATE_LIMIT_MESSAGE,
         data: { messages: null, detail: null },

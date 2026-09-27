@@ -1173,6 +1173,25 @@ describe('User API - Integration Tests', () => {
         birthDate: '1998-04-12T00:00:00.000Z',
       });
     });
+
+    test('returns 429 before authentication when the route rate-limit bucket is exhausted', async () => {
+      mockRedisRateLimitConsume.mockResolvedValueOnce({
+        allowed: false,
+        current: RATE_LIMIT.USER_MAX_REQUESTS + 1,
+        remaining: 0,
+        limit: RATE_LIMIT.USER_MAX_REQUESTS,
+        retryAfter: 75,
+      });
+
+      const res = await request(app).get('/api/users/current');
+
+      expect(res.status).toBe(STATUES.TOO_MANY_REQUESTS);
+      expect(res.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.USER_MAX_REQUESTS),
+      );
+      expect(res.headers['ratelimit-remaining']).toBe('0');
+      expect(res.headers['retry-after']).toBe('75');
+    });
   });
 
   // =========================================================
