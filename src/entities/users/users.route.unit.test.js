@@ -46,6 +46,7 @@ jest.mock('./users.controller.js', () => ({
   getAllUsersListController: jest.fn(),
   getAllUsersListPaginateController: jest.fn(),
   getCurrentUserController: jest.fn(),
+  getCartItemDetailsController: jest.fn(),
   getCartItemsController: jest.fn(),
   getUserAddressListController: jest.fn(),
   getUserByIdController: jest.fn(),
@@ -67,8 +68,10 @@ import { RATE_LIMIT, ROUTES } from '#configs/constants.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 
 import { RateLimiter } from '../../infrastructure/redis/rateLimit/rateLimit.core.js';
+import { USER_ROUTES } from './route.path.js';
 import {
   createDeliveryQuoteController,
+  getCartItemDetailsController,
   loginUserController,
   logoutUserController,
   selectDeliveryWindowController,
@@ -105,6 +108,9 @@ describe('users route policies', () => {
     const deliverySelectionRoute = registeredRoutes.find(
       ([path]) => path === ROUTES.cart.deliveryWindow,
     );
+    const cartItemsRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.cartItems,
+    );
     const standardRoutes = registeredRoutes.filter(
       ([path]) =>
         path !== ROUTES.users.login && path !== ROUTES.users.getAllPaginate,
@@ -124,8 +130,8 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
       window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
     });
-    expect(registeredRoutes).toHaveLength(29);
-    expect(standardRoutes).toHaveLength(27);
+    expect(registeredRoutes).toHaveLength(30);
+    expect(standardRoutes).toHaveLength(28);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
     });
@@ -152,6 +158,12 @@ describe('users route policies', () => {
       standardRateLimitMiddleware,
       authenticated,
       selectDeliveryWindowController,
+    ]);
+    expect(cartItemsRoute).toEqual([
+      USER_ROUTES.cartItems,
+      standardRateLimitMiddleware,
+      authenticated,
+      getCartItemDetailsController,
     ]);
   });
 });

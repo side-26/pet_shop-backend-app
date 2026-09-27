@@ -23,6 +23,7 @@ import {
   getAllUsersListPaginateController,
   getCurrentUserController,
   getCartItemsController,
+  getCartItemDetailsController,
   getUserByIdController,
   getUserAddressListController,
   getWishlistItemsController,
@@ -326,6 +327,12 @@ router.get(
     #swagger.responses[200] = { description: 'Current cart', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { $ref: '#/components/schemas/Cart' } } } } } }
   */
   getCartItemsController,
+);
+router.get(
+  USER_ROUTES.cartItems,
+  standardUserRateLimit,
+  authenticated,
+  getCartItemDetailsController,
 );
 router.post(
   USER_ROUTES.cartDeliveryWindows,

@@ -13,6 +13,7 @@ export const USER_ROUTES = {
   cartAdd: '/cart/add',
   cartDeleteById: '/cart/delete/:id',
   cartAll: '/cart/all',
+  cartItems: '/cart/items',
   cartDeliveryWindows: '/cart/delivery-windows',
   cartDeliveryWindow: '/cart/delivery-window',
   cartEmpty: '/cart/empty',

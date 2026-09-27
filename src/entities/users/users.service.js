@@ -45,7 +45,11 @@ import {
 import { shippingService } from '../../integrations/shipping/shipping.service.js';
 import { OtpCodeService } from '../../integrations/otpCode/otpCode.service.js';
 import { UserModel } from './users.model.js';
-import { calculateCartPrices, formatUserFullName } from './users.helpers.js';
+import {
+  calculateCartPrices,
+  formatCartItemDetails,
+  formatUserFullName,
+} from './users.helpers.js';
 import { userAddressSchema } from './users.schema.js';
 
 const redisOtpStore = new RedisOtpStore();
@@ -1113,6 +1117,11 @@ export class UserService {
   static async getCartItems(actor, session) {
     const userId = this.getAuthenticatedUserId(actor);
     return this.recalculateCart(userId, session);
+  }
+
+  static async getCartItemDetails(actor) {
+    const cart = await this.getCartItems(actor);
+    return formatCartItemDetails(cart.items);
   }
 
   static async emptyCart(actor, session) {

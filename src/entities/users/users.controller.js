@@ -264,6 +264,15 @@ export const getCartItemsController = async (req, res, next) => {
   }
 };
 
+export const getCartItemDetailsController = async (req, res, next) => {
+  try {
+    const items = await UserService.getCartItemDetails(req.user);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: items });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const createDeliveryQuoteController = async (req, res, next) => {
   try {
     const { addressId, idempotencyKey } = returnFormValidation(
