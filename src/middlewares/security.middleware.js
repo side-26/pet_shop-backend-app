@@ -14,11 +14,14 @@ export const createRateLimiter = (overrides = {}) =>
     legacyHeaders: false,
     statusCode: STATUES.TOO_MANY_REQUESTS,
     handler: (_req, res) => {
-      res.status(STATUES.TOO_MANY_REQUESTS).json({
-        isSuccess: false,
-        message: RATE_LIMIT_MESSAGE,
-        data: { messages: null, detail: null },
-      });
+      res
+        .status(STATUES.TOO_MANY_REQUESTS)
+        .type('application/json; charset=utf-8')
+        .json({
+          isSuccess: false,
+          message: RATE_LIMIT_MESSAGE,
+          data: { messages: null, detail: null },
+        });
     },
     ...overrides,
   });

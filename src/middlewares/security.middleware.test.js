@@ -45,6 +45,9 @@ describe('security middleware', () => {
     });
     expect(response.headers).toHaveProperty('ratelimit');
     expect(response.headers).toHaveProperty('retry-after');
+    expect(response.headers['content-type']).toMatch(
+      /application\/json; charset=utf-8/i,
+    );
     expect(response.headers).not.toHaveProperty('x-ratelimit-limit');
   });
 

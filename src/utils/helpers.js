@@ -24,10 +24,13 @@ export const setErrorResponse = (statusCode, options = {}) => {
 };
 
 export const setSuccessResponse = (res, statusCode, option) => {
-  res.status(statusCode).json({
-    isSuccess: true,
-    ...option,
-  });
+  res
+    .status(statusCode)
+    .type('application/json; charset=utf-8')
+    .json({
+      isSuccess: true,
+      ...option,
+    });
 };
 
 export const getPaginationQueryParam = (req) => {
