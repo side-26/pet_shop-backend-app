@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
@@ -19,6 +20,7 @@ import {
 import { CATEGORY_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('categories').applyTo(router);
 
 // ============================================
 // CREATE

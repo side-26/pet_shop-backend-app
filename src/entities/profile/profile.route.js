@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 
@@ -20,6 +21,7 @@ import {
 import { PROFILE_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('profile').applyTo(router);
 
 router.get(
   PROFILE_ROUTES.profileAccount,

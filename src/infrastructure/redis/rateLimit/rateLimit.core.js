@@ -24,7 +24,7 @@ export class RateLimiter {
     return ['rate-limit', this.#entityName, route, req.ip].join(':');
   }
 
-  limit({ limit = 10, window = 60 } = {}) {
+  limit({ limit = 4, window = 60 } = {}) {
     if (!Number.isInteger(limit) || limit <= 0) {
       setErrorResponse(STATUES.BAD_REQUEST, {
         message: 'حداکثر تعداد درخواست باید یک عدد صحیح مثبت باشد',
@@ -39,6 +39,10 @@ export class RateLimiter {
 
     return async (req, res, next) => {
       try {
+        if (this.#store.isReady === false) {
+          return next();
+        }
+
         const key = this.#createRouteKey(req);
 
         const result = await this.#store.consume({
@@ -65,5 +69,13 @@ export class RateLimiter {
         return next(error);
       }
     };
+  }
+
+  applyTo(router, policy) {
+    for (const method of ['get', 'post', 'put', 'patch', 'delete']) {
+      const registerRoute = router[method].bind(router);
+      router[method] = (path, ...handlers) =>
+        registerRoute(path, this.limit(policy), ...handlers);
+    }
   }
 }

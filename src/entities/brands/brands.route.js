@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { MANAGEMENT_ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadBrandLogo } from '#middlewares/upload.middleware.js';
@@ -19,6 +20,7 @@ import {
 import { BRAND_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('brands').applyTo(router);
 
 router.get(
   BRAND_ROUTES.brands,

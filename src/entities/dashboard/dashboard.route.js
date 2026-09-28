@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 
@@ -8,6 +9,7 @@ import { getDashboardMetricsController } from './dashboard.controller.js';
 import { DASHBOARD_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('dashboard').applyTo(router);
 
 router.get(
   DASHBOARD_ROUTES.dashboardMetrics,

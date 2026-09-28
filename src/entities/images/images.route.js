@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { MANAGEMENT_ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadMainImage } from '#middlewares/upload.middleware.js';
@@ -13,6 +14,7 @@ import {
 import { IMAGE_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('images').applyTo(router);
 
 router.post(
   IMAGE_ROUTES.images,

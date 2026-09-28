@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { MANAGEMENT_ROLES, ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 import { uploadBreedMainImage } from '#middlewares/upload.middleware.js';
@@ -22,6 +23,7 @@ import {
 import { BREED_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('breeds').applyTo(router);
 
 router.get(
   BREED_ROUTES.breedsPropertyDefinitionsById,

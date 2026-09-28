@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { optionallyAuthenticated } from '#middlewares/auth.middleware.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 
 import {
   getAllPetTypesController,
@@ -21,6 +22,7 @@ import {
 import { LANDING_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('landing').applyTo(router);
 
 router.get(
   LANDING_ROUTES.landingSearch,

@@ -1,8 +1,12 @@
 const mockConsume = jest.fn();
+const mockIsReady = jest.fn();
 
 jest.mock('./redisRateLimit.store.js', () => ({
   RedisRateLimitStore: jest.fn().mockImplementation(() => ({
     consume: mockConsume,
+    get isReady() {
+      return mockIsReady();
+    },
   })),
 }));
 
@@ -25,6 +29,7 @@ const createResponse = () => ({
 describe('Redis rate-limit middleware', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsReady.mockReturnValue(true);
   });
 
   test.each([undefined, null, '', '   ', 123])(
@@ -40,6 +45,36 @@ describe('Redis rate-limit middleware', () => {
     const rateLimiter = new RateLimiter('auth');
 
     expect(rateLimiter.limit()).toEqual(expect.any(Function));
+  });
+
+  test('adds the Redis limiter to every registered entity route', () => {
+    const router = {
+      get: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+      patch: jest.fn(),
+      delete: jest.fn(),
+    };
+    const originalGet = router.get;
+    const originalPost = router.post;
+    const controller = jest.fn();
+    const rateLimiter = new RateLimiter('products');
+
+    rateLimiter.applyTo(router);
+    router.get('/products/:id', controller);
+    router.post('/products', controller);
+
+    expect(originalGet.mock.calls).toHaveLength(1);
+    expect(originalGet.mock.calls[0]).toEqual([
+      '/products/:id',
+      expect.any(Function),
+      controller,
+    ]);
+    expect(originalPost.mock.calls[0]).toEqual([
+      '/products',
+      expect.any(Function),
+      controller,
+    ]);
   });
 
   test.each([0, -1, 1.5, Number.NaN, '3'])(
@@ -68,8 +103,8 @@ describe('Redis rate-limit middleware', () => {
     mockConsume.mockResolvedValue({
       allowed: true,
       current: 1,
-      remaining: 9,
-      limit: 10,
+      remaining: 3,
+      limit: 4,
       retryAfter: 60,
     });
     const rateLimiter = new RateLimiter('auth');
@@ -81,11 +116,11 @@ describe('Redis rate-limit middleware', () => {
 
     expect(mockConsume).toHaveBeenCalledWith({
       key: 'rate-limit:auth:POST:/api/auth/send-otp:192.168.1.10',
-      limit: 10,
+      limit: 4,
       window: 60,
     });
-    expect(res.setHeader).toHaveBeenCalledWith('RateLimit-Limit', 10);
-    expect(res.setHeader).toHaveBeenCalledWith('RateLimit-Remaining', 9);
+    expect(res.setHeader).toHaveBeenCalledWith('RateLimit-Limit', 4);
+    expect(res.setHeader).toHaveBeenCalledWith('RateLimit-Remaining', 3);
     expect(next).toHaveBeenCalledWith();
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -109,6 +144,20 @@ describe('Redis rate-limit middleware', () => {
     expect(mockConsume).toHaveBeenCalledWith(
       expect.objectContaining({ limit: 3, window: 120 }),
     );
+  });
+
+  test('continues without rate limiting when Redis is unavailable', async () => {
+    mockIsReady.mockReturnValue(false);
+    const next = jest.fn();
+
+    await new RateLimiter('products').limit()(
+      createRequest(),
+      createResponse(),
+      next,
+    );
+
+    expect(mockConsume).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
   });
 
   test('forwards a 429 error and retry headers above the limit', async () => {

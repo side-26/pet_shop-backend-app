@@ -1,6 +1,7 @@
 import express from 'express';
 
 import { MANAGEMENT_ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { roleMiddleware } from '#middlewares/role.middleware.js';
 
@@ -16,6 +17,7 @@ import {
 import { ORDER_ROUTES } from './route.path.js';
 
 const router = express.Router();
+new RateLimiter('orders').applyTo(router);
 
 router.post(
   ORDER_ROUTES.orders,

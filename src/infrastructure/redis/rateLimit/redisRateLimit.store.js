@@ -18,6 +18,10 @@ export class RedisRateLimitStore {
     this.#client = RedisClient.getClient();
   }
 
+  get isReady() {
+    return this.#client.isReady;
+  }
+
   async consume({ key, limit, window }) {
     const [currentValue, ttlValue] = await this.#client.eval(CONSUME_SCRIPT, {
       keys: [key],
