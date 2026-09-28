@@ -55,6 +55,10 @@ const loginUserRateLimit = userRateLimiter.limit({
   limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
   window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
 });
+const frequentUserRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.CART_MAX_REQUESTS,
+  window: RATE_LIMIT.CART_WINDOW_SECONDS,
+});
 
 router.post(
   USER_ROUTES.users,
@@ -287,7 +291,7 @@ router.get(
 
 router.post(
   USER_ROUTES.cartAdd,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -303,7 +307,7 @@ router.post(
 );
 router.delete(
   USER_ROUTES.cartDeleteById,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -318,7 +322,7 @@ router.delete(
 );
 router.get(
   USER_ROUTES.cartAll,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -330,13 +334,13 @@ router.get(
 );
 router.get(
   USER_ROUTES.cartItems,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   getCartItemDetailsController,
 );
 router.post(
   USER_ROUTES.cartDeliveryWindows,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -352,7 +356,7 @@ router.post(
 );
 router.patch(
   USER_ROUTES.cartDeliveryWindow,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -368,7 +372,7 @@ router.patch(
 );
 router.delete(
   USER_ROUTES.cartEmpty,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
@@ -493,7 +497,7 @@ router.get(
 
 router.get(
   USER_ROUTES.usersCurrent,
-  standardUserRateLimit,
+  frequentUserRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Users']

@@ -86,6 +86,7 @@ describe('users route policies', () => {
     const paginatedRateLimitMiddleware =
       rateLimiter.limit.mock.results[1].value;
     const loginRateLimitMiddleware = rateLimiter.limit.mock.results[2].value;
+    const cartRateLimitMiddleware = rateLimiter.limit.mock.results[3].value;
     const registeredRoutes = [
       ...mockRouter.delete.mock.calls,
       ...mockRouter.get.mock.calls,
@@ -111,9 +112,18 @@ describe('users route policies', () => {
     const cartItemsRoute = registeredRoutes.find(
       ([path]) => path === USER_ROUTES.cartItems,
     );
+    const currentUserRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.usersCurrent,
+    );
+    const cartRoutePaths = Object.values(USER_ROUTES).filter((path) =>
+      path.startsWith('/cart/'),
+    );
     const standardRoutes = registeredRoutes.filter(
       ([path]) =>
-        path !== ROUTES.users.login && path !== ROUTES.users.getAllPaginate,
+        path !== ROUTES.users.login &&
+        path !== ROUTES.users.getAllPaginate &&
+        path !== USER_ROUTES.usersCurrent &&
+        !cartRoutePaths.includes(path),
     );
 
     expect(usersRouter).toBe(mockRouter);
@@ -130,8 +140,12 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
       window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
     });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(4, {
+      limit: RATE_LIMIT.CART_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    });
     expect(registeredRoutes).toHaveLength(30);
-    expect(standardRoutes).toHaveLength(28);
+    expect(standardRoutes).toHaveLength(20);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
     });
@@ -149,21 +163,22 @@ describe('users route policies', () => {
     ]);
     expect(deliveryQuoteRoute).toEqual([
       ROUTES.cart.deliveryWindows,
-      standardRateLimitMiddleware,
+      cartRateLimitMiddleware,
       authenticated,
       createDeliveryQuoteController,
     ]);
     expect(deliverySelectionRoute).toEqual([
       ROUTES.cart.deliveryWindow,
-      standardRateLimitMiddleware,
+      cartRateLimitMiddleware,
       authenticated,
       selectDeliveryWindowController,
     ]);
     expect(cartItemsRoute).toEqual([
       USER_ROUTES.cartItems,
-      standardRateLimitMiddleware,
+      cartRateLimitMiddleware,
       authenticated,
       getCartItemDetailsController,
     ]);
+    expect(currentUserRoute[1]).toBe(cartRateLimitMiddleware);
   });
 });
