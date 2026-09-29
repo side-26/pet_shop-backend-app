@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 import '#configs/zod.config.js';
 
-const { boolean, number, object, preprocess, string, tuple } = z;
+import { DELIVERY_WEEK_DAYS } from './deliveryServices.constants.js';
+
+const { array, boolean, number, object, preprocess, string, tuple } = z;
 
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
 const booleanSchema = preprocess(
@@ -11,6 +13,14 @@ const booleanSchema = preprocess(
 );
 const longitudeSchema = number().min(-180).max(180);
 const latitudeSchema = number().min(-90).max(90);
+const timeSchema = string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const timeRangeSchema = object({
+  startsAt: timeSchema,
+  endsAt: timeSchema,
+}).refine(({ startsAt, endsAt }) => startsAt < endsAt);
+const scheduleFields = Object.fromEntries(
+  DELIVERY_WEEK_DAYS.map((day) => [day, array(timeRangeSchema)]),
+);
 
 export const deliveryServiceCoordinatesSchema = tuple([
   longitudeSchema,
@@ -20,9 +30,12 @@ export const deliveryServiceCoordinatesSchema = tuple([
 const deliveryServiceFields = {
   title: string().trim().min(2).max(100),
   title_fa: string().trim().min(2).max(100),
+  logo: string().trim().url().max(2048),
   originCoordinates: deliveryServiceCoordinatesSchema,
+  availability: object(scheduleFields),
   basePrice: number().int().min(0).default(0),
   packingPrice: number().int().min(0).default(0),
+  pricePerKilometerInCity: number().int().positive(),
   pricePerKilometer: number().int().positive(),
   isEnable: booleanSchema.optional().default(true),
 };
@@ -34,4 +47,8 @@ export const deliveryServiceQueryZodSchema = object({
   includeDisabled: string()
     .optional()
     .transform((value) => value === 'true'),
+});
+export const deliveryServiceAvailableQueryZodSchema = object({
+  lat: preprocess((value) => Number(value), latitudeSchema),
+  lng: preprocess((value) => Number(value), longitudeSchema),
 });

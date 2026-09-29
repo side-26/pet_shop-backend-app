@@ -10,6 +10,7 @@ import {
   deleteDeliveryServiceController,
   disableDeliveryServiceController,
   enableDeliveryServiceController,
+  getAvailableDeliveryServicesController,
   getAllDeliveryServicesController,
   getDeliveryServiceByIdController,
   updateDeliveryServiceController,
@@ -18,6 +19,13 @@ import { DELIVERY_SERVICE_ROUTES } from './route.path.js';
 
 const router = express.Router();
 new RateLimiter('delivery-services').applyTo(router);
+
+router.get(
+  DELIVERY_SERVICE_ROUTES.deliveryServicesAvailable,
+  /* #swagger.parameters['lat'] = { in: 'query', required: true, schema: { type: 'number' } }
+     #swagger.parameters['lng'] = { in: 'query', required: true, schema: { type: 'number' } } */
+  getAvailableDeliveryServicesController,
+);
 
 router.get(
   DELIVERY_SERVICE_ROUTES.deliveryServices,

@@ -219,10 +219,17 @@ export const schemas = {
   },
   DeliveryServiceBody: {
     type: 'object',
-    required: ['title', 'title_fa', 'originCoordinates', 'pricePerKilometer'],
+    required: [
+      'title',
+      'title_fa',
+      'originCoordinates',
+      'pricePerKilometerInCity',
+      'pricePerKilometer',
+    ],
     properties: {
       title: { type: 'string', minLength: 2, maxLength: 100 },
       title_fa: { type: 'string', minLength: 2, maxLength: 100 },
+      logo: { type: 'string', format: 'uri' },
       originCoordinates: {
         type: 'array',
         minItems: 2,
@@ -230,8 +237,14 @@ export const schemas = {
         items: { type: 'number' },
         description: 'Origin coordinates as [longitude, latitude].',
       },
+      availability: {
+        type: 'object',
+        description:
+          'Weekly availability keyed by weekday; each range has startsAt and endsAt in HH:mm.',
+      },
       basePrice: { type: 'integer', minimum: 0, default: 0 },
       packingPrice: { type: 'integer', minimum: 0, default: 0 },
+      pricePerKilometerInCity: { type: 'integer', minimum: 1 },
       pricePerKilometer: { type: 'integer', minimum: 1 },
       isEnable: { type: 'boolean', default: true },
     },

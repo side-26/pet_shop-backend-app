@@ -16,6 +16,8 @@ const deliveryServiceSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 100 },
     title_fa: { type: String, required: true, trim: true, maxlength: 100 },
+    logo: { type: String, required: true, trim: true, maxlength: 2048 },
+    availability: { type: mongoose.Schema.Types.Mixed, required: true },
     originCoordinates: {
       type: [Number],
       required: true,
@@ -35,6 +37,7 @@ const deliveryServiceSchema = new mongoose.Schema(
     },
     basePrice: { type: Number, required: true, min: 0, default: 0 },
     packingPrice: { type: Number, required: true, min: 0, default: 0 },
+    pricePerKilometerInCity: { type: Number, required: true, min: 1 },
     pricePerKilometer: { type: Number, required: true, min: 1 },
     isEnable: { type: Boolean, required: true, default: true, index: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -51,9 +54,12 @@ deliveryServiceSchema.pre('validate', function () {
   validateDeliveryServiceData({
     title: this.title,
     title_fa: this.title_fa,
+    logo: this.logo,
     originCoordinates: this.originCoordinates,
+    availability: this.availability,
     basePrice: this.basePrice,
     packingPrice: this.packingPrice,
+    pricePerKilometerInCity: this.pricePerKilometerInCity,
     pricePerKilometer: this.pricePerKilometer,
     isEnable: this.isEnable,
   });

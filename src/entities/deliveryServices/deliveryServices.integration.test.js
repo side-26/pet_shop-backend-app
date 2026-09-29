@@ -28,9 +28,20 @@ describe('Delivery service API', () => {
   const payload = {
     title: 'Tehran Express',
     title_fa: 'اکسپرس تهران',
+    logo: 'https://cdn.example.com/delivery-services/tehran-express.webp',
     originCoordinates: [51.389, 35.6892],
+    availability: {
+      sunday: [],
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [{ startsAt: '09:00', endsAt: '18:00' }],
+    },
     basePrice: 10000,
     packingPrice: 3000,
+    pricePerKilometerInCity: 4000,
     pricePerKilometer: 5000,
   };
 
@@ -64,6 +75,38 @@ describe('Delivery service API', () => {
       .expect(200);
   });
 
+  test('returns enabled services with a distance quote and ISO availability slots', async () => {
+    await DeliveryServiceModel.create(payload);
+    await DeliveryServiceModel.create({
+      ...payload,
+      title: 'Disabled Express',
+      title_fa: 'اکسپرس غیرفعال',
+      isEnable: false,
+    });
+
+    const response = await request(app)
+      .get('/api/delivery-services/available')
+      .query({ lat: 35.7, lng: 51.4 })
+      .expect(200);
+
+    expect(response.body).toMatchObject({ totalRecords: 1 });
+    expect(response.body.data[0]).toMatchObject({
+      title: payload.title,
+      logo: payload.logo,
+      packingPrice: payload.packingPrice,
+    });
+    expect(response.body.data[0].shippingPrice).toBeGreaterThan(
+      payload.packingPrice,
+    );
+    expect(response.body.data[0].availability[0]).toEqual(
+      expect.objectContaining({
+        weekday: expect.any(String),
+        startsAt: expect.any(String),
+        endsAt: expect.any(String),
+      }),
+    );
+  });
+
   test('updates the complete provider contract and changes availability', async () => {
     const deliveryService = await DeliveryServiceModel.create(payload);
     const updatedPayload = {
@@ -73,6 +116,7 @@ describe('Delivery service API', () => {
       originCoordinates: [51.4, 35.7],
       basePrice: 20000,
       packingPrice: 4000,
+      pricePerKilometerInCity: 6000,
       pricePerKilometer: 7000,
       isEnable: false,
     };

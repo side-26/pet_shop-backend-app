@@ -23,6 +23,7 @@ import { REVERSE_GEOCODING_ROUTES } from '../integrations/reverseGeocoding/route
 const { get, post, put, patch, delete: deleteMethod } = METHODS;
 
 export const API_ROUTE_METHODS = [
+  { path: DELIVERY_SERVICE_ROUTES.deliveryServicesAvailable, methods: [get] },
   { path: LANDING_ROUTES.landingBrandsPopular, methods: [get] },
   { path: LANDING_ROUTES.landingPetTypesAll, methods: [get] },
   { path: LANDING_ROUTES.landingPetsPopular, methods: [get] },

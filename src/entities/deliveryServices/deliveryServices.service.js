@@ -1,7 +1,11 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
-import { calculateDistanceKm } from './deliveryServices.helpers.js';
+import { DELIVERY_LOOKUP_DAYS } from './deliveryServices.constants.js';
+import {
+  calculateDistanceKm,
+  createAvailabilitySlots,
+} from './deliveryServices.helpers.js';
 import { DeliveryServiceModel } from './deliveryServices.model.js';
 
 export class DeliveryServiceService {
@@ -87,6 +91,22 @@ export class DeliveryServiceService {
     ).sort({ createdAt: 1 });
   }
 
+  static async findAvailableByCoordinates(
+    destinationCoordinates,
+    now = new Date(),
+  ) {
+    const deliveryServices = await this.findAll();
+    return deliveryServices.map((deliveryService) => ({
+      ...this.format(deliveryService),
+      ...this.calculateQuote(deliveryService, destinationCoordinates),
+      availability: createAvailabilitySlots(
+        deliveryService.availability,
+        now,
+        DELIVERY_LOOKUP_DAYS,
+      ),
+    }));
+  }
+
   static calculateQuote(deliveryService, destinationCoordinates) {
     const distanceKm = calculateDistanceKm(
       deliveryService.originCoordinates,
@@ -95,9 +115,7 @@ export class DeliveryServiceService {
     return {
       distanceKm,
       shippingPrice:
-        deliveryService.basePrice +
-        deliveryService.packingPrice +
-        Math.ceil(distanceKm) * deliveryService.pricePerKilometer,
+        deliveryService.basePrice * distanceKm + deliveryService.packingPrice,
     };
   }
 
@@ -111,9 +129,12 @@ export class DeliveryServiceService {
       id: value._id,
       title: value.title,
       title_fa: value.title_fa,
+      logo: value.logo,
       originCoordinates: value.originCoordinates,
+      availability: value.availability,
       basePrice: value.basePrice,
       packingPrice: value.packingPrice,
+      pricePerKilometerInCity: value.pricePerKilometerInCity,
       pricePerKilometer: value.pricePerKilometer,
       isEnable: value.isEnable,
       createdBy: value.createdBy,

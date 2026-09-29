@@ -8014,6 +8014,33 @@
           }
         }
       }
+    },
+    "/delivery-services/available": {
+      "get": {
+        "tags": ["/delivery-services"],
+        "summary": "List available delivery services for coordinates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lat",
+            "required": true,
+            "schema": { "type": "number", "minimum": -90, "maximum": 90 }
+          },
+          {
+            "in": "query",
+            "name": "lng",
+            "required": true,
+            "schema": { "type": "number", "minimum": -180, "maximum": 180 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enabled delivery services with distance prices and ISO availability slots"
+          },
+          "422": { "description": "Invalid coordinates" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
     }
   },
   "components": {
@@ -9849,6 +9876,7 @@
           "title",
           "title_fa",
           "originCoordinates",
+          "pricePerKilometerInCity",
           "pricePerKilometer"
         ],
         "properties": {
@@ -9862,6 +9890,10 @@
             "minLength": 2,
             "maxLength": 100
           },
+          "logo": {
+            "type": "string",
+            "format": "uri"
+          },
           "originCoordinates": {
             "type": "array",
             "minItems": 2,
@@ -9871,17 +9903,25 @@
             },
             "description": "Origin coordinates as [longitude, latitude]."
           },
-        "basePrice": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
-        },
-        "packingPrice": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
-        },
-        "pricePerKilometer": {
+          "availability": {
+            "type": "object",
+            "description": "Weekly availability keyed by weekday; each range has startsAt and endsAt in HH:mm."
+          },
+          "basePrice": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "packingPrice": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "pricePerKilometerInCity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pricePerKilometer": {
             "type": "integer",
             "minimum": 1
           },

@@ -29,9 +29,20 @@ describe('DeliveryServiceService', () => {
     _id: '65a4de97aff1fbb38c437952',
     title: 'Tehran Express',
     title_fa: 'اکسپرس تهران',
+    logo: 'https://cdn.example.com/delivery-services/tehran-express.webp',
     originCoordinates: [51.389, 35.6892],
+    availability: {
+      sunday: [],
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [{ startsAt: '09:00', endsAt: '18:00' }],
+    },
     basePrice: 10000,
     packingPrice: 3000,
+    pricePerKilometerInCity: 4000,
     pricePerKilometer: 5000,
     isEnable: true,
     createdAt: new Date(),
@@ -48,7 +59,10 @@ describe('DeliveryServiceService', () => {
       createDeliveryServiceZodSchema.parse({
         title: deliveryService.title,
         title_fa: deliveryService.title_fa,
+        logo: deliveryService.logo,
         originCoordinates: deliveryService.originCoordinates,
+        availability: deliveryService.availability,
+        pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
         pricePerKilometer: deliveryService.pricePerKilometer,
       }),
     ).toMatchObject({ basePrice: 0, packingPrice: 0, isEnable: true });
@@ -57,7 +71,10 @@ describe('DeliveryServiceService', () => {
       createDeliveryServiceZodSchema.parse({
         title: deliveryService.title,
         title_fa: deliveryService.title_fa,
+        logo: deliveryService.logo,
         originCoordinates: deliveryService.originCoordinates,
+        availability: deliveryService.availability,
+        pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
         pricePerKilometer: deliveryService.pricePerKilometer,
         isEnable: 'false',
       }).isEnable,
@@ -66,7 +83,10 @@ describe('DeliveryServiceService', () => {
       createDeliveryServiceZodSchema.parse({
         title: deliveryService.title,
         title_fa: deliveryService.title_fa,
+        logo: deliveryService.logo,
         originCoordinates: deliveryService.originCoordinates,
+        availability: deliveryService.availability,
+        pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
         pricePerKilometer: deliveryService.pricePerKilometer,
         isEnable: 'true',
       }).isEnable,
@@ -201,7 +221,10 @@ describe('DeliveryServiceService', () => {
 
     expect(quote.distanceKm).toBeGreaterThan(1);
     expect(quote.distanceKm).toBeLessThan(2);
-    expect(quote.shippingPrice).toBe(23000);
+    expect(quote.shippingPrice).toBe(
+      deliveryService.basePrice * quote.distanceKm +
+        deliveryService.packingPrice,
+    );
   });
 
   test('formats one or many delivery services without exposing Mongoose internals', () => {
@@ -211,6 +234,7 @@ describe('DeliveryServiceService', () => {
         id: deliveryService._id,
         title: deliveryService.title,
         packingPrice: deliveryService.packingPrice,
+        pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
         pricePerKilometer: deliveryService.pricePerKilometer,
       }),
     ]);

@@ -7,6 +7,7 @@ import {
 
 import {
   createDeliveryServiceZodSchema,
+  deliveryServiceAvailableQueryZodSchema,
   deliveryServiceIdZodSchema,
   deliveryServiceQueryZodSchema,
   updateDeliveryServiceZodSchema,
@@ -58,6 +59,27 @@ export const getAllDeliveryServicesController = async (req, res, next) => {
     });
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: DeliveryServiceService.formatMany(deliveryServices),
+      totalRecords: deliveryServices.length,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getAvailableDeliveryServicesController = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const { lat, lng } = returnFormValidation(
+      deliveryServiceAvailableQueryZodSchema,
+      req.query,
+    );
+    const deliveryServices =
+      await DeliveryServiceService.findAvailableByCoordinates([lng, lat]);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: deliveryServices,
       totalRecords: deliveryServices.length,
     });
   } catch (error) {
