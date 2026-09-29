@@ -4,6 +4,7 @@ import { BRAND_ROUTES } from '#entities/brands/route.path.js';
 import { BREED_ROUTES } from '#entities/breeds/route.path.js';
 import { CATEGORY_ROUTES } from '#entities/categories/route.path.js';
 import { DASHBOARD_ROUTES } from '#entities/dashboard/route.path.js';
+import { DELIVERY_SERVICE_ROUTES } from '#entities/deliveryServices/route.path.js';
 import { IMAGE_ROUTES } from '#entities/images/route.path.js';
 import { LANDING_ROUTES } from '#entities/landing/route.path.js';
 import { ORDER_ROUTES } from '#entities/orders/route.path.js';
@@ -43,6 +44,14 @@ export const API_ROUTE_METHODS = [
   { path: PET_ROUTES.petsCustomerPaginate, methods: [get] },
   { path: BRAND_ROUTES.brandsByIdDisable, methods: [patch] },
   { path: BRAND_ROUTES.brandsByIdEnable, methods: [patch] },
+  {
+    path: DELIVERY_SERVICE_ROUTES.deliveryServicesByIdDisable,
+    methods: [patch],
+  },
+  {
+    path: DELIVERY_SERVICE_ROUTES.deliveryServicesByIdEnable,
+    methods: [patch],
+  },
   { path: BREED_ROUTES.breedsByIdDisable, methods: [patch] },
   { path: BREED_ROUTES.breedsByIdEnable, methods: [patch] },
   { path: BREED_ROUTES.breedsPropertyDefinitionsById, methods: [get] },
@@ -115,6 +124,10 @@ export const API_ROUTE_METHODS = [
   { path: USER_ROUTES.wishlistAdd, methods: [post] },
   { path: USER_ROUTES.wishlistAll, methods: [get] },
   { path: BRAND_ROUTES.brandsById, methods: [get, put, deleteMethod] },
+  {
+    path: DELIVERY_SERVICE_ROUTES.deliveryServicesById,
+    methods: [get, put, deleteMethod],
+  },
   { path: BREED_ROUTES.breedsById, methods: [get, put, deleteMethod] },
   { path: CATEGORY_ROUTES.categoriesById, methods: [put, deleteMethod, get] },
   { path: LOCATION_ROUTES.citiesByProvinceId, methods: [get] },
@@ -128,6 +141,7 @@ export const API_ROUTE_METHODS = [
   },
   { path: USER_ROUTES.usersById, methods: [get, deleteMethod] },
   { path: BRAND_ROUTES.brands, methods: [get, post] },
+  { path: DELIVERY_SERVICE_ROUTES.deliveryServices, methods: [get, post] },
   { path: BREED_ROUTES.breeds, methods: [get, post] },
   { path: CATEGORY_ROUTES.categories, methods: [post, get] },
   { path: COUNTRY_ROUTES.countries, methods: [get] },

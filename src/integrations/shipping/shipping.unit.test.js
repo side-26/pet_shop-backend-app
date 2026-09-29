@@ -1,4 +1,5 @@
 import { SHIPPING } from '#configs/constants.js';
+import { getShippingDistanceRates } from '#configs/env.config.js';
 
 import { MockShippingClient } from './mockShipping.client.js';
 import { ShippingService } from './shipping.service.js';
@@ -35,7 +36,8 @@ describe('ShippingService', () => {
           countryCode: SHIPPING.COUNTRY_CODE,
           provider: SHIPPING.PROVIDER,
           shippingPrice:
-            SHIPPING.TEHRAN_BASE_PRICE + 2 * SHIPPING.EXTRA_ITEM_PRICE,
+            getShippingDistanceRates().tehranPerKilometer +
+            2 * SHIPPING.EXTRA_ITEM_PRICE,
         }),
       ]),
     );
@@ -63,7 +65,7 @@ describe('ShippingService', () => {
     });
 
     expect(quote.options[0].shippingPrice).toBe(
-      SHIPPING.OTHER_PROVINCE_BASE_PRICE,
+      getShippingDistanceRates().otherCitiesPerKilometer,
     );
   });
 });

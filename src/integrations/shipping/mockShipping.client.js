@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 
 import { SHIPPING } from '#configs/constants.js';
+import { getShippingDistanceRates } from '#configs/env.config.js';
 
 const tehranDateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
   timeZone: SHIPPING.TIME_ZONE,
@@ -22,6 +23,8 @@ export class MockShippingClient {
   }
 
   createDeliveryQuote({ cartId, address, items }) {
+    const { tehranPerKilometer, otherCitiesPerKilometer } =
+      getShippingDistanceRates();
     const requestedAt = this.clock();
     const localNow = new Date(
       requestedAt.getTime() + SHIPPING.UTC_OFFSET_MINUTES * 60 * 1000,
@@ -34,8 +37,8 @@ export class MockShippingClient {
     const seed = `${cartId}:${address._id}:${iranRequestDate}`;
     const itemCount = items.reduce((total, item) => total + item.quantity, 0);
     const basePrice = isTehran(address)
-      ? SHIPPING.TEHRAN_BASE_PRICE
-      : SHIPPING.OTHER_PROVINCE_BASE_PRICE;
+      ? tehranPerKilometer
+      : otherCitiesPerKilometer;
     const shippingPrice =
       basePrice + Math.max(0, itemCount - 1) * SHIPPING.EXTRA_ITEM_PRICE;
     const candidates = [];

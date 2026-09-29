@@ -17,6 +17,7 @@ Each entity owns persistence, business logic, request orchestration, routes, val
 - [`pets/AGENTS.md`](./pets/AGENTS.md) — customer and management pet catalog operations.
 - [`categories/AGENTS.md`](./categories/AGENTS.md) — product categories associated with pet types.
 - [`brands/AGENTS.md`](./brands/AGENTS.md) — management-owned product-brand directory.
+- [`deliveryServices/AGENTS.md`](./deliveryServices/AGENTS.md) — management-owned delivery-provider directory and distance-based pricing inputs.
 - [`subCategories/AGENTS.md`](./subCategories/AGENTS.md) — category-owned product subdivisions.
 - [`products/AGENTS.md`](./products/AGENTS.md) — customer and management product catalog operations.
 - [`orders/AGENTS.md`](./orders/AGENTS.md) — immutable Cart snapshots, user Order history, and management delivery workflows.

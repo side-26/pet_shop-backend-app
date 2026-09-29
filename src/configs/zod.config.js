@@ -40,6 +40,9 @@ const persianFieldNames = {
   expiresAt: 'زمان انقضای پیشنهاد',
   provider: 'ارائه‌دهنده ارسال',
   countryCode: 'کد کشور',
+  originCoordinates: 'مختصات مبدا سرویس ارسال',
+  basePrice: 'هزینه پایه ارسال',
+  pricePerKilometer: 'هزینه هر کیلومتر ارسال',
 
   itemId: 'شناسه آیتم',
   itemType: 'نوع آیتم',

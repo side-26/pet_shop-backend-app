@@ -217,6 +217,24 @@ export const schemas = {
       isEnable: { type: 'boolean' },
     },
   },
+  DeliveryServiceBody: {
+    type: 'object',
+    required: ['title', 'title_fa', 'originCoordinates', 'pricePerKilometer'],
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 100 },
+      title_fa: { type: 'string', minLength: 2, maxLength: 100 },
+      originCoordinates: {
+        type: 'array',
+        minItems: 2,
+        maxItems: 2,
+        items: { type: 'number' },
+        description: 'Origin coordinates as [longitude, latitude].',
+      },
+      basePrice: { type: 'integer', minimum: 0, default: 0 },
+      pricePerKilometer: { type: 'integer', minimum: 1 },
+      isEnable: { type: 'boolean', default: true },
+    },
+  },
   MainImageCreateBody: {
     type: 'object',
     required: ['mainImage', 'title', 'description', 'category', 'brand'],

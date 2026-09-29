@@ -4,6 +4,31 @@ import { ERROR_CODES, STATUES } from './constants.js';
 
 dotenv.config({ quiet: true });
 
+const getPositiveIntegerEnv = (name, fallback) => {
+  const value = process.env[name]?.trim();
+  if (!value) return fallback;
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    const error = new Error(`مقدار ${name} باید یک عدد صحیح مثبت باشد`);
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = `${name}_INVALID`;
+    throw error;
+  }
+  return parsed;
+};
+
+export const getShippingDistanceRates = () => ({
+  tehranPerKilometer: getPositiveIntegerEnv(
+    'SHIPPING_TEHRAN_PER_KILOMETER_TOMAN',
+    80000,
+  ),
+  otherCitiesPerKilometer: getPositiveIntegerEnv(
+    'SHIPPING_OTHER_CITIES_PER_KILOMETER_TOMAN',
+    120000,
+  ),
+});
+
 export const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET_KEY?.trim();
 

@@ -228,6 +228,7 @@ const routes = [
   '../entities/petTypes/petTypes.route.js',
   '../entities/categories/categories.route.js',
   '../entities/brands/brands.route.js',
+  '../entities/deliveryServices/deliveryServices.route.js',
   '../entities/subCategories/subCategories.route.js',
   '../entities/breeds/breeds.route.js',
   '../entities/pets/pets.route.js',
