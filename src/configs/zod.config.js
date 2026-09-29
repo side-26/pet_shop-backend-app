@@ -43,6 +43,8 @@ const persianFieldNames = {
   originCoordinates: 'مختصات مبدا سرویس ارسال',
   basePrice: 'هزینه پایه ارسال',
   packingPrice: 'هزینه بسته‌بندی',
+  cityLeadDays: 'حداقل روز آماده‌سازی درون‌شهری',
+  outsideCityLeadDays: 'حداقل روز آماده‌سازی برون‌شهری',
   pricePerKilometerInCity: 'هزینه هر کیلومتر ارسال درون‌شهری',
   pricePerKilometer: 'هزینه هر کیلومتر ارسال',
 

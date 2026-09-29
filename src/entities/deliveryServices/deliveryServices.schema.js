@@ -35,6 +35,8 @@ const deliveryServiceFields = {
   availability: object(scheduleFields),
   basePrice: number().int().min(0).default(0),
   packingPrice: number().int().min(0).default(0),
+  cityLeadDays: number().int().min(0),
+  outsideCityLeadDays: number().int().min(0),
   pricePerKilometerInCity: number().int().positive(),
   pricePerKilometer: number().int().positive(),
   isEnable: booleanSchema.optional().default(true),

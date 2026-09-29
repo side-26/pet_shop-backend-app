@@ -42,6 +42,8 @@ describe('DeliveryServiceService', () => {
     },
     basePrice: 10000,
     packingPrice: 3000,
+    cityLeadDays: 0,
+    outsideCityLeadDays: 1,
     pricePerKilometerInCity: 4000,
     pricePerKilometer: 5000,
     isEnable: true,
@@ -63,6 +65,8 @@ describe('DeliveryServiceService', () => {
         originCoordinates: deliveryService.originCoordinates,
         availability: deliveryService.availability,
         pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
+        cityLeadDays: deliveryService.cityLeadDays,
+        outsideCityLeadDays: deliveryService.outsideCityLeadDays,
         pricePerKilometer: deliveryService.pricePerKilometer,
       }),
     ).toMatchObject({ basePrice: 0, packingPrice: 0, isEnable: true });
@@ -75,6 +79,8 @@ describe('DeliveryServiceService', () => {
         originCoordinates: deliveryService.originCoordinates,
         availability: deliveryService.availability,
         pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
+        cityLeadDays: deliveryService.cityLeadDays,
+        outsideCityLeadDays: deliveryService.outsideCityLeadDays,
         pricePerKilometer: deliveryService.pricePerKilometer,
         isEnable: 'false',
       }).isEnable,
@@ -87,6 +93,8 @@ describe('DeliveryServiceService', () => {
         originCoordinates: deliveryService.originCoordinates,
         availability: deliveryService.availability,
         pricePerKilometerInCity: deliveryService.pricePerKilometerInCity,
+        cityLeadDays: deliveryService.cityLeadDays,
+        outsideCityLeadDays: deliveryService.outsideCityLeadDays,
         pricePerKilometer: deliveryService.pricePerKilometer,
         isEnable: 'true',
       }).isEnable,
@@ -221,9 +229,8 @@ describe('DeliveryServiceService', () => {
 
     expect(quote.distanceKm).toBeGreaterThan(1);
     expect(quote.distanceKm).toBeLessThan(2);
-    expect(quote.shippingPrice).toBe(
-      deliveryService.basePrice * quote.distanceKm +
-        deliveryService.packingPrice,
+    expect(quote.calculatedPricePerKilometer).toBe(
+      deliveryService.pricePerKilometerInCity * quote.distanceKm,
     );
   });
 

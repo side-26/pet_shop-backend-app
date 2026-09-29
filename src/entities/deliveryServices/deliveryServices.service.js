@@ -1,9 +1,13 @@
 import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
-import { DELIVERY_LOOKUP_DAYS } from './deliveryServices.constants.js';
+import {
+  DELIVERY_CITY_RADIUS_KM,
+  DELIVERY_LOOKUP_DAYS,
+} from './deliveryServices.constants.js';
 import {
   calculateDistanceKm,
+  calculateDistancePrice,
   createAvailabilitySlots,
 } from './deliveryServices.helpers.js';
 import { DeliveryServiceModel } from './deliveryServices.model.js';
@@ -96,15 +100,33 @@ export class DeliveryServiceService {
     now = new Date(),
   ) {
     const deliveryServices = await this.findAll();
-    return deliveryServices.map((deliveryService) => ({
-      ...this.format(deliveryService),
-      ...this.calculateQuote(deliveryService, destinationCoordinates),
-      availability: createAvailabilitySlots(
-        deliveryService.availability,
-        now,
-        DELIVERY_LOOKUP_DAYS,
-      ),
-    }));
+    return deliveryServices.map((deliveryService) => {
+      const quote = this.calculateQuote(
+        deliveryService,
+        destinationCoordinates,
+      );
+      return {
+        ...this.formatAvailable(deliveryService, quote),
+        availability: createAvailabilitySlots(
+          deliveryService.availability,
+          now,
+          DELIVERY_LOOKUP_DAYS,
+        ).filter(
+          ({ startsAt }) =>
+            startsAt >=
+            new Date(
+              now.getTime() +
+                (quote.isInCity
+                  ? deliveryService.cityLeadDays
+                  : deliveryService.outsideCityLeadDays) *
+                  24 *
+                  60 *
+                  60 *
+                  1000,
+            ),
+        ),
+      };
+    });
   }
 
   static calculateQuote(deliveryService, destinationCoordinates) {
@@ -112,10 +134,17 @@ export class DeliveryServiceService {
       deliveryService.originCoordinates,
       destinationCoordinates,
     );
+    const isInCity = distanceKm <= DELIVERY_CITY_RADIUS_KM;
+    const ratePerKilometer = isInCity
+      ? deliveryService.pricePerKilometerInCity
+      : deliveryService.pricePerKilometer;
     return {
       distanceKm,
-      shippingPrice:
-        deliveryService.basePrice * distanceKm + deliveryService.packingPrice,
+      isInCity,
+      calculatedPricePerKilometer: calculateDistancePrice(
+        distanceKm,
+        ratePerKilometer,
+      ),
     };
   }
 
@@ -134,6 +163,8 @@ export class DeliveryServiceService {
       availability: value.availability,
       basePrice: value.basePrice,
       packingPrice: value.packingPrice,
+      cityLeadDays: value.cityLeadDays,
+      outsideCityLeadDays: value.outsideCityLeadDays,
       pricePerKilometerInCity: value.pricePerKilometerInCity,
       pricePerKilometer: value.pricePerKilometer,
       isEnable: value.isEnable,
@@ -141,6 +172,22 @@ export class DeliveryServiceService {
       updatedBy: value.updatedBy,
       createdAt: value.createdAt,
       updatedAt: value.updatedAt,
+    };
+  }
+
+  static formatAvailable(deliveryService, quote) {
+    const value =
+      typeof deliveryService.toObject === 'function'
+        ? deliveryService.toObject()
+        : deliveryService;
+    return {
+      id: value._id,
+      title: value.title,
+      title_fa: value.title_fa,
+      logo: value.logo,
+      packingPrice: value.packingPrice,
+      distanceKm: quote.distanceKm,
+      calculatedPricePerKilometer: quote.calculatedPricePerKilometer,
     };
   }
 

@@ -17,7 +17,8 @@
     "start": "cross-env NODE_ENV=production node ./src/server.js",
     "prepare": "husky",
     "openapi": "node ./src/configs/openapi.generate.js",
-    "migrate:province-coordinates": "node ./scripts/migrate-province-coordinates.js"
+    "migrate:province-coordinates": "node ./scripts/migrate-province-coordinates.js",
+    "seed:delivery-services": "node ./scripts/seed-delivery-services.js"
   },
   "keywords": [],
   "author": "",

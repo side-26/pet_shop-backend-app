@@ -21,6 +21,9 @@ export const calculateDistanceKm = (
   );
 };
 
+export const calculateDistancePrice = (distanceKm, pricePerKilometer) =>
+  distanceKm * pricePerKilometer;
+
 export const createAvailabilitySlots = (availability, now, days) => {
   const slots = [];
   const localNow = new Date(

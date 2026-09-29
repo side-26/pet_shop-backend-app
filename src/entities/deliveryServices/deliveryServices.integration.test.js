@@ -41,6 +41,8 @@ describe('Delivery service API', () => {
     },
     basePrice: 10000,
     packingPrice: 3000,
+    cityLeadDays: 0,
+    outsideCityLeadDays: 1,
     pricePerKilometerInCity: 4000,
     pricePerKilometer: 5000,
   };
@@ -95,9 +97,11 @@ describe('Delivery service API', () => {
       logo: payload.logo,
       packingPrice: payload.packingPrice,
     });
-    expect(response.body.data[0].shippingPrice).toBeGreaterThan(
+    expect(response.body.data[0].calculatedPricePerKilometer).toBeGreaterThan(
       payload.packingPrice,
     );
+    expect(response.body.data[0]).not.toHaveProperty('basePrice');
+    expect(response.body.data[0]).not.toHaveProperty('pricePerKilometer');
     expect(response.body.data[0].availability[0]).toEqual(
       expect.objectContaining({
         weekday: expect.any(String),
