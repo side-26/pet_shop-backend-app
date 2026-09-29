@@ -31,6 +31,7 @@ describe('DeliveryServiceService', () => {
     title_fa: 'اکسپرس تهران',
     originCoordinates: [51.389, 35.6892],
     basePrice: 10000,
+    packingPrice: 3000,
     pricePerKilometer: 5000,
     isEnable: true,
     createdAt: new Date(),
@@ -50,7 +51,7 @@ describe('DeliveryServiceService', () => {
         originCoordinates: deliveryService.originCoordinates,
         pricePerKilometer: deliveryService.pricePerKilometer,
       }),
-    ).toMatchObject({ basePrice: 0, isEnable: true });
+    ).toMatchObject({ basePrice: 0, packingPrice: 0, isEnable: true });
 
     expect(
       createDeliveryServiceZodSchema.parse({
@@ -200,7 +201,7 @@ describe('DeliveryServiceService', () => {
 
     expect(quote.distanceKm).toBeGreaterThan(1);
     expect(quote.distanceKm).toBeLessThan(2);
-    expect(quote.shippingPrice).toBe(20000);
+    expect(quote.shippingPrice).toBe(23000);
   });
 
   test('formats one or many delivery services without exposing Mongoose internals', () => {
@@ -209,6 +210,7 @@ describe('DeliveryServiceService', () => {
       expect.objectContaining({
         id: deliveryService._id,
         title: deliveryService.title,
+        packingPrice: deliveryService.packingPrice,
         pricePerKilometer: deliveryService.pricePerKilometer,
       }),
     ]);

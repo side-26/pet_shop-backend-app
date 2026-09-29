@@ -22,6 +22,7 @@ const deliveryServiceFields = {
   title_fa: string().trim().min(2).max(100),
   originCoordinates: deliveryServiceCoordinatesSchema,
   basePrice: number().int().min(0).default(0),
+  packingPrice: number().int().min(0).default(0),
   pricePerKilometer: number().int().positive(),
   isEnable: booleanSchema.optional().default(true),
 };

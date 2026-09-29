@@ -96,6 +96,7 @@ export class DeliveryServiceService {
       distanceKm,
       shippingPrice:
         deliveryService.basePrice +
+        deliveryService.packingPrice +
         Math.ceil(distanceKm) * deliveryService.pricePerKilometer,
     };
   }
@@ -112,6 +113,7 @@ export class DeliveryServiceService {
       title_fa: value.title_fa,
       originCoordinates: value.originCoordinates,
       basePrice: value.basePrice,
+      packingPrice: value.packingPrice,
       pricePerKilometer: value.pricePerKilometer,
       isEnable: value.isEnable,
       createdBy: value.createdBy,

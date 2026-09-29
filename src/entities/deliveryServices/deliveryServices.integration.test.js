@@ -30,6 +30,7 @@ describe('Delivery service API', () => {
     title_fa: 'اکسپرس تهران',
     originCoordinates: [51.389, 35.6892],
     basePrice: 10000,
+    packingPrice: 3000,
     pricePerKilometer: 5000,
   };
 
@@ -71,6 +72,7 @@ describe('Delivery service API', () => {
       title_fa: 'اکسپرس به‌روز',
       originCoordinates: [51.4, 35.7],
       basePrice: 20000,
+      packingPrice: 4000,
       pricePerKilometer: 7000,
       isEnable: false,
     };
@@ -140,6 +142,7 @@ describe('Delivery service API', () => {
     ).rejects.toThrow('اعتبارسنجی سرویس ارسال ناموفق بود');
 
     const deliveryService = await DeliveryServiceModel.create(payload);
+    expect(deliveryService.toJSON()).toMatchObject({ packingPrice: 3000 });
     expect(deliveryService.toJSON()).not.toHaveProperty('__v');
   });
 

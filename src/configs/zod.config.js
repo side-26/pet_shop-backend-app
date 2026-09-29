@@ -42,6 +42,7 @@ const persianFieldNames = {
   countryCode: 'کد کشور',
   originCoordinates: 'مختصات مبدا سرویس ارسال',
   basePrice: 'هزینه پایه ارسال',
+  packingPrice: 'هزینه بسته‌بندی',
   pricePerKilometer: 'هزینه هر کیلومتر ارسال',
 
   itemId: 'شناسه آیتم',

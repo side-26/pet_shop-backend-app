@@ -34,6 +34,7 @@ const deliveryServiceSchema = new mongoose.Schema(
       },
     },
     basePrice: { type: Number, required: true, min: 0, default: 0 },
+    packingPrice: { type: Number, required: true, min: 0, default: 0 },
     pricePerKilometer: { type: Number, required: true, min: 1 },
     isEnable: { type: Boolean, required: true, default: true, index: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -52,6 +53,7 @@ deliveryServiceSchema.pre('validate', function () {
     title_fa: this.title_fa,
     originCoordinates: this.originCoordinates,
     basePrice: this.basePrice,
+    packingPrice: this.packingPrice,
     pricePerKilometer: this.pricePerKilometer,
     isEnable: this.isEnable,
   });

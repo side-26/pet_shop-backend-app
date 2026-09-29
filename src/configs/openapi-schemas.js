@@ -231,6 +231,7 @@ export const schemas = {
         description: 'Origin coordinates as [longitude, latitude].',
       },
       basePrice: { type: 'integer', minimum: 0, default: 0 },
+      packingPrice: { type: 'integer', minimum: 0, default: 0 },
       pricePerKilometer: { type: 'integer', minimum: 1 },
       isEnable: { type: 'boolean', default: true },
     },
