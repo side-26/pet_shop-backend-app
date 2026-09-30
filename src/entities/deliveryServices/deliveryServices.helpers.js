@@ -1,6 +1,34 @@
 import { SHIPPING } from '#configs/constants.js';
 
+import {
+  DELIVERY_WEEK_DAYS,
+  DELIVERY_WEEK_DAYS_FA,
+} from './deliveryServices.constants.js';
+
 const EARTH_RADIUS_KM = 6371;
+const gregorianDateFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: SHIPPING.TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+const jalaliDateFormatter = new Intl.DateTimeFormat('en-US-u-ca-persian', {
+  timeZone: SHIPPING.TIME_ZONE,
+  month: 'numeric',
+  day: 'numeric',
+});
+
+const getDatePart = (date, type, formatter) =>
+  Number(
+    formatter.formatToParts(date).find((part) => part.type === type).value,
+  );
+
+const getTimeAsHours = (date) => {
+  const localDate = new Date(
+    date.getTime() + SHIPPING.UTC_OFFSET_MINUTES * 60 * 1000,
+  );
+  return localDate.getUTCHours() + localDate.getUTCMinutes() / 60;
+};
 
 export const calculateDistanceKm = (
   [longitudeA, latitudeA],
@@ -36,19 +64,10 @@ export const createAvailabilitySlots = (availability, now, days) => {
       localNow.getUTCDate(),
     ),
   );
-  const weekDays = [
-    'sunday',
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-  ];
   for (let offset = 0; offset < days; offset += 1) {
     const day = new Date(firstDay);
     day.setUTCDate(firstDay.getUTCDate() + offset);
-    const weekday = weekDays[day.getUTCDay()];
+    const weekday = DELIVERY_WEEK_DAYS[day.getUTCDay()];
     for (const range of availability[weekday]) {
       const [startHour, startMinute] = range.startsAt.split(':').map(Number);
       const [endHour, endMinute] = range.endsAt.split(':').map(Number);
@@ -76,4 +95,27 @@ export const createAvailabilitySlots = (availability, now, days) => {
     }
   }
   return slots;
+};
+
+export const formatAvailabilityDays = (slots) => {
+  const daysByDate = new Map();
+
+  slots.forEach(({ weekday, startsAt, endsAt }) => {
+    const date = gregorianDateFormatter.format(startsAt);
+    const day = daysByDate.get(date) ?? {
+      weekday,
+      weekday_fa: DELIVERY_WEEK_DAYS_FA[weekday],
+      date,
+      month_ja: getDatePart(startsAt, 'month', jalaliDateFormatter),
+      day_ja: getDatePart(startsAt, 'day', jalaliDateFormatter),
+      availableTimes: [],
+    };
+    day.availableTimes.push({
+      start: getTimeAsHours(startsAt),
+      end: getTimeAsHours(endsAt),
+    });
+    daysByDate.set(date, day);
+  });
+
+  return [...daysByDate.values()];
 };

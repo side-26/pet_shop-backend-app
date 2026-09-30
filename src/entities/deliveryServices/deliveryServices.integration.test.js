@@ -77,7 +77,7 @@ describe('Delivery service API', () => {
       .expect(200);
   });
 
-  test('returns enabled services with a distance quote and ISO availability slots', async () => {
+  test('returns enabled services with a distance quote and localized availability days', async () => {
     await DeliveryServiceModel.create(payload);
     await DeliveryServiceModel.create({
       ...payload,
@@ -105,8 +105,16 @@ describe('Delivery service API', () => {
     expect(response.body.data[0].availability[0]).toEqual(
       expect.objectContaining({
         weekday: expect.any(String),
-        startsAt: expect.any(String),
-        endsAt: expect.any(String),
+        weekday_fa: expect.any(String),
+        date: expect.stringMatching(/^\d{2}\/\d{2}\/\d{4}$/),
+        month_ja: expect.any(Number),
+        day_ja: expect.any(Number),
+        availableTimes: [
+          expect.objectContaining({
+            start: expect.any(Number),
+            end: expect.any(Number),
+          }),
+        ],
       }),
     );
   });

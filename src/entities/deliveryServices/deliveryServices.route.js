@@ -23,7 +23,8 @@ new RateLimiter('delivery-services').applyTo(router);
 router.get(
   DELIVERY_SERVICE_ROUTES.deliveryServicesAvailable,
   /* #swagger.parameters['lat'] = { in: 'query', required: true, schema: { type: 'number' } }
-     #swagger.parameters['lng'] = { in: 'query', required: true, schema: { type: 'number' } } */
+     #swagger.parameters['lng'] = { in: 'query', required: true, schema: { type: 'number' } }
+     #swagger.responses[200] = { description: 'Enabled delivery services with Tehran-local Gregorian and Jalali availability days.' } */
   getAvailableDeliveryServicesController,
 );
 

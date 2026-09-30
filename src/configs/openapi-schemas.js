@@ -249,6 +249,86 @@ export const schemas = {
       isEnable: { type: 'boolean', default: true },
     },
   },
+  AvailableDeliveryServicesResponse: {
+    type: 'object',
+    required: ['isSuccess', 'data', 'totalRecords'],
+    properties: {
+      isSuccess: { type: 'boolean', example: true },
+      totalRecords: { type: 'integer', minimum: 0 },
+      data: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['id', 'title', 'title_fa', 'availability'],
+          properties: {
+            id: { type: 'string' },
+            title: { type: 'string' },
+            title_fa: { type: 'string' },
+            logo: { type: 'string', format: 'uri' },
+            packingPrice: { type: 'number', minimum: 0 },
+            distanceKm: { type: 'number', minimum: 0 },
+            calculatedPricePerKilometer: { type: 'number', minimum: 0 },
+            availability: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: [
+                  'weekday',
+                  'weekday_fa',
+                  'date',
+                  'month_ja',
+                  'day_ja',
+                  'availableTimes',
+                ],
+                properties: {
+                  weekday: { type: 'string', example: 'friday' },
+                  weekday_fa: { type: 'string', example: 'جمعه' },
+                  date: {
+                    type: 'string',
+                    pattern: '^\\d{2}/\\d{2}/\\d{4}$',
+                    description: 'Gregorian date in Tehran time (DD/MM/YYYY).',
+                  },
+                  month_ja: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 12,
+                    description: 'Jalali month number.',
+                  },
+                  day_ja: {
+                    type: 'integer',
+                    minimum: 1,
+                    maximum: 31,
+                    description: 'Jalali day number.',
+                  },
+                  availableTimes: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['start', 'end'],
+                      properties: {
+                        start: {
+                          type: 'number',
+                          description:
+                            'Tehran-local hour; fractional values preserve minutes.',
+                          example: 9,
+                        },
+                        end: {
+                          type: 'number',
+                          description:
+                            'Tehran-local hour; fractional values preserve minutes.',
+                          example: 11,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   MainImageCreateBody: {
     type: 'object',
     required: ['mainImage', 'title', 'description', 'category', 'brand'],

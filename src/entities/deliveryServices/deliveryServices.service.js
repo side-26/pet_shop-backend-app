@@ -9,6 +9,7 @@ import {
   calculateDistanceKm,
   calculateDistancePrice,
   createAvailabilitySlots,
+  formatAvailabilityDays,
 } from './deliveryServices.helpers.js';
 import { DeliveryServiceModel } from './deliveryServices.model.js';
 
@@ -107,23 +108,25 @@ export class DeliveryServiceService {
       );
       return {
         ...this.formatAvailable(deliveryService, quote),
-        availability: createAvailabilitySlots(
-          deliveryService.availability,
-          now,
-          DELIVERY_LOOKUP_DAYS,
-        ).filter(
-          ({ startsAt }) =>
-            startsAt >=
-            new Date(
-              now.getTime() +
-                (quote.isInCity
-                  ? deliveryService.cityLeadDays
-                  : deliveryService.outsideCityLeadDays) *
-                  24 *
-                  60 *
-                  60 *
-                  1000,
-            ),
+        availability: formatAvailabilityDays(
+          createAvailabilitySlots(
+            deliveryService.availability,
+            now,
+            DELIVERY_LOOKUP_DAYS,
+          ).filter(
+            ({ startsAt }) =>
+              startsAt >=
+              new Date(
+                now.getTime() +
+                  (quote.isInCity
+                    ? deliveryService.cityLeadDays
+                    : deliveryService.outsideCityLeadDays) *
+                    24 *
+                    60 *
+                    60 *
+                    1000,
+              ),
+          ),
         ),
       };
     });

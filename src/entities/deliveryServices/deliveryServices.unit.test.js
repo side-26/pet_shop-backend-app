@@ -234,6 +234,44 @@ describe('DeliveryServiceService', () => {
     );
   });
 
+  test('groups available ranges by Tehran day with Gregorian and Jalali calendar data', async () => {
+    jest.spyOn(DeliveryServiceService, 'findAll').mockResolvedValue([
+      {
+        ...deliveryService,
+        availability: {
+          ...deliveryService.availability,
+          friday: [
+            { startsAt: '09:00', endsAt: '11:00' },
+            { startsAt: '12:30', endsAt: '14:00' },
+          ],
+        },
+      },
+    ]);
+
+    await expect(
+      DeliveryServiceService.findAvailableByCoordinates(
+        [51.4, 35.7],
+        new Date('2026-10-02T01:00:00.000Z'),
+      ),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        availability: expect.arrayContaining([
+          {
+            weekday: 'friday',
+            weekday_fa: 'جمعه',
+            date: '02/10/2026',
+            month_ja: 7,
+            day_ja: 10,
+            availableTimes: [
+              { start: 9, end: 11 },
+              { start: 12.5, end: 14 },
+            ],
+          },
+        ]),
+      }),
+    ]);
+  });
+
   test('formats one or many delivery services without exposing Mongoose internals', () => {
     expect(DeliveryServiceService.format(null)).toBeNull();
     expect(DeliveryServiceService.formatMany([deliveryService])).toEqual([
