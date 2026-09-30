@@ -37,7 +37,7 @@ describe('Delivery service API', () => {
       wednesday: [],
       thursday: [],
       friday: [],
-      saturday: [{ startsAt: '09:00', endsAt: '18:00' }],
+      saturday: [{ startsAt: '09:00', endsAt: '11:00' }],
     },
     basePrice: 10000,
     packingPrice: 3000,

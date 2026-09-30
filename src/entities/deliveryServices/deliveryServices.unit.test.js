@@ -38,7 +38,7 @@ describe('DeliveryServiceService', () => {
       wednesday: [],
       thursday: [],
       friday: [],
-      saturday: [{ startsAt: '09:00', endsAt: '18:00' }],
+      saturday: [{ startsAt: '09:00', endsAt: '11:00' }],
     },
     basePrice: 10000,
     packingPrice: 3000,
@@ -242,7 +242,7 @@ describe('DeliveryServiceService', () => {
           ...deliveryService.availability,
           friday: [
             { startsAt: '09:00', endsAt: '11:00' },
-            { startsAt: '12:30', endsAt: '14:00' },
+            { startsAt: '12:30', endsAt: '14:30' },
           ],
         },
       },
@@ -264,12 +264,24 @@ describe('DeliveryServiceService', () => {
             day_ja: 10,
             availableTimes: [
               { start: 9, end: 11 },
-              { start: 12.5, end: 14 },
+              { start: '12:30', end: '14:30' },
             ],
           },
         ]),
       }),
     ]);
+  });
+
+  test('rejects an availability range that is not exactly two hours', () => {
+    expect(() =>
+      createDeliveryServiceZodSchema.parse({
+        ...deliveryService,
+        availability: {
+          ...deliveryService.availability,
+          saturday: [{ startsAt: '09:00', endsAt: '12:00' }],
+        },
+      }),
+    ).toThrow('دقیقاً دو ساعت');
   });
 
   test('formats one or many delivery services without exposing Mongoose internals', () => {

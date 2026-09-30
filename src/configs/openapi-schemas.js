@@ -240,7 +240,7 @@ export const schemas = {
       availability: {
         type: 'object',
         description:
-          'Weekly availability keyed by weekday; each range has startsAt and endsAt in HH:mm.',
+          'Weekly availability keyed by weekday; each range has startsAt and endsAt in HH:mm and lasts exactly two hours.',
       },
       basePrice: { type: 'integer', minimum: 0, default: 0 },
       packingPrice: { type: 'integer', minimum: 0, default: 0 },
@@ -307,15 +307,15 @@ export const schemas = {
                       required: ['start', 'end'],
                       properties: {
                         start: {
-                          type: 'number',
+                          oneOf: [{ type: 'integer' }, { type: 'string' }],
                           description:
-                            'Tehran-local hour; fractional values preserve minutes.',
+                            'Tehran-local start time: whole hours are numbers and minute-based times use HH:mm.',
                           example: 9,
                         },
                         end: {
-                          type: 'number',
+                          oneOf: [{ type: 'integer' }, { type: 'string' }],
                           description:
-                            'Tehran-local hour; fractional values preserve minutes.',
+                            'Tehran-local end time: whole hours are numbers and minute-based times use HH:mm.',
                           example: 11,
                         },
                       },

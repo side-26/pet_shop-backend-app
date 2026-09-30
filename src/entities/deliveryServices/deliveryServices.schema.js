@@ -14,10 +14,18 @@ const booleanSchema = preprocess(
 const longitudeSchema = number().min(-180).max(180);
 const latitudeSchema = number().min(-90).max(90);
 const timeSchema = string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const getMinutesFromMidnight = (time) => {
+  const [hour, minute] = time.split(':').map(Number);
+  return hour * 60 + minute;
+};
 const timeRangeSchema = object({
   startsAt: timeSchema,
   endsAt: timeSchema,
-}).refine(({ startsAt, endsAt }) => startsAt < endsAt);
+}).refine(
+  ({ startsAt, endsAt }) =>
+    getMinutesFromMidnight(endsAt) - getMinutesFromMidnight(startsAt) === 120,
+  { message: 'بازه زمانی ارسال باید دقیقاً دو ساعت باشد' },
+);
 const scheduleFields = Object.fromEntries(
   DELIVERY_WEEK_DAYS.map((day) => [day, array(timeRangeSchema)]),
 );

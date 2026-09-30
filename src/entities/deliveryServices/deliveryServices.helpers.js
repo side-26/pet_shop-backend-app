@@ -23,11 +23,13 @@ const getDatePart = (date, type, formatter) =>
     formatter.formatToParts(date).find((part) => part.type === type).value,
   );
 
-const getTimeAsHours = (date) => {
+const getFormattedTime = (date) => {
   const localDate = new Date(
     date.getTime() + SHIPPING.UTC_OFFSET_MINUTES * 60 * 1000,
   );
-  return localDate.getUTCHours() + localDate.getUTCMinutes() / 60;
+  const hour = localDate.getUTCHours();
+  const minute = localDate.getUTCMinutes();
+  return minute === 0 ? hour : `${hour}:${String(minute).padStart(2, '0')}`;
 };
 
 export const calculateDistanceKm = (
@@ -111,8 +113,8 @@ export const formatAvailabilityDays = (slots) => {
       availableTimes: [],
     };
     day.availableTimes.push({
-      start: getTimeAsHours(startsAt),
-      end: getTimeAsHours(endsAt),
+      start: getFormattedTime(startsAt),
+      end: getFormattedTime(endsAt),
     });
     daysByDate.set(date, day);
   });

@@ -1,16 +1,17 @@
 import connectDB, { disconnectDB } from '#configs/db.config.js';
+import { DELIVERY_WEEK_DAYS } from '#entities/deliveryServices/deliveryServices.constants.js';
 import { DeliveryServiceModel } from '#entities/deliveryServices/deliveryServices.model.js';
 
 const originCoordinates = [51.3377, 35.6997];
-const availability = {
-  sunday: [{ startsAt: '09:00', endsAt: '20:00' }],
-  monday: [{ startsAt: '09:00', endsAt: '20:00' }],
-  tuesday: [{ startsAt: '09:00', endsAt: '20:00' }],
-  wednesday: [{ startsAt: '09:00', endsAt: '20:00' }],
-  thursday: [{ startsAt: '09:00', endsAt: '20:00' }],
-  friday: [{ startsAt: '09:00', endsAt: '20:00' }],
-  saturday: [{ startsAt: '09:00', endsAt: '20:00' }],
-};
+const deliveryTimeRanges = [
+  { startsAt: '09:00', endsAt: '11:00' },
+  { startsAt: '12:00', endsAt: '14:00' },
+  { startsAt: '15:00', endsAt: '17:00' },
+  { startsAt: '18:00', endsAt: '20:00' },
+];
+const availability = Object.fromEntries(
+  DELIVERY_WEEK_DAYS.map((weekday) => [weekday, deliveryTimeRanges]),
+);
 
 const deliveryServices = [
   {
