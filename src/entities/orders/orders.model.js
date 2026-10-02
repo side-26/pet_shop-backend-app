@@ -4,6 +4,7 @@ import {
   CART_PAYMENT_TYPES,
   ORDER_DELIVERY_STATES,
   ORDER_IDENTIFIER,
+  ORDER_PAYMENT_STATUSES,
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 
@@ -108,6 +109,11 @@ const orderSchema = new mongoose.Schema(
       default: ORDER_DELIVERY_STATES[0],
     },
     paymentTrackingId: { type: String, required: true, trim: true },
+    paymentStatus: {
+      type: String,
+      enum: Object.values(ORDER_PAYMENT_STATUSES),
+      default: ORDER_PAYMENT_STATUSES.PENDING,
+    },
     totalPrice: { type: Number, required: true, min: 0 },
     items: { type: [orderItemSchema], required: true },
     discountPrice: { type: Number, required: true, min: 0 },

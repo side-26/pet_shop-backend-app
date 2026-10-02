@@ -8,6 +8,7 @@ import { DELIVERY_SERVICE_ROUTES } from '#entities/deliveryServices/route.path.j
 import { IMAGE_ROUTES } from '#entities/images/route.path.js';
 import { LANDING_ROUTES } from '#entities/landing/route.path.js';
 import { ORDER_ROUTES } from '#entities/orders/route.path.js';
+import { PAYMENT_ROUTES } from '#entities/payments/route.path.js';
 import { PET_ROUTES } from '#entities/pets/route.path.js';
 import { PET_TYPE_ROUTES } from '#entities/petTypes/route.path.js';
 import { PRODUCT_ROUTES } from '#entities/products/route.path.js';
@@ -64,6 +65,7 @@ export const API_ROUTE_METHODS = [
   { path: LANDING_ROUTES.landingProductsBySlug, methods: [get] },
   { path: ORDER_ROUTES.ordersByIdDeliveryState, methods: [patch] },
   { path: ORDER_ROUTES.ordersByIdShippingInfo, methods: [patch] },
+  { path: PAYMENT_ROUTES.paymentsByIdStatus, methods: [patch] },
   { path: PET_TYPE_ROUTES.petTypesByIdDisable, methods: [patch] },
   { path: PET_TYPE_ROUTES.petTypesByIdEnable, methods: [patch] },
   { path: PET_TYPE_ROUTES.petTypesPropertyDefinitionsById, methods: [get] },
@@ -104,6 +106,10 @@ export const API_ROUTE_METHODS = [
   { path: LANDING_ROUTES.landingProducts, methods: [get] },
   { path: LANDING_ROUTES.landingSearch, methods: [get] },
   { path: ORDER_ROUTES.ordersAll, methods: [get] },
+  { path: PAYMENT_ROUTES.paymentsAll, methods: [get] },
+  { path: PAYMENT_ROUTES.paymentGatewayByAuthority, methods: [get] },
+  { path: PAYMENT_ROUTES.paymentGatewayPayByAuthority, methods: [post] },
+  { path: PAYMENT_ROUTES.paymentGatewayCancelByAuthority, methods: [post] },
   { path: PET_TYPE_ROUTES.petTypesRange, methods: [put] },
   { path: PET_ROUTES.petsPaginate, methods: [get] },
   { path: PRODUCT_ROUTES.productsPaginate, methods: [get] },
@@ -133,6 +139,7 @@ export const API_ROUTE_METHODS = [
   { path: CATEGORY_ROUTES.categoriesById, methods: [put, deleteMethod, get] },
   { path: LOCATION_ROUTES.citiesByProvinceId, methods: [get] },
   { path: ORDER_ROUTES.ordersById, methods: [get] },
+  { path: PAYMENT_ROUTES.paymentsById, methods: [get] },
   { path: PET_TYPE_ROUTES.petTypesById, methods: [get, put, deleteMethod] },
   { path: PET_ROUTES.petsById, methods: [put, deleteMethod] },
   { path: PRODUCT_ROUTES.productsById, methods: [put, patch, deleteMethod] },
@@ -148,6 +155,8 @@ export const API_ROUTE_METHODS = [
   { path: COUNTRY_ROUTES.countries, methods: [get] },
   { path: IMAGE_ROUTES.images, methods: [post, deleteMethod] },
   { path: ORDER_ROUTES.orders, methods: [post, get] },
+  { path: PAYMENT_ROUTES.payments, methods: [post, get] },
+  { path: PAYMENT_ROUTES.paymentsRequest, methods: [post] },
   { path: OTP_CODE_ROUTES.otpCode, methods: [post] },
   { path: PET_TYPE_ROUTES.petTypes, methods: [get, post] },
   { path: PET_ROUTES.pets, methods: [get, post] },

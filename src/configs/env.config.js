@@ -96,3 +96,42 @@ export const getMelipayamakOtpToken = () => {
 
   return token;
 };
+
+export const getPaymentGatewayUrl = () => {
+  const url = process.env.PAYMENT_GETWAY_URL?.trim();
+  if (!url) {
+    const error = new Error(
+      'نشانی درگاه پرداخت در تنظیمات محیطی تعریف نشده است',
+    );
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = ERROR_CODES.PAYMENT_GATEWAY_URL_NOT_CONFIGURED;
+    throw error;
+  }
+  return url;
+};
+
+export const getFrontendAppUrl = () => {
+  const url = process.env.FRONTEND_APP_URL?.trim();
+  if (!url) {
+    const error = new Error(
+      'نشانی برنامه کاربر در تنظیمات محیطی تعریف نشده است',
+    );
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = 'FRONTEND_APP_URL_NOT_CONFIGURED';
+    throw error;
+  }
+  return url;
+};
+
+export const getFrontendPaymentResultUrl = () => {
+  const url = process.env.FRONTEND_PAYMENT_RESULT_URL?.trim();
+  if (!url) {
+    const error = new Error(
+      'نشانی نتیجه پرداخت در تنظیمات محیطی تعریف نشده است',
+    );
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = 'FRONTEND_PAYMENT_RESULT_URL_NOT_CONFIGURED';
+    throw error;
+  }
+  return url;
+};

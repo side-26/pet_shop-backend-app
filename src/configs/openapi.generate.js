@@ -234,6 +234,7 @@ const routes = [
   '../entities/pets/pets.route.js',
   '../entities/products/products.route.js',
   '../entities/orders/orders.route.js',
+  '../entities/payments/payments.route.js',
   '../entities/dashboard/dashboard.route.js',
   '../entities/landing/landing.route.js',
   '../entities/profile/profile.route.js',

@@ -8024,21 +8024,351 @@
             "in": "query",
             "name": "lat",
             "required": true,
-            "schema": { "type": "number", "minimum": -90, "maximum": 90 }
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
           },
           {
             "in": "query",
             "name": "lng",
             "required": true,
-            "schema": { "type": "number", "minimum": -180, "maximum": 180 }
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "Enabled delivery services with distance prices and ISO availability slots"
           },
-          "422": { "description": "Invalid coordinates" },
-          "405": { "description": "Method not allowed" }
+          "405": {
+            "description": "Method not allowed"
+          },
+          "422": {
+            "description": "Invalid coordinates"
+          }
+        }
+      }
+    },
+    "/payments/request": {
+      "post": {
+        "tags": ["/payments"],
+        "summary": "Create a gateway payment request for an owned order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPaymentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment request created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": ["paymentId", "authority", "gatewayUrl"],
+                      "properties": {
+                        "paymentId": {
+                          "type": "string"
+                        },
+                        "authority": {
+                          "type": "string"
+                        },
+                        "gatewayUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Order not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments": {
+      "post": {
+        "tags": ["/payments"],
+        "summary": "Create a payment attempt for an owned order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Payment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["/payments"],
+        "summary": "List the authenticated users payments",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user payments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/all": {
+      "get": {
+        "tags": ["/payments"],
+        "summary": "List all payments for Admin or Seller",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated payments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin or Seller role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "tags": ["/payments"],
+        "summary": "Get one of the authenticated users payments",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned payment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Payment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{id}/status": {
+      "patch": {
+        "tags": ["/payments"],
+        "summary": "Update payment status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentStatusBody"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Payment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gateway/payments/{authority}": {
+      "get": {
+        "tags": ["/gateway"],
+        "summary": "Get gateway-safe payment details by authority",
+        "parameters": [
+          {
+            "name": "authority",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{64}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gateway payment details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GatewayPaymentDetails"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -9930,6 +10260,102 @@
             "default": true
           }
         }
+      },
+      "RequestPaymentBody": {
+        "type": "object",
+        "required": ["orderId"],
+        "additionalProperties": false,
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{24}$"
+          }
+        }
+      },
+      "CreatePaymentBody": {
+        "type": "object",
+        "required": ["order", "amount", "authority", "expiresAt"],
+        "properties": {
+          "order": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "authority": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdatePaymentStatusBody": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "completed", "cancelled"]
+          }
+        }
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "authority": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "completed", "cancelled"]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "GatewayPaymentDetails": {
+        "type": "object",
+        "required": ["status", "finalPrice", "companyName", "appUrl"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "completed", "cancelled"]
+          },
+          "finalPrice": {
+            "type": "number",
+            "minimum": 0
+          },
+          "companyName": {
+            "type": "string",
+            "example": "پت شاپ پرشین"
+          },
+          "appUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
       }
     }
   },
@@ -9963,6 +10389,10 @@
       "description": "Endpoints under /api/dashboard"
     },
     {
+      "name": "/gateway",
+      "description": "Endpoints under /api/gateway"
+    },
+    {
       "name": "/images",
       "description": "Endpoints under /api/images"
     },
@@ -9977,6 +10407,10 @@
     {
       "name": "/otp-code",
       "description": "Endpoints under /api/otp-code"
+    },
+    {
+      "name": "/payments",
+      "description": "Endpoints under /api/payments"
     },
     {
       "name": "/pet-types",

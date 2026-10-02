@@ -666,6 +666,38 @@ export const schemas = {
       },
     },
   },
+  CreatePaymentBody: {
+    type: 'object',
+    required: ['order', 'amount', 'authority', 'expiresAt'],
+    additionalProperties: false,
+    properties: {
+      order: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+      amount: { type: 'number', minimum: 0 },
+      authority: { type: 'string', minLength: 1, maxLength: 200 },
+      expiresAt: { type: 'string', format: 'date-time' },
+    },
+  },
+  RequestPaymentBody: {
+    type: 'object',
+    required: ['orderId'],
+    additionalProperties: false,
+    properties: {
+      orderId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
+    },
+  },
+  UpdatePaymentStatusBody: {
+    type: 'object',
+    required: ['status'],
+    additionalProperties: false,
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['pending', 'processing', 'completed', 'cancelled'],
+      },
+      gatewayReferenceId: { type: 'string', minLength: 1, maxLength: 200 },
+      paidAt: { type: 'string', format: 'date-time' },
+    },
+  },
 
   Pagination: {
     type: 'object',
@@ -809,6 +841,37 @@ export const schemas = {
       deliveryWindow: { $ref: '#/components/schemas/DeliveryWindow' },
       shippingInfo: { type: 'object' },
       createdAt: { type: 'string', format: 'date-time' },
+    },
+  },
+  Payment: {
+    type: 'object',
+    required: ['order', 'user', 'amount', 'authority', 'status', 'expiresAt'],
+    properties: {
+      _id: { type: 'string' },
+      order: { type: 'string' },
+      user: { type: 'string' },
+      amount: { type: 'number', minimum: 0 },
+      authority: { type: 'string' },
+      status: {
+        type: 'string',
+        enum: ['pending', 'processing', 'completed', 'cancelled'],
+      },
+      gatewayReferenceId: { type: 'string', nullable: true },
+      expiresAt: { type: 'string', format: 'date-time' },
+      paidAt: { type: 'string', format: 'date-time', nullable: true },
+    },
+  },
+  GatewayPaymentDetails: {
+    type: 'object',
+    required: ['status', 'finalPrice', 'companyName', 'appUrl'],
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['pending', 'processing', 'completed', 'cancelled'],
+      },
+      finalPrice: { type: 'number', minimum: 0 },
+      companyName: { type: 'string', example: 'پت شاپ پرشین' },
+      appUrl: { type: 'string', format: 'uri' },
     },
   },
   DashboardMetricsResponse: {

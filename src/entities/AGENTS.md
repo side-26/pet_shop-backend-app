@@ -21,6 +21,7 @@ Each entity owns persistence, business logic, request orchestration, routes, val
 - [`subCategories/AGENTS.md`](./subCategories/AGENTS.md) — category-owned product subdivisions.
 - [`products/AGENTS.md`](./products/AGENTS.md) — customer and management product catalog operations.
 - [`orders/AGENTS.md`](./orders/AGENTS.md) — immutable Cart snapshots, user Order history, and management delivery workflows.
+- [`payments/AGENTS.md`](./payments/AGENTS.md) — order payment attempts, gateway references, and payment-status workflows.
 - [`dashboard/AGENTS.md`](./dashboard/AGENTS.md) — admin-only cross-domain commerce and catalog metrics.
 - [`landing/AGENTS.md`](./landing/AGENTS.md) — public homepage catalog sections.
 - [`profile/AGENTS.md`](./profile/AGENTS.md) — authenticated customer account views without a dedicated collection.
