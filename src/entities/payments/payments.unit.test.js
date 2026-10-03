@@ -6,6 +6,13 @@ jest.mock('#entities/orders/orders.model.js', () => ({
   },
 }));
 
+jest.mock('#entities/orders/orders.service.js', () => ({
+  OrderService: {
+    createCheckoutSnapshot: jest.fn(),
+    createOrderFromCheckout: jest.fn(),
+  },
+}));
+
 jest.mock('crypto', () => ({
   randomBytes: jest.fn(() => ({ toString: jest.fn(() => 'fixed-authority') })),
   randomUUID: jest.fn(() => 'reference-id'),
@@ -22,6 +29,7 @@ jest.mock('#utils/helpers.js', () => ({
 
 jest.mock('./payments.model.js', () => ({
   PaymentModel: {
+    db: { startSession: jest.fn() },
     create: jest.fn(),
     findOne: jest.fn(),
     findByIdAndUpdate: jest.fn(),
@@ -32,6 +40,7 @@ jest.mock('./payments.model.js', () => ({
 
 import { PAYMENT_STATUSES, STATUES } from '#configs/constants.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
+import { OrderService } from '#entities/orders/orders.service.js';
 import { getPaginationData } from '#utils/helpers.js';
 
 import { PaymentModel } from './payments.model.js';
@@ -113,21 +122,14 @@ describe('PaymentService', () => {
   });
 
   test('creates a trusted gateway payment request from an owned order', async () => {
-    OrderModel.findOne.mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockResolvedValue({
-        _id: orderId,
-        user: userId,
-        totalPrice: 1000,
-        discountPrice: 100,
-        shippingPrice: 50,
-      }),
-    });
+    const checkoutSnapshot = {
+      cart: {},
+      order: { totalPrice: 1000, discountPrice: 100, shippingPrice: 50 },
+    };
+    OrderService.createCheckoutSnapshot.mockResolvedValue(checkoutSnapshot);
     PaymentModel.create.mockResolvedValue({ id: 'payment-id' });
 
-    await expect(
-      PaymentService.requestPayment(actor, orderId),
-    ).resolves.toEqual({
+    await expect(PaymentService.requestPayment(actor)).resolves.toEqual({
       paymentId: 'payment-id',
       authority: 'fixed-authority',
       gatewayUrl:
@@ -135,9 +137,9 @@ describe('PaymentService', () => {
     });
     expect(PaymentModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        order: orderId,
         user: userId,
         amount: 950,
+        checkoutSnapshot,
         authority: 'fixed-authority',
         status: PAYMENT_STATUSES.PENDING,
         expiresAt: expect.any(Date),
@@ -145,15 +147,14 @@ describe('PaymentService', () => {
     );
   });
 
-  test('does not create a gateway payment request for a missing or unowned order', async () => {
-    OrderModel.findOne.mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      lean: jest.fn().mockResolvedValue(null),
-    });
+  test('does not create a gateway payment request for an invalid cart', async () => {
+    OrderService.createCheckoutSnapshot.mockRejectedValue(
+      new Error('سبد خرید برای ثبت سفارش کامل یا معتبر نیست'),
+    );
 
-    await expect(
-      PaymentService.requestPayment(actor, orderId),
-    ).rejects.toMatchObject({ statusCode: STATUES.NOT_FOUND });
+    await expect(PaymentService.requestPayment(actor)).rejects.toThrow(
+      'سبد خرید برای ثبت سفارش کامل یا معتبر نیست',
+    );
     expect(PaymentModel.create).not.toHaveBeenCalled();
   });
 
@@ -215,12 +216,19 @@ describe('PaymentService', () => {
 
   test('marks an unexpired pending gateway payment as paid', async () => {
     const paymentId = 'payment-id';
+    const session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn(),
+    };
+    PaymentModel.db.startSession.mockResolvedValue(session);
+    OrderService.createOrderFromCheckout.mockResolvedValue({ _id: 'order-id' });
     PaymentModel.findOne.mockReturnValue({
       select: jest.fn().mockReturnThis(),
       lean: jest.fn().mockResolvedValue({
         _id: paymentId,
         status: PAYMENT_STATUSES.PENDING,
         expiresAt: new Date(Date.now() + 60_000),
+        checkoutSnapshot: { cart: {}, order: {} },
       }),
     });
     PaymentModel.findOneAndUpdate.mockResolvedValue({ _id: paymentId });
@@ -239,10 +247,12 @@ describe('PaymentService', () => {
           status: PAYMENT_STATUSES.PAID,
           gatewayReferenceId: 'reference-id',
           paidAt: expect.any(Date),
+          order: 'order-id',
         },
       },
       expect.any(Object),
     );
+    expect(session.endSession).toHaveBeenCalled();
   });
 
   test('rejects expired and already processed gateway payments', async () => {
@@ -271,17 +281,15 @@ describe('PaymentService', () => {
     ).rejects.toMatchObject({ statusCode: STATUES.CONFLICT });
   });
 
-  test('cancels a pending payment, marks its order failed, and returns a failure error', async () => {
+  test('cancels a pending checkout payment without creating an Order', async () => {
     PaymentModel.findOne.mockReturnValue({
       select: jest.fn().mockReturnThis(),
       lean: jest.fn().mockResolvedValue({
         _id: 'payment-id',
-        order: 'order-id',
         status: PAYMENT_STATUSES.PENDING,
       }),
     });
     PaymentModel.findOneAndUpdate.mockResolvedValue({ _id: 'payment-id' });
-    OrderModel.findByIdAndUpdate.mockResolvedValue({ _id: 'order-id' });
 
     await expect(
       PaymentService.cancelGatewayPayment('a'.repeat(64)),
@@ -289,11 +297,7 @@ describe('PaymentService', () => {
       statusCode: STATUES.BAD_REQUEST,
       message: 'پرداخت ناموفق بود و سفارش لغو شد',
     });
-    expect(OrderModel.findByIdAndUpdate).toHaveBeenCalledWith(
-      'order-id',
-      { $set: { paymentStatus: 'failed' } },
-      { runValidators: true },
-    );
+    expect(OrderModel.findByIdAndUpdate).not.toHaveBeenCalled();
   });
 
   test('hides a missing or unowned payment as not found', async () => {

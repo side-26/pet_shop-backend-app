@@ -4,6 +4,7 @@ import { setErrorResponse } from '#utils/helpers.js';
 import {
   DELIVERY_CITY_RADIUS_KM,
   DELIVERY_LOOKUP_DAYS,
+  DELIVERY_LOOKUP_HORIZON_DAYS,
 } from './deliveryServices.constants.js';
 import {
   calculateDistanceKm,
@@ -112,7 +113,7 @@ export class DeliveryServiceService {
           createAvailabilitySlots(
             deliveryService.availability,
             now,
-            DELIVERY_LOOKUP_DAYS,
+            DELIVERY_LOOKUP_HORIZON_DAYS,
           ).filter(
             ({ startsAt }) =>
               startsAt >=
@@ -127,7 +128,7 @@ export class DeliveryServiceService {
                     1000,
               ),
           ),
-        ),
+        ).slice(0, DELIVERY_LOOKUP_DAYS),
       };
     });
   }

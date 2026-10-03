@@ -14,6 +14,7 @@ import {
   getPaymentGatewayUrl,
 } from '#configs/env.config.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
+import { OrderService } from '#entities/orders/orders.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import { PaymentModel } from './payments.model.js';
@@ -53,25 +54,17 @@ export class PaymentService {
     return order.totalPrice - order.discountPrice + order.shippingPrice;
   }
 
-  static async requestPayment(actor, orderId) {
+  static async requestPayment(actor) {
     const userId = this.getAuthenticatedUserId(actor);
-    const order = await OrderModel.findOne({ _id: orderId, user: userId })
-      .select('user totalPrice discountPrice shippingPrice')
-      .lean();
-    if (!order) {
-      setErrorResponse(STATUES.NOT_FOUND, {
-        message: 'سفارش یافت نشد',
-        code: ERROR_CODES.PAYMENT_ORDER_NOT_FOUND,
-      });
-    }
+    const checkoutSnapshot = await OrderService.createCheckoutSnapshot(actor);
 
     const authority = crypto
       .randomBytes(PAYMENT_REQUEST.AUTHORITY_BYTES)
       .toString('hex');
     const payment = await PaymentModel.create({
-      order: order._id,
       user: userId,
-      amount: this.getOrderFinalPrice(order),
+      amount: this.getOrderFinalPrice(checkoutSnapshot.order),
+      checkoutSnapshot,
       authority,
       status: PAYMENT_STATUSES.PENDING,
       expiresAt: new Date(Date.now() + PAYMENT_REQUEST.EXPIRATION_MS),
@@ -119,7 +112,10 @@ export class PaymentService {
     };
   }
 
-  static async markAsPaid(paymentId, { referenceId, paidAt }) {
+  static async markAsPaid(
+    paymentId,
+    { referenceId, paidAt, orderId, session },
+  ) {
     return PaymentModel.findOneAndUpdate(
       { _id: paymentId, status: PAYMENT_STATUSES.PENDING },
       {
@@ -127,15 +123,20 @@ export class PaymentService {
           status: PAYMENT_STATUSES.PAID,
           gatewayReferenceId: referenceId,
           paidAt,
+          order: orderId,
         },
       },
-      { returnDocument: 'after', runValidators: true },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session && { session }),
+      },
     );
   }
 
   static async payGatewayPayment(authority) {
     const payment = await PaymentModel.findOne({ authority })
-      .select('_id status expiresAt')
+      .select('_id status expiresAt checkoutSnapshot')
       .lean();
     if (!payment) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -155,16 +156,30 @@ export class PaymentService {
         code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
       });
     }
-    const referenceId = crypto.randomUUID();
-    const paidPayment = await this.markAsPaid(payment._id, {
-      referenceId,
-      paidAt: new Date(),
-    });
-    if (!paidPayment) {
-      setErrorResponse(STATUES.CONFLICT, {
-        message: 'این پرداخت قبلا پردازش شده است',
-        code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
+    const session = await PaymentModel.db.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const referenceId = crypto.randomUUID();
+        const order = await OrderService.createOrderFromCheckout(
+          payment.checkoutSnapshot,
+          referenceId,
+          session,
+        );
+        const paidPayment = await this.markAsPaid(payment._id, {
+          referenceId,
+          paidAt: new Date(),
+          orderId: order._id,
+          session,
+        });
+        if (!paidPayment) {
+          setErrorResponse(STATUES.CONFLICT, {
+            message: 'این پرداخت قبلا پردازش شده است',
+            code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
+          });
+        }
       });
+    } finally {
+      await session.endSession();
     }
     return {
       success: true,
@@ -202,11 +217,13 @@ export class PaymentService {
         code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
       });
     }
-    await OrderModel.findByIdAndUpdate(
-      payment.order,
-      { $set: { paymentStatus: ORDER_PAYMENT_STATUSES.FAILED } },
-      { runValidators: true },
-    );
+    if (payment.order) {
+      await OrderModel.findByIdAndUpdate(
+        payment.order,
+        { $set: { paymentStatus: ORDER_PAYMENT_STATUSES.FAILED } },
+        { runValidators: true },
+      );
+    }
     setErrorResponse(STATUES.BAD_REQUEST, {
       message: 'پرداخت ناموفق بود و سفارش لغو شد',
     });

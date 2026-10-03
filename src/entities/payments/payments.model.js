@@ -7,7 +7,9 @@ const paymentSchema = new mongoose.Schema(
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Orders',
-      required: true,
+      default: null,
+      unique: true,
+      sparse: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -15,6 +17,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
     amount: { type: Number, required: true, min: 0 },
+    checkoutSnapshot: { type: mongoose.Schema.Types.Mixed, required: true },
     authority: {
       type: String,
       required: true,

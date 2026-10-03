@@ -2,11 +2,11 @@
 
 ## Snapshot creation
 
-After successful payment verification, `POST /api/orders` receives the gateway's `paymentTrackingId`. The service loads and reprices the authenticated user's cart, verifies enabled Product/Pet references, quantities, the selected embedded address, unexpired delivery quote and selected window, shipping price, and payment type, then creates an immutable Order snapshot.
+At payment-request time, the backend validates and snapshots the authenticated user's Cart into the Payment record. After successful gateway verification, the backend creates the immutable Order only from that stored checkout snapshot. Later Cart changes, including changes from another browser session, cannot affect the paid Order.
 
 Each item preserves its original reference plus quantity, price, discount percentage, title, main image, and thumbnail. Product snapshots additionally preserve the selected weight's metric and value. Within the transaction, checkout atomically decrements the selected product-weight quantity, the derived product quantity, and increments product sales volume; insufficient stock aborts the full checkout. The full selected address and Tehran delivery-window interval are copied. Order totals, shipping price, payment type, and checkout shipping information are copied. Later Cart, address, Product, Pet, or quote changes cannot change the Order.
 
-Cart reads, recalculation, snapshot persistence, and cart clearing run in one MongoDB transaction. Concurrent checkout attempts cannot snapshot the same cart twice: one transaction commits, while a conflicting attempt retries against the now-empty cart and fails validation. An aborted transaction leaves both the Order and Cart unchanged. This requires a MongoDB deployment with transaction support (a replica set or sharded cluster).
+Gateway completion creates the Order, decrements product inventory, and marks the Payment paid in one MongoDB transaction. A repeated callback cannot create another Order because it can only transition a pending Payment once. This requires a MongoDB deployment with transaction support (a replica set or sharded cluster).
 
 ## Identifiers
 
@@ -20,14 +20,14 @@ Cart reads, recalculation, snapshot persistence, and cart clearing run in one Mo
 ## Current lifecycle and API
 
 ```text
-Cart → verified payment → Order (deliveryState 0)
+Cart → Payment checkout snapshot → verified payment → Order (deliveryState 0)
      → Admin/Seller shipping updates
      → Admin/Seller deliveryState updates through values 0–3
 ```
 
 No meanings beyond the numeric `0–3` contract or transition state machine are currently defined.
 
-- `POST /api/orders` creates an Order from the authenticated user's Cart.
+- Gateway verification creates an Order from the Payment checkout snapshot. The frontend must not create an Order from its current Cart after redirect.
 - `GET /api/orders` returns the authenticated user's paginated Orders.
 - `GET /api/orders/:id` returns one owned Order.
 - `GET /api/orders/all` returns paginated Orders for Admin/Seller.

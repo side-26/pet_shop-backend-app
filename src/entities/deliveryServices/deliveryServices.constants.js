@@ -19,4 +19,5 @@ export const DELIVERY_WEEK_DAYS_FA = {
 };
 
 export const DELIVERY_LOOKUP_DAYS = 7;
+export const DELIVERY_LOOKUP_HORIZON_DAYS = DELIVERY_LOOKUP_DAYS + 1;
 export const DELIVERY_CITY_RADIUS_KM = 22;

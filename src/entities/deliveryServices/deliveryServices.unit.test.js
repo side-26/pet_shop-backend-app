@@ -272,6 +272,28 @@ describe('DeliveryServiceService', () => {
     ]);
   });
 
+  test("includes next week when today's final availability has elapsed", async () => {
+    jest
+      .spyOn(DeliveryServiceService, 'findAll')
+      .mockResolvedValue([deliveryService]);
+
+    await expect(
+      DeliveryServiceService.findAvailableByCoordinates(
+        [51.4, 35.7],
+        new Date('2026-10-03T09:00:00.000Z'),
+      ),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        availability: [
+          expect.objectContaining({
+            weekday: 'saturday',
+            date: '10/10/2026',
+          }),
+        ],
+      }),
+    ]);
+  });
+
   test('rejects an availability range that is not exactly two hours', () => {
     expect(() =>
       createDeliveryServiceZodSchema.parse({

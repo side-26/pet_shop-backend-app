@@ -18,6 +18,13 @@ jest.mock('#middlewares/role.middleware.js', () => ({
   },
 }));
 
+jest.mock('#entities/orders/orders.service.js', () => ({
+  OrderService: {
+    createCheckoutSnapshot: jest.fn(),
+    createOrderFromCheckout: jest.fn(),
+  },
+}));
+
 import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -25,6 +32,7 @@ import request from 'supertest';
 import { PAYMENT_STATUSES, ROLES, STATUES } from '#configs/constants.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
+import { OrderService } from '#entities/orders/orders.service.js';
 import { UserModel } from '#entities/users/users.model.js';
 
 import { PaymentModel } from './payments.model.js';
@@ -101,22 +109,28 @@ describe('Payment API', () => {
     global.__PAYMENT_TEST_USER_ID__ = user._id.toString();
     global.__PAYMENT_TEST_ROLE__ = ROLES.CUSTOMER;
     global.__PAYMENT_TEST_UNAUTHENTICATED__ = false;
+    OrderService.createCheckoutSnapshot.mockResolvedValue({
+      cart: {},
+      order: {
+        user: user._id,
+        totalPrice: 1000,
+        discountPrice: 0,
+        shippingPrice: 0,
+      },
+    });
   });
 
-  test('creates an owned pending payment and exposes it only to its user', async () => {
+  test('creates an owned checkout payment and exposes it only to its user', async () => {
     const created = await request(app)
-      .post('/api/payments')
+      .post('/api/payments/request')
       .set('Authorization', 'Bearer token')
-      .send(payload());
+      .send({});
     expect(created.status).toBe(STATUES.CREATED);
-    expect(created.body.data).toMatchObject({
-      order: order._id.toString(),
-      user: user._id.toString(),
-      status: PAYMENT_STATUSES.PENDING,
-    });
+    const payment = await PaymentModel.findById(created.body.data.paymentId);
+    expect(payment).toMatchObject({ user: user._id });
 
     const fetched = await request(app)
-      .get(`/api/payments/${created.body.data._id}`)
+      .get(`/api/payments/${created.body.data.paymentId}`)
       .set('Authorization', 'Bearer token');
     expect(fetched.status).toBe(STATUES.SUCCESS);
     expect(fetched.body.data.authority).toBe(created.body.data.authority);
@@ -126,7 +140,7 @@ describe('Payment API', () => {
     const response = await request(app)
       .post('/api/payments/request')
       .set('Authorization', 'Bearer token')
-      .send({ orderId: order._id.toString() });
+      .send({});
 
     expect(response.status).toBe(STATUES.CREATED);
     expect(response.body.data).toMatchObject({
@@ -138,7 +152,6 @@ describe('Payment API', () => {
     });
     const payment = await PaymentModel.findById(response.body.data.paymentId);
     expect(payment).toMatchObject({
-      order: order._id,
       user: user._id,
       amount: 1000,
       status: PAYMENT_STATUSES.PENDING,
@@ -151,6 +164,7 @@ describe('Payment API', () => {
       order: order._id,
       user: user._id,
       amount: 950,
+      checkoutSnapshot: { cart: {}, order: {} },
       authority,
       status: PAYMENT_STATUSES.PENDING,
       expiresAt: new Date('2099-01-01T00:00:00.000Z'),
@@ -180,26 +194,27 @@ describe('Payment API', () => {
       .send({});
     expect(malformed.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
-    const missing = await request(app)
-      .post('/api/payments')
+    OrderService.createCheckoutSnapshot.mockRejectedValueOnce(
+      new Error('سبد خرید برای ثبت سفارش کامل یا معتبر نیست'),
+    );
+    const invalidCart = await request(app)
+      .post('/api/payments/request')
       .set('Authorization', 'Bearer token')
-      .send(payload({ order: new mongoose.Types.ObjectId().toString() }));
-    expect(missing.status).toBe(STATUES.NOT_FOUND);
-
-    const foreignOrder = await createOrder(new mongoose.Types.ObjectId());
-    const forbidden = await request(app)
-      .post('/api/payments')
-      .set('Authorization', 'Bearer token')
-      .send(payload({ order: foreignOrder._id.toString() }));
-    expect(forbidden.status).toBe(STATUES.NO_ACCESS);
+      .send({});
+    expect(invalidCart.status).toBe(STATUES.INTERNAL_SERVER);
   });
 
   test('scopes lists to the user and protects management status updates', async () => {
-    await PaymentModel.create({ ...payload(), user: user._id });
+    await PaymentModel.create({
+      ...payload(),
+      user: user._id,
+      checkoutSnapshot: { cart: {}, order: {} },
+    });
     await PaymentModel.create({
       ...payload({ authority: 'FOREIGN-AUTH' }),
       user: new mongoose.Types.ObjectId(),
       order: new mongoose.Types.ObjectId(),
+      checkoutSnapshot: { cart: {}, order: {} },
     });
     const list = await request(app)
       .get('/api/payments')

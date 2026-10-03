@@ -679,11 +679,8 @@ export const schemas = {
   },
   RequestPaymentBody: {
     type: 'object',
-    required: ['orderId'],
     additionalProperties: false,
-    properties: {
-      orderId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' },
-    },
+    properties: {},
   },
   UpdatePaymentStatusBody: {
     type: 'object',

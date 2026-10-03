@@ -123,6 +123,38 @@ export class OrderService {
     };
   }
 
+  static async createCheckoutSnapshot(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const [cart, user] = await Promise.all([
+      UserService.getCartItems(actor),
+      UserService.findById(userId),
+    ]);
+    this.validateCart(cart);
+    const address = this.findAddress(user, cart.userAddress);
+    if (!address) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نشانی انتخاب‌شده برای سفارش معتبر نیست',
+        code: ERROR_CODES.ORDER_INVALID_CART,
+      });
+    }
+    return {
+      cart: typeof cart.toObject === 'function' ? cart.toObject() : cart,
+      order: this.buildOrderSnapshot(userId, cart, address),
+    };
+  }
+
+  static async createOrderFromCheckout(
+    checkoutSnapshot,
+    paymentTrackingId,
+    session,
+  ) {
+    await this.decrementProductInventory(checkoutSnapshot.cart, session);
+    return this.createWithUniqueIdentifiers(
+      { ...checkoutSnapshot.order, paymentTrackingId },
+      session,
+    );
+  }
+
   static async createWithUniqueIdentifiers(snapshot, session) {
     for (
       let attempt = 0;
