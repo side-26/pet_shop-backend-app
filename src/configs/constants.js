@@ -122,9 +122,14 @@ export const PAYMENT_STATUSES = {
 };
 
 export const ORDER_PAYMENT_STATUSES = {
-  PENDING: 'pending',
+  PENDING: 'pending_payment',
   PAID: 'paid',
   FAILED: 'failed',
+};
+
+export const ORDER_RESERVATION_STATES = {
+  RESERVED: 'reserved',
+  RELEASED: 'released',
 };
 
 export const ORDER_DELIVERY_STATES = [0, 1, 2, 3];

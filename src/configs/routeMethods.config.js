@@ -155,6 +155,7 @@ export const API_ROUTE_METHODS = [
   { path: COUNTRY_ROUTES.countries, methods: [get] },
   { path: IMAGE_ROUTES.images, methods: [post, deleteMethod] },
   { path: ORDER_ROUTES.orders, methods: [post, get] },
+  { path: ORDER_ROUTES.ordersPrepare, methods: [post] },
   { path: PAYMENT_ROUTES.payments, methods: [post, get] },
   { path: PAYMENT_ROUTES.paymentsRequest, methods: [post] },
   { path: OTP_CODE_ROUTES.otpCode, methods: [post] },

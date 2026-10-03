@@ -16,6 +16,7 @@ export const snapshotOrderItem = (cartItem) => {
     itemType: cartItem.itemType,
     quantity: cartItem.quantity,
     ...(weight && { weight: { metric: weight.metric, value: weight.value } }),
+    ...(weight && { sourceWeightId: cartItem.weight }),
     price: weight?.price ?? cartItem.item.price,
     discountPercentage:
       weight?.discountPercentage ?? cartItem.item.discountPercentage,

@@ -5,6 +5,7 @@ import {
   ORDER_DELIVERY_STATES,
   ORDER_IDENTIFIER,
   ORDER_PAYMENT_STATUSES,
+  ORDER_RESERVATION_STATES,
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 
@@ -39,6 +40,7 @@ const orderItemSchema = new mongoose.Schema(
       validate: Number.isInteger,
     },
     weight: { type: weightSnapshotSchema, default: undefined },
+    sourceWeightId: { type: mongoose.Schema.Types.ObjectId, default: null },
     price: { type: Number, required: true, min: 0 },
     discountPercentage: { type: Number, required: true, min: 0, max: 100 },
     title: { type: String, required: true, trim: true },
@@ -108,12 +110,19 @@ const orderSchema = new mongoose.Schema(
       enum: ORDER_DELIVERY_STATES,
       default: ORDER_DELIVERY_STATES[0],
     },
-    paymentTrackingId: { type: String, required: true, trim: true },
+    paymentTrackingId: { type: String, default: null, trim: true },
     paymentStatus: {
       type: String,
       enum: Object.values(ORDER_PAYMENT_STATUSES),
       default: ORDER_PAYMENT_STATUSES.PENDING,
     },
+    paymentExpiresAt: { type: Date, default: null },
+    inventoryReservationState: {
+      type: String,
+      enum: Object.values(ORDER_RESERVATION_STATES),
+      default: null,
+    },
+    inventoryReleasedAt: { type: Date, default: null },
     totalPrice: { type: Number, required: true, min: 0 },
     items: { type: [orderItemSchema], required: true },
     discountPrice: { type: Number, required: true, min: 0 },
@@ -138,5 +147,6 @@ const orderSchema = new mongoose.Schema(
 
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ deliveryState: 1, createdAt: -1 });
+orderSchema.index({ paymentStatus: 1, paymentExpiresAt: 1 });
 
 export const OrderModel = mongoose.model('Orders', orderSchema);

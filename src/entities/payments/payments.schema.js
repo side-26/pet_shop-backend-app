@@ -14,7 +14,7 @@ export const createPaymentSchema = object({
   expiresAt: coerce.date(),
 });
 
-export const requestPaymentSchema = object({});
+export const requestPaymentSchema = object({ orderId: objectIdSchema });
 
 export const paymentIdSchema = object({ id: objectIdSchema });
 

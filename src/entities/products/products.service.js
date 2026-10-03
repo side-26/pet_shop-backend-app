@@ -338,6 +338,20 @@ export class ProductService {
     return product;
   }
 
+  static async restoreWeightStock(id, weightId, quantity, session) {
+    return ProductModel.findOneAndUpdate(
+      { _id: id, 'weights._id': weightId },
+      {
+        $inc: {
+          'weights.$.quantity': quantity,
+          quantity,
+          salesVolume: -quantity,
+        },
+      },
+      { returnDocument: 'after', runValidators: true, session },
+    );
+  }
+
   static async setEnableStatus(id, isEnable, userId) {
     await this.findById(id);
     const product = await ProductModel.findByIdAndUpdate(

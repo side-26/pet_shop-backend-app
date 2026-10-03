@@ -30,8 +30,8 @@ export const createPaymentController = async (req, res, next) => {
 
 export const requestPaymentController = async (req, res, next) => {
   try {
-    returnFormValidation(requestPaymentSchema, req.body);
-    const payment = await PaymentService.requestPayment(req.user);
+    const { orderId } = returnFormValidation(requestPaymentSchema, req.body);
+    const payment = await PaymentService.requestPayment(req.user, orderId);
     setSuccessResponse(res, STATUES.CREATED, {
       data: payment,
       message: 'درخواست پرداخت با موفقیت ایجاد شد',

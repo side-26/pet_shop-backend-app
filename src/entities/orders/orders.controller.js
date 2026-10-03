@@ -9,6 +9,7 @@ import {
   createOrderSchema,
   orderIdSchema,
   orderQuerySchema,
+  prepareOrderSchema,
   updateDeliveryStateSchema,
   updateShippingInfoSchema,
 } from './orders.schema.js';
@@ -27,6 +28,24 @@ export const createOrderController = async (req, res, next) => {
     setSuccessResponse(res, STATUES.CREATED, {
       data: order,
       message: 'سفارش با موفقیت ثبت شد',
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const prepareOrderController = async (req, res, next) => {
+  try {
+    const selection = returnFormValidation(prepareOrderSchema, req.body);
+    const order = await OrderService.prepareOrder(req.user, selection);
+    setSuccessResponse(res, STATUES.CREATED, {
+      data: {
+        orderId: order.id || order._id.toString(),
+        expiresAt: order.paymentExpiresAt,
+        payableAmount:
+          order.totalPrice - order.discountPrice + order.shippingPrice,
+      },
+      message: 'سفارش برای پرداخت آماده شد',
     });
   } catch (error) {
     onCatchPromiseController(error, next);

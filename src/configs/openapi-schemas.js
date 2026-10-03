@@ -15,6 +15,7 @@ import {
 } from '../entities/users/users.schema.js';
 import {
   createOrderSchema,
+  prepareOrderSchema,
   updateDeliveryStateSchema,
 } from '../entities/orders/orders.schema.js';
 import { ROLES } from './constants.js';
@@ -651,6 +652,7 @@ export const schemas = {
   CreateDeliveryQuoteBody: toOpenApi(createDeliveryQuoteSchema),
   SelectDeliveryWindowBody: toOpenApi(selectDeliveryWindowSchema),
   CreateOrderBody: toOpenApi(createOrderSchema),
+  PrepareOrderBody: toOpenApi(prepareOrderSchema),
   UpdateOrderDeliveryStateBody: toOpenApi(updateDeliveryStateSchema),
   UpdateOrderShippingInfoBody: {
     type: 'object',
@@ -679,8 +681,9 @@ export const schemas = {
   },
   RequestPaymentBody: {
     type: 'object',
+    required: ['orderId'],
     additionalProperties: false,
-    properties: {},
+    properties: { orderId: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' } },
   },
   UpdatePaymentStatusBody: {
     type: 'object',

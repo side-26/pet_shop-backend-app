@@ -2,11 +2,20 @@
 
 ## Snapshot creation
 
-At payment-request time, the backend validates and snapshots the authenticated user's Cart into the Payment record. After successful gateway verification, the backend creates the immutable Order only from that stored checkout snapshot. Later Cart changes, including changes from another browser session, cannot affect the paid Order.
+`POST /api/orders/prepare` validates the authenticated user's cart, saved address,
+and enabled delivery-service window on the server, then creates the immutable
+Order before gateway redirection. It reserves product inventory in the same
+MongoDB transaction and leaves the active Cart unchanged. Later Cart changes,
+including changes from another browser session, cannot affect the prepared
+Order.
 
 Each item preserves its original reference plus quantity, price, discount percentage, title, main image, and thumbnail. Product snapshots additionally preserve the selected weight's metric and value. Within the transaction, checkout atomically decrements the selected product-weight quantity, the derived product quantity, and increments product sales volume; insufficient stock aborts the full checkout. The full selected address and Tehran delivery-window interval are copied. Order totals, shipping price, payment type, and checkout shipping information are copied. Later Cart, address, Product, Pet, or quote changes cannot change the Order.
 
-Gateway completion creates the Order, decrements product inventory, and marks the Payment paid in one MongoDB transaction. A repeated callback cannot create another Order because it can only transition a pending Payment once. This requires a MongoDB deployment with transaction support (a replica set or sharded cluster).
+Prepared Orders remain `pending_payment` for fifteen minutes. Gateway completion
+marks that exact Order paid in one MongoDB transaction; it does not create a
+second Order or reserve stock again. Cancellation and expiry explicitly release
+the reservation exactly once, tracked on the Order. This requires a MongoDB
+deployment with transaction support (a replica set or sharded cluster).
 
 ## Identifiers
 
@@ -20,14 +29,17 @@ Gateway completion creates the Order, decrements product inventory, and marks th
 ## Current lifecycle and API
 
 ```text
-Cart → Payment checkout snapshot → verified payment → Order (deliveryState 0)
+Cart → prepared Order + inventory reservation → Payment attempt → paid Order (deliveryState 0)
      → Admin/Seller shipping updates
      → Admin/Seller deliveryState updates through values 0–3
 ```
 
 No meanings beyond the numeric `0–3` contract or transition state machine are currently defined.
 
-- Gateway verification creates an Order from the Payment checkout snapshot. The frontend must not create an Order from its current Cart after redirect.
+- `POST /api/orders/prepare` accepts only address and delivery-selection IDs and returns the prepared Order ID, expiry, and server-calculated payable amount.
+- `POST /api/orders` remains available for direct checkout. It accepts `{ paymentTrackingId }`, snapshots the finalized Cart, and clears the Cart within the same transaction.
+- `POST /api/payments/request` accepts `{ orderId }` and creates one active payment attempt from that Order snapshot.
+- Gateway verification updates the prepared Order only. The frontend must not create an Order from its current Cart after redirect.
 - `GET /api/orders` returns the authenticated user's paginated Orders.
 - `GET /api/orders/:id` returns one owned Order.
 - `GET /api/orders/all` returns paginated Orders for Admin/Seller.

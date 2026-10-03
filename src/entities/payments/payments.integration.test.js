@@ -1,3 +1,8 @@
+jest.mock('nanoid', () => ({
+  nanoid: jest.fn(() => 'payment-test-id'),
+  customAlphabet: jest.fn(() => () => '200000000'),
+}));
+
 jest.mock('#middlewares/auth.middleware.js', () => ({
   authenticated: (req, res, next) => {
     if (global.__PAYMENT_TEST_UNAUTHENTICATED__)
@@ -18,21 +23,19 @@ jest.mock('#middlewares/role.middleware.js', () => ({
   },
 }));
 
-jest.mock('#entities/orders/orders.service.js', () => ({
-  OrderService: {
-    createCheckoutSnapshot: jest.fn(),
-    createOrderFromCheckout: jest.fn(),
-  },
-}));
-
 import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
 
-import { PAYMENT_STATUSES, ROLES, STATUES } from '#configs/constants.js';
+import {
+  ORDER_PAYMENT_STATUSES,
+  ORDER_RESERVATION_STATES,
+  PAYMENT_STATUSES,
+  ROLES,
+  STATUES,
+} from '#configs/constants.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
-import { OrderService } from '#entities/orders/orders.service.js';
 import { UserModel } from '#entities/users/users.model.js';
 
 import { PaymentModel } from './payments.model.js';
@@ -68,6 +71,9 @@ describe('Payment API', () => {
       totalPrice: 1000,
       discountPrice: 0,
       shippingPrice: 0,
+      paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
+      paymentExpiresAt: new Date('2099-01-01T00:00:00.000Z'),
+      inventoryReservationState: ORDER_RESERVATION_STATES.RESERVED,
     };
     await OrderModel.collection.insertOne(document);
     return document;
@@ -109,22 +115,13 @@ describe('Payment API', () => {
     global.__PAYMENT_TEST_USER_ID__ = user._id.toString();
     global.__PAYMENT_TEST_ROLE__ = ROLES.CUSTOMER;
     global.__PAYMENT_TEST_UNAUTHENTICATED__ = false;
-    OrderService.createCheckoutSnapshot.mockResolvedValue({
-      cart: {},
-      order: {
-        user: user._id,
-        totalPrice: 1000,
-        discountPrice: 0,
-        shippingPrice: 0,
-      },
-    });
   });
 
   test('creates an owned checkout payment and exposes it only to its user', async () => {
     const created = await request(app)
       .post('/api/payments/request')
       .set('Authorization', 'Bearer token')
-      .send({});
+      .send({ orderId: order._id.toString() });
     expect(created.status).toBe(STATUES.CREATED);
     const payment = await PaymentModel.findById(created.body.data.paymentId);
     expect(payment).toMatchObject({ user: user._id });
@@ -140,7 +137,7 @@ describe('Payment API', () => {
     const response = await request(app)
       .post('/api/payments/request')
       .set('Authorization', 'Bearer token')
-      .send({});
+      .send({ orderId: order._id.toString() });
 
     expect(response.status).toBe(STATUES.CREATED);
     expect(response.body.data).toMatchObject({
@@ -187,21 +184,18 @@ describe('Payment API', () => {
     expect(missing.status).toBe(STATUES.NOT_FOUND);
   });
 
-  test('rejects malformed data, missing orders, and orders belonging to another user', async () => {
+  test('rejects malformed data and missing prepared Orders', async () => {
     const malformed = await request(app)
       .post('/api/payments')
       .set('Authorization', 'Bearer token')
       .send({});
     expect(malformed.status).toBe(STATUES.BAD_FORM_VALIDATION);
 
-    OrderService.createCheckoutSnapshot.mockRejectedValueOnce(
-      new Error('سبد خرید برای ثبت سفارش کامل یا معتبر نیست'),
-    );
-    const invalidCart = await request(app)
+    const missingOrder = await request(app)
       .post('/api/payments/request')
       .set('Authorization', 'Bearer token')
-      .send({});
-    expect(invalidCart.status).toBe(STATUES.INTERNAL_SERVER);
+      .send({ orderId: new mongoose.Types.ObjectId().toString() });
+    expect(missingOrder.status).toBe(STATUES.NOT_FOUND);
   });
 
   test('scopes lists to the user and protects management status updates', async () => {

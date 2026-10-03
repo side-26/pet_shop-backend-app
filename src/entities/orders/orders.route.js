@@ -7,6 +7,7 @@ import { roleMiddleware } from '#middlewares/role.middleware.js';
 
 import {
   createOrderController,
+  prepareOrderController,
   getOrdersController,
   getUserOrderController,
   getUserOrdersController,
@@ -23,15 +24,31 @@ router.post(
   ORDER_ROUTES.orders,
   authenticated,
   /*
+    #swagger.path = '/orders'
     #swagger.tags = ['Orders']
-    #swagger.summary = "Create an order from the authenticated user's cart"
+    #swagger.summary = 'Create an immutable order from the authenticated user cart'
     #swagger.security = [{ "bearerAuth": [] }]
     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/CreateOrderBody' } } } }
-    #swagger.responses[201] = { description: 'Order created' }
-    #swagger.responses[422] = { description: 'Cart or payment validation error' }
+    #swagger.responses[201] = { description: 'Order created and cart cleared' }
+    #swagger.responses[422] = { description: 'Invalid cart or payment tracking ID' }
   */
   createOrderController,
 );
+
+router.post(
+  ORDER_ROUTES.ordersPrepare,
+  authenticated,
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = 'Create an immutable prepared order and reserve inventory'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PrepareOrderBody' } } } }
+    #swagger.responses[201] = { description: 'Prepared order created' }
+    #swagger.responses[422] = { description: 'Invalid cart, address, delivery service, or time slot' }
+  */
+  prepareOrderController,
+);
+
 router.get(
   ORDER_ROUTES.orders,
   authenticated,

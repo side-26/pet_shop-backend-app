@@ -16,7 +16,9 @@ Owns immutable purchase snapshots created from authenticated users' finalized ca
 ## Rules
 
 - Orders are historical snapshots, never live Cart or catalog pricing views.
-- Cart recalculation, Order snapshot creation, and cart clearing share one MongoDB transaction; deployments must use a replica set or sharded cluster.
+- Prepared checkout recalculates the cart, snapshots the selected owned address and enabled delivery window, creates the Order, and reserves stock in one MongoDB transaction; it does not clear the active cart. Deployments must use a replica set or sharded cluster.
+- The backwards-compatible direct checkout endpoint creates an immutable Order from a finalized Cart and clears that Cart in the same transaction; it requires a payment tracking ID.
+- Prepared Orders expire after fifteen minutes. Payment cancellation or expiry releases their inventory reservation exactly once before marking payment failed.
 - Only `deliveryState` and `shippingInfo` are mutable, and only through Admin/Seller routes.
 - Checkout requires an unexpired quoted delivery window and snapshots that complete interval into the Order.
 - User reads are always scoped to the authenticated user.

@@ -11,6 +11,15 @@ export const createOrderSchema = object({
   paymentTrackingId: string().trim().min(1).max(200),
 });
 
+export const prepareOrderSchema = object({
+  addressId: objectIdSchema,
+  deliveryServiceId: objectIdSchema,
+  deliveryDateId: string()
+    .trim()
+    .regex(/^\d{2}\/\d{2}\/\d{4}$/),
+  deliveryTimeSlotId: string().trim().min(1).max(100),
+});
+
 export const orderIdSchema = object({ id: objectIdSchema });
 
 export const orderQuerySchema = object({

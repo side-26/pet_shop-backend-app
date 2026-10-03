@@ -8,8 +8,6 @@ const paymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Orders',
       default: null,
-      unique: true,
-      sparse: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -17,7 +15,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
     amount: { type: Number, required: true, min: 0 },
-    checkoutSnapshot: { type: mongoose.Schema.Types.Mixed, required: true },
+    checkoutSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
     authority: {
       type: String,
       required: true,
@@ -39,6 +37,13 @@ const paymentSchema = new mongoose.Schema(
 
 paymentSchema.index({ user: 1, createdAt: -1 });
 paymentSchema.index({ order: 1, createdAt: -1 });
+paymentSchema.index(
+  { order: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: PAYMENT_STATUSES.PENDING },
+  },
+);
 paymentSchema.index({ status: 1, expiresAt: 1 });
 
 export const PaymentModel = mongoose.model('Payments', paymentSchema);

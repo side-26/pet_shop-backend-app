@@ -3,12 +3,15 @@ import {
   ERROR_CODES,
   ORDER_IDENTIFIER,
   ORDER_DELIVERY_STATE,
+  ORDER_PAYMENT_STATUSES,
+  ORDER_RESERVATION_STATES,
   SHIPPING,
   STATUES,
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
 import { UserService } from '#entities/users/users.service.js';
 import { ProductService } from '#entities/products/products.service.js';
+import { DeliveryServiceService } from '#entities/deliveryServices/deliveryServices.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
@@ -87,6 +90,19 @@ export class OrderService {
     }
   }
 
+  static async releaseProductInventory(items, session) {
+    for (const item of items) {
+      if (item.itemType === USER_ITEM_TYPES.PRODUCT && item.sourceWeightId) {
+        await ProductService.restoreWeightStock(
+          item.item,
+          item.sourceWeightId,
+          item.quantity,
+          session,
+        );
+      }
+    }
+  }
+
   static findAddress(user, addressId) {
     if (typeof user.addresses?.id === 'function') {
       return user.addresses.id(addressId);
@@ -121,6 +137,152 @@ export class OrderService {
           ? null
           : cart.instalmentCompany,
     };
+  }
+
+  static parseDeliverySlotDate(date, time) {
+    const [day, month, year] = date.split('/').map(Number);
+    const [hour, minute = 0] = String(time).split(':').map(Number);
+    return new Date(
+      Date.UTC(year, month - 1, day, hour, minute) -
+        SHIPPING.UTC_OFFSET_MINUTES * 60 * 1000,
+    );
+  }
+
+  static async getPreparedDeliveryWindow({
+    deliveryServiceId,
+    deliveryDateId,
+    deliveryTimeSlotId,
+    address,
+  }) {
+    const available = await DeliveryServiceService.findAvailableByCoordinates(
+      address.latLng,
+    );
+    const service = available.find(
+      ({ id }) => id.toString() === deliveryServiceId.toString(),
+    );
+    if (!service) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'سرویس ارسال انتخاب‌شده در دسترس نیست',
+        code: ERROR_CODES.ORDER_INVALID_CART,
+      });
+    }
+    const date = service.availability.find(
+      ({ date: value }) => value === deliveryDateId,
+    );
+    const slot = date?.availableTimes.find(
+      ({ start, end }) =>
+        `${deliveryDateId}-${start}-${end}` === deliveryTimeSlotId,
+    );
+    if (!slot) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'بازه زمانی ارسال انتخاب‌شده معتبر نیست',
+        code: ERROR_CODES.ORDER_INVALID_CART,
+      });
+    }
+    const startsAt = this.parseDeliverySlotDate(deliveryDateId, slot.start);
+    const endsAt = this.parseDeliverySlotDate(deliveryDateId, slot.end);
+    const shippingPrice =
+      service.calculatedPricePerKilometer + service.packingPrice;
+    return {
+      id: deliveryTimeSlotId,
+      startsAt,
+      endsAt,
+      countryCode: SHIPPING.COUNTRY_CODE,
+      timezone: SHIPPING.TIME_ZONE,
+      label: `${date.weekday_fa} ${deliveryDateId}، ${slot.start} تا ${slot.end}`,
+      shippingPrice,
+      provider: service.title,
+    };
+  }
+
+  static async prepareOrder(actor, selection) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const session = await OrderModel.db.startSession();
+    let transactionError;
+    let order;
+    try {
+      await session.withTransaction(async () => {
+        // MongoDB sessions do not support concurrent operations inside one
+        // transaction, so every session-bound query remains sequential.
+        const cart = await UserService.getCartItems(actor, session);
+        const user = await UserService.findById(userId, true, session);
+        if (!cart?.items?.length) this.validateCart(cart);
+        const address = this.findAddress(user, selection.addressId);
+        if (!address) {
+          setErrorResponse(STATUES.NO_ACCESS, {
+            message: 'نشانی انتخاب‌شده متعلق به کاربر نیست',
+            code: ERROR_CODES.ORDER_ACCESS_DENIED,
+          });
+        }
+        const deliveryWindow = await this.getPreparedDeliveryWindow({
+          ...selection,
+          address,
+        });
+        const paymentExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        const snapshotCart = {
+          ...cart,
+          userAddress: address._id,
+          deliveryWindow,
+          shippingPrice: deliveryWindow.shippingPrice,
+          paymentType: cart.paymentType || CART_PAYMENT_TYPES.DIRECT,
+          shippingInfo: {},
+        };
+        this.validateCart({
+          ...snapshotCart,
+          deliveryQuote: {
+            id: 'prepared-order',
+            expiresAt: paymentExpiresAt,
+            countryCode: SHIPPING.COUNTRY_CODE,
+            timezone: SHIPPING.TIME_ZONE,
+            addressId: address._id,
+            options: [deliveryWindow],
+          },
+          deliveringDateToShipping: deliveryWindow.startsAt,
+        });
+        await this.decrementProductInventory(snapshotCart, session);
+        order = await this.createWithUniqueIdentifiers(
+          {
+            ...this.buildOrderSnapshot(userId, snapshotCart, address, ''),
+            deliveringDateToShipping: deliveryWindow.startsAt,
+            paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
+            paymentExpiresAt,
+            inventoryReservationState: ORDER_RESERVATION_STATES.RESERVED,
+          },
+          session,
+        );
+      });
+    } catch (error) {
+      transactionError = error;
+    }
+    try {
+      await session.endSession();
+    } catch (sessionError) {
+      if (!transactionError) throw sessionError;
+      if (!transactionError.cause) transactionError.cause = sessionError;
+    }
+    if (transactionError) throw transactionError;
+    return order;
+  }
+
+  static async releasePreparedOrderReservation(orderId, session) {
+    const order = await OrderModel.findOne({
+      _id: orderId,
+      inventoryReservationState: ORDER_RESERVATION_STATES.RESERVED,
+      paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
+    }).session(session);
+    if (!order) return null;
+    await this.releaseProductInventory(order.items, session);
+    return OrderModel.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          inventoryReservationState: ORDER_RESERVATION_STATES.RELEASED,
+          inventoryReleasedAt: new Date(),
+          paymentStatus: ORDER_PAYMENT_STATUSES.FAILED,
+        },
+      },
+      { returnDocument: 'after', runValidators: true, session },
+    );
   }
 
   static async createCheckoutSnapshot(actor) {

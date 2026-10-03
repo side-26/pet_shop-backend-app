@@ -54,20 +54,49 @@ export class PaymentService {
     return order.totalPrice - order.discountPrice + order.shippingPrice;
   }
 
-  static async requestPayment(actor) {
+  static async requestPayment(actor, orderId) {
     const userId = this.getAuthenticatedUserId(actor);
-    const checkoutSnapshot = await OrderService.createCheckoutSnapshot(actor);
+    const order = await OrderModel.findOne({ _id: orderId, user: userId });
+    if (!order) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'سفارش یافت نشد',
+        code: ERROR_CODES.PAYMENT_ORDER_NOT_FOUND,
+      });
+    }
+    if (order.paymentStatus !== ORDER_PAYMENT_STATUSES.PENDING) {
+      setErrorResponse(STATUES.CONFLICT, {
+        message: 'این سفارش در وضعیت قابل پرداخت نیست',
+        code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
+      });
+    }
+    if (!order.paymentExpiresAt || order.paymentExpiresAt <= new Date()) {
+      await this.expirePreparedOrder(order._id);
+      setErrorResponse(STATUES.EXPIRED, {
+        message: 'مهلت پرداخت سفارش منقضی شده است',
+        code: ERROR_CODES.PAYMENT_EXPIRED,
+      });
+    }
+    const activePayment = await PaymentModel.findOne({
+      order: order._id,
+      status: PAYMENT_STATUSES.PENDING,
+    });
+    if (activePayment) {
+      setErrorResponse(STATUES.CONFLICT, {
+        message: 'برای این سفارش درخواست پرداخت فعال وجود دارد',
+        code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
+      });
+    }
 
     const authority = crypto
       .randomBytes(PAYMENT_REQUEST.AUTHORITY_BYTES)
       .toString('hex');
     const payment = await PaymentModel.create({
       user: userId,
-      amount: this.getOrderFinalPrice(checkoutSnapshot.order),
-      checkoutSnapshot,
+      order: order._id,
+      amount: this.getOrderFinalPrice(order),
       authority,
       status: PAYMENT_STATUSES.PENDING,
-      expiresAt: new Date(Date.now() + PAYMENT_REQUEST.EXPIRATION_MS),
+      expiresAt: order.paymentExpiresAt,
     });
     const gatewayUrl = new URL(getPaymentGatewayUrl());
     gatewayUrl.searchParams.set('authority', authority);
@@ -77,6 +106,30 @@ export class PaymentService {
       authority,
       gatewayUrl: gatewayUrl.toString(),
     };
+  }
+
+  static async expirePreparedOrder(orderId) {
+    const session = await PaymentModel.db.startSession();
+    let transactionError;
+    try {
+      await session.withTransaction(async () => {
+        await PaymentModel.updateMany(
+          { order: orderId, status: PAYMENT_STATUSES.PENDING },
+          { $set: { status: PAYMENT_STATUSES.FAILED } },
+          { session },
+        );
+        await OrderService.releasePreparedOrderReservation(orderId, session);
+      });
+    } catch (error) {
+      transactionError = error;
+    }
+    try {
+      await session.endSession();
+    } catch (sessionError) {
+      if (!transactionError) throw sessionError;
+      if (!transactionError.cause) transactionError.cause = sessionError;
+    }
+    if (transactionError) throw transactionError;
   }
 
   static async getUserPayment(actor, paymentId) {
@@ -136,7 +189,7 @@ export class PaymentService {
 
   static async payGatewayPayment(authority) {
     const payment = await PaymentModel.findOne({ authority })
-      .select('_id status expiresAt checkoutSnapshot')
+      .select('_id order status expiresAt')
       .lean();
     if (!payment) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -145,10 +198,20 @@ export class PaymentService {
       });
     }
     if (payment.expiresAt <= new Date()) {
+      await this.expirePreparedOrder(payment.order);
       setErrorResponse(STATUES.EXPIRED, {
         message: 'مهلت انجام پرداخت منقضی شده است',
         code: ERROR_CODES.PAYMENT_EXPIRED,
       });
+    }
+    if (payment.status === PAYMENT_STATUSES.PAID) {
+      return {
+        success: true,
+        callbackUrl: getFrontendPaymentResultUrl().replace(
+          ':authority',
+          encodeURIComponent(authority),
+        ),
+      };
     }
     if (payment.status !== PAYMENT_STATUSES.PENDING) {
       setErrorResponse(STATUES.CONFLICT, {
@@ -157,14 +220,30 @@ export class PaymentService {
       });
     }
     const session = await PaymentModel.db.startSession();
+    let transactionError;
     try {
       await session.withTransaction(async () => {
         const referenceId = crypto.randomUUID();
-        const order = await OrderService.createOrderFromCheckout(
-          payment.checkoutSnapshot,
-          referenceId,
-          session,
+        const order = await OrderModel.findOneAndUpdate(
+          {
+            _id: payment.order,
+            paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
+            paymentExpiresAt: { $gt: new Date() },
+          },
+          {
+            $set: {
+              paymentStatus: ORDER_PAYMENT_STATUSES.PAID,
+              paymentTrackingId: referenceId,
+            },
+          },
+          { returnDocument: 'after', runValidators: true, session },
         );
+        if (!order) {
+          setErrorResponse(STATUES.CONFLICT, {
+            message: 'این سفارش در وضعیت قابل پرداخت نیست',
+            code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
+          });
+        }
         const paidPayment = await this.markAsPaid(payment._id, {
           referenceId,
           paidAt: new Date(),
@@ -178,9 +257,16 @@ export class PaymentService {
           });
         }
       });
-    } finally {
-      await session.endSession();
+    } catch (error) {
+      transactionError = error;
     }
+    try {
+      await session.endSession();
+    } catch (sessionError) {
+      if (!transactionError) throw sessionError;
+      if (!transactionError.cause) transactionError.cause = sessionError;
+    }
+    if (transactionError) throw transactionError;
     return {
       success: true,
       callbackUrl: getFrontendPaymentResultUrl().replace(
@@ -217,13 +303,7 @@ export class PaymentService {
         code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
       });
     }
-    if (payment.order) {
-      await OrderModel.findByIdAndUpdate(
-        payment.order,
-        { $set: { paymentStatus: ORDER_PAYMENT_STATUSES.FAILED } },
-        { runValidators: true },
-      );
-    }
+    if (payment.order) await this.expirePreparedOrder(payment.order);
     setErrorResponse(STATUES.BAD_REQUEST, {
       message: 'پرداخت ناموفق بود و سفارش لغو شد',
     });

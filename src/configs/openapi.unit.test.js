@@ -1,12 +1,16 @@
 import { readFileSync } from 'fs';
 
 import { RATE_LIMIT, STATUES } from './constants.js';
+import { API_ROUTE_METHODS } from './routeMethods.config.js';
 
 const openapiDocument = JSON.parse(
   readFileSync('src/configs/openapi.json', 'utf8'),
 );
 const userRouterCollections = new Set(['users', 'cart', 'wishlist']);
 const httpMethods = ['get', 'post', 'put', 'patch', 'delete'];
+const expectedUserRouterOperationCount = API_ROUTE_METHODS.filter(({ path }) =>
+  userRouterCollections.has(path.split('/').filter(Boolean)[0]),
+).reduce((count, { methods }) => count + methods.length, 0);
 
 const userRouterOperations = Object.entries(openapiDocument.paths).flatMap(
   ([apiPath, pathItem]) => {
@@ -28,7 +32,7 @@ const getOperation = (apiPath, method) =>
 
 describe('users-router OpenAPI rate-limit contracts', () => {
   test('documents a 429 response for every users-router operation', () => {
-    expect(userRouterOperations).toHaveLength(28);
+    expect(userRouterOperations).toHaveLength(expectedUserRouterOperationCount);
 
     userRouterOperations.forEach(({ operation }) => {
       expect(
