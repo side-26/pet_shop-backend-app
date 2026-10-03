@@ -40,6 +40,11 @@ import { PaymentService } from './payments.service.js';
 describe('PaymentService', () => {
   const userId = '65a4de97aff1fbb38c437952';
   const orderId = '65a4de97aff1fbb38c437953';
+  const paymentGatewayEnvironment = {
+    PAYMENT_GETWAY_URL: process.env.PAYMENT_GETWAY_URL,
+    FRONTEND_APP_URL: process.env.FRONTEND_APP_URL,
+    FRONTEND_PAYMENT_RESULT_URL: process.env.FRONTEND_PAYMENT_RESULT_URL,
+  };
   const actor = { userId, role: 'customer' };
   const data = {
     order: orderId,
@@ -47,6 +52,20 @@ describe('PaymentService', () => {
     authority: 'AUTH-123',
     expiresAt: new Date('2099-01-01T00:00:00.000Z'),
   };
+
+  beforeAll(() => {
+    process.env.PAYMENT_GETWAY_URL = 'http://localhost:3001/pet-shop-app';
+    process.env.FRONTEND_APP_URL = 'http://localhost:3000';
+    process.env.FRONTEND_PAYMENT_RESULT_URL =
+      'http://localhost:3000/order/result/:authority';
+  });
+
+  afterAll(() => {
+    for (const [name, value] of Object.entries(paymentGatewayEnvironment)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  });
 
   beforeEach(() => jest.clearAllMocks());
 

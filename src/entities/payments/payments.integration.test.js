@@ -34,6 +34,11 @@ describe('Payment API', () => {
   let app;
   let user;
   let order;
+  let orderIdentifier = 0;
+  const paymentGatewayEnvironment = {
+    PAYMENT_GETWAY_URL: process.env.PAYMENT_GETWAY_URL,
+    FRONTEND_APP_URL: process.env.FRONTEND_APP_URL,
+  };
 
   const createUser = async (phoneNumber) =>
     UserModel.collection.insertOne({
@@ -46,9 +51,12 @@ describe('Payment API', () => {
     });
 
   const createOrder = async (userId) => {
+    const identifier = String(++orderIdentifier).padStart(9, '0');
     const document = {
       _id: new mongoose.Types.ObjectId(),
       user: userId,
+      trackingCode: identifier,
+      orderNumber: identifier,
       totalPrice: 1000,
       discountPrice: 0,
       shippingPrice: 0,
@@ -66,10 +74,19 @@ describe('Payment API', () => {
   });
 
   beforeAll(() => {
+    process.env.PAYMENT_GETWAY_URL = 'http://localhost:3001/pet-shop-app';
+    process.env.FRONTEND_APP_URL = 'http://localhost:3000';
     app = express();
     app.use(express.json());
     app.use('/api', paymentRoutes);
     app.use(errorHandler);
+  });
+
+  afterAll(() => {
+    for (const [name, value] of Object.entries(paymentGatewayEnvironment)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
   });
 
   beforeEach(async () => {
@@ -194,7 +211,7 @@ describe('Payment API', () => {
     const customerUpdate = await request(app)
       .patch(`/api/payments/${payment._id}/status`)
       .set('Authorization', 'Bearer token')
-      .send({ status: PAYMENT_STATUSES.COMPLETED });
+      .send({ status: PAYMENT_STATUSES.PAID });
     expect(customerUpdate.status).toBe(STATUES.NO_ACCESS);
 
     global.__PAYMENT_TEST_ROLE__ = ROLES.ADMIN;
@@ -202,12 +219,12 @@ describe('Payment API', () => {
       .patch(`/api/payments/${payment._id}/status`)
       .set('Authorization', 'Bearer token')
       .send({
-        status: PAYMENT_STATUSES.COMPLETED,
+        status: PAYMENT_STATUSES.PAID,
         gatewayReferenceId: 'REF-1',
       });
     expect(update.status).toBe(STATUES.SUCCESS);
     expect(update.body.data).toMatchObject({
-      status: PAYMENT_STATUSES.COMPLETED,
+      status: PAYMENT_STATUSES.PAID,
       gatewayReferenceId: 'REF-1',
     });
     expect(update.body.data.paidAt).toBeTruthy();
