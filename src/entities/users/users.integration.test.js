@@ -2043,6 +2043,33 @@ describe('User API - Integration Tests', () => {
       return item;
     };
 
+    test('applies the ten-request one-minute policy to cart reads', async () => {
+      mockRedisRateLimitConsume.mockResolvedValueOnce({
+        allowed: true,
+        current: 1,
+        remaining: RATE_LIMIT.CART_ALL_MAX_REQUESTS - 1,
+        limit: RATE_LIMIT.CART_ALL_MAX_REQUESTS,
+        retryAfter: RATE_LIMIT.CART_WINDOW_SECONDS,
+      });
+
+      const response = await request(app)
+        .get('/api/cart/all')
+        .set('Authorization', 'Bearer token');
+
+      expect(response.status).toBe(STATUES.SUCCESS);
+      expect(mockRedisRateLimitConsume).toHaveBeenCalledWith({
+        key: expect.stringContaining('rate-limit:users:GET:/api/cart/all:'),
+        limit: RATE_LIMIT.CART_ALL_MAX_REQUESTS,
+        window: RATE_LIMIT.CART_WINDOW_SECONDS,
+      });
+      expect(response.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.CART_ALL_MAX_REQUESTS),
+      );
+      expect(response.headers['ratelimit-remaining']).toBe(
+        String(RATE_LIMIT.CART_ALL_MAX_REQUESTS - 1),
+      );
+    });
+
     test('creates the structured cart with safe checkout defaults', async () => {
       const user = await UserModel.findById(testUser._id);
       expect(user.cart.toObject()).toMatchObject({

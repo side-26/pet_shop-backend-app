@@ -137,6 +137,20 @@ const getUserRouteRateLimitPolicy = (apiPath) => {
     };
   }
 
+  if (apiPath === '/cart/all') {
+    return {
+      limit: RATE_LIMIT.CART_ALL_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    };
+  }
+
+  if (apiPath === '/cart/checkout') {
+    return {
+      limit: RATE_LIMIT.CART_CHECKOUT_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    };
+  }
+
   return {
     limit: RATE_LIMIT.USER_MAX_REQUESTS,
     window: RATE_LIMIT.USER_WINDOW_SECONDS,

@@ -55,6 +55,13 @@ jest.mock('#entities/pets/pets.service.js', () => ({
   PetService: { findById: jest.fn(), findCustomerById: jest.fn() },
 }));
 
+jest.mock('#entities/deliveryServices/deliveryServices.service.js', () => ({
+  DeliveryServiceService: {
+    calculateQuote: jest.fn(),
+    findById: jest.fn(),
+  },
+}));
+
 jest.mock('../../integrations/shipping/shipping.service.js', () => ({
   shippingService: { createDeliveryQuote: jest.fn() },
 }));
@@ -190,6 +197,7 @@ import {
 } from '#configs/constants.js';
 import logger from '#configs/logger.js';
 import { PetService } from '#entities/pets/pets.service.js';
+import { DeliveryServiceService } from '#entities/deliveryServices/deliveryServices.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
 import { getPaginationData, verifyRefreshToken } from '#utils/helpers.js';
@@ -1918,6 +1926,43 @@ describe('UserService - Unit Tests', () => {
     expect(populate).toHaveBeenCalledWith(
       expect.objectContaining({ path: 'cart.items.item' }),
     );
+  });
+
+  test('calculates a checkout quote from the owned address and enabled delivery service', async () => {
+    const address = {
+      _id: '65a4de97aff1fbb38c437953',
+      latLng: [51.4, 35.7],
+    };
+    mockUser.addresses = { id: jest.fn(() => address) };
+    jest.spyOn(UserService, 'getCartItems').mockResolvedValue(mockUser.cart);
+    jest.spyOn(UserService, 'findById').mockResolvedValue(mockUser);
+    DeliveryServiceService.findById.mockResolvedValue({
+      basePrice: 30,
+      packingPrice: 20,
+      isEnable: true,
+    });
+    DeliveryServiceService.calculateQuote.mockReturnValue({
+      calculatedPricePerKilometer: 50,
+    });
+
+    await expect(
+      UserService.getCartCheckout(mockActor, {
+        addressId: address._id,
+        deliveryServiceId: '65a4de97aff1fbb38c437954',
+      }),
+    ).resolves.toEqual({
+      itemsPrice: 200,
+      packingPrice: 20,
+      discountPrice: 20,
+      shippingPrice: 80,
+      payableAmount: 280,
+    });
+    expect(DeliveryServiceService.calculateQuote).toHaveBeenCalledWith(
+      expect.objectContaining({ isEnable: true }),
+      address.latLng,
+    );
+    UserService.getCartItems.mockRestore();
+    UserService.findById.mockRestore();
   });
 
   test('creates and persists delivery-window options for an owned address', async () => {

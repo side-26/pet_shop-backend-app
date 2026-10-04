@@ -49,6 +49,7 @@ The add schema accepts `itemId`, `itemType`, `quantity`, and required `weightId`
 - `POST /api/cart/add` adds a new item or increases an existing quantity.
 - `DELETE /api/cart/delete/:id` deletes by embedded cart-item `_id` and recalculates pricing.
 - `GET /api/cart/all` populates useful Product/Pet fields and refreshes pricing.
+- `GET /api/cart/checkout?addressId=…&deliveryServiceId=…` calculates the current cart's item, packaging, discount, shipping, and payable amounts without creating an Order or changing the Cart.
 - `POST /api/cart/delivery-windows` creates delivery options for an owned Iranian address.
 - `PATCH /api/cart/delivery-window` selects an unexpired quoted option.
 - `DELETE /api/cart/empty` clears items, prices, and all delivery quote/selection metadata.

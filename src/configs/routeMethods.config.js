@@ -96,6 +96,7 @@ export const API_ROUTE_METHODS = [
   { path: BREED_ROUTES.breedsRange, methods: [put] },
   { path: USER_ROUTES.cartAdd, methods: [post] },
   { path: USER_ROUTES.cartAll, methods: [get] },
+  { path: USER_ROUTES.cartCheckout, methods: [get] },
   { path: USER_ROUTES.cartItems, methods: [get] },
   { path: USER_ROUTES.cartDeliveryWindow, methods: [patch] },
   { path: USER_ROUTES.cartDeliveryWindows, methods: [post] },

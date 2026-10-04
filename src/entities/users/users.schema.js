@@ -141,6 +141,11 @@ export const createDeliveryQuoteSchema = object({
   idempotencyKey: idempotencyKeySchema,
 }).strict();
 
+export const cartCheckoutQuerySchema = object({
+  addressId: mongoObjectIdSchema,
+  deliveryServiceId: mongoObjectIdSchema,
+}).strict();
+
 export const selectDeliveryWindowSchema = object({
   quoteId: string().trim().min(1).max(100),
   deliveryWindowId: string().trim().min(1).max(100),

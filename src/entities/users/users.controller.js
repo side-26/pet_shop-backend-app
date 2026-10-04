@@ -11,6 +11,7 @@ import {
   userChangePasswordFormBodyValidation,
   addUserAddressSchema,
   addWishlistItemSchema,
+  cartCheckoutQuerySchema,
   cartEntryIdSchema,
   cartIdempotencyKeySchema,
   createDeliveryQuoteSchema,
@@ -259,6 +260,16 @@ export const getCartItemsController = async (req, res, next) => {
   try {
     const cart = await UserService.getCartItems(req.user);
     setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getCartCheckoutController = async (req, res, next) => {
+  try {
+    const query = returnFormValidation(cartCheckoutQuerySchema, req.query);
+    const checkout = await UserService.getCartCheckout(req.user, query);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: checkout });
   } catch (error) {
     onCatchPromiseController(error, next);
   }

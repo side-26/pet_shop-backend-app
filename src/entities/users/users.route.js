@@ -23,6 +23,7 @@ import {
   getAllUsersListPaginateController,
   getCurrentUserController,
   getCartItemsController,
+  getCartCheckoutController,
   getCartItemDetailsController,
   getUserByIdController,
   getUserAddressListController,
@@ -57,6 +58,14 @@ const loginUserRateLimit = userRateLimiter.limit({
 });
 const frequentUserRateLimit = userRateLimiter.limit({
   limit: RATE_LIMIT.CART_MAX_REQUESTS,
+  window: RATE_LIMIT.CART_WINDOW_SECONDS,
+});
+const cartAllRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.CART_ALL_MAX_REQUESTS,
+  window: RATE_LIMIT.CART_WINDOW_SECONDS,
+});
+const cartCheckoutRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.CART_CHECKOUT_MAX_REQUESTS,
   window: RATE_LIMIT.CART_WINDOW_SECONDS,
 });
 
@@ -294,6 +303,7 @@ router.post(
   frequentUserRateLimit,
   authenticated,
   /*
+    #swagger.path = '/cart/checkout'
     #swagger.tags = ['Cart']
     #swagger.summary = "Add an item to the authenticated user's cart"
     #swagger.security = [{ "bearerAuth": [] }]
@@ -322,15 +332,32 @@ router.delete(
 );
 router.get(
   USER_ROUTES.cartAll,
-  frequentUserRateLimit,
+  cartAllRateLimit,
   authenticated,
   /*
     #swagger.tags = ['Cart']
     #swagger.summary = "Get the authenticated user's cart"
     #swagger.security = [{ "bearerAuth": [] }]
     #swagger.responses[200] = { description: 'Current cart', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { $ref: '#/components/schemas/Cart' } } } } } }
+    #swagger.responses[429] = { description: 'Too many requests' }
   */
   getCartItemsController,
+);
+router.get(
+  USER_ROUTES.cartCheckout,
+  cartCheckoutRateLimit,
+  authenticated,
+  /*
+    #swagger.tags = ['Cart']
+    #swagger.summary = 'Calculate the authenticated user checkout price'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['addressId'] = { in: 'query', required: true, schema: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' } }
+    #swagger.parameters['deliveryServiceId'] = { in: 'query', required: true, schema: { type: 'string', pattern: '^[0-9a-fA-F]{24}$' } }
+    #swagger.responses[200] = { description: 'Server-calculated item, packaging, discount, shipping, and payable amounts' }
+    #swagger.responses[401] = { description: 'Authentication required' }
+    #swagger.responses[422] = { description: 'Empty cart, invalid parameters, or unavailable delivery service' }
+  */
+  getCartCheckoutController,
 );
 router.get(
   USER_ROUTES.cartItems,

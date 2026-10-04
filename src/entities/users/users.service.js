@@ -21,6 +21,7 @@ import {
   getTemporaryTokenSecret,
 } from '#configs/env.config.js';
 import logger from '#configs/logger.js';
+import { DeliveryServiceService } from '#entities/deliveryServices/deliveryServices.service.js';
 import { PetService } from '#entities/pets/pets.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { ObjectStorageService } from '#services/objectStorage.service.js';
@@ -1118,6 +1119,48 @@ export class UserService {
   static async getCartItems(actor, session) {
     const userId = this.getAuthenticatedUserId(actor);
     return this.recalculateCart(userId, session);
+  }
+
+  static async getCartCheckout(actor, { addressId, deliveryServiceId }) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const [cart, user, deliveryService] = await Promise.all([
+      this.getCartItems(actor),
+      this.findById(userId),
+      DeliveryServiceService.findById(deliveryServiceId),
+    ]);
+    if (!cart.items.length) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'سبد خرید برای محاسبه مبلغ قابل پرداخت خالی است',
+        code: ERROR_CODES.SHIPPING_EMPTY_CART,
+      });
+    }
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      setErrorResponse(STATUES.NO_ACCESS, {
+        message: 'نشانی انتخاب‌شده متعلق به کاربر نیست',
+        code: ERROR_CODES.SHIPPING_ADDRESS_NOT_FOUND,
+      });
+    }
+    if (!deliveryService.isEnable) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'سرویس ارسال انتخاب‌شده در دسترس نیست',
+        code: ERROR_CODES.DELIVERY_SERVICE_NOT_FOUND,
+      });
+    }
+    const { calculatedPricePerKilometer } =
+      DeliveryServiceService.calculateQuote(deliveryService, address.latLng);
+    const shippingPrice =
+      deliveryService.basePrice + calculatedPricePerKilometer;
+    const packingPrice = deliveryService.packingPrice;
+
+    return {
+      itemsPrice: cart.totalPrice,
+      packingPrice,
+      discountPrice: cart.discountPrice,
+      shippingPrice,
+      payableAmount:
+        cart.totalPrice - cart.discountPrice + packingPrice + shippingPrice,
+    };
   }
 
   static async getCartItemDetails(actor) {

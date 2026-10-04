@@ -47,6 +47,7 @@ jest.mock('./users.controller.js', () => ({
   getAllUsersListPaginateController: jest.fn(),
   getCurrentUserController: jest.fn(),
   getCartItemDetailsController: jest.fn(),
+  getCartCheckoutController: jest.fn(),
   getCartItemsController: jest.fn(),
   getUserAddressListController: jest.fn(),
   getUserByIdController: jest.fn(),
@@ -72,6 +73,7 @@ import { USER_ROUTES } from './route.path.js';
 import {
   createDeliveryQuoteController,
   getCartItemDetailsController,
+  getCartCheckoutController,
   loginUserController,
   logoutUserController,
   selectDeliveryWindowController,
@@ -87,6 +89,9 @@ describe('users route policies', () => {
       rateLimiter.limit.mock.results[1].value;
     const loginRateLimitMiddleware = rateLimiter.limit.mock.results[2].value;
     const cartRateLimitMiddleware = rateLimiter.limit.mock.results[3].value;
+    const cartAllRateLimitMiddleware = rateLimiter.limit.mock.results[4].value;
+    const cartCheckoutRateLimitMiddleware =
+      rateLimiter.limit.mock.results[5].value;
     const registeredRoutes = [
       ...mockRouter.delete.mock.calls,
       ...mockRouter.get.mock.calls,
@@ -111,6 +116,12 @@ describe('users route policies', () => {
     );
     const cartItemsRoute = registeredRoutes.find(
       ([path]) => path === USER_ROUTES.cartItems,
+    );
+    const cartAllRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.cartAll,
+    );
+    const cartCheckoutRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.cartCheckout,
     );
     const currentUserRoute = registeredRoutes.find(
       ([path]) => path === USER_ROUTES.usersCurrent,
@@ -144,7 +155,15 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.CART_MAX_REQUESTS,
       window: RATE_LIMIT.CART_WINDOW_SECONDS,
     });
-    expect(registeredRoutes).toHaveLength(30);
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(5, {
+      limit: RATE_LIMIT.CART_ALL_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(6, {
+      limit: RATE_LIMIT.CART_CHECKOUT_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    });
+    expect(registeredRoutes).toHaveLength(31);
     expect(standardRoutes).toHaveLength(20);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
@@ -178,6 +197,13 @@ describe('users route policies', () => {
       cartRateLimitMiddleware,
       authenticated,
       getCartItemDetailsController,
+    ]);
+    expect(cartAllRoute[1]).toBe(cartAllRateLimitMiddleware);
+    expect(cartCheckoutRoute).toEqual([
+      USER_ROUTES.cartCheckout,
+      cartCheckoutRateLimitMiddleware,
+      authenticated,
+      getCartCheckoutController,
     ]);
     expect(currentUserRoute[1]).toBe(cartRateLimitMiddleware);
   });
