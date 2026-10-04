@@ -98,8 +98,10 @@ export class PaymentService {
       status: PAYMENT_STATUSES.PENDING,
       expiresAt: order.paymentExpiresAt,
     });
-    const gatewayUrl = new URL(getPaymentGatewayUrl());
-    gatewayUrl.searchParams.set('authority', authority);
+    const gatewayUrl = new URL(
+      authority,
+      `${getPaymentGatewayUrl().replace(/\/+$/, '')}/`,
+    );
 
     return {
       paymentId: payment.id || payment._id.toString(),

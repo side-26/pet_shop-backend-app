@@ -1040,6 +1040,7 @@ export class UserService {
     );
     user.cart.totalPrice = prices.totalPrice;
     user.cart.discountPrice = prices.discountPrice;
+    // console.log('user', '---', user.cart.items?.length);
     return user.cart;
   }
 

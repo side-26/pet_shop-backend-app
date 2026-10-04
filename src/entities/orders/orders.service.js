@@ -205,8 +205,10 @@ export class OrderService {
         // MongoDB sessions do not support concurrent operations inside one
         // transaction, so every session-bound query remains sequential.
         const cart = await UserService.getCartItems(actor, session);
+        const cartData =
+          typeof cart.toObject === 'function' ? cart.toObject() : cart;
         const user = await UserService.findById(userId, true, session);
-        if (!cart?.items?.length) this.validateCart(cart);
+        if (!cartData?.items?.length) this.validateCart(cartData);
         const address = this.findAddress(user, selection.addressId);
         if (!address) {
           setErrorResponse(STATUES.NO_ACCESS, {
@@ -220,11 +222,12 @@ export class OrderService {
         });
         const paymentExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
         const snapshotCart = {
-          ...cart,
+          ...cartData,
+          items: cart.items,
           userAddress: address._id,
           deliveryWindow,
           shippingPrice: deliveryWindow.shippingPrice,
-          paymentType: cart.paymentType || CART_PAYMENT_TYPES.DIRECT,
+          paymentType: cartData.paymentType || CART_PAYMENT_TYPES.DIRECT,
           shippingInfo: {},
         };
         this.validateCart({

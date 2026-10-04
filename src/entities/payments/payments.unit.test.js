@@ -141,8 +141,7 @@ describe('PaymentService', () => {
     ).resolves.toEqual({
       paymentId: 'payment-id',
       authority: 'fixed-authority',
-      gatewayUrl:
-        'http://localhost:3001/pet-shop-app?authority=fixed-authority',
+      gatewayUrl: 'http://localhost:3001/pet-shop-app/fixed-authority',
     });
     expect(PaymentModel.create).toHaveBeenCalledWith(
       expect.objectContaining({

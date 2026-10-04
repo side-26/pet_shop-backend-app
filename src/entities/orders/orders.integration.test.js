@@ -34,12 +34,22 @@ jest.mock('#configs/logger.js', () => ({
   api: { request: jest.fn() },
 }));
 
+jest.mock('#entities/deliveryServices/deliveryServices.service.js', () => ({
+  DeliveryServiceService: { findAvailableByCoordinates: jest.fn() },
+}));
+
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
 
-import { ROLES, STATUES } from '#configs/constants.js';
+import {
+  ORDER_PAYMENT_STATUSES,
+  ORDER_RESERVATION_STATES,
+  ROLES,
+  STATUES,
+} from '#configs/constants.js';
+import { DeliveryServiceService } from '#entities/deliveryServices/deliveryServices.service.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
@@ -162,6 +172,12 @@ describe('Order API', () => {
       .set('Authorization', 'Bearer token')
       .send({ paymentTrackingId: 'PAYMENT-123' });
 
+  const prepareOrder = async (selection) =>
+    request(app)
+      .post('/api/orders/prepare')
+      .set('Authorization', 'Bearer token')
+      .send(selection);
+
   beforeAll(() => {
     app = express();
     app.use(express.json());
@@ -213,6 +229,51 @@ describe('Order API', () => {
     const clearedUser = await UserModel.findById(user._id);
     expect(clearedUser.cart.items).toHaveLength(0);
     expect(clearedUser.cart.totalPrice).toBe(0);
+  });
+
+  test('prepares an Order from the populated Mongoose Cart subdocument', async () => {
+    const product = await createCatalogItem(ProductModel, 'prepared-order');
+    await prepareCart([{ item: product, itemType: 'product', quantity: 1 }]);
+    const selection = {
+      addressId: user.addresses[0]._id.toString(),
+      deliveryServiceId: '65a4de97aff1fbb38c437956',
+      deliveryDateId: '06/10/2026',
+      deliveryTimeSlotId: '06/10/2026-18-20',
+    };
+    DeliveryServiceService.findAvailableByCoordinates.mockResolvedValue([
+      {
+        id: selection.deliveryServiceId,
+        title: 'ارسال آزمایشی',
+        calculatedPricePerKilometer: 100,
+        packingPrice: 50,
+        availability: [
+          {
+            date: selection.deliveryDateId,
+            weekday_fa: 'سه‌شنبه',
+            availableTimes: [{ start: '18', end: '20' }],
+          },
+        ],
+      },
+    ]);
+
+    const response = await prepareOrder(selection);
+
+    expect(response.status).toBe(STATUES.CREATED);
+    expect(response.body.data).toMatchObject({
+      orderId: expect.any(String),
+      payableAmount: 240,
+    });
+    const order = await OrderModel.findById(response.body.data.orderId);
+    expect(order.toObject()).toMatchObject({
+      paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
+      inventoryReservationState: ORDER_RESERVATION_STATES.RESERVED,
+      shippingPrice: 150,
+      deliveryWindow: expect.objectContaining({
+        id: selection.deliveryTimeSlotId,
+      }),
+    });
+    expect(order.items).toHaveLength(1);
+    expect((await UserModel.findById(user._id)).cart.items).toHaveLength(1);
   });
 
   test('historical item pricing and address survive source changes', async () => {

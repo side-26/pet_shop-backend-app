@@ -18,6 +18,10 @@ jest.mock('#entities/products/products.service.js', () => ({
   ProductService: { decrementWeightStock: jest.fn() },
 }));
 
+jest.mock('#entities/deliveryServices/deliveryServices.service.js', () => ({
+  DeliveryServiceService: { findAvailableByCoordinates: jest.fn() },
+}));
+
 jest.mock('#utils/helpers.js', () => ({
   getPaginationData: jest.fn(),
   setErrorResponse: jest.fn((statusCode, options = {}) => {
@@ -40,6 +44,7 @@ jest.mock('./orders.model.js', () => ({
 
 import { UserService } from '#entities/users/users.service.js';
 import { STATUES } from '#configs/constants.js';
+import { DeliveryServiceService } from '#entities/deliveryServices/deliveryServices.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { getPaginationData } from '#utils/helpers.js';
 
@@ -168,6 +173,71 @@ describe('OrderService', () => {
       OrderService.createOrderFromCart(actor, 'PAY-123'),
     ).rejects.toThrow('سبد خرید خالی است');
     expect(OrderModel.create).not.toHaveBeenCalled();
+  });
+
+  test('prepares an Order from a Mongoose Cart subdocument', async () => {
+    const selection = {
+      addressId,
+      deliveryServiceId: '65a4de97aff1fbb38c437956',
+      deliveryDateId: '06/10/2026',
+      deliveryTimeSlotId: '06/10/2026-18-20',
+    };
+    const mongooseCart = { items: cart.items, toObject: jest.fn(() => cart) };
+    const deliveryWindow = {
+      id: selection.deliveryTimeSlotId,
+      startsAt: new Date('2026-10-06T14:30:00.000Z'),
+      endsAt: new Date('2026-10-06T16:30:00.000Z'),
+      countryCode: 'IR',
+      timezone: 'Asia/Tehran',
+      label: 'سه‌شنبه 06/10/2026، 18 تا 20',
+      shippingPrice: 150,
+      provider: 'ارسال آزمایشی',
+    };
+    UserService.getCartItems.mockResolvedValue(mongooseCart);
+    UserService.findById.mockResolvedValue({ addresses: [address] });
+    DeliveryServiceService.findAvailableByCoordinates.mockResolvedValue([
+      {
+        id: selection.deliveryServiceId,
+        title: deliveryWindow.provider,
+        calculatedPricePerKilometer: 100,
+        packingPrice: 50,
+        availability: [
+          {
+            date: selection.deliveryDateId,
+            weekday_fa: 'سه‌شنبه',
+            availableTimes: [{ start: '18', end: '20' }],
+          },
+        ],
+      },
+    ]);
+    OrderModel.create.mockResolvedValue([{ _id: 'prepared-order-id' }]);
+
+    await expect(OrderService.prepareOrder(actor, selection)).resolves.toEqual({
+      _id: 'prepared-order-id',
+    });
+
+    expect(mongooseCart.toObject).toHaveBeenCalledTimes(1);
+    expect(ProductService.decrementWeightStock).toHaveBeenCalledWith(
+      cart.items[0].item._id,
+      cart.items[0].weight,
+      cart.items[0].quantity,
+      session,
+    );
+    expect(OrderModel.create).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({ item: cart.items[0].item._id }),
+          ]),
+          deliveryWindow: expect.objectContaining({
+            id: selection.deliveryTimeSlotId,
+            shippingPrice: 150,
+          }),
+          shippingPrice: 150,
+        }),
+      ],
+      { session },
+    );
   });
 
   test('rejects checkout when the delivery quote has expired', async () => {
