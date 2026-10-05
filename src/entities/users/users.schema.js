@@ -22,6 +22,8 @@ const iranianPhoneNumberSchema = string().regex(/^09\d{9}$/);
 const nationalCodeSchema = string().regex(/^\d{10}$/);
 const postalCodeSchema = string().regex(/^\d{10}$/);
 const mongoObjectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
+const latitudeSchema = number().min(-90).max(90);
+const longitudeSchema = number().min(-180).max(180);
 const birthDateSchema = string()
   .date()
   .refine((birthDate) => new Date(`${birthDate}T00:00:00.000Z`) <= new Date(), {
@@ -57,7 +59,7 @@ const addressFields = {
   province: string().trim().min(2),
   city: string().trim().min(2),
   detailAddress: string().trim().min(5),
-  latLng: tuple([number(), number()]),
+  latLng: tuple([latitudeSchema, longitudeSchema]),
   plate: string().trim().min(1),
   unit: string().trim().nullable().optional(),
   postalCode: postalCodeSchema,

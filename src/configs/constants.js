@@ -121,6 +121,11 @@ export const PAYMENT_STATUSES = {
   CANCELLED: 'cancelled',
 };
 
+export const TERMINAL_PAYMENT_FAILURE_STATUSES = [
+  PAYMENT_STATUSES.FAILED,
+  PAYMENT_STATUSES.CANCELLED,
+];
+
 export const ORDER_PAYMENT_STATUSES = {
   PENDING: 'pending_payment',
   PAID: 'paid',

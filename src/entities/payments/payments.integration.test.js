@@ -71,6 +71,7 @@ describe('Payment API', () => {
       totalPrice: 1000,
       discountPrice: 0,
       shippingPrice: 0,
+      items: [],
       paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
       paymentExpiresAt: new Date('2099-01-01T00:00:00.000Z'),
       inventoryReservationState: ORDER_RESERVATION_STATES.RESERVED,
@@ -174,6 +175,7 @@ describe('Payment API', () => {
     expect(response.body.data).toEqual({
       status: PAYMENT_STATUSES.PENDING,
       finalPrice: 950,
+      expiresAt: '2099-01-01T00:00:00.000Z',
       companyName: 'پت شاپ پرشین',
       appUrl: 'http://localhost:3000',
     });
@@ -182,6 +184,54 @@ describe('Payment API', () => {
       `/api/gateway/payments/${'b'.repeat(64)}`,
     );
     expect(missing.status).toBe(STATUES.NOT_FOUND);
+  });
+
+  test('expires a pending gateway authority after its expiry time', async () => {
+    const authority = 'c'.repeat(64);
+    await PaymentModel.create({
+      order: order._id,
+      user: user._id,
+      amount: 950,
+      authority,
+      status: PAYMENT_STATUSES.PENDING,
+      expiresAt: new Date(Date.now() - 1),
+    });
+
+    const response = await request(app).get(
+      `/api/gateway/payments/${authority}`,
+    );
+
+    expect(response.status).toBe(STATUES.EXPIRED);
+    expect(response.body).toMatchObject({
+      isSuccess: false,
+      message: 'مهلت انجام پرداخت منقضی شده است',
+    });
+    await expect(PaymentModel.findOne({ authority })).resolves.toMatchObject({
+      status: PAYMENT_STATUSES.FAILED,
+    });
+  });
+
+  test('releases a prepared order when management marks its payment as failed', async () => {
+    const payment = await PaymentModel.create({
+      order: order._id,
+      user: user._id,
+      amount: 950,
+      authority: 'd'.repeat(64),
+      status: PAYMENT_STATUSES.PENDING,
+      expiresAt: new Date('2099-01-01T00:00:00.000Z'),
+    });
+    global.__PAYMENT_TEST_ROLE__ = ROLES.ADMIN;
+
+    const response = await request(app)
+      .patch(`/api/payments/${payment._id}/status`)
+      .set('Authorization', 'Bearer token')
+      .send({ status: PAYMENT_STATUSES.FAILED });
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    await expect(OrderModel.findById(order._id)).resolves.toMatchObject({
+      paymentStatus: ORDER_PAYMENT_STATUSES.FAILED,
+      inventoryReservationState: ORDER_RESERVATION_STATES.RELEASED,
+    });
   });
 
   test('rejects malformed data and missing prepared Orders', async () => {

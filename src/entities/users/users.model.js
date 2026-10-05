@@ -23,7 +23,12 @@ const addressSchema = new mongoose.Schema({
       validator: (value) =>
         Array.isArray(value) &&
         value.length === 2 &&
-        value.every(Number.isFinite),
+        Number.isFinite(value[0]) &&
+        Number.isFinite(value[1]) &&
+        value[0] >= -90 &&
+        value[0] <= 90 &&
+        value[1] >= -180 &&
+        value[1] <= 180,
       message: 'مختصات نشانی باید شامل دو عدد باشد',
     },
   },

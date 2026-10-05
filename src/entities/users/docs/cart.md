@@ -40,7 +40,7 @@ totalPrice = Σ(item.price × quantity)
 discountPrice = Σ(item.price × quantity × item.discountPercentage / 100)
 ```
 
-`discountPrice` is the amount discounted, not the post-discount price. Shipping is excluded from both values. `GET /api/cart/checkout` calculates `shippingPrice` from the selected delivery service's distance price and returns `payableAmount = totalPrice - discountPrice + shippingPrice + packingPrice`; neither value is persisted.
+`discountPrice` is the amount discounted, not the post-discount price. Shipping is excluded from both values. Address `latLng` is stored as `[latitude, longitude]`; checkout converts it to `[longitude, latitude]` before calculating the selected delivery service's distance price. `GET /api/cart/checkout` returns `payableAmount = totalPrice - discountPrice + shippingPrice + packingPrice`; neither value is persisted.
 
 The add schema accepts `itemId`, `itemType`, `quantity`, and required `weightId` for products. Client-provided totals or checkout metadata are stripped by validation, so server-calculated values always win.
 

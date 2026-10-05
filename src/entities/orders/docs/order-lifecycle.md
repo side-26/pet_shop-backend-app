@@ -17,6 +17,12 @@ second Order or reserve stock again. Cancellation and expiry explicitly release
 the reservation exactly once, tracked on the Order. This requires a MongoDB
 deployment with transaction support (a replica set or sharded cluster).
 
+For legacy failed, cancelled, or expired payments whose orders still show an
+active reservation, run `npm run repair:failed-order-reservations -- --apply`.
+The repair only restores product-weight inventory because pet inventory has
+never been reserved by the order workflow. It skips paid and already-released
+orders.
+
 ## Identifiers
 
 - `orderNumber` is the public/business Order number.

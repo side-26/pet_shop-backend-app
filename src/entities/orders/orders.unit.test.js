@@ -216,6 +216,9 @@ describe('OrderService', () => {
       _id: 'prepared-order-id',
     });
 
+    expect(
+      DeliveryServiceService.findAvailableByCoordinates,
+    ).toHaveBeenCalledWith([51.3347, 35.7219]);
     expect(mongooseCart.toObject).toHaveBeenCalledTimes(1);
     expect(ProductService.decrementWeightStock).toHaveBeenCalledWith(
       cart.items[0].item._id,

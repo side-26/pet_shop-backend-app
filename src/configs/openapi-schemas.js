@@ -865,13 +865,14 @@ export const schemas = {
   },
   GatewayPaymentDetails: {
     type: 'object',
-    required: ['status', 'finalPrice', 'companyName', 'appUrl'],
+    required: ['status', 'finalPrice', 'expiresAt', 'companyName', 'appUrl'],
     properties: {
       status: {
         type: 'string',
         enum: ['pending', 'processing', 'completed', 'cancelled'],
       },
       finalPrice: { type: 'number', minimum: 0 },
+      expiresAt: { type: 'string', format: 'date-time' },
       companyName: { type: 'string', example: 'پت شاپ پرشین' },
       appUrl: { type: 'string', format: 'uri' },
     },

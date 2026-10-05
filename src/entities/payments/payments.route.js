@@ -30,6 +30,7 @@ router.get(
     #swagger.parameters['authority'] = { in: 'path', required: true, schema: { type: 'string', pattern: '^[a-fA-F0-9]{64}$' } }
     #swagger.responses[200] = { description: 'Gateway payment details' }
     #swagger.responses[404] = { description: 'Payment not found' }
+    #swagger.responses[410] = { description: 'Payment authority expired' }
   */
   getGatewayPaymentController,
 );

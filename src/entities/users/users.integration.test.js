@@ -1466,17 +1466,20 @@ describe('User API - Integration Tests', () => {
       expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
     });
 
-    test.each([[35.7219], [35.7219, '51.3347'], [35.7219, 51.3347, 1]])(
-      'rejects an address with an invalid latLng tuple',
-      async (latLng) => {
-        const response = await request(app)
-          .post('/api/users/addresses')
-          .set('Authorization', 'Bearer token')
-          .send(createAddressBody({ latLng }));
+    test.each([
+      [35.7219],
+      [35.7219, '51.3347'],
+      [35.7219, 51.3347, 1],
+      [91, 51.3347],
+      [35.7219, 181],
+    ])('rejects an address with an invalid latLng tuple', async (latLng) => {
+      const response = await request(app)
+        .post('/api/users/addresses')
+        .set('Authorization', 'Bearer token')
+        .send(createAddressBody({ latLng }));
 
-        expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
-      },
-    );
+      expect(response.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    });
 
     test('atomically enforces five addresses and unique subdocument ids', async () => {
       const responses = await Promise.all(

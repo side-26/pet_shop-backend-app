@@ -32,6 +32,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims. The session ID is internal and is never returned in the response.
 - `GET /users/current` returns the authenticated account summary: `userId`, name, phone number, role, avatar, `email`, `nationalCode`, `age`, and `birthDate`.
 - Preserve actor-versus-target authorization rules for profile and address operations.
+- Address `latLng` values are stored and accepted as `[latitude, longitude]`. Convert them to `[longitude, latitude]` before passing coordinates to delivery-service distance calculations.
 - Persist uploaded images as complete public URLs.
 - `PUT /users/edit-info` accepts editable personal fields `firstName`, `lastName`, `email`, `nationalCode`, `age`, and `birthDate`; `avatar` is accepted only as the multipart file, never as a body URL. Customers may edit only themselves; admins may additionally provide `userId` to target another account.
 - Only authenticated admins may permanently delete a user through `DELETE /api/users/:id`; successful deletion also attempts to remove the user's stored avatar without reversing the database deletion when storage cleanup fails.

@@ -34,6 +34,7 @@ import {
   setErrorResponse,
   verifyRefreshToken,
 } from '#utils/helpers.js';
+import { toLongitudeLatitude } from '#utils/coordinates.helpers.js';
 import { formatImageFile } from '#utils/image.helpers.js';
 
 import { RedisAuthSessionStore } from '../../infrastructure/redis/auth/redisAuthSession.store.js';
@@ -1181,7 +1182,10 @@ export class UserService {
       });
     }
     const { calculatedPricePerKilometer } =
-      DeliveryServiceService.calculateQuote(deliveryService, address.latLng);
+      DeliveryServiceService.calculateQuote(
+        deliveryService,
+        toLongitudeLatitude(address.latLng),
+      );
     const shippingPrice = calculatedPricePerKilometer;
     const packingPrice = deliveryService.packingPrice;
 

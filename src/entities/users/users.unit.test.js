@@ -1948,7 +1948,7 @@ describe('UserService - Unit Tests', () => {
   test('calculates a checkout quote from the owned address and enabled delivery service', async () => {
     const address = {
       _id: '65a4de97aff1fbb38c437953',
-      latLng: [51.4, 35.7],
+      latLng: [35.7, 51.4],
     };
     mockUser.addresses = { id: jest.fn(() => address) };
     jest.spyOn(UserService, 'getCartItems').mockResolvedValue(mockUser.cart);
@@ -1976,7 +1976,7 @@ describe('UserService - Unit Tests', () => {
     });
     expect(DeliveryServiceService.calculateQuote).toHaveBeenCalledWith(
       expect.objectContaining({ isEnable: true }),
-      address.latLng,
+      [51.4, 35.7],
     );
     UserService.getCartItems.mockRestore();
     UserService.findById.mockRestore();

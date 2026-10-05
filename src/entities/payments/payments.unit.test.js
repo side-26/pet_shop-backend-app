@@ -41,7 +41,7 @@ jest.mock('./payments.model.js', () => ({
   },
 }));
 
-import { PAYMENT_STATUSES, STATUES } from '#configs/constants.js';
+import { ERROR_CODES, PAYMENT_STATUSES, STATUES } from '#configs/constants.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { OrderService } from '#entities/orders/orders.service.js';
 import { getPaginationData } from '#utils/helpers.js';
@@ -205,6 +205,7 @@ describe('PaymentService', () => {
       lean: jest.fn().mockResolvedValue({
         status: PAYMENT_STATUSES.PENDING,
         amount: 950,
+        expiresAt: data.expiresAt,
       }),
     });
 
@@ -213,12 +214,44 @@ describe('PaymentService', () => {
     ).resolves.toEqual({
       status: PAYMENT_STATUSES.PENDING,
       finalPrice: 950,
+      expiresAt: data.expiresAt,
       companyName: 'پت شاپ پرشین',
       appUrl: 'http://localhost:3000',
     });
     expect(PaymentModel.findOne).toHaveBeenCalledWith({
       authority: 'a'.repeat(64),
     });
+  });
+
+  test('expires a pending gateway authority after its expiry time', async () => {
+    const session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn(),
+    };
+    PaymentModel.db.startSession.mockResolvedValue(session);
+    PaymentModel.findOne.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue({
+        order: orderId,
+        status: PAYMENT_STATUSES.PENDING,
+        amount: 950,
+        expiresAt: new Date(Date.now() - 1),
+      }),
+    });
+    PaymentModel.updateMany.mockResolvedValue({});
+    OrderService.releasePreparedOrderReservation.mockResolvedValue(null);
+
+    await expect(
+      PaymentService.getGatewayPayment('a'.repeat(64)),
+    ).rejects.toMatchObject({
+      statusCode: STATUES.EXPIRED,
+      code: ERROR_CODES.PAYMENT_EXPIRED,
+    });
+    expect(PaymentModel.updateMany).toHaveBeenCalledWith(
+      { order: orderId, status: PAYMENT_STATUSES.PENDING },
+      { $set: { status: PAYMENT_STATUSES.FAILED } },
+      { session },
+    );
   });
 
   test('reports an unknown gateway authority as not found', async () => {

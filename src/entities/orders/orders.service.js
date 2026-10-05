@@ -12,6 +12,7 @@ import {
 import { UserService } from '#entities/users/users.service.js';
 import { ProductService } from '#entities/products/products.service.js';
 import { DeliveryServiceService } from '#entities/deliveryServices/deliveryServices.service.js';
+import { toLongitudeLatitude } from '#utils/coordinates.helpers.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
@@ -155,7 +156,7 @@ export class OrderService {
     address,
   }) {
     const available = await DeliveryServiceService.findAvailableByCoordinates(
-      address.latLng,
+      toLongitudeLatitude(address.latLng),
     );
     const service = available.find(
       ({ id }) => id.toString() === deliveryServiceId.toString(),

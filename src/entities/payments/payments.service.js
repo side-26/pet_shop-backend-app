@@ -5,6 +5,7 @@ import {
   PAYMENT_GATEWAY,
   PAYMENT_REQUEST,
   PAYMENT_STATUSES,
+  TERMINAL_PAYMENT_FAILURE_STATUSES,
   ORDER_PAYMENT_STATUSES,
   STATUES,
 } from '#configs/constants.js';
@@ -151,7 +152,7 @@ export class PaymentService {
 
   static async getGatewayPayment(authority) {
     const payment = await PaymentModel.findOne({ authority })
-      .select('status amount')
+      .select('order status amount expiresAt')
       .lean();
     if (!payment) {
       setErrorResponse(STATUES.NOT_FOUND, {
@@ -159,9 +160,20 @@ export class PaymentService {
         code: ERROR_CODES.PAYMENT_NOT_FOUND,
       });
     }
+    if (
+      payment.status === PAYMENT_STATUSES.PENDING &&
+      payment.expiresAt <= new Date()
+    ) {
+      await this.expirePreparedOrder(payment.order);
+      setErrorResponse(STATUES.EXPIRED, {
+        message: 'مهلت انجام پرداخت منقضی شده است',
+        code: ERROR_CODES.PAYMENT_EXPIRED,
+      });
+    }
     return {
       status: payment.status,
       finalPrice: payment.amount,
+      expiresAt: payment.expiresAt,
       companyName: PAYMENT_GATEWAY.COMPANY_NAME,
       appUrl: getFrontendAppUrl(),
     };
@@ -199,7 +211,10 @@ export class PaymentService {
         code: ERROR_CODES.PAYMENT_NOT_FOUND,
       });
     }
-    if (payment.expiresAt <= new Date()) {
+    if (
+      payment.status === PAYMENT_STATUSES.PENDING &&
+      payment.expiresAt <= new Date()
+    ) {
       await this.expirePreparedOrder(payment.order);
       setErrorResponse(STATUES.EXPIRED, {
         message: 'مهلت انجام پرداخت منقضی شده است',
@@ -348,6 +363,12 @@ export class PaymentService {
         message: 'پرداخت یافت نشد',
         code: ERROR_CODES.PAYMENT_NOT_FOUND,
       });
+    }
+    if (
+      TERMINAL_PAYMENT_FAILURE_STATUSES.includes(data.status) &&
+      payment.order
+    ) {
+      await this.expirePreparedOrder(payment.order);
     }
     return payment;
   }
