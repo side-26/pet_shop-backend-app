@@ -1049,6 +1049,7 @@ export class UserService {
     const userId = this.getAuthenticatedUserId(actor);
     await this.validateCartReferencedItem(itemId, itemType, weightId);
     const weight = weightId || null;
+    const cartItemUpdatedAt = new Date();
 
     const existingItemUpdate = await UserModel.findOneAndUpdate(
       {
@@ -1057,7 +1058,10 @@ export class UserService {
       },
       {
         $inc: { 'cart.items.$.quantity': quantity },
-        $set: CART_DELIVERY_RESET,
+        $set: {
+          ...CART_DELIVERY_RESET,
+          'cart.items.$.updatedAt': cartItemUpdatedAt,
+        },
       },
       { returnDocument: 'after', runValidators: true },
     );
@@ -1071,7 +1075,16 @@ export class UserService {
           },
         },
         {
-          $push: { 'cart.items': { item: itemId, itemType, quantity, weight } },
+          $push: {
+            'cart.items': {
+              item: itemId,
+              itemType,
+              quantity,
+              weight,
+              createdAt: cartItemUpdatedAt,
+              updatedAt: cartItemUpdatedAt,
+            },
+          },
           $set: CART_DELIVERY_RESET,
         },
         { returnDocument: 'after', runValidators: true },
@@ -1084,7 +1097,10 @@ export class UserService {
           },
           {
             $inc: { 'cart.items.$.quantity': quantity },
-            $set: CART_DELIVERY_RESET,
+            $set: {
+              ...CART_DELIVERY_RESET,
+              'cart.items.$.updatedAt': cartItemUpdatedAt,
+            },
           },
           { returnDocument: 'after', runValidators: true },
         );
@@ -1121,6 +1137,23 @@ export class UserService {
     return this.recalculateCart(userId, session);
   }
 
+  static async getCartItemsWithUpdatedAt(actor) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const cart = await this.getCartItems(actor);
+    const user = await this.findById(userId);
+    const value =
+      typeof cart.toObject === 'function' ? cart.toObject() : { ...cart };
+
+    return {
+      ...value,
+      items: value.items.map((item) => ({
+        ...item,
+        updatedAt: item.updatedAt || user.updatedAt,
+      })),
+      updatedAt: user.updatedAt,
+    };
+  }
+
   static async getCartCheckout(actor, { addressId, deliveryServiceId }) {
     const userId = this.getAuthenticatedUserId(actor);
     const [cart, user, deliveryService] = await Promise.all([
@@ -1149,8 +1182,7 @@ export class UserService {
     }
     const { calculatedPricePerKilometer } =
       DeliveryServiceService.calculateQuote(deliveryService, address.latLng);
-    const shippingPrice =
-      deliveryService.basePrice + calculatedPricePerKilometer;
+    const shippingPrice = calculatedPricePerKilometer;
     const packingPrice = deliveryService.packingPrice;
 
     return {

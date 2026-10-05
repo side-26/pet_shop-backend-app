@@ -258,7 +258,7 @@ export const deleteCartItemController = async (req, res, next) => {
 
 export const getCartItemsController = async (req, res, next) => {
   try {
-    const cart = await UserService.getCartItems(req.user);
+    const cart = await UserService.getCartItemsWithUpdatedAt(req.user);
     setSuccessResponse(res, STATUES.SUCCESS, { data: cart });
   } catch (error) {
     onCatchPromiseController(error, next);

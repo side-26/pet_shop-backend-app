@@ -729,6 +729,7 @@ export const schemas = {
   Cart: {
     type: 'object',
     properties: {
+      updatedAt: { type: 'string', format: 'date-time' },
       totalPrice: { type: 'number' },
       items: {
         type: 'array',
@@ -736,6 +737,7 @@ export const schemas = {
           type: 'object',
           properties: {
             _id: { type: 'string' },
+            updatedAt: { type: 'string', format: 'date-time' },
             item: { type: 'object' },
             itemType: { type: 'string', enum: ['product', 'pet'] },
             quantity: { type: 'integer', minimum: 1 },

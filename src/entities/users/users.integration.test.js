@@ -2068,6 +2068,7 @@ describe('User API - Integration Tests', () => {
       expect(response.headers['ratelimit-remaining']).toBe(
         String(RATE_LIMIT.CART_ALL_MAX_REQUESTS - 1),
       );
+      expect(response.body.data.updatedAt).toEqual(expect.any(String));
     });
 
     test('creates the structured cart with safe checkout defaults', async () => {
@@ -2209,6 +2210,9 @@ describe('User API - Integration Tests', () => {
         .get('/api/cart/all')
         .set('Authorization', 'Bearer token');
       expect(listResponse.body.data.items).toHaveLength(1);
+      expect(listResponse.body.data.items[0].updatedAt).toEqual(
+        expect.any(String),
+      );
       expect(listResponse.body.data).toMatchObject({
         totalPrice: 1200,
         discountPrice: itemType === 'product' ? 120 : 0,

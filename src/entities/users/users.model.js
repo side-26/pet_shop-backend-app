@@ -57,27 +57,30 @@ const itemReference = {
   },
 };
 
-const cartItemSchema = new mongoose.Schema({
-  item: itemReference,
-  itemType: {
-    type: String,
-    required: true,
-    enum: Object.values(USER_ITEM_TYPES),
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
-    validate: Number.isInteger,
-  },
-  weight: {
-    type: mongoose.Schema.Types.ObjectId,
-    required() {
-      return this.itemType === USER_ITEM_TYPES.PRODUCT;
+const cartItemSchema = new mongoose.Schema(
+  {
+    item: itemReference,
+    itemType: {
+      type: String,
+      required: true,
+      enum: Object.values(USER_ITEM_TYPES),
     },
-    default: null,
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+      validate: Number.isInteger,
+    },
+    weight: {
+      type: mongoose.Schema.Types.ObjectId,
+      required() {
+        return this.itemType === USER_ITEM_TYPES.PRODUCT;
+      },
+      default: null,
+    },
   },
-});
+  { timestamps: true },
+);
 
 const shippingInfoSchema = new mongoose.Schema(
   {

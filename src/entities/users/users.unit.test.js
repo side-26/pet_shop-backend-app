@@ -1928,6 +1928,23 @@ describe('UserService - Unit Tests', () => {
     );
   });
 
+  test('adds the server-managed user update time to cart reads', async () => {
+    const updatedAt = new Date('2026-10-04T12:34:56.000Z');
+    jest.spyOn(UserService, 'getCartItems').mockResolvedValue(mockUser.cart);
+    jest.spyOn(UserService, 'findById').mockResolvedValue({ updatedAt });
+
+    await expect(
+      UserService.getCartItemsWithUpdatedAt(mockActor),
+    ).resolves.toEqual({
+      ...mockUser.cart,
+      items: mockUser.cart.items.map((item) => ({ ...item, updatedAt })),
+      updatedAt,
+    });
+
+    UserService.getCartItems.mockRestore();
+    UserService.findById.mockRestore();
+  });
+
   test('calculates a checkout quote from the owned address and enabled delivery service', async () => {
     const address = {
       _id: '65a4de97aff1fbb38c437953',
@@ -1954,8 +1971,8 @@ describe('UserService - Unit Tests', () => {
       itemsPrice: 200,
       packingPrice: 20,
       discountPrice: 20,
-      shippingPrice: 80,
-      payableAmount: 280,
+      shippingPrice: 50,
+      payableAmount: 250,
     });
     expect(DeliveryServiceService.calculateQuote).toHaveBeenCalledWith(
       expect.objectContaining({ isEnable: true }),

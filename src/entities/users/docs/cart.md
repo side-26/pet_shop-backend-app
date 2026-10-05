@@ -9,7 +9,7 @@ The Users module owns each authenticated user's cart. Cart endpoints derive the 
 `cart` is an embedded object with:
 
 - `totalPrice`: server-calculated item price before discounts; default `0`.
-- `items`: embedded polymorphic Product/Pet entries.
+- `items`: embedded polymorphic Product/Pet entries, each with a server-managed `updatedAt` timestamp for per-item newest-wins merging.
 - `discountPrice`: server-calculated monetary discount; default `0`.
 - `userAddress`: nullable ObjectId of a selected embedded user address.
 - `deliveryQuote`: a short-lived set of mock Iranian delivery options for the selected address.
@@ -40,7 +40,7 @@ totalPrice = Σ(item.price × quantity)
 discountPrice = Σ(item.price × quantity × item.discountPercentage / 100)
 ```
 
-`discountPrice` is the amount discounted, not the post-discount price. Shipping is excluded from both values. A future payable value can be calculated as `totalPrice - discountPrice + shippingPrice`; it is not persisted.
+`discountPrice` is the amount discounted, not the post-discount price. Shipping is excluded from both values. `GET /api/cart/checkout` calculates `shippingPrice` from the selected delivery service's distance price and returns `payableAmount = totalPrice - discountPrice + shippingPrice + packingPrice`; neither value is persisted.
 
 The add schema accepts `itemId`, `itemType`, `quantity`, and required `weightId` for products. Client-provided totals or checkout metadata are stripped by validation, so server-calculated values always win.
 
@@ -48,7 +48,7 @@ The add schema accepts `itemId`, `itemType`, `quantity`, and required `weightId`
 
 - `POST /api/cart/add` adds a new item or increases an existing quantity.
 - `DELETE /api/cart/delete/:id` deletes by embedded cart-item `_id` and recalculates pricing.
-- `GET /api/cart/all` populates useful Product/Pet fields and refreshes pricing.
+- `GET /api/cart/all` populates useful Product/Pet fields, refreshes pricing, and returns the server-managed user `updatedAt` timestamp for newest-wins cart merging.
 - `GET /api/cart/checkout?addressId=…&deliveryServiceId=…` calculates the current cart's item, packaging, discount, shipping, and payable amounts without creating an Order or changing the Cart.
 - `POST /api/cart/delivery-windows` creates delivery options for an owned Iranian address.
 - `PATCH /api/cart/delivery-window` selects an unexpired quoted option.
