@@ -55,7 +55,6 @@ describe('PaymentService', () => {
   const paymentGatewayEnvironment = {
     PAYMENT_GETWAY_URL: process.env.PAYMENT_GETWAY_URL,
     FRONTEND_APP_URL: process.env.FRONTEND_APP_URL,
-    FRONTEND_PAYMENT_RESULT_URL: process.env.FRONTEND_PAYMENT_RESULT_URL,
   };
   const actor = { userId, role: 'customer' };
   const data = {
@@ -68,8 +67,6 @@ describe('PaymentService', () => {
   beforeAll(() => {
     process.env.PAYMENT_GETWAY_URL = 'http://localhost:3001/pet-shop-app';
     process.env.FRONTEND_APP_URL = 'http://localhost:3000';
-    process.env.FRONTEND_PAYMENT_RESULT_URL =
-      'http://localhost:3000/order/result/:authority';
   });
 
   afterAll(() => {
@@ -254,6 +251,26 @@ describe('PaymentService', () => {
     );
   });
 
+  test('keeps a fulfilled authority unavailable without releasing inventory again', async () => {
+    PaymentModel.findOne.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue({
+        order: orderId,
+        status: PAYMENT_STATUSES.PAID,
+        amount: 950,
+        expiresAt: new Date(Date.now() + 60_000),
+      }),
+    });
+
+    await expect(
+      PaymentService.getGatewayPayment('a'.repeat(64)),
+    ).rejects.toMatchObject({
+      statusCode: STATUES.EXPIRED,
+      code: ERROR_CODES.PAYMENT_EXPIRED,
+    });
+    expect(PaymentModel.db.startSession).not.toHaveBeenCalled();
+  });
+
   test('reports an unknown gateway authority as not found', async () => {
     PaymentModel.findOne.mockReturnValue({
       select: jest.fn().mockReturnThis(),
@@ -288,7 +305,7 @@ describe('PaymentService', () => {
     ).resolves.toEqual({
       success: true,
       callbackUrl:
-        'http://localhost:3000/order/result/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        'http://localhost:3000/payment/result/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     });
     expect(PaymentModel.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: paymentId, status: PAYMENT_STATUSES.PENDING },

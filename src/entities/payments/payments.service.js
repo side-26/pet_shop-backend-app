@@ -160,10 +160,13 @@ export class PaymentService {
         code: ERROR_CODES.PAYMENT_NOT_FOUND,
       });
     }
-    if (
-      payment.status === PAYMENT_STATUSES.PENDING &&
-      payment.expiresAt <= new Date()
-    ) {
+    if (payment.status !== PAYMENT_STATUSES.PENDING) {
+      setErrorResponse(STATUES.EXPIRED, {
+        message: 'این لینک پرداخت دیگر در دسترس نیست',
+        code: ERROR_CODES.PAYMENT_EXPIRED,
+      });
+    }
+    if (payment.expiresAt <= new Date()) {
       await this.expirePreparedOrder(payment.order);
       setErrorResponse(STATUES.EXPIRED, {
         message: 'مهلت انجام پرداخت منقضی شده است',

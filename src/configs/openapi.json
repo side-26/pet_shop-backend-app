@@ -10538,7 +10538,13 @@
       },
       "GatewayPaymentDetails": {
         "type": "object",
-        "required": ["status", "finalPrice", "expiresAt", "companyName", "appUrl"],
+        "required": [
+          "status",
+          "finalPrice",
+          "expiresAt",
+          "companyName",
+          "appUrl"
+        ],
         "properties": {
           "status": {
             "type": "string",

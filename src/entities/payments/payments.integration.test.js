@@ -206,9 +206,28 @@ describe('Payment API', () => {
       isSuccess: false,
       message: 'مهلت انجام پرداخت منقضی شده است',
     });
+    await request(app)
+      .get(`/api/gateway/payments/${authority}`)
+      .expect(STATUES.EXPIRED);
     await expect(PaymentModel.findOne({ authority })).resolves.toMatchObject({
       status: PAYMENT_STATUSES.FAILED,
     });
+  });
+
+  test('does not expose a fulfilled payment authority', async () => {
+    const authority = 'e'.repeat(64);
+    await PaymentModel.create({
+      order: order._id,
+      user: user._id,
+      amount: 950,
+      authority,
+      status: PAYMENT_STATUSES.PAID,
+      expiresAt: new Date('2099-01-01T00:00:00.000Z'),
+    });
+
+    await request(app)
+      .get(`/api/gateway/payments/${authority}`)
+      .expect(STATUES.EXPIRED);
   });
 
   test('releases a prepared order when management marks its payment as failed', async () => {

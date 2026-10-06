@@ -124,14 +124,5 @@ export const getFrontendAppUrl = () => {
 };
 
 export const getFrontendPaymentResultUrl = () => {
-  const url = process.env.FRONTEND_PAYMENT_RESULT_URL?.trim();
-  if (!url) {
-    const error = new Error(
-      'نشانی نتیجه پرداخت در تنظیمات محیطی تعریف نشده است',
-    );
-    error.statusCode = STATUES.INTERNAL_SERVER;
-    error.code = 'FRONTEND_PAYMENT_RESULT_URL_NOT_CONFIGURED';
-    throw error;
-  }
-  return url;
+  return `${getFrontendAppUrl().replace(/\/+$/, '')}/payment/result/:authority`;
 };
