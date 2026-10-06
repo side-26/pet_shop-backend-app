@@ -29,11 +29,21 @@ import { ROLES } from '#configs/constants.js';
  */
 const ROLE_PERMISSIONS = {
   [ROLES.ADMIN]: {
-    // have to fill in the permissions for admin role
+    articles: {
+      create: true,
+      update: true,
+      delete: true,
+    },
   },
 
   [ROLES.SELLER]: {
-    // have to fill in the permissions for seller role
+    articles: {
+      create: true,
+      update: (user, article) =>
+        String(article.createdBy) === String(user.userId || user.id),
+      delete: (user, article) =>
+        String(article.createdBy) === String(user.userId || user.id),
+    },
   },
 
   [ROLES.CUSTOMER]: {

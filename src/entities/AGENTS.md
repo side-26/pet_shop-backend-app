@@ -25,6 +25,7 @@ Each entity owns persistence, business logic, request orchestration, routes, val
 - [`dashboard/AGENTS.md`](./dashboard/AGENTS.md) — admin-only cross-domain commerce and catalog metrics.
 - [`landing/AGENTS.md`](./landing/AGENTS.md) — public homepage catalog sections.
 - [`profile/AGENTS.md`](./profile/AGENTS.md) — authenticated customer account views without a dedicated collection.
+- [`articles/AGENTS.md`](./articles/AGENTS.md) — management-authored articles and public slug previews.
 
 ## Flow
 

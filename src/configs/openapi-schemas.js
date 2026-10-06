@@ -29,6 +29,57 @@ function toOpenApi(zodSchema) {
 }
 
 export const schemas = {
+  ArticleCreateBody: {
+    type: 'object',
+    required: [
+      'title',
+      'subtitle',
+      'mainImage',
+      'mainThumbnailImage',
+      'mainText',
+    ],
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 180 },
+      subtitle: { type: 'string', minLength: 1, maxLength: 240 },
+      mainImage: { type: 'string', format: 'uri' },
+      mainThumbnailImage: { type: 'string' },
+      summary: { type: 'string', maxLength: 600 },
+      tags: {
+        type: 'array',
+        maxItems: 20,
+        items: {
+          type: 'object',
+          required: ['title'],
+          properties: {
+            title: { type: 'string', minLength: 1, maxLength: 60 },
+          },
+        },
+      },
+      petType: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
+      mainText: { description: 'Rich-text document JSON value.' },
+    },
+  },
+  ArticleUpdateBody: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', minLength: 2, maxLength: 180 },
+      subtitle: { type: 'string', minLength: 1, maxLength: 240 },
+      mainImage: { type: 'string', format: 'uri' },
+      mainThumbnailImage: { type: 'string' },
+      summary: { type: 'string', maxLength: 600 },
+      tags: {
+        type: 'array',
+        maxItems: 20,
+        items: { type: 'object', properties: { title: { type: 'string' } } },
+      },
+      petType: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
+    },
+  },
+  ArticleMainTextUpdateBody: {
+    type: 'object',
+    required: ['mainText'],
+    properties: { mainText: { description: 'Rich-text document JSON value.' } },
+  },
   BreedPropertyDefinitionsBody: {
     type: 'object',
     required: ['id', 'propertyDefinitions'],

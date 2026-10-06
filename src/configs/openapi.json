@@ -12,6 +12,125 @@
     }
   ],
   "paths": {
+    "/articles/{slug}": {
+      "get": {
+        "tags": ["/articles"],
+        "summary": "Preview an article by its slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Article preview returned" },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
+    "/articles": {
+      "post": {
+        "tags": ["/articles"],
+        "summary": "Create an article",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ArticleCreateBody" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Article created" },
+          "403": { "description": "Access denied" },
+          "422": { "description": "Validation error" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
+    "/articles/id/{id}/main-text": {
+      "put": {
+        "tags": ["/articles"],
+        "summary": "Update an article main text",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleMainTextUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Article main text updated" },
+          "403": { "description": "Access denied" },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
+    "/articles/id/{id}": {
+      "put": {
+        "tags": ["/articles"],
+        "summary": "Update article details",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ArticleUpdateBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Article details updated" },
+          "403": { "description": "Access denied" },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      },
+      "delete": {
+        "tags": ["/articles"],
+        "summary": "Delete an article",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Article deleted" },
+          "403": { "description": "Access denied" },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
     "/users": {
       "post": {
         "tags": ["/users"],
@@ -8582,6 +8701,57 @@
       }
     },
     "schemas": {
+      "ArticleCreateBody": {
+        "type": "object",
+        "required": [
+          "title",
+          "subtitle",
+          "mainImage",
+          "mainThumbnailImage",
+          "mainText"
+        ],
+        "properties": {
+          "title": { "type": "string", "minLength": 2, "maxLength": 180 },
+          "subtitle": { "type": "string", "minLength": 1, "maxLength": 240 },
+          "mainImage": { "type": "string", "format": "uri" },
+          "mainThumbnailImage": { "type": "string" },
+          "summary": { "type": "string", "maxLength": 600 },
+          "tags": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": ["title"],
+              "properties": { "title": { "type": "string" } }
+            }
+          },
+          "petType": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" },
+          "mainText": { "description": "Rich-text document JSON value." }
+        }
+      },
+      "ArticleUpdateBody": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "minLength": 2, "maxLength": 180 },
+          "subtitle": { "type": "string", "minLength": 1, "maxLength": 240 },
+          "mainImage": { "type": "string", "format": "uri" },
+          "mainThumbnailImage": { "type": "string" },
+          "summary": { "type": "string", "maxLength": 600 },
+          "tags": {
+            "type": "array",
+            "maxItems": 20,
+            "items": { "type": "object" }
+          },
+          "petType": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" }
+        }
+      },
+      "ArticleMainTextUpdateBody": {
+        "type": "object",
+        "required": ["mainText"],
+        "properties": {
+          "mainText": { "description": "Rich-text document JSON value." }
+        }
+      },
       "BreedPropertyDefinitionsBody": {
         "type": "object",
         "required": ["id", "propertyDefinitions"],
@@ -10571,6 +10741,10 @@
     }
   },
   "tags": [
+    {
+      "name": "/articles",
+      "description": "Endpoints under /api/articles"
+    },
     {
       "name": "/brands",
       "description": "Endpoints under /api/brands"

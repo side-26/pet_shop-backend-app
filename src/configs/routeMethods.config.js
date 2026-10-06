@@ -1,5 +1,4 @@
-import { METHODS } from './constants.js';
-
+import { ARTICLE_ROUTES } from '#entities/articles/route.path.js';
 import { BRAND_ROUTES } from '#entities/brands/route.path.js';
 import { BREED_ROUTES } from '#entities/breeds/route.path.js';
 import { CATEGORY_ROUTES } from '#entities/categories/route.path.js';
@@ -16,6 +15,7 @@ import { PROFILE_ROUTES } from '#entities/profile/route.path.js';
 import { SUB_CATEGORY_ROUTES } from '#entities/subCategories/route.path.js';
 import { USER_ROUTES } from '#entities/users/route.path.js';
 
+import { METHODS } from './constants.js';
 import { COUNTRY_ROUTES } from '../integrations/countries/route.path.js';
 import { LOCATION_ROUTES } from '../integrations/locations/route.path.js';
 import { OTP_CODE_ROUTES } from '../integrations/otpCode/route.path.js';
@@ -24,6 +24,13 @@ import { REVERSE_GEOCODING_ROUTES } from '../integrations/reverseGeocoding/route
 const { get, post, put, patch, delete: deleteMethod } = METHODS;
 
 export const API_ROUTE_METHODS = [
+  { path: ARTICLE_ROUTES.articlePreviewBySlug, methods: [get] },
+  { path: ARTICLE_ROUTES.articles, methods: [post] },
+  {
+    path: ARTICLE_ROUTES.articleMainTextById,
+    methods: [put],
+  },
+  { path: ARTICLE_ROUTES.articleById, methods: [put, deleteMethod] },
   { path: DELIVERY_SERVICE_ROUTES.deliveryServicesAvailable, methods: [get] },
   { path: LANDING_ROUTES.landingBrandsPopular, methods: [get] },
   { path: LANDING_ROUTES.landingPetTypesAll, methods: [get] },

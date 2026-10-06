@@ -27,6 +27,7 @@ import landingRoutes from '#entities/landing/landing.route.js';
 import profileRoutes from '#entities/profile/profile.route.js';
 import deliveryServiceRoutes from '#entities/deliveryServices/deliveryServices.route.js';
 import paymentRoutes from '#entities/payments/payments.route.js';
+import articleRoutes from '#entities/articles/articles.route.js';
 
 import countryRoutes from './integrations/countries/countries.route.js';
 import locationRoutes from './integrations/locations/locations.route.js';
@@ -70,6 +71,7 @@ app.use('/api', landingRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', deliveryServiceRoutes);
 app.use('/api', paymentRoutes);
+app.use('/api', articleRoutes);
 
 app.use(logError);
 app.use(errorHandler);

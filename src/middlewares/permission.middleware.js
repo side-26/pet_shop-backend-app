@@ -8,13 +8,17 @@ const getPermissionUser = (user) => ({
   roles: user?.roles || (user?.role ? [user.role] : []),
 });
 
-export const permissionMiddleware = (resource, action) => (req, res, next) => {
-  if (hasPermission(getPermissionUser(req.user), resource, action, req.body)) {
-    next();
-    return;
-  }
+export const permissionMiddleware =
+  (resource, action, getData = (req) => req.body) =>
+  (req, res, next) => {
+    if (
+      hasPermission(getPermissionUser(req.user), resource, action, getData(req))
+    ) {
+      next();
+      return;
+    }
 
-  setErrorResponse(STATUES.NO_ACCESS, {
-    message: 'شما اجازه انجام این عملیات را ندارید',
-  });
-};
+    setErrorResponse(STATUES.NO_ACCESS, {
+      message: 'شما اجازه انجام این عملیات را ندارید',
+    });
+  };
