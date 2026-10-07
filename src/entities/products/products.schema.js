@@ -95,8 +95,8 @@ const salesVolumeSchema = coerce.number().int().min(0);
 const slugSchema = string()
   .trim()
   .min(2)
-  .max(160)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+  .max(PRODUCT_LIMITS.MAX_SLUG_LENGTH)
+  .regex(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u);
 const booleanSchema = preprocess(
   (value) => (value === 'true' ? true : value === 'false' ? false : value),
   boolean(),

@@ -93,8 +93,8 @@ const productSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      maxlength: 160,
-      match: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      maxlength: PRODUCT_LIMITS.MAX_SLUG_LENGTH,
+      match: /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u,
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
@@ -136,13 +136,11 @@ productSchema.pre('validate', function () {
     const generatedSlug = this.title
       .normalize('NFKC')
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
       .trim()
       .replace(/[\s-]+/g, '-')
-      .substring(0, 150);
-    this.slug = generatedSlug
-      ? `${generatedSlug}-${this._id.toString().slice(-8)}`
-      : `product-${this._id.toString().slice(-8)}`;
+      .substring(0, PRODUCT_LIMITS.MAX_SLUG_LENGTH);
+    this.slug = generatedSlug ? generatedSlug : 'product';
   }
 });
 

@@ -8,6 +8,7 @@ Owns the product catalog and separate customer-facing and management-facing oper
 
 - `products.model.js` — product persistence, configured limits, Zod-backed hooks, relationship filters, and text indexes.
 - `products.service.js` — category/brand/subcategory validation, CRUD, image/property-definition updates, weight-stock and variant-pricing management, status, search, pagination, and response formatting.
+- [`scripts/migrate-product-slugs.js`](../../../scripts/migrate-product-slugs.js) — one-time repair migration for product slugs after changing their taxonomy-based format.
 - `products.schema.js` — create, partial update, id, and query validation.
 - `products.controller.js`, `products.route.js`, and `products.helpers.js` — HTTP orchestration and customer/management filters and projections.
 - Colocated tests cover public and management behavior.
@@ -21,7 +22,7 @@ References `CategoryModel`, `BrandModel`, and `SubCategoryModel`; routes use aut
 - Keep customer responses restricted to customer-safe formatting and enabled records.
 - Validate brand existence and category/subcategory consistency in the service. A brand is required on product creation and main-information updates.
 - Create and replace main/gallery images through the image section APIs; convert uploads to WebP and generate `mainImageThumbnail` server-side as a Base64 Data URL.
-- Generate product slugs server-side from the title and product ID. Products are created enabled with no sellable weights; pricing becomes available only after a weight range is configured.
+- Generate product slugs server-side from the product title, pet-type title, category title, and optional subcategory title. Add a numeric suffix only when necessary to preserve uniqueness. Products are created enabled with no sellable weights; pricing becomes available only after a weight range is configured.
 - Product price and discount are stored only on each weight. `minimumPayablePrice` and `maximumDiscountPercentage` are derived internal fields for catalog filtering and landing sorting; public product cards show the cheapest payable weight.
 - Management reads and updates main information and images through `/products/:id/main-info` and `/products/:id/images`. Variant inventory and pricing are read through `GET /products/weights/:id` and replaced through management-only `PUT /products/range`, never catalog create/update APIs. Cart product entries select a weight, and order snapshots preserve that weight's metric, value, price, and discount.
 - Product property definitions are read/replaced through dedicated endpoints, never ordinary create/update. Customer-only product-rating updates accept a value from 0 to 5 in 0.1 increments; a unique per-customer rating record maintains the cached product average and count transactionally.

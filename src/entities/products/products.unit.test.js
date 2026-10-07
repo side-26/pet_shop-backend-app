@@ -19,6 +19,10 @@ jest.mock('#entities/brands/brands.model.js', () => ({
   BrandModel: { findById: jest.fn() },
 }));
 
+jest.mock('#entities/petTypes/petTypes.model.js', () => ({
+  PetTypeModel: { findById: jest.fn() },
+}));
+
 jest.mock('#entities/subCategories/subCategories.model.js', () => ({
   SubCategoryModel: { findById: jest.fn() },
 }));
@@ -30,6 +34,7 @@ jest.mock('./products.model.js', () => ({
     create: jest.fn(),
     findByIdAndUpdate: jest.fn(),
     findByIdAndDelete: jest.fn(),
+    exists: jest.fn(),
     populate: jest.fn(),
   },
 }));
@@ -47,6 +52,7 @@ jest.mock('#services/mainImage.service.js', () => ({
 import { getPaginationData } from '#utils/helpers.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
 
@@ -61,8 +67,10 @@ const userId = '65a4de97aff1fbb38c437114';
 const category = {
   _id: categoryId,
   title: 'Food',
+  petType: '65a4de97aff1fbb38c437116',
   isEnable: true,
 };
+const petType = { _id: category.petType, title: 'Cat' };
 const subCategory = {
   _id: subCategoryId,
   title: 'Dry Food',
@@ -93,7 +101,9 @@ describe('ProductService', () => {
     jest.clearAllMocks();
     CategoryModel.findById.mockResolvedValue(category);
     BrandModel.findById.mockResolvedValue(brand);
+    PetTypeModel.findById.mockResolvedValue(petType);
     SubCategoryModel.findById.mockResolvedValue(subCategory);
+    ProductModel.exists.mockResolvedValue(false);
     ProductModel.populate.mockImplementation(async (value) => value);
     MainImageService.upload.mockResolvedValue({
       key: 'products/main/new.webp',
@@ -120,10 +130,10 @@ describe('ProductService', () => {
   test('validateRelations supports an optional subCategory', async () => {
     await expect(
       ProductService.validateRelations(categoryId, brandId, subCategoryId),
-    ).resolves.toEqual({ category, brand, subCategory });
+    ).resolves.toEqual({ category, brand, petType, subCategory });
     await expect(
       ProductService.validateRelations(categoryId, brandId, null),
-    ).resolves.toEqual({ category, brand, subCategory: null });
+    ).resolves.toEqual({ category, brand, petType, subCategory: null });
     expect(SubCategoryModel.findById).toHaveBeenCalledTimes(1);
   });
 
@@ -161,6 +171,7 @@ describe('ProductService', () => {
     ).resolves.toBe(product);
     expect(ProductModel.create).toHaveBeenCalledWith({
       ...data,
+      slug: 'premium-cat-food-cat-food-dry-food',
       createdBy: userId,
     });
     expect(MainImageService.uploadImages).toHaveBeenCalledWith(
@@ -180,7 +191,13 @@ describe('ProductService', () => {
     ).resolves.toMatchObject({ subCategory: null });
     expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
       id,
-      { $set: { subCategory: null, updatedBy: userId } },
+      {
+        $set: {
+          subCategory: null,
+          slug: 'premium-cat-food-cat-food',
+          updatedBy: userId,
+        },
+      },
       { returnDocument: 'after', runValidators: true },
     );
 
@@ -323,7 +340,13 @@ describe('ProductService', () => {
     );
     expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
       id,
-      { $set: { title: 'Edited product', updatedBy: userId } },
+      {
+        $set: {
+          title: 'Edited product',
+          slug: 'edited-product-cat-food-dry-food',
+          updatedBy: userId,
+        },
+      },
       { returnDocument: 'after', runValidators: true },
     );
   });

@@ -172,7 +172,7 @@ describe('Product API', () => {
       isEnable: true,
     });
     expect(withSubCategory.body.data.slug).toMatch(
-      /^premium-cat-food-[0-9a-f]{8}$/,
+      /^premium-cat-food-cat-food-dry-food$/,
     );
     expect(withSubCategory.body.data.images).toEqual([
       'https://cdn.example.com/products/main/generated.webp',
@@ -326,6 +326,7 @@ describe('Product API', () => {
       });
     expect(updated.status).toBe(STATUES.SUCCESS);
     expect(updated.body.data.title).toBe('Updated food');
+    expect(updated.body.data.slug).toBe('updated-food-cat-food-dry-food');
     expect(updated.body.data).not.toHaveProperty('salesVolume');
     const mainInfoUpdated = await request(app)
       .put(`/api/products/${product._id}/main-info`)

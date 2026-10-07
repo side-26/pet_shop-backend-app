@@ -18,6 +18,7 @@
     "prepare": "husky",
     "openapi": "node ./src/configs/openapi.generate.js",
     "migrate:province-coordinates": "node ./scripts/migrate-province-coordinates.js",
+    "migrate:product-slugs": "node ./scripts/migrate-product-slugs.js",
     "repair:failed-order-reservations": "node ./scripts/repair-failed-order-reservations.js",
     "seed:delivery-services": "node ./scripts/seed-delivery-services.js"
   },

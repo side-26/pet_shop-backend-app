@@ -2,6 +2,7 @@ import { ERROR_CODES, STATUES } from '#configs/constants.js';
 import { CategoryModel } from '#entities/categories/categories.model.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { BrandModel } from '#entities/brands/brands.model.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { MainImageService } from '#services/mainImage.service.js';
 import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
@@ -9,6 +10,7 @@ import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import {
   buildProductFilter,
+  buildProductSlug,
   escapeProductRegex,
   formatCustomerProductDetail,
   formatCustomerProductListItem,
@@ -56,6 +58,13 @@ export class ProductService {
         code: ERROR_CODES.PRODUCT_CATEGORY_NOT_FOUND,
       });
     }
+    const petType = await PetTypeModel.findById(category.petType);
+    if (!petType) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نوع حیوان دسته‌بندی انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PET_TYPE_NOT_FOUND,
+      });
+    }
     if (!brand) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
         message: 'برند انتخاب‌شده وجود ندارد',
@@ -77,11 +86,45 @@ export class ProductService {
         code: ERROR_CODES.PRODUCT_SUB_CATEGORY_MISMATCH,
       });
     }
-    return { category, brand, subCategory };
+    return { category, brand, petType, subCategory };
+  }
+
+  static async getUniqueSlug(slug, productId) {
+    let uniqueSlug = slug;
+    let suffix = 2;
+    while (
+      await ProductModel.exists({
+        slug: uniqueSlug,
+        ...(productId ? { _id: { $ne: productId } } : {}),
+      })
+    ) {
+      const suffixValue = `-${suffix}`;
+      uniqueSlug = `${slug.slice(
+        0,
+        Math.max(1, slug.length - suffixValue.length),
+      )}${suffixValue}`;
+      suffix += 1;
+    }
+    return uniqueSlug;
+  }
+
+  static async getSlug(data, relations, productId) {
+    const slug = buildProductSlug({
+      title: data.title,
+      petTypeTitle: relations.petType.title,
+      categoryTitle: relations.category.title,
+      subCategoryTitle: relations.subCategory?.title,
+    });
+    return this.getUniqueSlug(slug, productId);
   }
 
   static async create(data, userId, imageFile, imageFiles = []) {
-    await this.validateRelations(data.category, data.brand, data.subCategory);
+    const relations = await this.validateRelations(
+      data.category,
+      data.brand,
+      data.subCategory,
+    );
+    const slug = await this.getSlug(data, relations);
     const uploadResults = await Promise.allSettled([
       MainImageService.upload(imageFile, 'products/main'),
       MainImageService.uploadImages(imageFiles, 'products/images'),
@@ -111,6 +154,7 @@ export class ProductService {
         mainImage: uploadedMainImage.mainImage,
         mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
         images: uploadedImages.map(({ url }) => url),
+        slug,
         createdBy: userId,
       });
     } catch (error) {
@@ -136,11 +180,20 @@ export class ProductService {
     const subCategoryId = hasSubCategory
       ? data.subCategory
       : currentProduct.subCategory;
-    await this.validateRelations(categoryId, brandId, subCategoryId || null);
+    const relations = await this.validateRelations(
+      categoryId,
+      brandId,
+      subCategoryId || null,
+    );
+    const slug = await this.getSlug(
+      { ...currentProduct.toObject?.(), ...currentProduct, ...data },
+      relations,
+      id,
+    );
 
     const product = await ProductModel.findByIdAndUpdate(
       id,
-      { $set: { ...data, updatedBy: userId } },
+      { $set: { ...data, slug, updatedBy: userId } },
       { returnDocument: 'after', runValidators: true },
     );
     if (!product) {

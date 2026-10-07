@@ -1,6 +1,29 @@
+import { PRODUCT_LIMITS } from '#configs/constants.js';
 import { CategoryService } from '#entities/categories/categories.service.js';
 import { BrandService } from '#entities/brands/brands.service.js';
 import { SubCategoryService } from '#entities/subCategories/subCategories.service.js';
+
+const slugifyProductPart = (value = '') =>
+  String(value)
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/[\s-]+/g, '-');
+
+export const buildProductSlug = ({
+  title,
+  petTypeTitle,
+  categoryTitle,
+  subCategoryTitle,
+}) => {
+  const slug = [title, petTypeTitle, categoryTitle, subCategoryTitle]
+    .map(slugifyProductPart)
+    .filter(Boolean)
+    .join('-');
+
+  return (slug || 'product').slice(0, PRODUCT_LIMITS.MAX_SLUG_LENGTH);
+};
 
 export const escapeProductRegex = (value = '') =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
