@@ -92,6 +92,26 @@ describe('Article API', () => {
       );
   });
 
+  test('reads article details and rich text separately by ID', async () => {
+    const article = await ArticleModel.create({
+      ...createPayload,
+      slug: 'healthy-dogs-dogs-health',
+      author: { firstName: 'Sara', lastName: 'Ahmadi' },
+      createdBy: seller._id,
+    });
+
+    const details = await request(app)
+      .get(`/api/articles/id/${article._id}`)
+      .expect(200);
+    expect(details.body.data).not.toHaveProperty('mainText');
+    expect(details.body.data).toMatchObject({ id: article._id.toString() });
+
+    const richText = await request(app)
+      .get(`/api/articles/id/${article._id}/main-text`)
+      .expect(200);
+    expect(richText.body.data).toEqual({ mainText: createPayload.mainText });
+  });
+
   test('allows the creating seller to update details and dedicated main text', async () => {
     const article = await ArticleModel.create({
       ...createPayload,

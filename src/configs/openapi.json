@@ -65,6 +65,23 @@
       }
     },
     "/articles/id/{id}/main-text": {
+      "get": {
+        "tags": ["/articles"],
+        "summary": "Get an article main text by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Article main text returned" },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      },
       "put": {
         "tags": ["/articles"],
         "summary": "Update an article main text",
@@ -96,6 +113,23 @@
       }
     },
     "/articles/id/{id}": {
+      "get": {
+        "tags": ["/articles"],
+        "summary": "Get an article by ID without its main text",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Article returned without main text" },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      },
       "put": {
         "tags": ["/articles"],
         "summary": "Update article details",

@@ -8,7 +8,7 @@ This folder owns shared integration-test environment setup.
 
 ### `setup.js`
 
-Loads test environment variables, connects Mongoose to a process-isolated database derived from `MONGODB_TEST_URI` (or starts MongoDB Memory Server when it is absent), clears collections between tests, and drops/disconnects the isolated database afterward.
+Loads test environment variables, connects Mongoose to a process-isolated database derived from `MONGODB_TEST_URI` (or starts MongoDB Memory Server when it is absent), retries transient memory-server port collisions up to three times, clears collections between tests, and drops/disconnects the isolated database afterward.
 
 ## Dependencies
 

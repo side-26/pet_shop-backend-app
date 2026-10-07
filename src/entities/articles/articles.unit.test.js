@@ -157,6 +157,24 @@ describe('ArticleService', () => {
     );
   });
 
+  test('reads article details and main text separately by ID', async () => {
+    const article = { _id: 'article-id', mainText: { type: 'doc' } };
+    const detailsSelect = jest.fn().mockResolvedValue(article);
+    const mainTextSelect = jest.fn().mockResolvedValue(article);
+    ArticleModel.findById
+      .mockReturnValueOnce({ select: detailsSelect })
+      .mockReturnValueOnce({ select: mainTextSelect });
+
+    await expect(
+      ArticleService.getByIdWithoutMainText('article-id'),
+    ).resolves.toBe(article);
+    await expect(ArticleService.getMainTextById('article-id')).resolves.toEqual(
+      article.mainText,
+    );
+    expect(detailsSelect).toHaveBeenCalledWith('-mainText');
+    expect(mainTextSelect).toHaveBeenCalledWith('mainText');
+  });
+
   test("returns only an author's articles with newest first", async () => {
     const articles = [{ _id: 'newer' }, { _id: 'older' }];
     const sort = jest.fn().mockResolvedValue(articles);

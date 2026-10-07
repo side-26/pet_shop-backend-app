@@ -7,6 +7,8 @@ import { permissionMiddleware } from '#middlewares/permission.middleware.js';
 import {
   createArticleController,
   deleteArticleController,
+  getArticleByIdController,
+  getArticleMainTextByIdController,
   getAuthorArticlesController,
   loadArticleForPermission,
   previewArticleController,
@@ -49,6 +51,16 @@ router.post(
   createArticleController,
 );
 
+router.get(
+  ARTICLE_ROUTES.articleMainTextById,
+  /* #swagger.path = '/articles/id/{id}/main-text'
+     #swagger.summary = 'Get an article main text by ID'
+     #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string' } }
+     #swagger.responses[200] = { description: 'Article main text returned' }
+     #swagger.responses[404] = { description: 'Article not found' } */
+  getArticleMainTextByIdController,
+);
+
 router.put(
   ARTICLE_ROUTES.articleMainTextById,
   /* #swagger.path = '/articles/id/{id}/main-text'
@@ -59,6 +71,16 @@ router.put(
   loadArticleForPermission,
   permissionMiddleware('articles', 'update', (req) => req.article),
   updateArticleMainTextController,
+);
+
+router.get(
+  ARTICLE_ROUTES.articleById,
+  /* #swagger.path = '/articles/id/{id}'
+     #swagger.summary = 'Get an article by ID without its main text'
+     #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string' } }
+     #swagger.responses[200] = { description: 'Article returned without main text' }
+     #swagger.responses[404] = { description: 'Article not found' } */
+  getArticleByIdController,
 );
 
 router.put(

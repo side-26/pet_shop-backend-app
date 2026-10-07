@@ -8,7 +8,7 @@ Owns management-authored pet-care articles and their public slug-based preview.
 
 - The author snapshot is derived only from the authenticated creator's User record; requests cannot supply it.
 - `slug` is server-derived from the title and at most the first five tag titles. It is recalculated only when the title or tags change.
-- `GET /articles/:slug` is public. Creation, detail updates, main-text updates, and deletion use the permission middleware.
+- `GET /articles/:slug`, `GET /articles/id/:id`, and `GET /articles/id/:id/main-text` are public. The ID detail route omits `mainText`; the dedicated main-text route returns only that field. Creation, detail updates, main-text updates, and deletion use the permission middleware.
 - Admins may update or delete every article. Sellers may do so only when `createdBy` is their authenticated user ID.
 - `mainText` is updated only through `/articles/:id/main-text`; the general update endpoint deliberately excludes it.
 

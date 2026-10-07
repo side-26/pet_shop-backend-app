@@ -32,6 +32,28 @@ export class ArticleService {
     return article;
   }
 
+  static async getByIdWithoutMainText(id) {
+    const article = await ArticleModel.findById(id).select('-mainText');
+    if (!article) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'مقاله یافت نشد',
+        code: 'ARTICLE_NOT_FOUND',
+      });
+    }
+    return article;
+  }
+
+  static async getMainTextById(id) {
+    const article = await ArticleModel.findById(id).select('mainText');
+    if (!article) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'مقاله یافت نشد',
+        code: 'ARTICLE_NOT_FOUND',
+      });
+    }
+    return article.mainText;
+  }
+
   static async getPreviewBySlug(slug) {
     const article = await ArticleModel.findOne({ slug });
     if (!article) {
@@ -144,6 +166,12 @@ export class ArticleService {
       createdAt: value.createdAt,
       updatedAt: value.updatedAt,
     };
+  }
+
+  static formatWithoutMainText(article) {
+    const formattedArticle = this.format(article);
+    delete formattedArticle.mainText;
+    return formattedArticle;
   }
 
   static formatMany(articles) {

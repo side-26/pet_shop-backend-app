@@ -50,6 +50,28 @@ export const getAuthorArticlesController = async (req, res, next) => {
   }
 };
 
+export const getArticleByIdController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(articleIdZodSchema, req.params);
+    const article = await ArticleService.getByIdWithoutMainText(id);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: ArticleService.formatWithoutMainText(article),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getArticleMainTextByIdController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(articleIdZodSchema, req.params);
+    const mainText = await ArticleService.getMainTextById(id);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: { mainText } });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const updateArticleMainTextController = async (req, res, next) => {
   try {
     const body = returnFormValidation(updateArticleMainTextZodSchema, req.body);

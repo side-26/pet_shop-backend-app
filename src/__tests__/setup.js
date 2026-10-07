@@ -10,6 +10,8 @@ dotenv.config();
 let mongoServer;
 let isolatedTestDatabase;
 
+const MEMORY_REPLICA_SET_START_ATTEMPTS = 3;
+
 const createIsolatedTestDatabaseUri = (databaseUri) => {
   const parsedUri = new URL(databaseUri);
   const databaseName =
@@ -18,6 +20,25 @@ const createIsolatedTestDatabaseUri = (databaseUri) => {
   isolatedTestDatabase = `${databaseName}_jest_${process.pid}`;
   parsedUri.pathname = `/${isolatedTestDatabase}`;
   return parsedUri.toString();
+};
+
+const startMemoryReplicaSet = async () => {
+  for (
+    let attempt = 1;
+    attempt <= MEMORY_REPLICA_SET_START_ATTEMPTS;
+    attempt += 1
+  ) {
+    try {
+      return await MongoMemoryReplSet.create({
+        replSet: { count: 1, storageEngine: 'wiredTiger' },
+      });
+    } catch (error) {
+      const isPortCollision = String(error.message).includes('already in use');
+      if (!isPortCollision || attempt === MEMORY_REPLICA_SET_START_ATTEMPTS) {
+        throw error;
+      }
+    }
+  }
 };
 
 // Increase global timeout for async hooks
@@ -40,9 +61,7 @@ beforeAll(async () => {
     console.warn(
       '⚠️ Using an in-memory MongoDB replica set for transaction-capable tests (may download binary)',
     );
-    mongoServer = await MongoMemoryReplSet.create({
-      replSet: { count: 1, storageEngine: 'wiredTiger' },
-    });
+    mongoServer = await startMemoryReplicaSet();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
   }

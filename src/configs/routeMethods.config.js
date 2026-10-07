@@ -29,9 +29,9 @@ export const API_ROUTE_METHODS = [
   { path: ARTICLE_ROUTES.articles, methods: [post] },
   {
     path: ARTICLE_ROUTES.articleMainTextById,
-    methods: [put],
+    methods: [get, put],
   },
-  { path: ARTICLE_ROUTES.articleById, methods: [put, deleteMethod] },
+  { path: ARTICLE_ROUTES.articleById, methods: [get, put, deleteMethod] },
   { path: DELIVERY_SERVICE_ROUTES.deliveryServicesAvailable, methods: [get] },
   { path: LANDING_ROUTES.landingBrandsPopular, methods: [get] },
   { path: LANDING_ROUTES.landingPetTypesAll, methods: [get] },
