@@ -18,7 +18,7 @@ const {
 } = z;
 
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
-const titleSchema = string().trim().min(2).max(150);
+const titleSchema = string().trim().min(2).max(PRODUCT_LIMITS.MAX_TITLE_LENGTH);
 const imageSchema = url().max(2048);
 const thumbnailSchema = string()
   .max(IMAGE_PROCESSING.MAX_THUMBNAIL_SIZE_BYTES - 1)

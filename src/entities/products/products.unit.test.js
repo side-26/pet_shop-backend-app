@@ -57,6 +57,7 @@ import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js
 import { MainImageService } from '#services/mainImage.service.js';
 
 import { ProductModel } from './products.model.js';
+import { buildProductSlug } from './products.helpers.js';
 import { ProductService } from './products.service.js';
 
 const id = '65a4de97aff1fbb38c437111';
@@ -117,6 +118,19 @@ describe('ProductService', () => {
 
   test('escapeRegex escapes special characters', () => {
     expect(ProductService.escapeRegex('food+cat')).toBe('food\\+cat');
+  });
+
+  test('drops taxonomy slug segments from the end to stay below 160 characters', () => {
+    const longPart = 'a'.repeat(40);
+    const slug = buildProductSlug({
+      title: longPart,
+      petTypeTitle: longPart,
+      categoryTitle: longPart,
+      subCategoryTitle: longPart,
+    });
+
+    expect(slug).toBe(`${longPart}-${longPart}-${longPart}`);
+    expect(slug).toHaveLength(122);
   });
 
   test('findById returns a product and rejects missing products', async () => {

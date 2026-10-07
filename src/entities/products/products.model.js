@@ -9,7 +9,12 @@ import {
 
 const productSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true, maxlength: 150 },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: PRODUCT_LIMITS.MAX_TITLE_LENGTH,
+    },
     mainImage: { type: String, required: true, trim: true, maxlength: 2048 },
     images: {
       type: [String],

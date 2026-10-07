@@ -17,12 +17,20 @@ export const buildProductSlug = ({
   categoryTitle,
   subCategoryTitle,
 }) => {
-  const slug = [title, petTypeTitle, categoryTitle, subCategoryTitle]
+  const titlePart = slugifyProductPart(title) || 'product';
+  const taxonomyParts = [petTypeTitle, categoryTitle, subCategoryTitle]
     .map(slugifyProductPart)
-    .filter(Boolean)
-    .join('-');
+    .filter(Boolean);
 
-  return (slug || 'product').slice(0, PRODUCT_LIMITS.MAX_SLUG_LENGTH);
+  while (
+    [titlePart, ...taxonomyParts].join('-').length >
+      PRODUCT_LIMITS.MAX_SLUG_LENGTH &&
+    taxonomyParts.length
+  ) {
+    taxonomyParts.pop();
+  }
+
+  return [titlePart, ...taxonomyParts].join('-');
 };
 
 export const escapeProductRegex = (value = '') =>
