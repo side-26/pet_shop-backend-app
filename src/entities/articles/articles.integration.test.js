@@ -15,6 +15,25 @@ jest.mock('#infrastructure/redis/rateLimit/rateLimit.core.js', () => ({
   },
 }));
 
+jest.mock('#services/mainImage.service.js', () => ({
+  MainImageService: {
+    upload: jest.fn(async (imageFile) => {
+      if (!imageFile) {
+        const error = new Error('تصویر اصلی باید ارسال شود');
+        error.statusCode = 422;
+        throw error;
+      }
+      return {
+        key: 'articles/main/article.webp',
+        mainImage: 'https://cdn.example.test/articles/article.webp',
+        mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      };
+    }),
+    cleanup: jest.fn().mockResolvedValue(undefined),
+    getStoredKey: jest.fn().mockReturnValue('articles/main/article.webp'),
+  },
+}));
+
 import express from 'express';
 import request from 'supertest';
 
@@ -32,11 +51,17 @@ describe('Article API', () => {
   const createPayload = {
     title: 'Healthy dogs',
     subtitle: 'A practical guide',
+    mainText: { type: 'doc', content: [] },
+  };
+  const storedArticleFields = {
     mainImage: 'https://cdn.example.test/articles/dogs.webp',
     mainThumbnailImage: 'data:image/webp;base64,AAAA',
-    mainText: { type: 'doc', content: [] },
     tags: [{ title: 'Dogs' }, { title: 'Health' }],
   };
+  const imageBuffer = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    'base64',
+  );
 
   beforeAll(() => {
     app = express();
@@ -70,13 +95,29 @@ describe('Article API', () => {
       .set('x-test-user-id', user._id.toString())
       .set('x-test-role', role);
 
+  const multipartArticle = (requestBuilder, values = createPayload) => {
+    let form = requestBuilder;
+    for (const [field, value] of Object.entries(values)) {
+      form = form.field(
+        field,
+        typeof value === 'object' ? JSON.stringify(value) : String(value),
+      );
+    }
+    return form.attach('mainImage', imageBuffer, {
+      filename: 'article.png',
+      contentType: 'image/png',
+    });
+  };
+
   test('creates an article with a server-derived author and previews it publicly', async () => {
-    const created = await asUser(request(app).post('/api/articles'), seller)
-      .send(createPayload)
-      .expect(201);
+    const created = await multipartArticle(
+      asUser(request(app).post('/api/articles'), seller),
+    ).expect(201);
 
     expect(created.body.data).toMatchObject({
       slug: 'healthy-dogs',
+      mainImage: 'https://cdn.example.test/articles/article.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
       author: {
         avatar: seller.avatar,
         placeholderImage: '',
@@ -95,6 +136,7 @@ describe('Article API', () => {
   test('reads article details and rich text separately by ID', async () => {
     const article = await ArticleModel.create({
       ...createPayload,
+      ...storedArticleFields,
       slug: 'healthy-dogs-dogs-health',
       author: { firstName: 'Sara', lastName: 'Ahmadi' },
       createdBy: seller._id,
@@ -115,6 +157,7 @@ describe('Article API', () => {
   test('reads and replaces tags only through dedicated article endpoints', async () => {
     const article = await ArticleModel.create({
       ...createPayload,
+      ...storedArticleFields,
       slug: 'healthy-dogs-dogs-health',
       author: { firstName: 'Sara', lastName: 'Ahmadi' },
       createdBy: seller._id,
@@ -123,7 +166,9 @@ describe('Article API', () => {
     await request(app)
       .get(`/api/articles/id/${article._id}/tags-list`)
       .expect(200)
-      .expect(({ body }) => expect(body.data).toEqual(createPayload.tags));
+      .expect(({ body }) =>
+        expect(body.data).toEqual(storedArticleFields.tags),
+      );
 
     await asUser(
       request(app).put(`/api/articles/id/${article._id}/range-tags-list`),
@@ -140,13 +185,16 @@ describe('Article API', () => {
   test('allows the creating seller to update details and dedicated main text', async () => {
     const article = await ArticleModel.create({
       ...createPayload,
+      ...storedArticleFields,
       slug: 'healthy-dogs-dogs-health',
       author: { firstName: 'Sara', lastName: 'Ahmadi' },
       createdBy: seller._id,
     });
 
-    await asUser(request(app).put(`/api/articles/id/${article._id}`), seller)
-      .send({ title: 'Better dogs' })
+    await multipartArticle(
+      asUser(request(app).put(`/api/articles/id/${article._id}`), seller),
+      { title: 'Better dogs' },
+    )
       .expect(200)
       .expect(({ body }) =>
         expect(body.data.slug).toBe('better-dogs-dogs-health'),
@@ -164,6 +212,7 @@ describe('Article API', () => {
     const [ownedArticle] = await ArticleModel.create([
       {
         ...createPayload,
+        ...storedArticleFields,
         title: 'Owned article',
         slug: 'owned-article',
         author: { firstName: 'Sara', lastName: 'Ahmadi' },
@@ -171,6 +220,7 @@ describe('Article API', () => {
       },
       {
         ...createPayload,
+        ...storedArticleFields,
         title: 'Another author article',
         slug: 'another-author-article',
         author: { firstName: 'Ali', lastName: 'Karimi' },
@@ -192,6 +242,7 @@ describe('Article API', () => {
   test('forbids another seller but permits an admin to delete the article', async () => {
     const article = await ArticleModel.create({
       ...createPayload,
+      ...storedArticleFields,
       slug: 'healthy-dogs-dogs-health',
       author: { firstName: 'Sara', lastName: 'Ahmadi' },
       createdBy: seller._id,
@@ -211,16 +262,21 @@ describe('Article API', () => {
 
   test('validates mandatory create fields and never accepts author or slug input', async () => {
     await asUser(request(app).post('/api/articles'), seller)
-      .send({ title: 'Only a title' })
+      .send(createPayload)
       .expect(422);
 
-    const response = await asUser(request(app).post('/api/articles'), seller)
-      .send({
+    await multipartArticle(asUser(request(app).post('/api/articles'), seller), {
+      title: 'Only a title',
+    }).expect(422);
+
+    const response = await multipartArticle(
+      asUser(request(app).post('/api/articles'), seller),
+      {
         ...createPayload,
         slug: 'forged',
         author: { firstName: 'Forged' },
-      })
-      .expect(201);
+      },
+    ).expect(201);
     expect(response.body.data.slug).toBe('healthy-dogs');
     expect(response.body.data.author.firstName).toBe('Sara');
   });

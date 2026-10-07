@@ -7,6 +7,14 @@ jest.mock('#utils/helpers.js', () => ({
   }),
 }));
 
+jest.mock('#services/mainImage.service.js', () => ({
+  MainImageService: {
+    upload: jest.fn(),
+    cleanup: jest.fn(),
+    getStoredKey: jest.fn(),
+  },
+}));
+
 jest.mock('../petTypes/petTypes.model.js', () => ({
   PetTypeModel: { findById: jest.fn() },
 }));
@@ -27,6 +35,8 @@ jest.mock('./articles.model.js', () => {
   return { ArticleModel: MockModel };
 });
 
+import { MainImageService } from '#services/mainImage.service.js';
+
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
 import { ArticleModel } from './articles.model.js';
@@ -36,8 +46,6 @@ describe('ArticleService', () => {
   const data = {
     title: 'Healthy dogs',
     subtitle: 'A practical guide',
-    mainImage: 'https://cdn.example.test/articles/dogs.webp',
-    mainThumbnailImage: 'data:image/webp;base64,AAAA',
     mainText: { type: 'doc', content: [] },
     tags: [{ title: 'Dogs' }, { title: 'Health' }],
   };
@@ -45,6 +53,12 @@ describe('ArticleService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     ArticleModel.findOne.mockResolvedValue(null);
+    MainImageService.upload.mockResolvedValue({
+      key: 'articles/main/new.webp',
+      mainImage: 'https://cdn.example.test/articles/new.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+    });
+    MainImageService.getStoredKey.mockReturnValue('articles/main/old.webp');
     UserModel.findById.mockReturnValue({
       select: jest.fn().mockResolvedValue({
         avatar: 'https://cdn.example.test/users/author.webp',
@@ -71,7 +85,8 @@ describe('ArticleService', () => {
   });
 
   test('creates an article with an author snapshot from its creator', async () => {
-    const article = await ArticleService.create(data, 'user-id');
+    const imageFile = { buffer: Buffer.from('image') };
+    const article = await ArticleService.create(data, 'user-id', imageFile);
 
     expect(article).toMatchObject({
       createdBy: 'user-id',
@@ -82,15 +97,21 @@ describe('ArticleService', () => {
         firstName: 'Sara',
         lastName: 'Ahmadi',
       },
+      mainImage: 'https://cdn.example.test/articles/new.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
     });
+    expect(MainImageService.upload).toHaveBeenCalledWith(
+      imageFile,
+      'articles/main',
+    );
   });
 
   test('rejects a duplicate generated slug', async () => {
     ArticleModel.findOne.mockResolvedValue({ _id: 'existing' });
 
-    await expect(ArticleService.create(data, 'user-id')).rejects.toThrow(
-      'قبلاً استفاده شده‌اند',
-    );
+    await expect(
+      ArticleService.create(data, 'user-id', { buffer: Buffer.from('image') }),
+    ).rejects.toThrow('قبلاً استفاده شده‌اند');
   });
 
   test('rejects an unknown optional pet type', async () => {
@@ -100,6 +121,7 @@ describe('ArticleService', () => {
       ArticleService.create(
         { ...data, petType: '65a4de97aff1fbb38c437952' },
         'user-id',
+        { buffer: Buffer.from('image') },
       ),
     ).rejects.toThrow('نوع حیوان انتخاب‌شده یافت نشد');
   });
@@ -127,6 +149,49 @@ describe('ArticleService', () => {
     );
     expect(article.slug).toBe('better-dogs-dogs-health');
     expect(article.updatedBy).toBe('user-id');
+  });
+
+  test('replaces an image server-side and cleans up the previous object', async () => {
+    const article = {
+      _id: 'article-id',
+      title: data.title,
+      tags: data.tags,
+      mainImage: 'https://cdn.example.test/articles/old.webp',
+      save: jest.fn().mockResolvedValue(true),
+    };
+    const imageFile = { buffer: Buffer.from('replacement') };
+
+    await ArticleService.updateDetails(article, {}, 'user-id', imageFile);
+
+    expect(article).toMatchObject({
+      mainImage: 'https://cdn.example.test/articles/new.webp',
+      mainThumbnailImage: 'data:image/webp;base64,AAAA',
+    });
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'articles/main/old.webp',
+      { id: 'article-id', userId: 'user-id' },
+    );
+  });
+
+  test('cleans up a newly uploaded image when its detail update cannot be saved', async () => {
+    const article = {
+      _id: 'article-id',
+      title: data.title,
+      tags: data.tags,
+      mainImage: 'https://cdn.example.test/articles/old.webp',
+      save: jest.fn().mockRejectedValue(new Error('save failed')),
+    };
+
+    await expect(
+      ArticleService.updateDetails(article, {}, 'user-id', {
+        buffer: Buffer.from('replacement'),
+      }),
+    ).rejects.toThrow('save failed');
+
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'articles/main/new.webp',
+      { id: 'article-id', userId: 'user-id' },
+    );
   });
 
   test('updates only the main text in its dedicated action', async () => {
@@ -187,10 +252,20 @@ describe('ArticleService', () => {
     expect(sort).toHaveBeenCalledWith({ createdAt: -1 });
   });
 
-  test('deletes the loaded article document', async () => {
-    const article = { deleteOne: jest.fn().mockResolvedValue(undefined) };
+  test('deletes the loaded article document and its stored image', async () => {
+    const article = {
+      _id: 'article-id',
+      mainImage: 'https://cdn.example.test/articles/old.webp',
+      deleteOne: jest.fn().mockResolvedValue(undefined),
+    };
 
-    await expect(ArticleService.delete(article)).resolves.toBeUndefined();
+    await expect(
+      ArticleService.delete(article, 'user-id'),
+    ).resolves.toBeUndefined();
     expect(article.deleteOne).toHaveBeenCalledTimes(1);
+    expect(MainImageService.cleanup).toHaveBeenCalledWith(
+      'articles/main/old.webp',
+      { id: 'article-id', userId: 'user-id' },
+    );
   });
 });

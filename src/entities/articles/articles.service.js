@@ -1,4 +1,5 @@
 import { STATUES } from '#configs/constants.js';
+import { MainImageService } from '#services/mainImage.service.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
@@ -109,17 +110,29 @@ export class ArticleService {
     };
   }
 
-  static async create(data, userId) {
+  static async create(data, userId, imageFile) {
     await this.ensurePetTypeExists(data.petType);
     const slug = this.createSlug(data);
     await this.ensureUniqueSlug(slug);
     const author = await this.getAuthorSnapshot(userId);
-    return new ArticleModel({
-      ...data,
-      slug,
-      author,
-      createdBy: userId,
-    }).save();
+    const uploadedImage = await MainImageService.upload(
+      imageFile,
+      'articles/main',
+    );
+
+    try {
+      return await new ArticleModel({
+        ...data,
+        mainImage: uploadedImage.mainImage,
+        mainThumbnailImage: uploadedImage.mainImageThumbnail,
+        slug,
+        author,
+        createdBy: userId,
+      }).save();
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage.key, { userId });
+      throw error;
+    }
   }
 
   static async updateMainText(article, data, userId) {
@@ -128,7 +141,7 @@ export class ArticleService {
     return article.save();
   }
 
-  static async updateDetails(article, data, userId) {
+  static async updateDetails(article, data, userId, imageFile) {
     await this.ensurePetTypeExists(data.petType);
     const nextArticle = {
       title: data.title ?? article.title,
@@ -139,8 +152,39 @@ export class ArticleService {
       await this.ensureUniqueSlug(slug, article._id);
       article.slug = slug;
     }
-    Object.assign(article, data, { updatedBy: userId });
-    return article.save();
+    const uploadedImage = imageFile
+      ? await MainImageService.upload(imageFile, 'articles/main')
+      : null;
+    const previousKey = uploadedImage
+      ? MainImageService.getStoredKey(article.mainImage, {
+          id: article._id,
+          userId,
+        })
+      : undefined;
+    const imageUpdate = uploadedImage
+      ? {
+          mainImage: uploadedImage.mainImage,
+          mainThumbnailImage: uploadedImage.mainImageThumbnail,
+        }
+      : {};
+
+    Object.assign(article, data, imageUpdate, { updatedBy: userId });
+    let updatedArticle;
+    try {
+      updatedArticle = await article.save();
+    } catch (error) {
+      await MainImageService.cleanup(uploadedImage?.key, {
+        id: article._id,
+        userId,
+      });
+      throw error;
+    }
+
+    if (uploadedImage) {
+      await MainImageService.cleanup(previousKey, { id: article._id, userId });
+    }
+
+    return updatedArticle;
   }
 
   static async replaceTags(article, tags, userId) {
@@ -152,8 +196,13 @@ export class ArticleService {
     return article.save();
   }
 
-  static async delete(article) {
+  static async delete(article, userId) {
+    const imageKey = MainImageService.getStoredKey(article.mainImage, {
+      id: article._id,
+      userId,
+    });
     await article.deleteOne();
+    await MainImageService.cleanup(imageKey, { id: article._id, userId });
   }
 
   static format(article) {

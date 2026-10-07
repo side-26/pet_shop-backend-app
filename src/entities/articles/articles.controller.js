@@ -2,6 +2,7 @@ import { STATUES } from '#configs/constants.js';
 import {
   onCatchPromiseController,
   returnFormValidation,
+  setErrorResponse,
   setSuccessResponse,
 } from '#utils/helpers.js';
 
@@ -30,7 +31,11 @@ export const loadArticleForPermission = async (req, _res, next) => {
 export const createArticleController = async (req, res, next) => {
   try {
     const body = returnFormValidation(createArticleZodSchema, req.body);
-    const article = await ArticleService.create(body, getUserId(req.user));
+    const article = await ArticleService.create(
+      body,
+      getUserId(req.user),
+      req.file,
+    );
     setSuccessResponse(res, STATUES.CREATED, {
       message: 'مقاله با موفقیت ایجاد شد',
       data: ArticleService.format(article),
@@ -125,10 +130,17 @@ export const updateArticleMainTextController = async (req, res, next) => {
 export const updateArticleController = async (req, res, next) => {
   try {
     const body = returnFormValidation(updateArticleZodSchema, req.body);
+    if (Object.keys(body).length === 0 && !req.file) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'حداقل یک فیلد یا تصویر اصلی باید ارسال شود',
+        code: 'ARTICLE_UPDATE_REQUIRED',
+      });
+    }
     const article = await ArticleService.updateDetails(
       req.article,
       body,
       getUserId(req.user),
+      req.file,
     );
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: 'اطلاعات مقاله با موفقیت ویرایش شد',
@@ -141,7 +153,7 @@ export const updateArticleController = async (req, res, next) => {
 
 export const deleteArticleController = async (req, res, next) => {
   try {
-    await ArticleService.delete(req.article);
+    await ArticleService.delete(req.article, getUserId(req.user));
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: 'مقاله با موفقیت حذف شد',
     });

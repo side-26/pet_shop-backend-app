@@ -29,49 +29,34 @@ function toOpenApi(zodSchema) {
 }
 
 export const schemas = {
-  ArticleCreateBody: {
+  ArticleMultipartBody: {
     type: 'object',
-    required: [
-      'title',
-      'subtitle',
-      'mainImage',
-      'mainThumbnailImage',
-      'mainText',
-    ],
+    required: ['title', 'subtitle', 'mainImage', 'mainText'],
     properties: {
       title: { type: 'string', minLength: 2, maxLength: 180 },
       subtitle: { type: 'string', minLength: 1, maxLength: 240 },
-      mainImage: { type: 'string', format: 'uri' },
-      mainThumbnailImage: { type: 'string' },
-      summary: { type: 'string', maxLength: 600 },
-      tags: {
-        type: 'array',
-        maxItems: 20,
-        items: {
-          type: 'object',
-          required: ['title'],
-          properties: {
-            title: { type: 'string', minLength: 1, maxLength: 60 },
-          },
-        },
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description: 'Required image; the server generates its thumbnail.',
       },
+      summary: { type: 'string', maxLength: 600 },
       petType: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
       mainText: { description: 'Rich-text document JSON value.' },
     },
   },
-  ArticleUpdateBody: {
+  ArticleUpdateMultipartBody: {
     type: 'object',
     properties: {
       title: { type: 'string', minLength: 2, maxLength: 180 },
       subtitle: { type: 'string', minLength: 1, maxLength: 240 },
-      mainImage: { type: 'string', format: 'uri' },
-      mainThumbnailImage: { type: 'string' },
-      summary: { type: 'string', maxLength: 600 },
-      tags: {
-        type: 'array',
-        maxItems: 20,
-        items: { type: 'object', properties: { title: { type: 'string' } } },
+      mainImage: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Optional replacement image; the server regenerates its thumbnail.',
       },
+      summary: { type: 'string', maxLength: 600 },
       petType: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' },
     },
   },

@@ -3,6 +3,7 @@ import express from 'express';
 import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 import { authenticated } from '#middlewares/auth.middleware.js';
 import { permissionMiddleware } from '#middlewares/permission.middleware.js';
+import { uploadMainImage } from '#middlewares/upload.middleware.js';
 
 import {
   createArticleController,
@@ -46,10 +47,11 @@ router.post(
   ARTICLE_ROUTES.articles,
   /* #swagger.path = '/articles'
      #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ArticleCreateBody' } } } }
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/ArticleMultipartBody' } } } }
      #swagger.responses[201] = { description: 'Article created' } */
   authenticated,
   permissionMiddleware('articles', 'create'),
+  uploadMainImage,
   createArticleController,
 );
 
@@ -105,11 +107,12 @@ router.put(
   ARTICLE_ROUTES.articleById,
   /* #swagger.path = '/articles/id/{id}'
      #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/ArticleUpdateBody' } } } }
+     #swagger.requestBody = { required: true, content: { "multipart/form-data": { schema: { $ref: '#/components/schemas/ArticleUpdateMultipartBody' } } } }
      #swagger.responses[200] = { description: 'Article details updated' } */
   authenticated,
   loadArticleForPermission,
   permissionMiddleware('articles', 'update', (req) => req.article),
+  uploadMainImage,
   updateArticleController,
 );
 

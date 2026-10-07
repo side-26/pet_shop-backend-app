@@ -12,6 +12,7 @@ Owns management-authored pet-care articles and their public slug-based preview.
 - Admins may update or delete every article. Sellers may do so only when `createdBy` is their authenticated user ID.
 - `mainText` is updated only through `/articles/:id/main-text`; the general update endpoint deliberately excludes it.
 - `GET /articles/id/:id/tags-list` returns an article's tags; its author or an admin replaces them through `PUT /articles/id/:id/range-tags-list`.
+- Article creation requires a multipart `mainImage`; detail updates may replace it. The backend stores the uploaded image URL and generates `mainThumbnailImage`, so clients must never send a thumbnail value.
 
 ## Files
 
