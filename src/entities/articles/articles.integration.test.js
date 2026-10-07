@@ -115,6 +115,35 @@ describe('Article API', () => {
       .expect(200);
   });
 
+  test("returns only the authenticated author's articles", async () => {
+    const [ownedArticle] = await ArticleModel.create([
+      {
+        ...createPayload,
+        title: 'Owned article',
+        slug: 'owned-article',
+        author: { firstName: 'Sara', lastName: 'Ahmadi' },
+        createdBy: seller._id,
+      },
+      {
+        ...createPayload,
+        title: 'Another author article',
+        slug: 'another-author-article',
+        author: { firstName: 'Ali', lastName: 'Karimi' },
+        createdBy: anotherSeller._id,
+      },
+    ]);
+
+    const response = await asUser(
+      request(app).get('/api/article/all'),
+      seller,
+    ).expect(200);
+
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
+      id: ownedArticle._id.toString(),
+    });
+  });
+
   test('forbids another seller but permits an admin to delete the article', async () => {
     const article = await ArticleModel.create({
       ...createPayload,

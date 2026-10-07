@@ -39,6 +39,17 @@ export const createArticleController = async (req, res, next) => {
   }
 };
 
+export const getAuthorArticlesController = async (req, res, next) => {
+  try {
+    const articles = await ArticleService.findByAuthor(getUserId(req.user));
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: ArticleService.formatMany(articles),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const updateArticleMainTextController = async (req, res, next) => {
   try {
     const body = returnFormValidation(updateArticleMainTextZodSchema, req.body);

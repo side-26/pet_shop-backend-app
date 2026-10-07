@@ -24,6 +24,7 @@ import { REVERSE_GEOCODING_ROUTES } from '../integrations/reverseGeocoding/route
 const { get, post, put, patch, delete: deleteMethod } = METHODS;
 
 export const API_ROUTE_METHODS = [
+  { path: ARTICLE_ROUTES.articleAuthorAll, methods: [get] },
   { path: ARTICLE_ROUTES.articlePreviewBySlug, methods: [get] },
   { path: ARTICLE_ROUTES.articles, methods: [post] },
   {

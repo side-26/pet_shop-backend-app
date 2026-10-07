@@ -70,6 +70,7 @@ const articleSchema = new mongoose.Schema(
 );
 
 articleSchema.index({ createdAt: -1 });
+articleSchema.index({ createdBy: 1, createdAt: -1 });
 articleSchema.index({ petType: 1, createdAt: -1 });
 
 export const ArticleModel = mongoose.model('Article', articleSchema);

@@ -7,6 +7,7 @@ import { permissionMiddleware } from '#middlewares/permission.middleware.js';
 import {
   createArticleController,
   deleteArticleController,
+  getAuthorArticlesController,
   loadArticleForPermission,
   previewArticleController,
   updateArticleController,
@@ -16,6 +17,16 @@ import { ARTICLE_ROUTES } from './route.path.js';
 
 const router = express.Router();
 new RateLimiter('articles').applyTo(router);
+
+router.get(
+  ARTICLE_ROUTES.articleAuthorAll,
+  /* #swagger.path = '/article/all'
+     #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.summary = 'List the authenticated author\'s articles'
+     #swagger.responses[200] = { description: 'Authenticated author articles returned' } */
+  authenticated,
+  getAuthorArticlesController,
+);
 
 router.get(
   ARTICLE_ROUTES.articlePreviewBySlug,

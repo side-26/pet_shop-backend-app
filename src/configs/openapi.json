@@ -12,6 +12,18 @@
     }
   ],
   "paths": {
+    "/article/all": {
+      "get": {
+        "tags": ["/article"],
+        "summary": "List the authenticated author's articles",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Authenticated author articles returned" },
+          "401": { "description": "Authentication required" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
     "/articles/{slug}": {
       "get": {
         "tags": ["/articles"],
@@ -10741,6 +10753,10 @@
     }
   },
   "tags": [
+    {
+      "name": "/article",
+      "description": "Endpoints under /api/article"
+    },
     {
       "name": "/articles",
       "description": "Endpoints under /api/articles"

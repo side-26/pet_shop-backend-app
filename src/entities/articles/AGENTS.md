@@ -16,6 +16,11 @@ Owns management-authored pet-care articles and their public slug-based preview.
 
 - `articles.model.js` — article persistence, author/tag snapshots, indexes.
 - `articles.schema.js` — request and route-param validation.
-- `articles.service.js` — slug, creator snapshot, pet-type validation, persistence, and formatting.
+- `articles.service.js` — slug, creator snapshot, pet-type validation, author-scoped listing, persistence, and formatting.
 - `articles.controller.js` and `articles.route.js` — HTTP orchestration and permission-resource loading.
 - `articles.unit.test.js` and `articles.integration.test.js` — service and route coverage.
+
+## Authenticated author list
+
+- `GET /article/all` returns only articles whose `createdBy` matches the authenticated user, newest first.
+- The existing permission policy lets an author edit or delete only their own article; admins retain access to every article.

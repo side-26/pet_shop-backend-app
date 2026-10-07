@@ -22,6 +22,7 @@ jest.mock('./articles.model.js', () => {
     return this;
   });
   MockModel.findById = jest.fn();
+  MockModel.find = jest.fn();
   MockModel.findOne = jest.fn();
   return { ArticleModel: MockModel };
 });
@@ -154,6 +155,18 @@ describe('ArticleService', () => {
     await expect(ArticleService.getPreviewBySlug('missing')).rejects.toThrow(
       'یافت نشد',
     );
+  });
+
+  test("returns only an author's articles with newest first", async () => {
+    const articles = [{ _id: 'newer' }, { _id: 'older' }];
+    const sort = jest.fn().mockResolvedValue(articles);
+    ArticleModel.find.mockReturnValue({ sort });
+
+    await expect(ArticleService.findByAuthor('user-id')).resolves.toBe(
+      articles,
+    );
+    expect(ArticleModel.find).toHaveBeenCalledWith({ createdBy: 'user-id' });
+    expect(sort).toHaveBeenCalledWith({ createdAt: -1 });
   });
 
   test('deletes the loaded article document', async () => {

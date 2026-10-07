@@ -43,6 +43,10 @@ export class ArticleService {
     return article;
   }
 
+  static findByAuthor(userId) {
+    return ArticleModel.find({ createdBy: userId }).sort({ createdAt: -1 });
+  }
+
   static async ensurePetTypeExists(petType) {
     if (!petType) return;
     const existingPetType = await PetTypeModel.findById(petType);
@@ -140,5 +144,9 @@ export class ArticleService {
       createdAt: value.createdAt,
       updatedAt: value.updatedAt,
     };
+  }
+
+  static formatMany(articles) {
+    return articles.map((article) => this.format(article));
   }
 }
