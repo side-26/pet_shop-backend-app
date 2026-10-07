@@ -143,6 +143,15 @@ export class ArticleService {
     return article.save();
   }
 
+  static async replaceTags(article, tags, userId) {
+    const slug = this.createSlug({ title: article.title, tags });
+    await this.ensureUniqueSlug(slug, article._id);
+    article.tags = tags;
+    article.slug = slug;
+    article.updatedBy = userId;
+    return article.save();
+  }
+
   static async delete(article) {
     await article.deleteOne();
   }
@@ -176,5 +185,9 @@ export class ArticleService {
 
   static formatMany(articles) {
     return articles.map((article) => this.format(article));
+  }
+
+  static formatTags(article) {
+    return article.tags || [];
   }
 }

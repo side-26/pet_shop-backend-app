@@ -76,7 +76,7 @@ describe('Article API', () => {
       .expect(201);
 
     expect(created.body.data).toMatchObject({
-      slug: 'healthy-dogs-dogs-health',
+      slug: 'healthy-dogs',
       author: {
         avatar: seller.avatar,
         placeholderImage: '',
@@ -110,6 +110,31 @@ describe('Article API', () => {
       .get(`/api/articles/id/${article._id}/main-text`)
       .expect(200);
     expect(richText.body.data).toEqual({ mainText: createPayload.mainText });
+  });
+
+  test('reads and replaces tags only through dedicated article endpoints', async () => {
+    const article = await ArticleModel.create({
+      ...createPayload,
+      slug: 'healthy-dogs-dogs-health',
+      author: { firstName: 'Sara', lastName: 'Ahmadi' },
+      createdBy: seller._id,
+    });
+
+    await request(app)
+      .get(`/api/articles/id/${article._id}/tags-list`)
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual(createPayload.tags));
+
+    await asUser(
+      request(app).put(`/api/articles/id/${article._id}/range-tags-list`),
+      seller,
+    )
+      .send({ tags: [{ title: 'Training' }] })
+      .expect(200)
+      .expect(({ body }) => expect(body.data).toEqual([{ title: 'Training' }]));
+
+    const updated = await ArticleModel.findById(article._id);
+    expect(updated.slug).toBe('healthy-dogs-training');
   });
 
   test('allows the creating seller to update details and dedicated main text', async () => {
@@ -196,7 +221,7 @@ describe('Article API', () => {
         author: { firstName: 'Forged' },
       })
       .expect(201);
-    expect(response.body.data.slug).toBe('healthy-dogs-dogs-health');
+    expect(response.body.data.slug).toBe('healthy-dogs');
     expect(response.body.data.author.firstName).toBe('Sara');
   });
 });

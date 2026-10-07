@@ -9,6 +9,7 @@ import {
   articleIdZodSchema,
   articleSlugZodSchema,
   createArticleZodSchema,
+  replaceArticleTagsZodSchema,
   updateArticleMainTextZodSchema,
   updateArticleZodSchema,
 } from './articles.schema.js';
@@ -67,6 +68,38 @@ export const getArticleMainTextByIdController = async (req, res, next) => {
     const { id } = returnFormValidation(articleIdZodSchema, req.params);
     const mainText = await ArticleService.getMainTextById(id);
     setSuccessResponse(res, STATUES.SUCCESS, { data: { mainText } });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getArticleTagsController = async (req, res, next) => {
+  try {
+    const { id } = returnFormValidation(articleIdZodSchema, req.params);
+    const article = await ArticleService.findById(id);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: ArticleService.formatTags(article),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const replaceArticleTagsController = async (req, res, next) => {
+  try {
+    const { tags } = returnFormValidation(
+      replaceArticleTagsZodSchema,
+      req.body,
+    );
+    const article = await ArticleService.replaceTags(
+      req.article,
+      tags,
+      getUserId(req.user),
+    );
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      message: 'برچسب‌های مقاله با موفقیت به‌روزرسانی شد',
+      data: ArticleService.formatTags(article),
+    });
   } catch (error) {
     onCatchPromiseController(error, next);
   }

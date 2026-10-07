@@ -23,13 +23,11 @@ const articleFields = {
   mainImage: imageSchema,
   mainThumbnailImage: thumbnailSchema,
   summary: string().trim().max(600).optional(),
-  tags: array(tagSchema).max(20).optional(),
   petType: objectIdSchema.optional(),
 };
 
 export const createArticleZodSchema = object({
   ...articleFields,
-  tags: articleFields.tags.default([]),
   mainText: mainTextSchema,
 });
 
@@ -41,6 +39,10 @@ export const updateArticleZodSchema = object(articleFields)
 
 export const updateArticleMainTextZodSchema = object({
   mainText: mainTextSchema,
+});
+
+export const replaceArticleTagsZodSchema = object({
+  tags: array(tagSchema).max(20),
 });
 
 export const articleIdZodSchema = object({ id: objectIdSchema });

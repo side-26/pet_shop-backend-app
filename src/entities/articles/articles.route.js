@@ -9,9 +9,11 @@ import {
   deleteArticleController,
   getArticleByIdController,
   getArticleMainTextByIdController,
+  getArticleTagsController,
   getAuthorArticlesController,
   loadArticleForPermission,
   previewArticleController,
+  replaceArticleTagsController,
   updateArticleController,
   updateArticleMainTextController,
 } from './articles.controller.js';
@@ -49,6 +51,22 @@ router.post(
   authenticated,
   permissionMiddleware('articles', 'create'),
   createArticleController,
+);
+
+router.get(
+  ARTICLE_ROUTES.articleTagsById,
+  /* #swagger.path = '/articles/id/{id}/tags-list' */
+  getArticleTagsController,
+);
+
+router.put(
+  ARTICLE_ROUTES.articleTagsRangeById,
+  /* #swagger.path = '/articles/id/{id}/range-tags-list'
+     #swagger.security = [{ "bearerAuth": [] }] */
+  authenticated,
+  loadArticleForPermission,
+  permissionMiddleware('articles', 'update', (req) => req.article),
+  replaceArticleTagsController,
 );
 
 router.get(
