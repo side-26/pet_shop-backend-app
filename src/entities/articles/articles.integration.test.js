@@ -37,6 +37,7 @@ jest.mock('#services/mainImage.service.js', () => ({
 import express from 'express';
 import request from 'supertest';
 
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
 import { errorHandler } from '#middlewares/error.middleware.js';
 
 import { ArticleModel } from './articles.model.js';
@@ -72,6 +73,7 @@ describe('Article API', () => {
 
   beforeEach(async () => {
     await ArticleModel.deleteMany({});
+    await PetTypeModel.deleteMany({});
     await UserModel.deleteMany({});
     seller = await UserModel.create({
       firstName: 'Sara',
@@ -209,12 +211,18 @@ describe('Article API', () => {
   });
 
   test("returns only the authenticated author's articles", async () => {
+    const petType = await PetTypeModel.create({
+      title: 'Dog',
+      mainImage: 'https://cdn.example.test/pet-types/dog.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
     const [ownedArticle] = await ArticleModel.create([
       {
         ...createPayload,
         ...storedArticleFields,
         title: 'Owned article',
         slug: 'owned-article',
+        petType: petType._id,
         author: { firstName: 'Sara', lastName: 'Ahmadi' },
         createdBy: seller._id,
       },
@@ -229,13 +237,14 @@ describe('Article API', () => {
     ]);
 
     const response = await asUser(
-      request(app).get('/api/article/all'),
+      request(app).get('/api/articles/all'),
       seller,
     ).expect(200);
 
     expect(response.body.data).toHaveLength(1);
     expect(response.body.data[0]).toMatchObject({
       id: ownedArticle._id.toString(),
+      petType: { title: 'Dog' },
     });
   });
 

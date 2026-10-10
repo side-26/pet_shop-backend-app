@@ -67,7 +67,9 @@ export class ArticleService {
   }
 
   static findByAuthor(userId) {
-    return ArticleModel.find({ createdBy: userId }).sort({ createdAt: -1 });
+    return ArticleModel.find({ createdBy: userId })
+      .sort({ createdAt: -1 })
+      .populate('petType');
   }
 
   static async ensurePetTypeExists(petType) {

@@ -25,10 +25,10 @@ new RateLimiter('articles').applyTo(router);
 
 router.get(
   ARTICLE_ROUTES.articleAuthorAll,
-  /* #swagger.path = '/article/all'
+  /* #swagger.path = '/articles/all'
      #swagger.security = [{ "bearerAuth": [] }]
      #swagger.summary = 'List the authenticated author\'s articles'
-     #swagger.responses[200] = { description: 'Authenticated author articles returned' } */
+     #swagger.responses[200] = { description: 'Authenticated author articles with populated pet types returned' } */
   authenticated,
   getAuthorArticlesController,
 );

@@ -242,7 +242,8 @@ describe('ArticleService', () => {
 
   test("returns only an author's articles with newest first", async () => {
     const articles = [{ _id: 'newer' }, { _id: 'older' }];
-    const sort = jest.fn().mockResolvedValue(articles);
+    const populate = jest.fn().mockResolvedValue(articles);
+    const sort = jest.fn().mockReturnValue({ populate });
     ArticleModel.find.mockReturnValue({ sort });
 
     await expect(ArticleService.findByAuthor('user-id')).resolves.toBe(
@@ -250,6 +251,7 @@ describe('ArticleService', () => {
     );
     expect(ArticleModel.find).toHaveBeenCalledWith({ createdBy: 'user-id' });
     expect(sort).toHaveBeenCalledWith({ createdAt: -1 });
+    expect(populate).toHaveBeenCalledWith('petType');
   });
 
   test('deletes the loaded article document and its stored image', async () => {

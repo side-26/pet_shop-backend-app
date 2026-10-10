@@ -24,5 +24,5 @@ Owns management-authored pet-care articles and their public slug-based preview.
 
 ## Authenticated author list
 
-- `GET /article/all` returns only articles whose `createdBy` matches the authenticated user, newest first.
+- `GET /articles/all` returns only articles whose `createdBy` matches the authenticated user, newest first, with its `petType` reference populated.
 - The existing permission policy lets an author edit or delete only their own article; admins retain access to every article.
