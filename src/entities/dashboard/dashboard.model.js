@@ -1,5 +1,6 @@
 import {
   DASHBOARD_METRICS,
+  ORDER_PAYMENT_STATUSES,
   ROLES,
   USER_ITEM_TYPES,
 } from '#configs/constants.js';
@@ -47,7 +48,12 @@ export class DashboardModel {
     recentLimit,
   }) {
     const [metrics = {}] = await OrderModel.aggregate([
-      { $match: { createdAt: { $gte: fromDate, $lte: toDate } } },
+      {
+        $match: {
+          createdAt: { $gte: fromDate, $lte: toDate },
+          paymentStatus: ORDER_PAYMENT_STATUSES.PAID,
+        },
+      },
       {
         $facet: {
           summary: [

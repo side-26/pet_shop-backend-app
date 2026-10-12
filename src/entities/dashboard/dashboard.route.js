@@ -18,7 +18,7 @@ router.get(
   /*
     #swagger.tags = ['Dashboard']
     #swagger.summary = 'Get admin dashboard metrics'
-    #swagger.description = 'Every created order is recognized as a sale. Revenue and top-selling metrics are derived from immutable order snapshots.'
+    #swagger.description = 'Only successfully paid orders are recognized as sales. Revenue and top-selling metrics are derived from immutable order snapshots.'
     #swagger.security = [{ "bearerAuth": [] }]
     #swagger.parameters['fromDate'] = { in: 'query', schema: { type: 'string', format: 'date-time' } }
     #swagger.parameters['toDate'] = { in: 'query', schema: { type: 'string', format: 'date-time' } }

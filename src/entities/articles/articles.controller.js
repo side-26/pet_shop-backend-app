@@ -8,6 +8,7 @@ import {
 
 import {
   articleIdZodSchema,
+  articlePaginationZodSchema,
   articleSlugZodSchema,
   createArticleZodSchema,
   replaceArticleTagsZodSchema,
@@ -50,6 +51,22 @@ export const getAuthorArticlesController = async (req, res, next) => {
     const articles = await ArticleService.findByAuthor(getUserId(req.user));
     setSuccessResponse(res, STATUES.SUCCESS, {
       data: ArticleService.formatMany(articles),
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getPaginatedArticlesController = async (req, res, next) => {
+  try {
+    const query = returnFormValidation(articlePaginationZodSchema, req.query);
+    const result = await ArticleService.findPaginatedWithMetadata(query);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: {
+        result: ArticleService.formatManyWithoutMainText(result.result),
+        pagination: result.pagination,
+        metadata: result.metadata,
+      },
     });
   } catch (error) {
     onCatchPromiseController(error, next);

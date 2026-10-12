@@ -1,5 +1,6 @@
 export const ARTICLE_ROUTES = {
   articleAuthorAll: '/articles/all',
+  articlesPaginate: '/articles/paginate',
   articles: '/articles',
   articlePreviewBySlug: '/articles/:slug',
   articleById: '/articles/id/:id',

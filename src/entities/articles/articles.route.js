@@ -13,6 +13,7 @@ import {
   getArticleTagsAndMatchedArticlesBySlugController,
   getArticleTagsController,
   getAuthorArticlesController,
+  getPaginatedArticlesController,
   loadArticleForPermission,
   previewArticleController,
   replaceArticleTagsController,
@@ -32,6 +33,16 @@ router.get(
      #swagger.responses[200] = { description: 'Authenticated author articles with populated pet types returned' } */
   authenticated,
   getAuthorArticlesController,
+);
+
+router.get(
+  ARTICLE_ROUTES.articlesPaginate,
+  /* #swagger.path = '/articles/paginate'
+     #swagger.summary = 'List articles with pet types and tag metadata'
+     #swagger.parameters['page'] = { in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } }
+     #swagger.parameters['limit'] = { in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 } }
+     #swagger.responses[200] = { description: 'Paginated articles with author snapshots, populated pet types, and distinct tag metadata' } */
+  getPaginatedArticlesController,
 );
 
 router.get(

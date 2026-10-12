@@ -25,6 +25,7 @@ const { get, post, put, patch, delete: deleteMethod } = METHODS;
 
 export const API_ROUTE_METHODS = [
   { path: ARTICLE_ROUTES.articleAuthorAll, methods: [get] },
+  { path: ARTICLE_ROUTES.articlesPaginate, methods: [get] },
   { path: ARTICLE_ROUTES.articlePreviewBySlug, methods: [get] },
   { path: ARTICLE_ROUTES.articles, methods: [post] },
   { path: ARTICLE_ROUTES.articleTagsById, methods: [get] },

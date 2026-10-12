@@ -26,6 +26,35 @@
         }
       }
     },
+    "/articles/paginate": {
+      "get": {
+        "tags": ["/articles"],
+        "summary": "List articles with pet types and tag metadata",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated articles with author snapshots, populated pet types, and distinct tag metadata"
+          },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
     "/articles/{slug}": {
       "get": {
         "tags": ["/articles"],
@@ -6268,7 +6297,7 @@
       "get": {
         "tags": ["/dashboard"],
         "summary": "Get admin dashboard metrics",
-        "description": "Every created order is recognized as a sale. Revenue and top-selling metrics are derived from immutable order snapshots.",
+        "description": "Only successfully paid orders are recognized as sales. Revenue and top-selling metrics are derived from immutable order snapshots.",
         "parameters": [
           {
             "name": "fromDate",

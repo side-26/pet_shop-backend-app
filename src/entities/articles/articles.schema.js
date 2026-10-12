@@ -3,7 +3,7 @@ import { z } from 'zod';
 import '#configs/zod.config.js';
 import { parseRichTextFormValue } from '#utils/richText.helpers.js';
 
-const { array, object, preprocess, string, unknown } = z;
+const { array, coerce, object, preprocess, string, unknown } = z;
 
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
 const titleSchema = string().trim().min(2).max(180);
@@ -40,4 +40,9 @@ export const replaceArticleTagsZodSchema = object({
 export const articleIdZodSchema = object({ id: objectIdSchema });
 export const articleSlugZodSchema = object({
   slug: string().trim().min(1).max(300),
+});
+
+export const articlePaginationZodSchema = object({
+  page: coerce.number().int().min(1).optional().default(1),
+  limit: coerce.number().int().min(1).max(100).optional().default(10),
 });

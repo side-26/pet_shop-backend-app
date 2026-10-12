@@ -306,6 +306,62 @@ describe('Article API', () => {
     });
   });
 
+  test('returns paginated articles with populated pet types and all unique tags', async () => {
+    const petType = await PetTypeModel.create({
+      title: 'Dog',
+      mainImage: 'https://cdn.example.test/pet-types/dog.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
+    await ArticleModel.create([
+      {
+        ...createPayload,
+        ...storedArticleFields,
+        slug: 'healthy-dogs-dogs-health',
+        petType: petType._id,
+        author: { firstName: 'Sara', lastName: 'Ahmadi' },
+        createdBy: seller._id,
+      },
+      {
+        ...createPayload,
+        ...storedArticleFields,
+        title: 'Dog training',
+        slug: 'dog-training',
+        tags: [{ title: 'Dogs' }, { title: 'Training' }],
+        author: { firstName: 'Ali', lastName: 'Karimi' },
+        createdBy: anotherSeller._id,
+      },
+    ]);
+
+    const response = await request(app)
+      .get('/api/articles/paginate')
+      .query({ page: 1, limit: 2 })
+      .expect(200);
+
+    expect(response.body.data.pagination).toMatchObject({
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 2,
+      itemsPerPage: 2,
+    });
+    expect(response.body.data.result).toHaveLength(2);
+    expect(response.body.data.result).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({ mainText: expect.anything() }),
+      ]),
+    );
+    expect(response.body.data.result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          author: expect.any(Object),
+          petType: expect.objectContaining({ title: 'Dog' }),
+        }),
+      ]),
+    );
+    expect(response.body.data.metadata).toEqual({
+      tags: [{ title: 'Dogs' }, { title: 'Health' }, { title: 'Training' }],
+    });
+  });
+
   test('forbids another seller but permits an admin to delete the article', async () => {
     const article = await ArticleModel.create({
       ...createPayload,

@@ -14,7 +14,7 @@ Provides admin-only, read-only metrics derived from orders, users, products, and
 
 ## Rules
 
-- Every successfully created order is recognized as a sale because orders require a payment tracking identifier and there is no separate payment or cancellation state.
+- Only orders with `paymentStatus: paid` are recognized as sales; pending and failed orders are excluded from order-derived metrics.
 - Revenue and top-selling data come from immutable order snapshots rather than catalog counters.
 - `netRevenue` equals `totalPrice - discountPrice + shippingPrice`.
 - Date grouping uses the `Asia/Tehran` timezone.

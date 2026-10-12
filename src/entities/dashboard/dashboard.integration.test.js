@@ -20,7 +20,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
 
-import { ROLES, STATUES, USER_ITEM_TYPES } from '#configs/constants.js';
+import {
+  ORDER_PAYMENT_STATUSES,
+  ROLES,
+  STATUES,
+  USER_ITEM_TYPES,
+} from '#configs/constants.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { PetModel } from '#entities/pets/pets.model.js';
 import { ProductModel } from '#entities/products/products.model.js';
@@ -91,6 +96,7 @@ describe('Dashboard API', () => {
         trackingCode: '111111111',
         orderNumber: '123456789',
         deliveryState: 0,
+        paymentStatus: ORDER_PAYMENT_STATUSES.PAID,
         totalPrice: 500,
         discountPrice: 80,
         shippingPrice: 10,
@@ -122,11 +128,25 @@ describe('Dashboard API', () => {
         trackingCode: '222222222',
         orderNumber: '987654321',
         deliveryState: 3,
+        paymentStatus: ORDER_PAYMENT_STATUSES.FAILED,
         totalPrice: 100,
         discountPrice: 0,
         shippingPrice: 0,
         items: [],
         createdAt: new Date('2026-08-01T10:00:00.000Z'),
+      },
+      {
+        _id: new mongoose.Types.ObjectId(),
+        user: userId,
+        trackingCode: '333333333',
+        orderNumber: '111111112',
+        deliveryState: 3,
+        paymentStatus: ORDER_PAYMENT_STATUSES.PENDING,
+        totalPrice: 900,
+        discountPrice: 0,
+        shippingPrice: 0,
+        items: [],
+        createdAt: new Date('2026-09-04T11:00:00.000Z'),
       },
     ]);
 

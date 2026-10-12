@@ -1,4 +1,5 @@
 jest.mock('#utils/helpers.js', () => ({
+  getPaginationData: jest.fn(),
   setErrorResponse: jest.fn((statusCode, options = {}) => {
     const error = new Error(options.message || 'خطای سمت سرور');
     error.statusCode = statusCode;
@@ -33,10 +34,12 @@ jest.mock('./articles.model.js', () => {
   MockModel.find = jest.fn();
   MockModel.findOne = jest.fn();
   MockModel.aggregate = jest.fn();
+  MockModel.populate = jest.fn();
   return { ArticleModel: MockModel };
 });
 
 import { MainImageService } from '#services/mainImage.service.js';
+import { getPaginationData } from '#utils/helpers.js';
 
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
@@ -292,6 +295,40 @@ describe('ArticleService', () => {
     expect(ArticleModel.find).toHaveBeenCalledWith({ createdBy: 'user-id' });
     expect(sort).toHaveBeenCalledWith({ createdAt: -1 });
     expect(populate).toHaveBeenCalledWith('petType');
+  });
+
+  test('returns paginated article summaries, populated pet types, and unique tag metadata', async () => {
+    const articles = [{ _id: 'article-id', petType: 'pet-type-id' }];
+    const pagination = { currentPage: 1, totalPages: 1 };
+    getPaginationData.mockResolvedValue({ result: articles, pagination });
+    ArticleModel.aggregate.mockResolvedValue([
+      { title: 'Dogs' },
+      { title: 'Health' },
+    ]);
+    ArticleModel.populate.mockResolvedValue([
+      { ...articles[0], petType: { title: 'Dog' } },
+    ]);
+
+    await expect(
+      ArticleService.findPaginatedWithMetadata({ page: 1, limit: 10 }),
+    ).resolves.toEqual({
+      result: [{ _id: 'article-id', petType: { title: 'Dog' } }],
+      pagination,
+      metadata: { tags: [{ title: 'Dogs' }, { title: 'Health' }] },
+    });
+    expect(getPaginationData).toHaveBeenCalledWith(
+      ArticleModel,
+      { page: 1, limit: 10 },
+      '-mainText',
+      expect.any(Function),
+    );
+    expect(ArticleModel.populate).toHaveBeenCalledWith(articles, 'petType');
+    expect(ArticleModel.aggregate).toHaveBeenCalledWith([
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags.title' } },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, title: '$_id' } },
+    ]);
   });
 
   test('deletes the loaded article document and its stored image', async () => {

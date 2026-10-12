@@ -1,6 +1,6 @@
 import { STATUES } from '#configs/constants.js';
 import { MainImageService } from '#services/mainImage.service.js';
-import { setErrorResponse } from '#utils/helpers.js';
+import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
@@ -107,6 +107,26 @@ export class ArticleService {
     return ArticleModel.find({ createdBy: userId })
       .sort({ createdAt: -1 })
       .populate('petType');
+  }
+
+  static async findPaginatedWithMetadata(query = {}) {
+    const [result, tags] = await Promise.all([
+      getPaginationData(ArticleModel, { ...query }, '-mainText', (error) =>
+        setErrorResponse(STATUES.OTHER_PROBLEM, {
+          message: 'دریافت فهرست مقاله‌ها ناموفق بود',
+          error: String(error),
+        }),
+      ),
+      ArticleModel.aggregate([
+        { $unwind: '$tags' },
+        { $group: { _id: '$tags.title' } },
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, title: '$_id' } },
+      ]),
+    ]);
+    result.result = await ArticleModel.populate(result.result, 'petType');
+
+    return { ...result, metadata: { tags } };
   }
 
   static async ensurePetTypeExists(petType) {
@@ -273,6 +293,10 @@ export class ArticleService {
 
   static formatMany(articles) {
     return articles.map((article) => this.format(article));
+  }
+
+  static formatManyWithoutMainText(articles) {
+    return articles.map((article) => this.formatWithoutMainText(article));
   }
 
   static formatTags(article) {
