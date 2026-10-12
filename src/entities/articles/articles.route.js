@@ -39,9 +39,12 @@ router.get(
   ARTICLE_ROUTES.articlesPaginate,
   /* #swagger.path = '/articles/paginate'
      #swagger.summary = 'List articles with pet types and tag metadata'
+     #swagger.parameters['tag'] = { in: 'query', schema: { type: 'string', maxLength: 60 } }
+     #swagger.parameters['petType'] = { in: 'query', schema: { type: 'string', pattern: '^[a-fA-F0-9]{24}$' } }
+     #swagger.parameters['sort'] = { in: 'query', schema: { type: 'string', enum: ['newest', 'oldest'], default: 'newest' } }
      #swagger.parameters['page'] = { in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } }
      #swagger.parameters['limit'] = { in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 } }
-     #swagger.responses[200] = { description: 'Paginated articles with author snapshots, populated pet types, and distinct tag metadata' } */
+     #swagger.responses[200] = { description: 'Filtered and sorted paginated articles with author snapshots, populated pet types, and tag/pet-type metadata' } */
   getPaginatedArticlesController,
 );
 

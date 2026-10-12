@@ -17,7 +17,7 @@ jest.mock('#services/mainImage.service.js', () => ({
 }));
 
 jest.mock('../petTypes/petTypes.model.js', () => ({
-  PetTypeModel: { findById: jest.fn() },
+  PetTypeModel: { find: jest.fn(), findById: jest.fn() },
 }));
 
 jest.mock('../users/users.model.js', () => ({
@@ -43,6 +43,10 @@ import { getPaginationData } from '#utils/helpers.js';
 
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
+import {
+  ARTICLE_LIST_SORT_ORDERS,
+  ARTICLE_LIST_SORTS,
+} from './articles.constants.js';
 import { ArticleModel } from './articles.model.js';
 import { ArticleService } from './articles.service.js';
 
@@ -308,17 +312,36 @@ describe('ArticleService', () => {
     ArticleModel.populate.mockResolvedValue([
       { ...articles[0], petType: { title: 'Dog' } },
     ]);
+    const petTypes = [{ title: 'Dog' }];
+    const sortPetTypes = jest.fn().mockResolvedValue(petTypes);
+    const selectPetTypes = jest.fn().mockReturnValue({ sort: sortPetTypes });
+    PetTypeModel.find.mockReturnValue({ select: selectPetTypes });
 
     await expect(
-      ArticleService.findPaginatedWithMetadata({ page: 1, limit: 10 }),
+      ArticleService.findPaginatedWithMetadata({
+        page: 1,
+        limit: 10,
+        tag: 'Dogs',
+        petType: 'pet-type-id',
+        sort: ARTICLE_LIST_SORTS.OLDEST,
+      }),
     ).resolves.toEqual({
       result: [{ _id: 'article-id', petType: { title: 'Dog' } }],
       pagination,
-      metadata: { tags: [{ title: 'Dogs' }, { title: 'Health' }] },
+      metadata: {
+        tags: [{ title: 'Dogs' }, { title: 'Health' }],
+        petTypes,
+      },
     });
     expect(getPaginationData).toHaveBeenCalledWith(
       ArticleModel,
-      { page: 1, limit: 10 },
+      {
+        'tags.title': 'Dogs',
+        petType: 'pet-type-id',
+        page: 1,
+        limit: 10,
+        sort: ARTICLE_LIST_SORT_ORDERS[ARTICLE_LIST_SORTS.OLDEST],
+      },
       '-mainText',
       expect.any(Function),
     );
@@ -329,6 +352,11 @@ describe('ArticleService', () => {
       { $sort: { _id: 1 } },
       { $project: { _id: 0, title: '$_id' } },
     ]);
+    expect(PetTypeModel.find).toHaveBeenCalledWith({ isEnabled: true });
+    expect(selectPetTypes).toHaveBeenCalledWith(
+      'title mainImage thumbnail slug',
+    );
+    expect(sortPetTypes).toHaveBeenCalledWith({ title: 1 });
   });
 
   test('deletes the loaded article document and its stored image', async () => {

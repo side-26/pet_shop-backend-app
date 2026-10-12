@@ -5,7 +5,10 @@ import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
 import { ArticleModel } from './articles.model.js';
-import { RELATED_ARTICLE_LIMIT } from './articles.constants.js';
+import {
+  ARTICLE_LIST_SORT_ORDERS,
+  RELATED_ARTICLE_LIMIT,
+} from './articles.constants.js';
 
 export class ArticleService {
   static createSlug({ title, tags = [] }) {
@@ -110,12 +113,25 @@ export class ArticleService {
   }
 
   static async findPaginatedWithMetadata(query = {}) {
-    const [result, tags] = await Promise.all([
-      getPaginationData(ArticleModel, { ...query }, '-mainText', (error) =>
-        setErrorResponse(STATUES.OTHER_PROBLEM, {
-          message: 'دریافت فهرست مقاله‌ها ناموفق بود',
-          error: String(error),
-        }),
+    const filter = {
+      ...(query.tag ? { 'tags.title': query.tag } : {}),
+      ...(query.petType ? { petType: query.petType } : {}),
+    };
+    const [result, tags, petTypes] = await Promise.all([
+      getPaginationData(
+        ArticleModel,
+        {
+          ...filter,
+          page: query.page,
+          limit: query.limit,
+          sort: ARTICLE_LIST_SORT_ORDERS[query.sort],
+        },
+        '-mainText',
+        (error) =>
+          setErrorResponse(STATUES.OTHER_PROBLEM, {
+            message: 'دریافت فهرست مقاله‌ها ناموفق بود',
+            error: String(error),
+          }),
       ),
       ArticleModel.aggregate([
         { $unwind: '$tags' },
@@ -123,10 +139,13 @@ export class ArticleService {
         { $sort: { _id: 1 } },
         { $project: { _id: 0, title: '$_id' } },
       ]),
+      PetTypeModel.find({ isEnabled: true })
+        .select('title mainImage thumbnail slug')
+        .sort({ title: 1 }),
     ]);
     result.result = await ArticleModel.populate(result.result, 'petType');
 
-    return { ...result, metadata: { tags } };
+    return { ...result, metadata: { tags, petTypes } };
   }
 
   static async ensurePetTypeExists(petType) {

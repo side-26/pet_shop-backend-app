@@ -307,11 +307,18 @@ describe('Article API', () => {
   });
 
   test('returns paginated articles with populated pet types and all unique tags', async () => {
-    const petType = await PetTypeModel.create({
-      title: 'Dog',
-      mainImage: 'https://cdn.example.test/pet-types/dog.webp',
-      thumbnail: 'data:image/webp;base64,AAAA',
-    });
+    const [petType, catPetType] = await PetTypeModel.create([
+      {
+        title: 'Dog',
+        mainImage: 'https://cdn.example.test/pet-types/dog.webp',
+        thumbnail: 'data:image/webp;base64,AAAA',
+      },
+      {
+        title: 'Cat',
+        mainImage: 'https://cdn.example.test/pet-types/cat.webp',
+        thumbnail: 'data:image/webp;base64,AAAA',
+      },
+    ]);
     await ArticleModel.create([
       {
         ...createPayload,
@@ -320,6 +327,7 @@ describe('Article API', () => {
         petType: petType._id,
         author: { firstName: 'Sara', lastName: 'Ahmadi' },
         createdBy: seller._id,
+        createdAt: new Date('2026-09-02T00:00:00.000Z'),
       },
       {
         ...createPayload,
@@ -327,8 +335,10 @@ describe('Article API', () => {
         title: 'Dog training',
         slug: 'dog-training',
         tags: [{ title: 'Dogs' }, { title: 'Training' }],
+        petType: catPetType._id,
         author: { firstName: 'Ali', lastName: 'Karimi' },
         createdBy: anotherSeller._id,
+        createdAt: new Date('2026-09-01T00:00:00.000Z'),
       },
     ]);
 
@@ -359,7 +369,28 @@ describe('Article API', () => {
     );
     expect(response.body.data.metadata).toEqual({
       tags: [{ title: 'Dogs' }, { title: 'Health' }, { title: 'Training' }],
+      petTypes: [
+        expect.objectContaining({ title: 'Cat' }),
+        expect.objectContaining({ title: 'Dog' }),
+      ],
     });
+
+    const filtered = await request(app)
+      .get('/api/articles/paginate')
+      .query({ tag: 'Dogs', petType: petType._id.toString(), sort: 'oldest' })
+      .expect(200);
+    expect(filtered.body.data.result).toEqual([
+      expect.objectContaining({ slug: 'healthy-dogs-dogs-health' }),
+    ]);
+
+    const oldest = await request(app)
+      .get('/api/articles/paginate')
+      .query({ tag: 'Dogs', sort: 'oldest', limit: 2 })
+      .expect(200);
+    expect(oldest.body.data.result.map(({ slug }) => slug)).toEqual([
+      'dog-training',
+      'healthy-dogs-dogs-health',
+    ]);
   });
 
   test('forbids another seller but permits an admin to delete the article', async () => {

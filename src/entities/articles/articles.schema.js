@@ -3,7 +3,17 @@ import { z } from 'zod';
 import '#configs/zod.config.js';
 import { parseRichTextFormValue } from '#utils/richText.helpers.js';
 
-const { array, coerce, object, preprocess, string, unknown } = z;
+import { ARTICLE_LIST_SORTS } from './articles.constants.js';
+
+const {
+  array,
+  coerce,
+  enum: enumValue,
+  object,
+  preprocess,
+  string,
+  unknown,
+} = z;
 
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
 const titleSchema = string().trim().min(2).max(180);
@@ -43,6 +53,11 @@ export const articleSlugZodSchema = object({
 });
 
 export const articlePaginationZodSchema = object({
+  tag: string().trim().min(1).max(60).optional(),
+  petType: objectIdSchema.optional(),
+  sort: enumValue(Object.values(ARTICLE_LIST_SORTS))
+    .optional()
+    .default(ARTICLE_LIST_SORTS.NEWEST),
   page: coerce.number().int().min(1).optional().default(1),
   limit: coerce.number().int().min(1).max(100).optional().default(10),
 });

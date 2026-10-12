@@ -61,7 +61,12 @@ export const getPaginationData = async (
     const page = parseInt(filterQuery.page) || 1;
     const limit = parseInt(filterQuery.limit) || 10;
     const skip = (page - 1) * limit;
-    const sort = filterQuery.sort ? `-${filterQuery.sort}` : '-createdAt';
+    const sort =
+      typeof filterQuery.sort === 'object'
+        ? filterQuery.sort
+        : filterQuery.sort
+          ? `-${filterQuery.sort}`
+          : '-createdAt';
     delete filterQuery?.page;
     delete filterQuery?.limit;
     delete filterQuery?.sort;
