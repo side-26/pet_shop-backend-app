@@ -10,6 +10,7 @@ import {
   deleteArticleController,
   getArticleByIdController,
   getArticleMainTextByIdController,
+  getArticleTagsAndMatchedArticlesBySlugController,
   getArticleTagsController,
   getAuthorArticlesController,
   loadArticleForPermission,
@@ -59,6 +60,16 @@ router.get(
   ARTICLE_ROUTES.articleTagsById,
   /* #swagger.path = '/articles/id/{id}/tags-list' */
   getArticleTagsController,
+);
+
+router.get(
+  ARTICLE_ROUTES.articleTagsAndMatchedArticlesBySlug,
+  /* #swagger.path = '/articles/{slug}/tags-list/matched-articles'
+     #swagger.summary = 'Get an article tags and its five closest tag matches'
+     #swagger.parameters['slug'] = { in: 'path', required: true, schema: { type: 'string' } }
+     #swagger.responses[200] = { description: 'Article tags and up to five matched articles returned without rich text' }
+     #swagger.responses[404] = { description: 'Article not found' } */
+  getArticleTagsAndMatchedArticlesBySlugController,
 );
 
 router.put(

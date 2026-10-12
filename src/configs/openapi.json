@@ -45,6 +45,27 @@
         }
       }
     },
+    "/articles/{slug}/tags-list/matched-articles": {
+      "get": {
+        "tags": ["/articles"],
+        "summary": "Get an article tags and its five closest tag matches",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Article tags and up to five matched articles returned without rich text"
+          },
+          "404": { "description": "Article not found" },
+          "405": { "description": "Method not allowed" }
+        }
+      }
+    },
     "/articles": {
       "post": {
         "tags": ["/articles"],

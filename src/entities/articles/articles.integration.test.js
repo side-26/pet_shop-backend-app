@@ -184,6 +184,64 @@ describe('Article API', () => {
     expect(updated.slug).toBe('healthy-dogs-training');
   });
 
+  test('gets an article tags and its five closest tag matches by slug', async () => {
+    const sourceArticle = await ArticleModel.create({
+      ...createPayload,
+      ...storedArticleFields,
+      slug: 'healthy-dogs-dogs-health',
+      author: { firstName: 'Sara', lastName: 'Ahmadi' },
+      createdBy: seller._id,
+    });
+    const [bestMatch] = await ArticleModel.create([
+      {
+        ...createPayload,
+        ...storedArticleFields,
+        title: 'Dogs and health',
+        slug: 'dogs-and-health',
+        author: { firstName: 'Sara', lastName: 'Ahmadi' },
+        createdBy: seller._id,
+      },
+      ...Array.from({ length: 5 }, (_, index) => ({
+        ...createPayload,
+        ...storedArticleFields,
+        title: `Dog care ${index}`,
+        slug: `dog-care-${index}`,
+        tags: [{ title: 'Dogs' }],
+        author: { firstName: 'Sara', lastName: 'Ahmadi' },
+        createdBy: seller._id,
+      })),
+      {
+        ...createPayload,
+        ...storedArticleFields,
+        title: 'Cats only',
+        slug: 'cats-only',
+        tags: [{ title: 'Cats' }],
+        author: { firstName: 'Sara', lastName: 'Ahmadi' },
+        createdBy: seller._id,
+      },
+    ]);
+
+    const response = await request(app)
+      .get(`/api/articles/${sourceArticle.slug}/tags-list/matched-articles`)
+      .expect(200);
+
+    expect(response.body.data.tags).toEqual(storedArticleFields.tags);
+    expect(response.body.data.articles).toHaveLength(5);
+    expect(response.body.data.articles[0]).toMatchObject({
+      id: bestMatch._id.toString(),
+    });
+    expect(response.body.data.articles).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: sourceArticle._id.toString() }),
+      ]),
+    );
+    expect(response.body.data.articles).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ mainText: expect.anything() }),
+      ]),
+    );
+  });
+
   test('allows the creating seller to update details and dedicated main text', async () => {
     const article = await ArticleModel.create({
       ...createPayload,

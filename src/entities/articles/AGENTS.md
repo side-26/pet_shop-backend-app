@@ -11,14 +11,15 @@ Owns management-authored pet-care articles and their public slug-based preview.
 - `GET /articles/:slug`, `GET /articles/id/:id`, and `GET /articles/id/:id/main-text` are public. The ID detail route omits `mainText`; the dedicated main-text route returns only that field. Creation, detail updates, main-text updates, and deletion use the permission middleware.
 - Admins may update or delete every article. Sellers may do so only when `createdBy` is their authenticated user ID.
 - `mainText` is updated only through `/articles/:id/main-text`; the general update endpoint deliberately excludes it.
-- `GET /articles/id/:id/tags-list` returns an article's tags; its author or an admin replaces them through `PUT /articles/id/:id/range-tags-list`.
+- `GET /articles/id/:id/tags-list` returns an article's tags. `GET /articles/:slug/tags-list/matched-articles` returns a slug-selected article's tags and up to five other articles ranked by shared tag titles, without rich text. Its author or an admin replaces tags through `PUT /articles/id/:id/range-tags-list`.
 - Article creation requires a multipart `mainImage`; detail updates may replace it. The backend stores the uploaded image URL and generates `mainThumbnailImage`, so clients must never send a thumbnail value.
 
 ## Files
 
 - `articles.model.js` — article persistence, author/tag snapshots, indexes.
 - `articles.schema.js` — request and route-param validation.
-- `articles.service.js` — slug, creator snapshot, pet-type validation, author-scoped listing, persistence, and formatting.
+- `articles.constants.js` — entity-level fixed result limits.
+- `articles.service.js` — slug, creator snapshot, pet-type validation, tag-match ranking, author-scoped listing, persistence, and formatting.
 - `articles.controller.js` and `articles.route.js` — HTTP orchestration and permission-resource loading.
 - `articles.unit.test.js` and `articles.integration.test.js` — service and route coverage.
 

@@ -90,6 +90,27 @@ export const getArticleTagsController = async (req, res, next) => {
   }
 };
 
+export const getArticleTagsAndMatchedArticlesBySlugController = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const { slug } = returnFormValidation(articleSlugZodSchema, req.params);
+    const result = await ArticleService.getTagsAndMatchedArticlesBySlug(slug);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data: {
+        tags: result.tags,
+        articles: result.articles.map((article) =>
+          ArticleService.formatWithoutMainText(article),
+        ),
+      },
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const replaceArticleTagsController = async (req, res, next) => {
   try {
     const { tags } = returnFormValidation(

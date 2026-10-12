@@ -5,6 +5,7 @@ import { setErrorResponse } from '#utils/helpers.js';
 import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
 import { ArticleModel } from './articles.model.js';
+import { RELATED_ARTICLE_LIMIT } from './articles.constants.js';
 
 export class ArticleService {
   static createSlug({ title, tags = [] }) {
@@ -64,6 +65,42 @@ export class ArticleService {
       });
     }
     return article;
+  }
+
+  static async getTagsAndMatchedArticlesBySlug(slug) {
+    const article = await this.getPreviewBySlug(slug);
+    const tags = article.tags || [];
+    const tagTitles = [...new Set(tags.map(({ title }) => title))];
+
+    if (tagTitles.length === 0) {
+      return { tags, articles: [] };
+    }
+
+    const articles = await ArticleModel.aggregate([
+      {
+        $match: {
+          _id: { $ne: article._id },
+          'tags.title': { $in: tagTitles },
+        },
+      },
+      {
+        $addFields: {
+          matchedTagCount: {
+            $size: {
+              $setIntersection: [
+                { $map: { input: '$tags', as: 'tag', in: '$$tag.title' } },
+                tagTitles,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { matchedTagCount: -1, createdAt: -1, _id: -1 } },
+      { $limit: RELATED_ARTICLE_LIMIT },
+      { $project: { mainText: 0, matchedTagCount: 0, __v: 0 } },
+    ]);
+
+    return { tags, articles };
   }
 
   static findByAuthor(userId) {

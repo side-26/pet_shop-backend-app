@@ -28,6 +28,10 @@ export const API_ROUTE_METHODS = [
   { path: ARTICLE_ROUTES.articlePreviewBySlug, methods: [get] },
   { path: ARTICLE_ROUTES.articles, methods: [post] },
   { path: ARTICLE_ROUTES.articleTagsById, methods: [get] },
+  {
+    path: ARTICLE_ROUTES.articleTagsAndMatchedArticlesBySlug,
+    methods: [get],
+  },
   { path: ARTICLE_ROUTES.articleTagsRangeById, methods: [put] },
   {
     path: ARTICLE_ROUTES.articleMainTextById,

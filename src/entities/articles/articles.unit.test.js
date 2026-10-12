@@ -32,6 +32,7 @@ jest.mock('./articles.model.js', () => {
   MockModel.findById = jest.fn();
   MockModel.find = jest.fn();
   MockModel.findOne = jest.fn();
+  MockModel.aggregate = jest.fn();
   return { ArticleModel: MockModel };
 });
 
@@ -238,6 +239,45 @@ describe('ArticleService', () => {
     );
     expect(detailsSelect).toHaveBeenCalledWith('-mainText');
     expect(mainTextSelect).toHaveBeenCalledWith('mainText');
+  });
+
+  test('returns source tags and ranks up to five articles by shared tags', async () => {
+    const sourceArticle = {
+      _id: 'source-article-id',
+      tags: [{ title: 'Dogs' }, { title: 'Health' }],
+    };
+    const matches = [{ _id: 'best-match' }];
+    ArticleModel.findOne.mockResolvedValue(sourceArticle);
+    ArticleModel.aggregate.mockResolvedValue(matches);
+
+    await expect(
+      ArticleService.getTagsAndMatchedArticlesBySlug('healthy-dogs'),
+    ).resolves.toEqual({ tags: sourceArticle.tags, articles: matches });
+
+    expect(ArticleModel.aggregate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          $match: {
+            _id: { $ne: sourceArticle._id },
+            'tags.title': { $in: ['Dogs', 'Health'] },
+          },
+        }),
+        { $limit: 5 },
+        { $project: { mainText: 0, matchedTagCount: 0, __v: 0 } },
+      ]),
+    );
+  });
+
+  test('returns no matches without querying when the source article has no tags', async () => {
+    ArticleModel.findOne.mockResolvedValue({
+      _id: 'source-article-id',
+      tags: [],
+    });
+
+    await expect(
+      ArticleService.getTagsAndMatchedArticlesBySlug('untagged-article'),
+    ).resolves.toEqual({ tags: [], articles: [] });
+    expect(ArticleModel.aggregate).not.toHaveBeenCalled();
   });
 
   test("returns only an author's articles with newest first", async () => {
