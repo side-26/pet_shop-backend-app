@@ -29,7 +29,7 @@
     "/articles/paginate": {
       "get": {
         "tags": ["/articles"],
-        "summary": "List articles with pet types and tag metadata",
+        "summary": "List articles with counted pet-type and tag metadata",
         "parameters": [
           {
             "name": "tags",
@@ -78,7 +78,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Filtered and sorted paginated articles with author snapshots, populated pet types, and tag/pet-type/sort metadata. Selected tags use OR matching."
+            "description": "Filtered and sorted paginated articles with author snapshots, populated pet types, and tag/pet-type/sort metadata. Each tag and each enabled pet type used by at least one article includes its total associated article count. Selected tags use OR matching."
           },
           "405": { "description": "Method not allowed" }
         }

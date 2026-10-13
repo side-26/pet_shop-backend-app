@@ -302,18 +302,24 @@ describe('ArticleService', () => {
     expect(populate).toHaveBeenCalledWith('petType');
   });
 
-  test('returns paginated article summaries, populated pet types, and unique tag metadata', async () => {
+  test('returns paginated article summaries and counted filter metadata', async () => {
     const articles = [{ _id: 'article-id', petType: 'pet-type-id' }];
     const pagination = { currentPage: 1, totalPages: 1 };
     getPaginationData.mockResolvedValue({ result: articles, pagination });
-    ArticleModel.aggregate.mockResolvedValue([
-      { title: 'Dogs' },
-      { title: 'Health' },
-    ]);
+    ArticleModel.aggregate
+      .mockResolvedValue([{ title: 'Dogs' }, { title: 'Health' }])
+      .mockResolvedValueOnce([
+        { title: 'Dogs', count: 2 },
+        { title: 'Health', count: 1 },
+      ])
+      .mockResolvedValueOnce([{ _id: 'pet-type-id', count: 2 }]);
     ArticleModel.populate.mockResolvedValue([
       { ...articles[0], petType: { title: 'Dog' } },
     ]);
-    const petTypes = [{ title: 'Dog' }];
+    const petTypes = [
+      { _id: 'pet-type-id', title: 'Dog' },
+      { _id: 'cat-id', title: 'Cat' },
+    ];
     const sortPetTypes = jest.fn().mockResolvedValue(petTypes);
     const selectPetTypes = jest.fn().mockReturnValue({ sort: sortPetTypes });
     PetTypeModel.find.mockReturnValue({ select: selectPetTypes });
@@ -330,8 +336,11 @@ describe('ArticleService', () => {
       result: [{ _id: 'article-id', petType: { title: 'Dog' } }],
       pagination,
       metadata: {
-        tags: [{ title: 'Dogs' }, { title: 'Health' }],
-        petTypes,
+        tags: [
+          { title: 'Dogs', count: 2 },
+          { title: 'Health', count: 1 },
+        ],
+        petTypes: [{ _id: 'pet-type-id', title: 'Dog', count: 2 }],
         sort: {
           current: ARTICLE_LIST_SORTS.OLDEST,
           options: ARTICLE_LIST_SORT_OPTIONS,
@@ -353,9 +362,13 @@ describe('ArticleService', () => {
     expect(ArticleModel.populate).toHaveBeenCalledWith(articles, 'petType');
     expect(ArticleModel.aggregate).toHaveBeenCalledWith([
       { $unwind: '$tags' },
-      { $group: { _id: '$tags.title' } },
+      { $group: { _id: '$tags.title', count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
-      { $project: { _id: 0, title: '$_id' } },
+      { $project: { _id: 0, title: '$_id', count: 1 } },
+    ]);
+    expect(ArticleModel.aggregate).toHaveBeenCalledWith([
+      { $match: { petType: { $ne: null } } },
+      { $group: { _id: '$petType', count: { $sum: 1 } } },
     ]);
     expect(PetTypeModel.find).toHaveBeenCalledWith({ isEnabled: true });
     expect(selectPetTypes).toHaveBeenCalledWith(

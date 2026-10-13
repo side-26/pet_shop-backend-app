@@ -120,7 +120,7 @@ export class ArticleService {
       ...(query.tags?.length ? { 'tags.title': { $in: query.tags } } : {}),
       ...(query.petType ? { petType: query.petType } : {}),
     };
-    const [result, tags, petTypes] = await Promise.all([
+    const [result, tags, petTypeArticleCounts, petTypes] = await Promise.all([
       getPaginationData(
         ArticleModel,
         {
@@ -138,21 +138,33 @@ export class ArticleService {
       ),
       ArticleModel.aggregate([
         { $unwind: '$tags' },
-        { $group: { _id: '$tags.title' } },
+        { $group: { _id: '$tags.title', count: { $sum: 1 } } },
         { $sort: { _id: 1 } },
-        { $project: { _id: 0, title: '$_id' } },
+        { $project: { _id: 0, title: '$_id', count: 1 } },
+      ]),
+      ArticleModel.aggregate([
+        { $match: { petType: { $ne: null } } },
+        { $group: { _id: '$petType', count: { $sum: 1 } } },
       ]),
       PetTypeModel.find({ isEnabled: true })
         .select('title mainImage thumbnail slug')
         .sort({ title: 1 }),
     ]);
     result.result = await ArticleModel.populate(result.result, 'petType');
+    const petTypeCountById = new Map(
+      petTypeArticleCounts.map(({ _id, count }) => [String(_id), count]),
+    );
 
     return {
       ...result,
       metadata: {
         tags,
-        petTypes,
+        petTypes: petTypes
+          .filter((petType) => petTypeCountById.has(String(petType._id)))
+          .map((petType) => ({
+            ...(petType.toObject?.() ?? petType),
+            count: petTypeCountById.get(String(petType._id)),
+          })),
         sort: { current: sort, options: ARTICLE_LIST_SORT_OPTIONS },
       },
     };

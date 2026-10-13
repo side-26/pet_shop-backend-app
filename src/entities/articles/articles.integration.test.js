@@ -306,7 +306,7 @@ describe('Article API', () => {
     });
   });
 
-  test('returns paginated articles with populated pet types and all unique tags', async () => {
+  test('returns paginated articles with populated pet types and counted filters', async () => {
     const [petType, catPetType] = await PetTypeModel.create([
       {
         title: 'Dog',
@@ -319,6 +319,11 @@ describe('Article API', () => {
         thumbnail: 'data:image/webp;base64,AAAA',
       },
     ]);
+    await PetTypeModel.create({
+      title: 'Bird',
+      mainImage: 'https://cdn.example.test/pet-types/bird.webp',
+      thumbnail: 'data:image/webp;base64,AAAA',
+    });
     await ArticleModel.create([
       {
         ...createPayload,
@@ -368,10 +373,14 @@ describe('Article API', () => {
       ]),
     );
     expect(response.body.data.metadata).toEqual({
-      tags: [{ title: 'Dogs' }, { title: 'Health' }, { title: 'Training' }],
+      tags: [
+        { title: 'Dogs', count: 2 },
+        { title: 'Health', count: 1 },
+        { title: 'Training', count: 1 },
+      ],
       petTypes: [
-        expect.objectContaining({ title: 'Cat' }),
-        expect.objectContaining({ title: 'Dog' }),
+        expect.objectContaining({ title: 'Cat', count: 1 }),
+        expect.objectContaining({ title: 'Dog', count: 1 }),
       ],
       sort: {
         current: 'newest',
@@ -381,6 +390,9 @@ describe('Article API', () => {
         ],
       },
     });
+    expect(response.body.data.metadata.petTypes).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ title: 'Bird' })]),
+    );
 
     const filtered = await request(app)
       .get('/api/articles/paginate')
