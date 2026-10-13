@@ -344,6 +344,7 @@ describe('Landing API', () => {
       expect.arrayContaining([
         expect.objectContaining({
           title: expect.any(String),
+          slug: expect.any(String),
           mainImage: expect.any(String),
           thumbnailImage: expect.any(String),
           itemType: expect.stringMatching(/^(pet|product)$/),
@@ -351,16 +352,18 @@ describe('Landing API', () => {
       ]),
     );
     expect(
-      response.body.data.result.every((item) => Object.keys(item).length === 4),
+      response.body.data.result.every((item) => Object.keys(item).length === 5),
     ).toBe(true);
     expect(response.body.data.result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           title: `${search} محصول`,
+          slug: 'search-product',
           itemType: 'product',
         }),
         expect.objectContaining({
           title: `${search} حیوان`,
+          slug: 'search-pet',
           itemType: 'pet',
         }),
       ]),

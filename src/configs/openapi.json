@@ -6560,7 +6560,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Paginated matching compact catalog items with title, mainImage, thumbnailImage, and itemType (pet or product)"
+            "description": "Paginated matching compact catalog items with title, slug, mainImage, thumbnailImage, and itemType (pet or product)"
           },
           "422": {
             "description": "Search query validation error"

@@ -434,6 +434,7 @@ export class LandingModel {
         $project: {
           _id: 0,
           title: 1,
+          slug: 1,
           mainImage: 1,
           thumbnailImage: '$mainImageThumbnail',
           itemType: { $literal: LANDING_SEARCH_ITEM_TYPES.PRODUCT },
@@ -458,6 +459,7 @@ export class LandingModel {
         $project: {
           _id: 0,
           title: 1,
+          slug: 1,
           mainImage: 1,
           thumbnailImage: '$mainImageThumbnail',
           itemType: { $literal: LANDING_SEARCH_ITEM_TYPES.PET },

@@ -31,7 +31,7 @@ router.get(
      #swagger.parameters['search'] = { in: 'query', required: true, type: 'string', minLength: 1, maxLength: 100 }
      #swagger.parameters['page'] = { in: 'query', type: 'integer', minimum: 1, default: 1 }
      #swagger.parameters['limit'] = { in: 'query', type: 'integer', minimum: 1, maximum: 100, default: 20 }
-     #swagger.responses[200] = { description: 'Paginated matching compact catalog items with title, mainImage, thumbnailImage, and itemType (pet or product)' }
+     #swagger.responses[200] = { description: 'Paginated matching compact catalog items with title, slug, mainImage, thumbnailImage, and itemType (pet or product)' }
      #swagger.responses[422] = { description: 'Search query validation error' } */
   searchCatalogController,
 );

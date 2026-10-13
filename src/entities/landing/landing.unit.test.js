@@ -147,12 +147,14 @@ describe('LandingService', () => {
     const search = /گربه/i;
     const productMatch = {
       title: 'غذای گربه',
+      slug: 'cat-food',
       mainImage: 'https://cdn.example.com/food.webp',
       thumbnailImage: 'data:image/webp;base64,AAAA',
       itemType: LANDING_SEARCH_ITEM_TYPES.PRODUCT,
     };
     const petMatch = {
       title: 'گربه پرشین',
+      slug: 'persian-cat',
       mainImage: 'https://cdn.example.com/persian.webp',
       thumbnailImage: 'data:image/webp;base64,BBBB',
       itemType: LANDING_SEARCH_ITEM_TYPES.PET,
