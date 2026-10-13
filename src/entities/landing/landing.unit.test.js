@@ -23,6 +23,8 @@ jest.mock('./landing.model.js', () => ({
     findFacetCategories: jest.fn(),
     findFacetSubCategories: jest.fn(),
     findFacetBrands: jest.fn(),
+    countSearchPets: jest.fn(),
+    countSearchProducts: jest.fn(),
     findSearchProducts: jest.fn(),
     findSearchPets: jest.fn(),
   },
@@ -140,7 +142,7 @@ const highestPricedPet = {
 describe('LandingService', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test('combines compact product and pet search matches in title order', async () => {
+  test('returns paginated compact product and pet search matches in title order', async () => {
     const search = /گربه/i;
     const productMatch = {
       title: 'غذای گربه',
@@ -154,13 +156,33 @@ describe('LandingService', () => {
     };
     LandingModel.findSearchProducts.mockResolvedValue([productMatch]);
     LandingModel.findSearchPets.mockResolvedValue([petMatch]);
+    LandingModel.countSearchProducts.mockResolvedValue(1);
+    LandingModel.countSearchPets.mockResolvedValue(1);
 
-    await expect(LandingService.searchCatalog(search)).resolves.toEqual([
-      productMatch,
-      petMatch,
-    ]);
+    await expect(
+      LandingService.searchCatalog(search, { page: 1, limit: 20 }),
+    ).resolves.toMatchObject({
+      result: [productMatch, petMatch],
+      pagination: { totalItems: 2, currentPage: 1, itemsPerPage: 20 },
+    });
     expect(LandingModel.findSearchProducts).toHaveBeenCalledWith(search, 20);
     expect(LandingModel.findSearchPets).toHaveBeenCalledWith(search, 20);
+    expect(LandingModel.countSearchProducts).toHaveBeenCalledWith(search);
+    expect(LandingModel.countSearchPets).toHaveBeenCalledWith(search);
+  });
+
+  test('returns a bounded non-paginated initial search preview', async () => {
+    const search = /گربه/i;
+    LandingModel.findSearchProducts.mockResolvedValue([{ title: 'غذای گربه' }]);
+    LandingModel.findSearchPets.mockResolvedValue([{ title: 'گربه پرشین' }]);
+
+    await expect(
+      LandingService.getInitialSearchCatalog(search, 3),
+    ).resolves.toEqual([{ title: 'غذای گربه' }, { title: 'گربه پرشین' }]);
+    expect(LandingModel.findSearchProducts).toHaveBeenCalledWith(search, 3);
+    expect(LandingModel.findSearchPets).toHaveBeenCalledWith(search, 3);
+    expect(LandingModel.countSearchProducts).not.toHaveBeenCalled();
+    expect(LandingModel.countSearchPets).not.toHaveBeenCalled();
   });
 
   test('formats the bounded featured pet types section', async () => {

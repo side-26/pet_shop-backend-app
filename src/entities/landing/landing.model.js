@@ -13,6 +13,68 @@ import { UserModel } from '#entities/users/users.model.js';
 
 import { LANDING_LIMITS } from './landing.constants.js';
 
+const buildProductSearchPipeline = (search) => [
+  { $match: { isEnable: true } },
+  {
+    $lookup: {
+      from: CategoryModel.collection.name,
+      localField: 'category',
+      foreignField: '_id',
+      as: 'category',
+    },
+  },
+  { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+  {
+    $lookup: {
+      from: SubCategoryModel.collection.name,
+      localField: 'subCategory',
+      foreignField: '_id',
+      as: 'subCategory',
+    },
+  },
+  { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
+  {
+    $match: {
+      $or: [
+        { title: search },
+        { 'category.title': search },
+        { 'subCategory.title': search },
+      ],
+    },
+  },
+];
+
+const buildPetSearchPipeline = (search) => [
+  { $match: { inEnable: true } },
+  {
+    $lookup: {
+      from: PetTypeModel.collection.name,
+      localField: 'petType',
+      foreignField: '_id',
+      as: 'petType',
+    },
+  },
+  { $unwind: { path: '$petType', preserveNullAndEmptyArrays: true } },
+  {
+    $lookup: {
+      from: BreedModel.collection.name,
+      localField: 'breed',
+      foreignField: '_id',
+      as: 'breed',
+    },
+  },
+  { $unwind: { path: '$breed', preserveNullAndEmptyArrays: true } },
+  {
+    $match: {
+      $or: [
+        { title: search },
+        { 'petType.title': search },
+        { 'breed.title': search },
+      ],
+    },
+  },
+];
+
 export class LandingModel {
   static findProductList(filter, sort, skip, limit) {
     return ProductModel.find(filter).sort(sort).skip(skip).limit(limit);
@@ -364,34 +426,7 @@ export class LandingModel {
 
   static findSearchProducts(search, limit) {
     return ProductModel.aggregate([
-      { $match: { isEnable: true } },
-      {
-        $lookup: {
-          from: CategoryModel.collection.name,
-          localField: 'category',
-          foreignField: '_id',
-          as: 'category',
-        },
-      },
-      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: SubCategoryModel.collection.name,
-          localField: 'subCategory',
-          foreignField: '_id',
-          as: 'subCategory',
-        },
-      },
-      { $unwind: { path: '$subCategory', preserveNullAndEmptyArrays: true } },
-      {
-        $match: {
-          $or: [
-            { title: search },
-            { 'category.title': search },
-            { 'subCategory.title': search },
-          ],
-        },
-      },
+      ...buildProductSearchPipeline(search),
       {
         $project: {
           _id: 0,
@@ -405,36 +440,16 @@ export class LandingModel {
     ]);
   }
 
+  static countSearchProducts(search) {
+    return ProductModel.aggregate([
+      ...buildProductSearchPipeline(search),
+      { $count: 'count' },
+    ]).then(([result]) => result?.count || 0);
+  }
+
   static findSearchPets(search, limit) {
     return PetModel.aggregate([
-      { $match: { inEnable: true } },
-      {
-        $lookup: {
-          from: PetTypeModel.collection.name,
-          localField: 'petType',
-          foreignField: '_id',
-          as: 'petType',
-        },
-      },
-      { $unwind: { path: '$petType', preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: BreedModel.collection.name,
-          localField: 'breed',
-          foreignField: '_id',
-          as: 'breed',
-        },
-      },
-      { $unwind: { path: '$breed', preserveNullAndEmptyArrays: true } },
-      {
-        $match: {
-          $or: [
-            { title: search },
-            { 'petType.title': search },
-            { 'breed.title': search },
-          ],
-        },
-      },
+      ...buildPetSearchPipeline(search),
       {
         $project: {
           _id: 0,
@@ -446,5 +461,12 @@ export class LandingModel {
       { $sort: { title: 1 } },
       { $limit: limit },
     ]);
+  }
+
+  static countSearchPets(search) {
+    return PetModel.aggregate([
+      ...buildPetSearchPipeline(search),
+      { $count: 'count' },
+    ]).then(([result]) => result?.count || 0);
   }
 }

@@ -7,6 +7,7 @@ import {
   getAllPetTypesController,
   getFeaturedPetTypesController,
   getFeaturedProductsController,
+  getInitialSearchCatalogController,
   getMostPopularBrandsController,
   getMostDiscountedProductsController,
   getMostPopularPetsController,
@@ -25,11 +26,25 @@ const router = express.Router();
 new RateLimiter('landing').applyTo(router);
 
 router.get(
-  LANDING_ROUTES.landingSearch,
-  /* #swagger.summary = 'Search enabled pets and products'
-     #swagger.description = 'Searches enabled products by title, category title, or sub-category title and enabled pets by title, pet-type title, or breed title. Returns at most 20 compact items.'
+  LANDING_ROUTES.landingInitialSearch,
+  /* #swagger.path = '/landing/initial-search'
+     #swagger.summary = 'Get initial enabled pet and product search matches'
+     #swagger.description = 'Searches enabled catalog records and returns a compact, non-paginated preview. Count defaults to three and is capped at ten.'
      #swagger.parameters['search'] = { in: 'query', required: true, type: 'string', minLength: 1, maxLength: 100 }
-     #swagger.responses[200] = { description: 'Matching compact catalog items with title, mainImage, and thumbnailImage' }
+     #swagger.parameters['count'] = { in: 'query', type: 'integer', minimum: 1, maximum: 10, default: 3 }
+     #swagger.responses[200] = { description: 'Up to the requested number of compact enabled catalog matches' }
+     #swagger.responses[422] = { description: 'Search query validation error' } */
+  getInitialSearchCatalogController,
+);
+
+router.get(
+  LANDING_ROUTES.landingSearch,
+  /* #swagger.summary = 'Search enabled pets and products with pagination'
+     #swagger.description = 'Searches enabled products by title, category title, or sub-category title and enabled pets by title, pet-type title, or breed title. Returns compact items with pagination metadata.'
+     #swagger.parameters['search'] = { in: 'query', required: true, type: 'string', minLength: 1, maxLength: 100 }
+     #swagger.parameters['page'] = { in: 'query', type: 'integer', minimum: 1, default: 1 }
+     #swagger.parameters['limit'] = { in: 'query', type: 'integer', minimum: 1, maximum: 100, default: 20 }
+     #swagger.responses[200] = { description: 'Paginated matching compact catalog items with title, mainImage, and thumbnailImage' }
      #swagger.responses[422] = { description: 'Search query validation error' } */
   searchCatalogController,
 );

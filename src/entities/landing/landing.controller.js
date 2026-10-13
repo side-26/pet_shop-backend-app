@@ -7,10 +7,11 @@ import {
 
 import { createLandingSearchRegex } from './landing.helpers.js';
 import {
+  landingInitialSearchQuerySchema,
   landingLimitSchema,
   landingProductListQuerySchema,
   landingPetListQuerySchema,
-  landingSearchQuerySchema,
+  landingSearchPaginationQuerySchema,
   landingSlugSchema,
 } from './landing.schema.js';
 import { LandingService } from './landing.service.js';
@@ -54,12 +55,29 @@ export const getMostPopularBrandsController = (_req, res, next) =>
 
 export const searchCatalogController = async (req, res, next) => {
   try {
-    const { search } = returnFormValidation(
-      landingSearchQuerySchema,
+    const query = returnFormValidation(
+      landingSearchPaginationQuerySchema,
       req.query,
     );
     const data = await LandingService.searchCatalog(
+      createLandingSearchRegex(query.search),
+      query,
+    );
+    setSuccessResponse(res, STATUES.SUCCESS, { data });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getInitialSearchCatalogController = async (req, res, next) => {
+  try {
+    const { search, count } = returnFormValidation(
+      landingInitialSearchQuerySchema,
+      req.query,
+    );
+    const data = await LandingService.getInitialSearchCatalog(
       createLandingSearchRegex(search),
+      count,
     );
     setSuccessResponse(res, STATUES.SUCCESS, { data });
   } catch (error) {

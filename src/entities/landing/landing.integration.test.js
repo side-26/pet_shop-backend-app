@@ -310,13 +310,26 @@ describe('Landing API', () => {
       },
     ]);
 
-    const [response, invalid] = await Promise.all([
-      request(app).get('/api/landing/search').query({ search }),
-      request(app).get('/api/landing/search'),
-    ]);
+    const [response, secondPage, initialSearch, invalid, invalidInitialCount] =
+      await Promise.all([
+        request(app).get('/api/landing/search').query({ search }),
+        request(app)
+          .get('/api/landing/search')
+          .query({ search, page: 2, limit: 2 }),
+        request(app).get('/api/landing/initial-search').query({ search }),
+        request(app).get('/api/landing/search'),
+        request(app)
+          .get('/api/landing/initial-search')
+          .query({ search, count: 11 }),
+      ]);
 
     expect(response.status).toBe(STATUES.SUCCESS);
-    expect(response.body.data.map(({ title }) => title)).toEqual(
+    expect(response.body.data.pagination).toMatchObject({
+      currentPage: 1,
+      totalItems: 6,
+      itemsPerPage: 20,
+    });
+    expect(response.body.data.result.map(({ title }) => title)).toEqual(
       expect.arrayContaining([
         `${search} محصول`,
         'محصول دسته',
@@ -326,13 +339,13 @@ describe('Landing API', () => {
         'حیوان نژاد',
       ]),
     );
-    expect(response.body.data).not.toEqual(
+    expect(response.body.data.result).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ title: `${search} محصول پنهان` }),
         expect.objectContaining({ title: `${search} حیوان پنهان` }),
       ]),
     );
-    expect(response.body.data).toEqual(
+    expect(response.body.data.result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           title: expect.any(String),
@@ -342,9 +355,16 @@ describe('Landing API', () => {
       ]),
     );
     expect(
-      response.body.data.every((item) => Object.keys(item).length === 3),
+      response.body.data.result.every((item) => Object.keys(item).length === 3),
     ).toBe(true);
+    expect(secondPage.body.data).toMatchObject({
+      result: expect.any(Array),
+      pagination: { currentPage: 2, totalItems: 6, itemsPerPage: 2 },
+    });
+    expect(secondPage.body.data.result).toHaveLength(2);
+    expect(initialSearch.body.data).toHaveLength(3);
     expect(invalid.status).toBe(STATUES.BAD_FORM_VALIDATION);
+    expect(invalidInitialCount.status).toBe(STATUES.BAD_FORM_VALIDATION);
   });
 
   test('never returns disabled records from public landing routes', async () => {

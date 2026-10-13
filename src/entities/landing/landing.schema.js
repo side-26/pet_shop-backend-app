@@ -45,8 +45,30 @@ export const landingLimitSchema = object({
     .default(LANDING_LIMITS.FEATURED_PRODUCTS),
 });
 
-export const landingSearchQuerySchema = object({
+const landingSearchFieldSchema = object({
   search: string().trim().min(1).max(LANDING_LIMITS.SEARCH_QUERY_MAX_LENGTH),
+});
+
+export const landingSearchPaginationQuerySchema =
+  landingSearchFieldSchema.extend({
+    page: coerce.number().int().min(1).optional().default(1),
+    limit: coerce
+      .number()
+      .int()
+      .min(1)
+      .max(LANDING_LIMITS.SEARCH_MAX_LIMIT)
+      .optional()
+      .default(LANDING_LIMITS.SEARCH_DEFAULT_LIMIT),
+  });
+
+export const landingInitialSearchQuerySchema = landingSearchFieldSchema.extend({
+  count: coerce
+    .number()
+    .int()
+    .min(1)
+    .max(LANDING_LIMITS.INITIAL_SEARCH_MAX_COUNT)
+    .optional()
+    .default(LANDING_LIMITS.INITIAL_SEARCH_DEFAULT_COUNT),
 });
 
 export const landingProductListQuerySchema = object({

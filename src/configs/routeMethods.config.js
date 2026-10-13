@@ -120,6 +120,7 @@ export const API_ROUTE_METHODS = [
   { path: LANDING_ROUTES.landingPetTypes, methods: [get] },
   { path: LANDING_ROUTES.landingPetsPaginate, methods: [get] },
   { path: LANDING_ROUTES.landingProducts, methods: [get] },
+  { path: LANDING_ROUTES.landingInitialSearch, methods: [get] },
   { path: LANDING_ROUTES.landingSearch, methods: [get] },
   { path: ORDER_ROUTES.ordersAll, methods: [get] },
   { path: PAYMENT_ROUTES.paymentsAll, methods: [get] },

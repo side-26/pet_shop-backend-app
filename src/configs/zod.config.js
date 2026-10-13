@@ -147,6 +147,7 @@ const persianFieldNames = {
   id: 'شناسه',
   page: 'صفحه',
   limit: 'تعداد در صفحه',
+  count: 'تعداد نتایج',
   sort: 'مرتب‌سازی',
   sortBy: 'فیلد مرتب‌سازی',
   sortOrder: 'ترتیب مرتب‌سازی',

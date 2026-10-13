@@ -95,14 +95,33 @@ const orderPetsById = (pets, ids) => {
 };
 
 export class LandingService {
-  static async searchCatalog(search) {
+  static async getSearchCatalogItems(search, itemCount) {
     const [products, pets] = await Promise.all([
-      LandingModel.findSearchProducts(search, LANDING_LIMITS.SEARCH_RESULTS),
-      LandingModel.findSearchPets(search, LANDING_LIMITS.SEARCH_RESULTS),
+      LandingModel.findSearchProducts(search, itemCount),
+      LandingModel.findSearchPets(search, itemCount),
     ]);
     return [...products, ...pets]
       .sort((first, second) => first.title.localeCompare(second.title, 'fa'))
-      .slice(0, LANDING_LIMITS.SEARCH_RESULTS);
+      .slice(0, itemCount);
+  }
+
+  static async searchCatalog(search, { page, limit }) {
+    const [items, productCount, petCount] = await Promise.all([
+      this.getSearchCatalogItems(search, page * limit),
+      LandingModel.countSearchProducts(search),
+      LandingModel.countSearchPets(search),
+    ]);
+
+    return createPaginationResponse({
+      result: items.slice((page - 1) * limit, page * limit),
+      totalItems: productCount + petCount,
+      page,
+      pageSize: limit,
+    });
+  }
+
+  static getInitialSearchCatalog(search, count) {
+    return this.getSearchCatalogItems(search, count);
   }
 
   static async getPetList(query) {
