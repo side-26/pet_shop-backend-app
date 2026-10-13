@@ -120,10 +120,6 @@ export class LandingService {
     });
   }
 
-  static getInitialSearchCatalog(search, count) {
-    return this.getSearchCatalogItems(search, count);
-  }
-
   static async getPetList(query) {
     const filters = parseLandingPetFilters(query);
     const filter = buildLandingPetFilter({ filters });

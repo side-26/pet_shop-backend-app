@@ -6527,37 +6527,6 @@
         ]
       }
     },
-    "/landing/initial-search": {
-      "get": {
-        "summary": "Get initial enabled pet and product search matches",
-        "description": "Searches enabled catalog records and returns a compact, non-paginated preview. Count defaults to three and is capped at ten.",
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": true,
-            "minLength": 1,
-            "maxLength": 100,
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "count",
-            "in": "query",
-            "minimum": 1,
-            "maximum": 10,
-            "default": 3,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Up to the requested number of compact enabled catalog matches"
-          },
-          "422": { "description": "Search query validation error" }
-        },
-        "tags": ["/landing"]
-      }
-    },
     "/landing/search": {
       "get": {
         "summary": "Search enabled pets and products with pagination",
@@ -6591,7 +6560,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Paginated matching compact catalog items with title, mainImage, and thumbnailImage"
+            "description": "Paginated matching compact catalog items with title, mainImage, thumbnailImage, and itemType (pet or product)"
           },
           "422": {
             "description": "Search query validation error"

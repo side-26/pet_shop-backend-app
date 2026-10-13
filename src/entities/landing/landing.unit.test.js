@@ -81,6 +81,7 @@ jest.mock('#entities/products/products.helpers.js', () => ({
 }));
 
 import { LandingModel } from './landing.model.js';
+import { LANDING_SEARCH_ITEM_TYPES } from './landing.constants.js';
 import { LandingService } from './landing.service.js';
 
 const petType = {
@@ -148,11 +149,13 @@ describe('LandingService', () => {
       title: 'غذای گربه',
       mainImage: 'https://cdn.example.com/food.webp',
       thumbnailImage: 'data:image/webp;base64,AAAA',
+      itemType: LANDING_SEARCH_ITEM_TYPES.PRODUCT,
     };
     const petMatch = {
       title: 'گربه پرشین',
       mainImage: 'https://cdn.example.com/persian.webp',
       thumbnailImage: 'data:image/webp;base64,BBBB',
+      itemType: LANDING_SEARCH_ITEM_TYPES.PET,
     };
     LandingModel.findSearchProducts.mockResolvedValue([productMatch]);
     LandingModel.findSearchPets.mockResolvedValue([petMatch]);
@@ -169,20 +172,6 @@ describe('LandingService', () => {
     expect(LandingModel.findSearchPets).toHaveBeenCalledWith(search, 20);
     expect(LandingModel.countSearchProducts).toHaveBeenCalledWith(search);
     expect(LandingModel.countSearchPets).toHaveBeenCalledWith(search);
-  });
-
-  test('returns a bounded non-paginated initial search preview', async () => {
-    const search = /گربه/i;
-    LandingModel.findSearchProducts.mockResolvedValue([{ title: 'غذای گربه' }]);
-    LandingModel.findSearchPets.mockResolvedValue([{ title: 'گربه پرشین' }]);
-
-    await expect(
-      LandingService.getInitialSearchCatalog(search, 3),
-    ).resolves.toEqual([{ title: 'غذای گربه' }, { title: 'گربه پرشین' }]);
-    expect(LandingModel.findSearchProducts).toHaveBeenCalledWith(search, 3);
-    expect(LandingModel.findSearchPets).toHaveBeenCalledWith(search, 3);
-    expect(LandingModel.countSearchProducts).not.toHaveBeenCalled();
-    expect(LandingModel.countSearchPets).not.toHaveBeenCalled();
   });
 
   test('formats the bounded featured pet types section', async () => {

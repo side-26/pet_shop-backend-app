@@ -7,8 +7,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 ## Endpoints
 
 - `GET /landing/pet-types` — up to four enabled pet types, ordered by creation date, each with its main image, thumbnail, and summary.
-- `GET /landing/search?search=TEXT&page=NUMBER&limit=NUMBER` — paginated enabled Products and Pets matched by catalog or requested taxonomy title; every item is limited to `title`, `mainImage`, and `thumbnailImage`.
-- `GET /landing/initial-search?search=TEXT&count=NUMBER` — non-paginated initial enabled Product and Pet search preview; `count` defaults to three and is capped at ten.
+- `GET /landing/search?search=TEXT&page=NUMBER&limit=NUMBER` — paginated enabled Products and Pets matched by catalog or requested taxonomy title; every item is limited to `title`, `mainImage`, `thumbnailImage`, and `itemType` (`product` or `pet`).
 - `GET /landing/products/discounted?limit=COUNT` — enabled products ordered by discount percentage, with the main image thumbnail, source price, discount percentage, response-only calculated discount amount, minimum final price, and minimum quantity across weights; `limit` defaults to four and is capped at 100.
 - `GET /landing/pet-types/all` — every enabled pet type, ordered by creation date, each with its main image, thumbnail, and summary.
 - `GET /landing/products/popular` — up to four enabled products, ordered by sales volume, with the main image thumbnail, slug, source price, discount percentage, response-only final discounted price, minimum final price, and minimum quantity across weights.

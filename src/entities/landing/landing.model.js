@@ -11,7 +11,10 @@ import { ProductModel } from '#entities/products/products.model.js';
 import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
 import { UserModel } from '#entities/users/users.model.js';
 
-import { LANDING_LIMITS } from './landing.constants.js';
+import {
+  LANDING_LIMITS,
+  LANDING_SEARCH_ITEM_TYPES,
+} from './landing.constants.js';
 
 const buildProductSearchPipeline = (search) => [
   { $match: { isEnable: true } },
@@ -433,6 +436,7 @@ export class LandingModel {
           title: 1,
           mainImage: 1,
           thumbnailImage: '$mainImageThumbnail',
+          itemType: { $literal: LANDING_SEARCH_ITEM_TYPES.PRODUCT },
         },
       },
       { $sort: { title: 1 } },
@@ -456,6 +460,7 @@ export class LandingModel {
           title: 1,
           mainImage: 1,
           thumbnailImage: '$mainImageThumbnail',
+          itemType: { $literal: LANDING_SEARCH_ITEM_TYPES.PET },
         },
       },
       { $sort: { title: 1 } },

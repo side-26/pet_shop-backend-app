@@ -61,16 +61,6 @@ export const landingSearchPaginationQuerySchema =
       .default(LANDING_LIMITS.SEARCH_DEFAULT_LIMIT),
   });
 
-export const landingInitialSearchQuerySchema = landingSearchFieldSchema.extend({
-  count: coerce
-    .number()
-    .int()
-    .min(1)
-    .max(LANDING_LIMITS.INITIAL_SEARCH_MAX_COUNT)
-    .optional()
-    .default(LANDING_LIMITS.INITIAL_SEARCH_DEFAULT_COUNT),
-});
-
 export const landingProductListQuerySchema = object({
   category: objectIdListSchema.optional(),
   subCategory: objectIdListSchema.optional(),
