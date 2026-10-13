@@ -17,7 +17,13 @@ const {
 
 const objectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
 const titleSchema = string().trim().min(2).max(180);
-const tagSchema = object({ title: string().trim().min(1).max(60) });
+const tagTitleSchema = string().trim().min(1).max(60);
+const tagSchema = object({ title: tagTitleSchema });
+const tagFilterSchema = preprocess(
+  (value) =>
+    Array.isArray(value) ? value : value === undefined ? value : [value],
+  array(tagTitleSchema).min(1).max(20).optional(),
+);
 const mainTextSchema = preprocess(
   parseRichTextFormValue,
   unknown().refine((value) => value !== undefined, {
@@ -53,7 +59,7 @@ export const articleSlugZodSchema = object({
 });
 
 export const articlePaginationZodSchema = object({
-  tag: string().trim().min(1).max(60).optional(),
+  tags: tagFilterSchema,
   petType: objectIdSchema.optional(),
   sort: enumValue(Object.values(ARTICLE_LIST_SORTS))
     .optional()

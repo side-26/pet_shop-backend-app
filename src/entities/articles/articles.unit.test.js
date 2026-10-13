@@ -45,6 +45,7 @@ import { PetTypeModel } from '../petTypes/petTypes.model.js';
 import { UserModel } from '../users/users.model.js';
 import {
   ARTICLE_LIST_SORT_ORDERS,
+  ARTICLE_LIST_SORT_OPTIONS,
   ARTICLE_LIST_SORTS,
 } from './articles.constants.js';
 import { ArticleModel } from './articles.model.js';
@@ -321,7 +322,7 @@ describe('ArticleService', () => {
       ArticleService.findPaginatedWithMetadata({
         page: 1,
         limit: 10,
-        tag: 'Dogs',
+        tags: ['Dogs', 'Training'],
         petType: 'pet-type-id',
         sort: ARTICLE_LIST_SORTS.OLDEST,
       }),
@@ -331,12 +332,16 @@ describe('ArticleService', () => {
       metadata: {
         tags: [{ title: 'Dogs' }, { title: 'Health' }],
         petTypes,
+        sort: {
+          current: ARTICLE_LIST_SORTS.OLDEST,
+          options: ARTICLE_LIST_SORT_OPTIONS,
+        },
       },
     });
     expect(getPaginationData).toHaveBeenCalledWith(
       ArticleModel,
       {
-        'tags.title': 'Dogs',
+        'tags.title': { $in: ['Dogs', 'Training'] },
         petType: 'pet-type-id',
         page: 1,
         limit: 10,

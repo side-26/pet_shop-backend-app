@@ -32,9 +32,16 @@
         "summary": "List articles with pet types and tag metadata",
         "parameters": [
           {
-            "name": "tag",
+            "name": "tags",
             "in": "query",
-            "schema": { "type": "string", "maxLength": 60 }
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "maxLength": 60 },
+              "maxItems": 20
+            },
+            "style": "form",
+            "explode": true,
+            "description": "Repeat tags to match articles containing any selected tag"
           },
           {
             "name": "petType",
@@ -71,7 +78,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Filtered and sorted paginated articles with author snapshots, populated pet types, and tag/pet-type metadata"
+            "description": "Filtered and sorted paginated articles with author snapshots, populated pet types, and tag/pet-type/sort metadata. Selected tags use OR matching."
           },
           "405": { "description": "Method not allowed" }
         }

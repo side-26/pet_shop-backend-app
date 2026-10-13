@@ -7,6 +7,8 @@ import { UserModel } from '../users/users.model.js';
 import { ArticleModel } from './articles.model.js';
 import {
   ARTICLE_LIST_SORT_ORDERS,
+  ARTICLE_LIST_SORT_OPTIONS,
+  ARTICLE_LIST_SORTS,
   RELATED_ARTICLE_LIMIT,
 } from './articles.constants.js';
 
@@ -113,8 +115,9 @@ export class ArticleService {
   }
 
   static async findPaginatedWithMetadata(query = {}) {
+    const sort = query.sort || ARTICLE_LIST_SORTS.NEWEST;
     const filter = {
-      ...(query.tag ? { 'tags.title': query.tag } : {}),
+      ...(query.tags?.length ? { 'tags.title': { $in: query.tags } } : {}),
       ...(query.petType ? { petType: query.petType } : {}),
     };
     const [result, tags, petTypes] = await Promise.all([
@@ -124,7 +127,7 @@ export class ArticleService {
           ...filter,
           page: query.page,
           limit: query.limit,
-          sort: ARTICLE_LIST_SORT_ORDERS[query.sort],
+          sort: ARTICLE_LIST_SORT_ORDERS[sort],
         },
         '-mainText',
         (error) =>
@@ -145,7 +148,14 @@ export class ArticleService {
     ]);
     result.result = await ArticleModel.populate(result.result, 'petType');
 
-    return { ...result, metadata: { tags, petTypes } };
+    return {
+      ...result,
+      metadata: {
+        tags,
+        petTypes,
+        sort: { current: sort, options: ARTICLE_LIST_SORT_OPTIONS },
+      },
+    };
   }
 
   static async ensurePetTypeExists(petType) {

@@ -373,11 +373,22 @@ describe('Article API', () => {
         expect.objectContaining({ title: 'Cat' }),
         expect.objectContaining({ title: 'Dog' }),
       ],
+      sort: {
+        current: 'newest',
+        options: [
+          { value: 'newest', label: 'جدیدترین' },
+          { value: 'oldest', label: 'قدیمی‌ترین' },
+        ],
+      },
     });
 
     const filtered = await request(app)
       .get('/api/articles/paginate')
-      .query({ tag: 'Dogs', petType: petType._id.toString(), sort: 'oldest' })
+      .query({
+        tags: ['Dogs'],
+        petType: petType._id.toString(),
+        sort: 'oldest',
+      })
       .expect(200);
     expect(filtered.body.data.result).toEqual([
       expect.objectContaining({ slug: 'healthy-dogs-dogs-health' }),
@@ -385,12 +396,13 @@ describe('Article API', () => {
 
     const oldest = await request(app)
       .get('/api/articles/paginate')
-      .query({ tag: 'Dogs', sort: 'oldest', limit: 2 })
+      .query({ tags: ['Health', 'Training'], sort: 'oldest', limit: 2 })
       .expect(200);
     expect(oldest.body.data.result.map(({ slug }) => slug)).toEqual([
       'dog-training',
       'healthy-dogs-dogs-health',
     ]);
+    expect(oldest.body.data.metadata.sort.current).toBe('oldest');
   });
 
   test('forbids another seller but permits an admin to delete the article', async () => {
