@@ -6983,7 +6983,7 @@
             "schema": {
               "type": "string"
             },
-            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            "description": "Hyphen-separated Unicode letters and numbers, including Persian."
           }
         ],
         "responses": {
@@ -7027,7 +7027,7 @@
             "schema": {
               "type": "string"
             },
-            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            "description": "Hyphen-separated Unicode letters and numbers, including Persian."
           }
         ],
         "responses": {

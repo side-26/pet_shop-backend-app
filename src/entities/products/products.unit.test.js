@@ -120,8 +120,8 @@ describe('ProductService', () => {
     expect(ProductService.escapeRegex('food+cat')).toBe('food\\+cat');
   });
 
-  test('drops taxonomy slug segments from the end to stay below 160 characters', () => {
-    const longPart = 'a'.repeat(40);
+  test('drops taxonomy slug segments from the end to stay below 300 characters', () => {
+    const longPart = 'a'.repeat(100);
     const slug = buildProductSlug({
       title: longPart,
       petTypeTitle: longPart,
@@ -129,8 +129,8 @@ describe('ProductService', () => {
       subCategoryTitle: longPart,
     });
 
-    expect(slug).toBe(`${longPart}-${longPart}-${longPart}`);
-    expect(slug).toHaveLength(122);
+    expect(slug).toBe(`${longPart}-${longPart}`);
+    expect(slug).toHaveLength(201);
   });
 
   test('findById returns a product and rejects missing products', async () => {

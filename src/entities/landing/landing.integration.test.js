@@ -1026,14 +1026,34 @@ describe('Landing API', () => {
       subCategory: subCategory._id,
       slug: 'dog-food',
     });
+    await ProductModel.create({
+      title: 'پوره تشویقی گربه',
+      mainImage: 'https://cdn.example.com/cat-treat.webp',
+      mainImageThumbnail: 'data:image/webp;base64,AAAA',
+      description: 'توضیحات پوره تشویقی گربه',
+      category: category._id,
+      brand: brand._id,
+      subCategory: subCategory._id,
+      slug: 'پوره-تشویقی-گربه-با-طعم-مرغ-گربه-تشویقی-و-اسنک-تشویقی-آموزشی',
+    });
 
-    const [petResponse, productResponse, hiddenPetResponse, invalidResponse] =
-      await Promise.all([
-        request(app).get('/api/landing/pets/young-husky'),
-        request(app).get('/api/landing/products/dog-food'),
-        request(app).get('/api/landing/pets/hidden-husky'),
-        request(app).get('/api/landing/pets/invalid_slug'),
-      ]);
+    const [
+      petResponse,
+      productResponse,
+      persianProductResponse,
+      hiddenPetResponse,
+      invalidResponse,
+    ] = await Promise.all([
+      request(app).get('/api/landing/pets/young-husky'),
+      request(app).get('/api/landing/products/dog-food'),
+      request(app).get(
+        `/api/landing/products/${encodeURIComponent(
+          'پوره-تشویقی-گربه-با-طعم-مرغ-گربه-تشویقی-و-اسنک-تشویقی-آموزشی',
+        )}`,
+      ),
+      request(app).get('/api/landing/pets/hidden-husky'),
+      request(app).get('/api/landing/pets/invalid_slug'),
+    ]);
 
     expect(petResponse.status).toBe(200);
     expect(petResponse.body.data).toEqual(
@@ -1059,6 +1079,10 @@ describe('Landing API', () => {
         brand: expect.objectContaining({ title: 'برند غذای سگ' }),
         subCategory: expect.objectContaining({ title: 'غذای خشک' }),
       }),
+    );
+    expect(persianProductResponse.status).toBe(200);
+    expect(persianProductResponse.body.data.slug).toBe(
+      'پوره-تشویقی-گربه-با-طعم-مرغ-گربه-تشویقی-و-اسنک-تشویقی-آموزشی',
     );
     await PetTypeModel.findByIdAndUpdate(petType._id, {
       isEnabled: false,

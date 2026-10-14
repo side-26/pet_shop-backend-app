@@ -125,7 +125,7 @@ router.get(
   LANDING_ROUTES.landingPetsBySlug,
   /* #swagger.summary = 'Get an enabled pet by slug'
      #swagger.description = 'Returns the full customer-safe pet detail for an enabled pet.'
-     #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+     #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', description: 'Hyphen-separated Unicode letters and numbers, including Persian.' }
      #swagger.responses[200] = { description: 'Pet detail' }
      #swagger.responses[404] = { description: 'Pet not found' } */
   getPetBySlugController,
@@ -134,7 +134,7 @@ router.get(
   LANDING_ROUTES.landingProductsBySlug,
   /* #swagger.summary = 'Get an enabled product by slug'
      #swagger.description = 'Returns the full customer-safe product detail for an enabled product, including its category pet type with only id, title, displayName, and propertyDefinitions.'
-     #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+     #swagger.parameters['slug'] = { in: 'path', required: true, type: 'string', description: 'Hyphen-separated Unicode letters and numbers, including Persian.' }
      #swagger.responses[200] = { description: 'Product detail' }
      #swagger.responses[404] = { description: 'Product not found' } */
   optionallyAuthenticated,

@@ -31,8 +31,8 @@ export const landingSlugSchema = object({
   slug: string()
     .trim()
     .min(2)
-    .max(160)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    .max(300)
+    .regex(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u),
 });
 
 export const landingLimitSchema = object({

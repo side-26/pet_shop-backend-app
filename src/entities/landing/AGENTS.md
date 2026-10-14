@@ -25,7 +25,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 - All endpoints are public and return only enabled catalog records.
 - Product-detail responses include `canVote` and `hasRated` for the optionally authenticated caller. A customer can vote only once after buying that product; the rating API independently enforces both rules.
 - Search matches Product title, Category title, and SubCategory title; and Pet title, PetType title, and Breed title. Product results require `isEnable: true` and Pet results require `inEnable: true`.
-- Slug detail endpoints validate the path parameter and reuse the catalog entities' full customer-detail formatters, including populated taxonomy and brand relations.
+- Slug detail endpoints accept hyphen-separated Unicode letters and numbers (including Persian slugs) and reuse the catalog entities' full customer-detail formatters, including populated taxonomy and brand relations.
 - Featured section limits are centralized in `landing.constants.js`.
 - Landing product summaries calculate `discountPrice` as `price * (discountPercentage / 100)` without persisting it to product documents.
 - The popular-products and product-list sections return `discountPrice` as the final payable price: `price - (price * (discountPercentage / 100))`.
