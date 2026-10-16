@@ -1,0 +1,458 @@
+{
+  "/src": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/server.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/configs": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/configs/constants.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/configs/db.config.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "connectDB",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/configs/swagger.config.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/configs/zod.config.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "customErrorMap",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/entities": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/entities/routes.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/utils": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/utils/fullPath.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "getFullPath",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/utils/globalErrors.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/utils/index.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "doesBodyExist",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "setErrorResponse",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "setSuccessResponse",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getPaginationQueryParam",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "createNewQueryParam",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getPaginationData",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "returnFormValidation",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "setAllStatics",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/utils/router.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/middlewares": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/middlewares/auth.middleware.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/middlewares/error.middleware.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "errorHandler",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/middlewares/header.middleware.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "setGlobalHeadersMiddleware",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/middlewares/role.middleware.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/landing": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/entities/landing/landing.controller.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/landing/landing.route.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/landing/landing.schema.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/orders": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/entities/orders/orders.controller.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/orders/orders.model.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/orders/orders.route.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/orders/orders.schema.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/orders/orders.utils.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/products": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/entities/products/products.controller.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/products/products.model.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/products/products.route.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/products/products.schema.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/products/products.utils.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/users": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null
+  },
+  "/src/entities/users/users.controller.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "createUserController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "updateUserPersonalInfoController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "updateUserLocationInfoController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "changeUserPasswordController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "disableUserController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "enableUserController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getAllUsersListController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getAllUsersListPaginateController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getUserByIdController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getUserCartListController",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/entities/users/users.model.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "userSchema",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "userSchema",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/entities/users/users.route.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": []
+  },
+  "/src/entities/users/users.schema.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "userSwaggerSchema",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  },
+  "/src/entities/users/users.utils.js": {
+    "percentage": null,
+    "totalStatements": null,
+    "coveredStatements": null,
+    "testables": [
+      {
+        "name": "doesUserExist",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getBodyWithHashPassword",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "setAllUsersFilter",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "setPaginateUsersFilter",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getUserById",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "updateUser",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "getUserFullName",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      },
+      {
+        "name": "compareTwoPassword",
+        "percentage": null,
+        "totalStatements": null,
+        "coveredStatements": null
+      }
+    ]
+  }
+}
