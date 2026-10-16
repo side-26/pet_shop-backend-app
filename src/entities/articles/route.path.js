@@ -1,0 +1,12 @@
+export const ARTICLE_ROUTES = {
+  articleAuthorAll: '/articles/all',
+  articlesPaginate: '/articles/paginate',
+  articles: '/articles',
+  articlePreviewBySlug: '/articles/:slug',
+  articleById: '/articles/id/:id',
+  articleTagsById: '/articles/id/:id/tags-list',
+  articleTagsAndMatchedArticlesBySlug:
+    '/articles/:slug/tags-list/matched-articles',
+  articleTagsRangeById: '/articles/id/:id/range-tags-list',
+  articleMainTextById: '/articles/id/:id/main-text',
+};

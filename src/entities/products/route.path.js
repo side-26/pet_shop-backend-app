@@ -1,0 +1,16 @@
+export const PRODUCT_ROUTES = {
+  products: '/products',
+  productsCustomerById: '/products/customer/:id',
+  productsPropertyDefinitionsById: '/products/property-definitions/:id',
+  productsWeightsById: '/products/weights/:id',
+  productsRange: '/products/range',
+  productsPropertyDefinitions: '/products/property-definitions',
+  productsByIdUserRate: '/products/:id/user-rate',
+  productsPaginate: '/products/paginate',
+  productsManageById: '/products/manage/:id',
+  productsByIdImages: '/products/:id/images',
+  productsByIdMainInfo: '/products/:id/main-info',
+  productsById: '/products/:id',
+  productsByIdEnable: '/products/:id/enable',
+  productsByIdDisable: '/products/:id/disable',
+};

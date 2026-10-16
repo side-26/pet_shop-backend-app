@@ -1,0 +1,48 @@
+# Users Entity
+
+## Purpose
+
+Owns public customer registration, OTP requests for existing phone numbers, user accounts, login, token refresh, per-device logout, profile data, password changes, addresses, status administration, admin-only user deletion, user listing, carts, and wishlists.
+
+## Important Files
+
+- `users.model.js` — user, embedded-address, structured cart, polymorphic cart-item, and polymorphic wishlist-item persistence with Zod-backed save/update validation.
+- `users.service.js` — authentication, JWT creation, password hashing, profile images, addresses, carts, wishlists, authorization-aware targeting, filtering, and formatting.
+- `users.schema.js` — request schemas for accounts, tokens, profiles, passwords, addresses, carts, and wishlists.
+- `users.controller.js` and `users.route.js` — compose public, authenticated, and role-restricted endpoints.
+- `users.helpers.js` — full-name formatting.
+- Colocated unit and integration tests cover service behavior and HTTP contracts.
+
+## Dependencies
+
+Uses `ObjectStorageService` and image helpers for profile images, the Melipayamak OTP integration, Redis OTP and login-session stores, separate access-token and refresh-token secrets through shared JWT/environment helpers, roles/status constants, authentication/role/upload middleware, and the shared Redis rate limiter for every users-router endpoint.
+
+## Modification Rules
+
+- Public password reset requires `newPassword` and matching `confirmPassword` values of at least eight characters plus the exact temporary JWT in a Bearer authorization header. The service verifies the token with `TEMPORARY_TOKEN_SECRET_KEY`, matches it against the phone-scoped Redis value, hashes and updates the user's password, and conditionally deletes the matching Redis token after success to prevent replay. Invalid, expired, missing, or mismatched tokens return Persian 403 access denied.
+- Keep passwords hashed and exclude sensitive fields from public formatting.
+- Public registration accepts only phone number and password and always assigns the customer role server-side.
+- Public OTP requests require an existing phone number, atomically reserve the phone-and-IP Redis key before contacting the provider, replace only the owned reservation with a bcrypt hash for 120 seconds, never return the provider code, and return the active key's remaining TTL without requesting another code until it expires.
+- Public OTP verification requires a valid phone number and six-digit `otp-code`, accepts optional `reset-password` (default `false`), reads the phone-and-requester-IP Redis key, and compares the bcrypt hash. A normal success returns the login token data without a message. Password-reset success signs a Nano ID and phone number with `TEMPORARY_TOKEN_SECRET_KEY`, atomically stores the token under the phone number for five minutes, and returns it with its remaining `expiry` and a Persian success message. Repeated successful requests return the current Redis token. Only three reset-token requests are allowed per phone and requester IP in the five-minute window; later requests return Persian 403 access denied. Expired OTP keys require requesting a new code.
+- The global API method middleware checks registration before overlapping dynamic user routes and returns 405 for methods other than POST.
+- Sign and verify access tokens with `JWT_SECRET_KEY`; sign and verify refresh tokens with `JWT_REFRESH_SECRET_KEY`. Each pair includes a random session ID and is accepted only while its Redis session maps to the signed user ID. `POST /users/logout` invalidates only the authenticated device session; password resets and changes, disabling, and deletion invalidate every session for the affected user.
+- Limit every users-router endpoint without a more specific policy to three requests per requester IP and route pattern in a fixed six-minute Redis window. This includes the user, cart, and wishlist paths owned by `users.route.js`.
+- Limit `/users/paginate` to nine requests per requester IP in a fixed three-minute Redis window.
+- Preserve the existing `/users/login` policy of three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.
+- The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims. The session ID is internal and is never returned in the response.
+- `GET /users/current` returns the authenticated account summary: `userId`, name, phone number, role, avatar, `email`, `nationalCode`, `age`, and `birthDate`.
+- Preserve actor-versus-target authorization rules for profile and address operations.
+- Address `latLng` values are stored and accepted as `[latitude, longitude]`. Convert them to `[longitude, latitude]` before passing coordinates to delivery-service distance calculations.
+- Persist uploaded images as complete public URLs.
+- `PUT /users/edit-info` accepts editable personal fields `firstName`, `lastName`, `email`, `nationalCode`, `age`, and `birthDate`; `avatar` is accepted only as the multipart file, never as a body URL. Customers may edit only themselves; admins may additionally provide `userId` to target another account.
+- Only authenticated admins may permanently delete a user through `DELETE /api/users/:id`; successful deletion also attempts to remove the user's stored avatar without reversing the database deletion when storage cleanup fails.
+- Cart and wishlist operations always derive ownership from the authenticated actor. See [`docs/cart.md`](./docs/cart.md) and [`docs/cart-and-wishlist.md`](./docs/cart-and-wishlist.md).
+- Cart delivery options come from the provider-independent shipping integration, are limited to Iran, use Tehran timezone metadata, expire after fifteen minutes, and are invalidated by item or address changes.
+
+## Summary
+
+- The service owns security-sensitive account and token behavior.
+- Addresses are embedded user data with configured limits.
+- The structured cart stores checkout metadata and server-calculated pricing around Product/Pet items; wishlist entries reference the same entity types without quantity.
+- A finalized Cart is transformed into an immutable Order snapshot and its contents and calculated prices are cleared in the same MongoDB transaction.
+- Routes mix public authentication endpoints and protected administration/profile endpoints.

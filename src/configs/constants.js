@@ -1,0 +1,371 @@
+export const ROUTES = {
+  users: {
+    getAll: '/users/all',
+    getAllPaginate: '/users/paginate',
+    getCurrentUser: '/users/current',
+    getUserById: '/users/:id',
+    createUser: '/users',
+    updateUserInfo: '/users/editInfo',
+    addAddress: '/users/addresses',
+    editAddress: '/users/addresses/:addressId',
+    getAddresses: '/users/addresses',
+    deleteUser: '/users/:id',
+    disableUser: '/users/disable/:id',
+    enableUser: '/users/enable/:id',
+    login: '/users/login',
+    logout: '/users/logout',
+    resetPassword: '/users/reset-password',
+    sendOtp: '/users/send-otp',
+    verifyOtp: '/users/verify',
+    register: '/users/register',
+    changePassword: '/users/changePassword',
+    userCart: '/users/profile/cart',
+  },
+  cart: {
+    deliveryWindows: '/cart/delivery-windows',
+    deliveryWindow: '/cart/delivery-window',
+  },
+  profile: {
+    login: '/profile/login',
+    updateProfile: '/profile/update',
+    changeProfilePassword: '/profile/changePassword',
+    getProfileIdentity: '/profile/identity',
+  },
+  orders: {
+    getAll: '/orders/all',
+    getAllPaginate: '/orders/paginate',
+    getOrderById: '/orders/:id',
+    getOrderByUser: '/orders/:userId',
+    createOrder: '/orders',
+    updateOrder: '/orders/edit/:id',
+    deleteOrder: '/orders/delete/:id',
+  },
+  products: {
+    getAll: '/products/all',
+    getAllPaginate: '/products/paginate',
+    getOrderById: '/products/:id',
+    getOrderByUser: '/products/:userId',
+    createOrder: '/products',
+    updateOrder: '/products/edit/:id',
+    deleteOrder: '/products/delete/:id',
+  },
+  landing: {
+    search: '/landing/search',
+    productList: '/landing/products',
+    featuredProducts: '/landing/products/featured',
+    popularBrands: '/landing/brands/popular',
+  },
+};
+export const STATUES = {
+  SUCCESS: 200,
+  CREATED: 201,
+  NO_RESPONSE: 204,
+  MULTIPLE_CHOICES: 300,
+  REDIRECT: 301,
+  BAD_REQUEST: 400,
+  UN_AUTHORIZED: 401,
+  PAYMENT_ERROR: 402,
+  NO_ACCESS: 403,
+  NOT_FOUND: 404,
+  EXPIRED: 410,
+  CONFLICT: 409,
+  METHOD_NOT_ALLOWED: 405,
+  BAD_FORM_VALIDATION: 422,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_SERVER: 500,
+  OTHER_PROBLEM: 503,
+};
+
+export const METHODS = {
+  get: 'GET',
+  post: 'POST',
+  put: 'PUT',
+  patch: 'PATCH',
+  delete: 'DELETE',
+  head: 'HEAD',
+};
+
+export const ENVIRONMENTS = {
+  DEVELOPMENT: 'development',
+  PRODUCTION: 'production',
+};
+
+export const ROLES = {
+  ADMIN: 'admin',
+  CUSTOMER: 'customer',
+  SELLER: 'seller',
+};
+
+export const MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.SELLER];
+
+export const DASHBOARD_METRICS = {
+  DEFAULT_PERIOD_DAYS: 30,
+  DEFAULT_LOW_STOCK_THRESHOLD: 5,
+  MAX_LOW_STOCK_THRESHOLD: 1000,
+  DEFAULT_LIST_LIMIT: 5,
+  MAX_LIST_LIMIT: 20,
+  TIME_ZONE: 'Asia/Tehran',
+  GROUP_BY: {
+    DAY: 'day',
+    WEEK: 'week',
+    MONTH: 'month',
+  },
+};
+
+export const ORDER_STATUSES = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+};
+
+export const PAYMENT_STATUSES = {
+  PENDING: 'pending',
+  PAID: 'paid',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled',
+};
+
+export const TERMINAL_PAYMENT_FAILURE_STATUSES = [
+  PAYMENT_STATUSES.FAILED,
+  PAYMENT_STATUSES.CANCELLED,
+];
+
+export const ORDER_PAYMENT_STATUSES = {
+  PENDING: 'pending_payment',
+  PAID: 'paid',
+  FAILED: 'failed',
+};
+
+export const ORDER_RESERVATION_STATES = {
+  RESERVED: 'reserved',
+  RELEASED: 'released',
+};
+
+export const ORDER_DELIVERY_STATES = [0, 1, 2, 3];
+
+export const ORDER_DELIVERY_STATE = {
+  DELIVERED: 3,
+};
+
+export const ORDER_IDENTIFIER = {
+  LENGTH: 9,
+  MAX_GENERATION_ATTEMPTS: 5,
+};
+
+export const SHIPPING = {
+  PROVIDER: 'mock-iran-shipping',
+  COUNTRY_CODE: 'IR',
+  TIME_ZONE: 'Asia/Tehran',
+  UTC_OFFSET_MINUTES: 210,
+  QUOTE_TTL_MS: 15 * 60 * 1000,
+  MIN_LEAD_DAYS: 2,
+  SEARCH_DAYS: 8,
+  WINDOW_COUNT: 4,
+  EXTRA_ITEM_PRICE: 5000,
+  TIME_RANGES: [
+    { startHour: 9, endHour: 12 },
+    { startHour: 14, endHour: 18 },
+    { startHour: 18, endHour: 21 },
+  ],
+};
+
+export const BREED_LEVELS = [0, 1, 2, 3, 4];
+
+export const PET_LIMITS = {
+  MAX_IMAGES: 10,
+  MIN_DISCOUNT_PERCENTAGE: 0,
+  MAX_DISCOUNT_PERCENTAGE: 100,
+  MAX_THUMBNAIL_LENGTH: 10 * 1024 - 1,
+};
+
+export const PRODUCT_LIMITS = {
+  MAX_IMAGES: 10,
+  MAX_SLUG_LENGTH: 300,
+  MAX_TITLE_LENGTH: 40,
+  MIN_DISCOUNT_PERCENTAGE: 0,
+  MAX_DISCOUNT_PERCENTAGE: 100,
+  MAX_THUMBNAIL_LENGTH: 10 * 1024 - 1,
+  MAX_WEIGHTS: 50,
+};
+
+export const ERROR_CODES = {
+  ENTITY_IN_USE: 'ENTITY_IN_USE',
+  PRODUCT_NOT_FOUND: 'PRODUCT_NOT_FOUND',
+  PRODUCT_ALREADY_EXISTS: 'PRODUCT_ALREADY_EXISTS',
+  PRODUCT_CATEGORY_NOT_FOUND: 'PRODUCT_CATEGORY_NOT_FOUND',
+  PRODUCT_BRAND_NOT_FOUND: 'PRODUCT_BRAND_NOT_FOUND',
+  PRODUCT_SUB_CATEGORY_NOT_FOUND: 'PRODUCT_SUB_CATEGORY_NOT_FOUND',
+  PRODUCT_SUB_CATEGORY_MISMATCH: 'PRODUCT_SUB_CATEGORY_MISMATCH',
+  INSUFFICIENT_PRODUCT_STOCK: 'INSUFFICIENT_PRODUCT_STOCK',
+  ORDER_NOT_FOUND: 'ORDER_NOT_FOUND',
+  ORDER_ACCESS_DENIED: 'ORDER_ACCESS_DENIED',
+  ORDER_EMPTY_CART: 'ORDER_EMPTY_CART',
+  ORDER_INVALID_CART: 'ORDER_INVALID_CART',
+  ORDER_IDENTIFIER_GENERATION_FAILED: 'ORDER_IDENTIFIER_GENERATION_FAILED',
+  PAYMENT_NOT_FOUND: 'PAYMENT_NOT_FOUND',
+  PAYMENT_ORDER_NOT_FOUND: 'PAYMENT_ORDER_NOT_FOUND',
+  PAYMENT_ORDER_ACCESS_DENIED: 'PAYMENT_ORDER_ACCESS_DENIED',
+  PAYMENT_GATEWAY_URL_NOT_CONFIGURED: 'PAYMENT_GATEWAY_URL_NOT_CONFIGURED',
+  PAYMENT_EXPIRED: 'PAYMENT_EXPIRED',
+  PAYMENT_ALREADY_PROCESSED: 'PAYMENT_ALREADY_PROCESSED',
+  NESHAN_API_KEY_NOT_CONFIGURED: 'NESHAN_API_KEY_NOT_CONFIGURED',
+  NESHAN_INVALID_COORDINATES: 'NESHAN_INVALID_COORDINATES',
+  NESHAN_PROVIDER_CONFIGURATION_ERROR: 'NESHAN_PROVIDER_CONFIGURATION_ERROR',
+  NESHAN_PROVIDER_LIMIT_EXCEEDED: 'NESHAN_PROVIDER_LIMIT_EXCEEDED',
+  NESHAN_PROVIDER_UNAVAILABLE: 'NESHAN_PROVIDER_UNAVAILABLE',
+  INVALID_NESHAN_PROVIDER_RESPONSE: 'INVALID_NESHAN_PROVIDER_RESPONSE',
+  MELIPAYAMAK_OTP_TOKEN_NOT_CONFIGURED: 'MELIPAYAMAK_OTP_TOKEN_NOT_CONFIGURED',
+  MELIPAYAMAK_PROVIDER_UNAVAILABLE: 'MELIPAYAMAK_PROVIDER_UNAVAILABLE',
+  MELIPAYAMAK_PROVIDER_REJECTED: 'MELIPAYAMAK_PROVIDER_REJECTED',
+  INVALID_MELIPAYAMAK_PROVIDER_RESPONSE:
+    'INVALID_MELIPAYAMAK_PROVIDER_RESPONSE',
+  TEMPORARY_TOKEN_SECRET_NOT_CONFIGURED:
+    'TEMPORARY_TOKEN_SECRET_NOT_CONFIGURED',
+  BREED_NOT_FOUND: 'BREED_NOT_FOUND',
+  BREED_ALREADY_EXISTS: 'BREED_ALREADY_EXISTS',
+  DELIVERY_SERVICE_NOT_FOUND: 'DELIVERY_SERVICE_NOT_FOUND',
+  DELIVERY_SERVICE_ALREADY_EXISTS: 'DELIVERY_SERVICE_ALREADY_EXISTS',
+  PET_NOT_FOUND: 'PET_NOT_FOUND',
+  PET_ALREADY_EXISTS: 'PET_ALREADY_EXISTS',
+  PET_TYPE_NOT_FOUND: 'PET_TYPE_NOT_FOUND',
+  PET_BREED_NOT_FOUND: 'PET_BREED_NOT_FOUND',
+  PET_BREED_TYPE_MISMATCH: 'PET_BREED_TYPE_MISMATCH',
+  USER_PROFILE_ACCESS_DENIED: 'USER_PROFILE_ACCESS_DENIED',
+  USER_ADDRESS_LIMIT_REACHED: 'USER_ADDRESS_LIMIT_REACHED',
+  USER_ADDRESS_NOT_FOUND: 'USER_ADDRESS_NOT_FOUND',
+  USER_RECEIVER_INFO_INCOMPLETE: 'USER_RECEIVER_INFO_INCOMPLETE',
+  USER_CART_ITEM_NOT_FOUND: 'USER_CART_ITEM_NOT_FOUND',
+  SHIPPING_EMPTY_CART: 'SHIPPING_EMPTY_CART',
+  SHIPPING_ADDRESS_NOT_FOUND: 'SHIPPING_ADDRESS_NOT_FOUND',
+  SHIPPING_QUOTE_NOT_FOUND: 'SHIPPING_QUOTE_NOT_FOUND',
+  SHIPPING_QUOTE_EXPIRED: 'SHIPPING_QUOTE_EXPIRED',
+  SHIPPING_WINDOW_NOT_FOUND: 'SHIPPING_WINDOW_NOT_FOUND',
+  USER_WISHLIST_ITEM_NOT_FOUND: 'USER_WISHLIST_ITEM_NOT_FOUND',
+  USER_WISHLIST_ITEM_ALREADY_EXISTS: 'USER_WISHLIST_ITEM_ALREADY_EXISTS',
+};
+
+export const USER_ADDRESS_LIMITS = {
+  MAX_ADDRESSES: 5,
+};
+
+export const CART_IDEMPOTENCY = {
+  MAX_PROCESSED_KEYS: 100,
+};
+
+export const USER_ITEM_TYPES = {
+  PRODUCT: 'product',
+  PET: 'pet',
+};
+
+export const CART_PAYMENT_TYPES = {
+  DIRECT: 1,
+  INSTALLMENT: 2,
+};
+
+export const COUNTRY_FLAGS = {
+  BASE_URL: 'https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/flags/4x3',
+  FORMAT: 'svg',
+};
+
+export const NESHAN_API = {
+  REVERSE_GEOCODING_URL: 'https://api.neshan.org/v5/reverse',
+  TIMEOUT_MS: 5000,
+  INVALID_COORDINATE_STATUSES: [400, 470],
+  CONFIGURATION_ERROR_STATUSES: [480, 483, 484, 485],
+  LIMIT_ERROR_STATUSES: [481, 482],
+};
+
+export const MELIPAYAMAK_API = {
+  BASE_URL: 'https://console.melipayamak.com',
+  OTP_PATH: '/api/send/otp',
+  TIMEOUT_MS: 5000,
+};
+
+export const IMAGE_FORMATS = {
+  WEBP: 'webp',
+  JPEG: 'jpeg',
+  PNG: 'png',
+  AVIF: 'avif',
+};
+
+export const IMAGE_PROCESSING = {
+  ONE_MB: 1024 * 1024,
+  THREE_MB: 3 * 1024 * 1024,
+  FOUR_MB: 4 * 1024 * 1024,
+  MAX_THUMBNAIL_SIZE_BYTES: 10 * 1024,
+  THUMBNAIL_BLUR_SIGMA: 8,
+  THUMBNAIL_WIDTHS: [20, 16, 12, 10],
+  THUMBNAIL_QUALITIES: [30, 25, 20, 15, 10],
+};
+
+export const IMAGE_UPLOAD = {
+  MAX_FILE_SIZE_BYTES: 5 * IMAGE_PROCESSING.ONE_MB,
+  MAX_PET_TYPE_IMAGE_SIZE_BYTES: IMAGE_PROCESSING.ONE_MB - 1,
+  MAX_BRAND_LOGO_SIZE_BYTES: IMAGE_PROCESSING.ONE_MB - 1,
+  MAX_PET_IMAGES: 5,
+  MAX_PRODUCT_IMAGES: PRODUCT_LIMITS.MAX_IMAGES,
+  MAX_MULTIPART_FIELDS: 20,
+  AVATAR_FIELD: 'avatar',
+  MAIN_IMAGE_FIELD: 'mainImage',
+  BRAND_LOGO_FIELD: 'logo',
+  IMAGES_FIELD: 'images',
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+  PET_TYPE_ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
+};
+
+export const OBJECT_STORAGE = {
+  DEFAULT_CACHE_CONTROL: 'public, max-age=31536000, immutable',
+  DEFAULT_ID_LENGTH: 21,
+};
+
+export const RATE_LIMIT = {
+  API_WINDOW_MS: 15 * 60 * 1000,
+  API_MAX_REQUESTS: 100,
+  STANDARD_HEADERS: 'draft-8',
+  LOGIN_MAX_REQUESTS: 3,
+  LOGIN_WINDOW_SECONDS: 2 * 60,
+  USER_MAX_REQUESTS: 3,
+  USER_WINDOW_SECONDS: 6 * 60,
+  USER_PAGINATE_MAX_REQUESTS: 9,
+  USER_PAGINATE_WINDOW_SECONDS: 3 * 60,
+  CART_MAX_REQUESTS: 4,
+  CART_ALL_MAX_REQUESTS: 10,
+  CART_CHECKOUT_MAX_REQUESTS: 10,
+  CART_WINDOW_SECONDS: 60,
+};
+
+export const USER_OTP = {
+  CODE_LENGTH: 6,
+  KEY_NAMESPACE: 'otp:users',
+  RESERVATION_TTL_SECONDS: 30,
+  TTL_SECONDS: 2 * 60,
+};
+
+export const PAYMENT_REQUEST = {
+  AUTHORITY_BYTES: 32,
+  EXPIRATION_MS: 15 * 60 * 1000,
+};
+
+export const PAYMENT_GATEWAY = {
+  COMPANY_NAME: 'پت شاپ پرشین',
+};
+
+export const USER_TEMPORARY_TOKEN = {
+  KEY_NAMESPACE: 'temporary-token:users',
+  RATE_LIMIT_NAMESPACE: 'rate-limit:temporary-token:users',
+  MAX_REQUESTS: 3,
+  TTL_SECONDS: 5 * 60,
+};
+
+export const USER_AUTH_SESSION = {
+  KEY_NAMESPACE: 'auth-session:users',
+  USER_SESSIONS_KEY_NAMESPACE: 'auth-sessions:user',
+  ACCESS_TOKEN_TTL: '7h',
+  REFRESH_TOKEN_TTL: '7d',
+  TTL_SECONDS: 7 * 24 * 60 * 60,
+};
+
+export const SERVER_LIFECYCLE = {
+  SHUTDOWN_TIMEOUT_MS: 10000,
+};

@@ -1,0 +1,236 @@
+import { PRODUCT_LIMITS } from '#configs/constants.js';
+import { CategoryService } from '#entities/categories/categories.service.js';
+import { BrandService } from '#entities/brands/brands.service.js';
+import { SubCategoryService } from '#entities/subCategories/subCategories.service.js';
+
+const slugifyProductPart = (value = '') =>
+  String(value)
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/[\s-]+/g, '-');
+
+export const buildProductSlug = ({
+  title,
+  petTypeTitle,
+  categoryTitle,
+  subCategoryTitle,
+}) => {
+  const titlePart = slugifyProductPart(title) || 'product';
+  const taxonomyParts = [petTypeTitle, categoryTitle, subCategoryTitle]
+    .map(slugifyProductPart)
+    .filter(Boolean);
+
+  while (
+    [titlePart, ...taxonomyParts].join('-').length >
+      PRODUCT_LIMITS.MAX_SLUG_LENGTH &&
+    taxonomyParts.length
+  ) {
+    taxonomyParts.pop();
+  }
+
+  return [titlePart, ...taxonomyParts].join('-');
+};
+
+export const escapeProductRegex = (value = '') =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export const getProductDisplayPricing = (product) => {
+  const weights = product?.weights || [];
+  if (!weights.length) return { price: 0, discountPercentage: 0 };
+  const selected = weights.reduce(
+    (selected, weight) => {
+      const payablePrice = weight.price * (1 - weight.discountPercentage / 100);
+      return payablePrice < selected.payablePrice
+        ? {
+            price: weight.price,
+            discountPercentage: weight.discountPercentage,
+            payablePrice,
+          }
+        : selected;
+    },
+    {
+      price: weights[0].price,
+      discountPercentage: weights[0].discountPercentage,
+      payablePrice:
+        weights[0].price * (1 - weights[0].discountPercentage / 100),
+    },
+  );
+  return {
+    price: selected.price,
+    discountPercentage: selected.discountPercentage,
+  };
+};
+
+export const getMinimumFinalPrice = (product) => {
+  if (Number.isFinite(product?.minimumPayablePrice)) {
+    return product.minimumPayablePrice;
+  }
+
+  const { price, discountPercentage } = getProductDisplayPricing(product);
+  return price * (1 - discountPercentage / 100);
+};
+
+export const getMinimumQuantity = (product) => {
+  const weights = product?.weights || [];
+  return weights.length
+    ? Math.min(...weights.map(({ quantity }) => quantity))
+    : 0;
+};
+
+export const buildProductFilter = (
+  {
+    title: filterTitle,
+    search,
+    category,
+    subCategory,
+    quantity,
+    price,
+    isEnable,
+    includeDisabled,
+  } = {},
+  enabledOnly = false,
+) => {
+  const filter = {};
+  const title = filterTitle ?? search;
+  if (enabledOnly) filter.isEnable = true;
+  else if (isEnable !== undefined) filter.isEnable = isEnable;
+  else if (!includeDisabled) filter.isEnable = true;
+  if (category) filter.category = category;
+  if (subCategory) filter.subCategory = subCategory;
+  if (quantity !== undefined) filter.quantity = quantity;
+  if (price !== undefined) filter.minimumPayablePrice = price;
+  if (title) {
+    filter.title = { $regex: escapeProductRegex(title), $options: 'i' };
+  }
+  return filter;
+};
+
+const valueOf = (product) =>
+  typeof product?.toObject === 'function' ? product.toObject() : product;
+const relationId = (relation) => relation?._id || relation;
+
+export const formatManagementProduct = (product) => {
+  if (!product) return null;
+  const value = valueOf(product);
+  const pricing = getProductDisplayPricing(value);
+  return {
+    id: value._id,
+    title: value.title,
+    mainImage: value.mainImage,
+    images: value.images || [],
+    mainImageThumbnail: value.mainImageThumbnail,
+    summary: value.summary,
+    description: value.description,
+    category: value.category?.title
+      ? CategoryService.format(value.category)
+      : relationId(value.category),
+    brand: value.brand?.title
+      ? BrandService.format(value.brand)
+      : relationId(value.brand),
+    subCategory: value.subCategory?.title
+      ? SubCategoryService.format(value.subCategory)
+      : relationId(value.subCategory) || null,
+    quantity: value.quantity,
+    weights: value.weights || [],
+    userRate: value.userRate,
+    userRateCount: value.userRateCount,
+    propertyDefinitions: value.propertyDefinitions || [],
+    ...pricing,
+    isEnable: value.isEnable,
+    slug: value.slug,
+    createdBy: value.createdBy,
+    updatedBy: value.updatedBy,
+    createdAt: value.createdAt,
+    updatedAt: value.updatedAt,
+  };
+};
+
+export const formatManagementProductListItem = (product) => ({
+  ...formatManagementProduct(product),
+  salesVolume: valueOf(product).salesVolume,
+});
+
+export const formatCustomerProductListItem = (product) => {
+  const value = valueOf(product);
+  const pricing = getProductDisplayPricing(value);
+  return {
+    id: value._id,
+    title: value.title,
+    mainImage: value.mainImage,
+    mainImageThumbnail: value.mainImageThumbnail,
+    summary: value.summary,
+    description: value.description,
+    quantity: value.quantity,
+    weights: value.weights || [],
+    userRate: value.userRate,
+    userRateCount: value.userRateCount,
+    ...pricing,
+    isEnable: value.isEnable,
+    slug: value.slug,
+    category: value.category?.title,
+    brand: value.brand?.title,
+    subCategory: value.subCategory?.title || null,
+  };
+};
+
+export const formatCustomerProductDetail = (product) => {
+  const value = valueOf(product);
+  const pricing = getProductDisplayPricing(value);
+  return {
+    id: value._id,
+    title: value.title,
+    mainImage: value.mainImage,
+    images: value.images || [],
+    mainImageThumbnail: value.mainImageThumbnail,
+    summary: value.summary,
+    description: value.description,
+    quantity: value.quantity,
+    weights: value.weights || [],
+    userRate: value.userRate,
+    userRateCount: value.userRateCount,
+    ...pricing,
+    isEnable: value.isEnable,
+    slug: value.slug,
+    category: CategoryService.format(value.category),
+    brand: BrandService.format(value.brand),
+    subCategory: value.subCategory
+      ? SubCategoryService.format(value.subCategory)
+      : null,
+  };
+};
+
+export const formatProductImages = (product) => {
+  const value = valueOf(product);
+  return {
+    mainImage: value.mainImage,
+    mainImageThumbnail: value.mainImageThumbnail,
+    imagesList: value.images || [],
+  };
+};
+
+export const formatProductMainInfo = (product) => {
+  const value = valueOf(product);
+  return {
+    title: value.title,
+    category: value.category?.title
+      ? CategoryService.format(value.category)
+      : relationId(value.category),
+    brand: value.brand?.title
+      ? BrandService.format(value.brand)
+      : relationId(value.brand),
+    subCategory: value.subCategory?.title
+      ? SubCategoryService.format(value.subCategory)
+      : relationId(value.subCategory) || null,
+    quantity: value.quantity,
+    weights: value.weights || [],
+    summary: value.summary,
+    description: value.description,
+  };
+};
+
+export const formatProductPropertyDefinitions = (product) =>
+  (valueOf(product).propertyDefinitions || []).map((definition) => ({
+    ...definition,
+  }));

@@ -1,0 +1,40 @@
+# Landing Entity
+
+## Purpose
+
+Provides public, read-only homepage sections from the enabled pet-type and product catalogs. It owns no collection; `landing.model.js` composes bounded queries over those source collections.
+
+## Endpoints
+
+- `GET /landing/pet-types` — up to four enabled pet types, ordered by creation date, each with its main image, thumbnail, and summary.
+- `GET /landing/search?search=TEXT&page=NUMBER&limit=NUMBER` — paginated enabled Products and Pets matched by catalog or requested taxonomy title; every item is limited to `title`, `slug`, `mainImage`, `thumbnailImage`, and `itemType` (`product` or `pet`).
+- `GET /landing/products/discounted?limit=COUNT` — enabled products ordered by discount percentage, with the main image thumbnail, source price, discount percentage, response-only calculated discount amount, minimum final price, and minimum quantity across weights; `limit` defaults to four and is capped at 100.
+- `GET /landing/pet-types/all` — every enabled pet type, ordered by creation date, each with its main image, thumbnail, and summary.
+- `GET /landing/products/popular` — up to four enabled products, ordered by sales volume, with the main image thumbnail, slug, source price, discount percentage, response-only final discounted price, minimum final price, and minimum quantity across weights.
+- `GET /landing/products` — enabled products filtered by comma-separated category, sub-category, and brand IDs, an inclusive raw-price range, and enabled status. It supports `most-valued`, `less-valued`, `most-sales`, and `less-sales`, and returns `{ result, pagination, filters, sort }` with each product's minimum final price and minimum quantity; `isEnable=false` returns no public records.
+- `GET /landing/pets-paginate` — enabled pets filtered by multi-select pet type and breed IDs, an inclusive raw-price range, and enabled status; it returns `{ result, pagination, filters, sort }`.
+- `GET /landing/products/featured` — up to four distinct enabled products in priority order: most purchased, most discounted, cheapest, then most wishlisted, each with its minimum final price and minimum quantity across weights. A product selected for an earlier category is excluded from later categories.
+- `GET /landing/brands/popular` — up to five enabled brands ranked by their enabled-product count, including basic brand details and `productCount`.
+- `GET /landing/pets/popular` — up to five enabled pets ranked by non-management wishlist frequency; it falls back to sales volume when no enabled pets are wishlisted and supplements sparse results with the highest-priced enabled pets.
+- `GET /landing/pets/recent` — up to five enabled, in-stock pets that were updated or enabled by a user, ordered by their most recent update and supplemented with highest-priced available pets when needed.
+- `GET /landing/pets/:slug` — full customer-safe detail for an enabled pet.
+- `GET /landing/products/:slug` — full customer-safe detail for an enabled product, including `category.petType` with only `id`, `title`, `displayName`, and `propertyDefinitions`.
+
+## Rules
+
+- All endpoints are public and return only enabled catalog records.
+- Product-detail responses include `canVote` and `hasRated` for the optionally authenticated caller. A customer can vote only once after buying that product; the rating API independently enforces both rules.
+- Search matches Product title, Category title, and SubCategory title; and Pet title, PetType title, and Breed title. Product results require `isEnable: true` and Pet results require `inEnable: true`.
+- Slug detail endpoints accept hyphen-separated Unicode letters and numbers (including Persian slugs) and reuse the catalog entities' full customer-detail formatters, including populated taxonomy and brand relations.
+- Featured section limits are centralized in `landing.constants.js`.
+- Landing product summaries calculate `discountPrice` as `price * (discountPercentage / 100)` without persisting it to product documents.
+- The popular-products and product-list sections return `discountPrice` as the final payable price: `price - (price * (discountPercentage / 100))`.
+- Every landing product-card list response exposes `minimumFinalPrice`, sourced from the product's derived `minimumPayablePrice` and representing the cheapest payable weight.
+- Every landing product-card list response exposes `minimumQuantity`, the lowest `weights[].quantity` value, or zero when no weight is configured.
+- Landing product summaries return `mainImageThumbnail` whenever their source product has a main image thumbnail.
+- Product-list queries apply their enabled-status predicate after the category, sub-category, brand, and price predicates, immediately before sorting. Their final `isEnable` boolean facet appears last before sort metadata; `isEnable=false` returns no public records. Sort modes use title then ID as deterministic tie-breakers. Facet counts use disjunctive filtering: each facet is calculated with its own selected value excluded, while all other selected values remain applied.
+- Featured products use ordered-product quantity, `discountPercentage`, raw `price`, and non-management wishlist frequency respectively; ties use ID where metrics are equal, and each response item includes its selection `tag`.
+- Popular brands count enabled Products only, filter joined Brands with `isEnable: true`, and apply the five-item limit afterward.
+- Popular pets aggregate non-management user wishlists without persisting rankings. When no enabled wishlisted pets are available, they use sales volume; a result with fewer than four pets is supplemented by highest price, without duplicates.
+- Recent pets require a non-null `updatedBy`, `inEnable: true`, and `quantity > 0`; they are ordered by `updatedAt` descending with `_id` as a deterministic tie-breaker. Fewer than five results are supplemented by distinct enabled, in-stock pets ordered by price descending.
+- Queries are ordinary bounded Mongoose queries and do not create cursors, caches, timers, or other long-lived resources.

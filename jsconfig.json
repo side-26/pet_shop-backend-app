@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "#/*": ["src/*"],
+      "#configs/*": ["src/configs/*"],
+      "#entities/*": ["src/entities/*"],
+      "#middlewares/*": ["src/middlewares/*"],
+      "#utils/*": ["src/utils/*"]
+    }
+  },
+  "exclude": ["node_modules"]
+}

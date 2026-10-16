@@ -1,0 +1,528 @@
+jest.mock('./landing.model.js', () => ({
+  LandingModel: {
+    findPetBySlug: jest.fn(),
+    findFeaturedPetTypes: jest.fn(),
+    findAllPetTypes: jest.fn(),
+    findHighestPricedPets: jest.fn(),
+    findHighestPricedAvailablePets: jest.fn(),
+    findMostPopularPets: jest.fn(),
+    findRecentlyUpdatedPets: jest.fn(),
+    findMostWishlistedPetIds: jest.fn(),
+    findPetsByIds: jest.fn(),
+    findMostDiscountedProducts: jest.fn(),
+    findMostPopularBrands: jest.fn(),
+    findMostPopularProducts: jest.fn(),
+    findMostPurchasedProduct: jest.fn(),
+    findMostDiscountedProduct: jest.fn(),
+    findCheapestProduct: jest.fn(),
+    findMostWishlistedProduct: jest.fn(),
+    findProductBySlug: jest.fn(),
+    findProductList: jest.fn(),
+    countProductList: jest.fn(),
+    findProductFacetData: jest.fn(),
+    findFacetCategories: jest.fn(),
+    findFacetSubCategories: jest.fn(),
+    findFacetBrands: jest.fn(),
+    countSearchPets: jest.fn(),
+    countSearchProducts: jest.fn(),
+    findSearchProducts: jest.fn(),
+    findSearchPets: jest.fn(),
+  },
+}));
+
+jest.mock('#entities/pets/pets.helpers.js', () => ({
+  formatCustomerPetDetail: jest.fn((pet) => ({
+    id: pet._id,
+    title: pet.title,
+  })),
+  formatCustomerPetListItem: jest.fn((pet) => ({
+    id: pet._id,
+    title: pet.title,
+    mainImage: pet.mainImage,
+    mainImageThumbnail: pet.mainImageThumbnail,
+  })),
+}));
+
+jest.mock('#entities/products/products.helpers.js', () => ({
+  formatCustomerProductDetail: jest.fn((product) => ({
+    id: product._id,
+    title: product.title,
+    category: product.category,
+  })),
+  getProductDisplayPricing: jest.fn((product) => {
+    const weights = product.weights || [];
+    if (!weights.length) {
+      return {
+        price: product.price || 0,
+        discountPercentage: product.discountPercentage || 0,
+      };
+    }
+    return weights.reduce((selected, weight) =>
+      weight.price * (1 - weight.discountPercentage / 100) <
+      selected.price * (1 - selected.discountPercentage / 100)
+        ? weight
+        : selected,
+    );
+  }),
+  getMinimumFinalPrice: jest.fn((product) => {
+    if (Number.isFinite(product.minimumPayablePrice)) {
+      return product.minimumPayablePrice;
+    }
+    const price = product.price || 0;
+    const discountPercentage = product.discountPercentage || 0;
+    return price * (1 - discountPercentage / 100);
+  }),
+  getMinimumQuantity: jest.fn((product) => {
+    const weights = product.weights || [];
+    return weights.length
+      ? Math.min(...weights.map(({ quantity }) => quantity))
+      : 0;
+  }),
+}));
+
+import { LandingModel } from './landing.model.js';
+import { LANDING_SEARCH_ITEM_TYPES } from './landing.constants.js';
+import { LandingService } from './landing.service.js';
+
+const petType = {
+  _id: 'pet-type-id',
+  title: 'گربه',
+  mainImage: 'https://cdn.example.com/cat.webp',
+  thumbnail: 'data:image/webp;base64,AAAA',
+  description: 'لوازم مخصوص گربه',
+};
+const product = {
+  _id: 'product-id',
+  title: 'غذای گربه',
+  mainImage: 'https://cdn.example.com/food.webp',
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
+  summary: 'غذای کامل',
+  price: 200000,
+  discountPercentage: 20,
+};
+const pet = {
+  _id: 'pet-id',
+  title: 'گربه پرشین',
+  mainImage: 'https://cdn.example.com/persian.webp',
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
+  images: ['https://cdn.example.com/persian-gallery.webp'],
+  description: 'توضیحات گربه',
+  petType: petType,
+  breed: { _id: 'breed-id', title: 'پرشین' },
+  quantity: 1,
+  price: 1000000,
+  discountPercentage: 10,
+  inEnable: true,
+  slug: 'persian-cat',
+};
+const fullProduct = {
+  ...product,
+  mainImageThumbnail: 'data:image/webp;base64,AAAA',
+  images: ['https://cdn.example.com/food-gallery.webp'],
+  description: 'توضیحات محصول',
+  category: {
+    _id: 'category-id',
+    title: 'غذا',
+    petType: {
+      ...petType,
+      displayName: 'گربه',
+      propertyDefinitions: [{ label: 'سن', value: 'age' }],
+    },
+  },
+  subCategory: { _id: 'subcategory-id', title: 'غذای خشک' },
+  quantity: 1,
+  isEnable: true,
+  slug: 'cat-food',
+};
+const highestPricedPet = {
+  ...pet,
+  _id: 'highest-priced-pet-id',
+  title: 'گربه گران‌قیمت',
+};
+
+describe('LandingService', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('returns paginated compact product and pet search matches in title order', async () => {
+    const search = /گربه/i;
+    const productMatch = {
+      title: 'غذای گربه',
+      slug: 'cat-food',
+      mainImage: 'https://cdn.example.com/food.webp',
+      thumbnailImage: 'data:image/webp;base64,AAAA',
+      itemType: LANDING_SEARCH_ITEM_TYPES.PRODUCT,
+    };
+    const petMatch = {
+      title: 'گربه پرشین',
+      slug: 'persian-cat',
+      mainImage: 'https://cdn.example.com/persian.webp',
+      thumbnailImage: 'data:image/webp;base64,BBBB',
+      itemType: LANDING_SEARCH_ITEM_TYPES.PET,
+    };
+    LandingModel.findSearchProducts.mockResolvedValue([productMatch]);
+    LandingModel.findSearchPets.mockResolvedValue([petMatch]);
+    LandingModel.countSearchProducts.mockResolvedValue(1);
+    LandingModel.countSearchPets.mockResolvedValue(1);
+
+    await expect(
+      LandingService.searchCatalog(search, { page: 1, limit: 20 }),
+    ).resolves.toMatchObject({
+      result: [productMatch, petMatch],
+      pagination: { totalItems: 2, currentPage: 1, itemsPerPage: 20 },
+    });
+    expect(LandingModel.findSearchProducts).toHaveBeenCalledWith(search, 20);
+    expect(LandingModel.findSearchPets).toHaveBeenCalledWith(search, 20);
+    expect(LandingModel.countSearchProducts).toHaveBeenCalledWith(search);
+    expect(LandingModel.countSearchPets).toHaveBeenCalledWith(search);
+  });
+
+  test('formats the bounded featured pet types section', async () => {
+    LandingModel.findFeaturedPetTypes.mockResolvedValue([petType]);
+
+    await expect(LandingService.getFeaturedPetTypes()).resolves.toEqual([
+      {
+        id: petType._id,
+        title: petType.title,
+        mainImage: petType.mainImage,
+        thumbnail: petType.thumbnail,
+        summary: petType.description,
+      },
+    ]);
+  });
+
+  test('formats every enabled pet type', async () => {
+    LandingModel.findAllPetTypes.mockResolvedValue([petType]);
+
+    await expect(LandingService.getAllPetTypes()).resolves.toHaveLength(1);
+    expect(LandingModel.findAllPetTypes).toHaveBeenCalledTimes(1);
+  });
+
+  test('returns pets most commonly wishlisted by non-management users', async () => {
+    LandingModel.findMostWishlistedPetIds.mockResolvedValue([
+      { petId: pet._id },
+    ]);
+    LandingModel.findPetsByIds.mockResolvedValue([pet]);
+    LandingModel.findHighestPricedPets.mockResolvedValue([]);
+
+    await expect(LandingService.getMostPopularPets()).resolves.toEqual([
+      {
+        id: pet._id,
+        title: pet.title,
+        mainImage: pet.mainImage,
+        mainImageThumbnail: pet.mainImageThumbnail,
+      },
+    ]);
+    expect(LandingModel.findPetsByIds).toHaveBeenCalledWith([pet._id]);
+    expect(LandingModel.findMostPopularPets).not.toHaveBeenCalled();
+  });
+
+  test('falls back to sales volume and supplements sparse results by price', async () => {
+    LandingModel.findMostWishlistedPetIds.mockResolvedValue([]);
+    LandingModel.findMostPopularPets.mockResolvedValue([pet]);
+    LandingModel.findHighestPricedPets.mockResolvedValue([highestPricedPet]);
+
+    await expect(LandingService.getMostPopularPets()).resolves.toEqual([
+      expect.objectContaining({ id: pet._id }),
+      expect.objectContaining({ id: highestPricedPet._id }),
+    ]);
+    expect(LandingModel.findMostPopularPets).toHaveBeenCalledWith(5);
+    expect(LandingModel.findHighestPricedPets).toHaveBeenCalledWith(
+      [pet._id],
+      4,
+    );
+  });
+
+  test('supplements recently updated pets with highest-priced available pets', async () => {
+    LandingModel.findRecentlyUpdatedPets.mockResolvedValue([pet]);
+    LandingModel.findHighestPricedAvailablePets.mockResolvedValue([
+      highestPricedPet,
+    ]);
+
+    await expect(LandingService.getRecentlyUpdatedPets()).resolves.toEqual([
+      {
+        id: pet._id,
+        title: pet.title,
+        mainImage: pet.mainImage,
+        mainImageThumbnail: pet.mainImageThumbnail,
+      },
+      {
+        id: highestPricedPet._id,
+        title: highestPricedPet.title,
+        mainImage: highestPricedPet.mainImage,
+        mainImageThumbnail: highestPricedPet.mainImageThumbnail,
+      },
+    ]);
+    expect(LandingModel.findRecentlyUpdatedPets).toHaveBeenCalledTimes(1);
+    expect(LandingModel.findHighestPricedAvailablePets).toHaveBeenCalledWith(
+      [pet._id],
+      4,
+    );
+  });
+
+  test('returns full enabled pet and product details by slug', async () => {
+    LandingModel.findPetBySlug.mockResolvedValue(pet);
+    LandingModel.findProductBySlug.mockResolvedValue(fullProduct);
+
+    await expect(LandingService.getPetBySlug(pet.slug)).resolves.toEqual(
+      expect.objectContaining({
+        title: pet.title,
+      }),
+    );
+    await expect(
+      LandingService.getProductBySlug(fullProduct.slug),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        title: fullProduct.title,
+        category: expect.objectContaining({
+          petType: {
+            id: petType._id,
+            title: petType.title,
+            displayName: petType.title,
+            propertyDefinitions: [{ label: 'سن', value: 'age' }],
+          },
+        }),
+      }),
+    );
+    expect(LandingModel.findPetBySlug).toHaveBeenCalledWith(pet.slug);
+    expect(LandingModel.findProductBySlug).toHaveBeenCalledWith(
+      fullProduct.slug,
+    );
+  });
+
+  test('rejects unavailable slug details as not found', async () => {
+    LandingModel.findPetBySlug.mockResolvedValue(null);
+    LandingModel.findProductBySlug.mockResolvedValue(null);
+
+    await expect(LandingService.getPetBySlug('missing-pet')).rejects.toThrow(
+      'حیوان یافت نشد',
+    );
+    await expect(
+      LandingService.getProductBySlug('missing-product'),
+    ).rejects.toThrow('محصول یافت نشد');
+  });
+
+  test('formats discounted and popular product sections', async () => {
+    LandingModel.findMostDiscountedProducts.mockResolvedValue([product]);
+    LandingModel.findMostPopularProducts.mockResolvedValue([product]);
+
+    const expected = {
+      id: product._id,
+      title: product.title,
+      mainImage: product.mainImage,
+      mainImageThumbnail: product.mainImageThumbnail,
+      summary: product.summary,
+      price: product.price,
+      discountPercentage: product.discountPercentage,
+      discountPrice: 40000,
+      minimumFinalPrice: 160000,
+      minimumQuantity: 0,
+    };
+    await expect(LandingService.getMostDiscountedProducts(2)).resolves.toEqual([
+      expected,
+    ]);
+    await expect(LandingService.getMostPopularProducts()).resolves.toEqual([
+      { ...expected, slug: product.slug, discountPrice: 160000 },
+    ]);
+    expect(LandingModel.findMostDiscountedProducts).toHaveBeenCalledWith(2);
+  });
+
+  test('filters and paginates enabled landing products with the selected sort', async () => {
+    LandingModel.findProductList.mockResolvedValue([
+      { ...product, slug: 'food' },
+    ]);
+    LandingModel.countProductList.mockResolvedValue(3);
+    LandingModel.findProductFacetData.mockResolvedValue({
+      category: [],
+      subCategory: [],
+      brand: [{ _id: 'brand-id', count: 3 }],
+      price: [{ min: 100000, max: 300000 }],
+      isEnable: [{ count: 3 }],
+    });
+    LandingModel.findFacetCategories.mockResolvedValue([]);
+    LandingModel.findFacetSubCategories.mockResolvedValue([]);
+    LandingModel.findFacetBrands.mockResolvedValue([
+      { _id: 'brand-id', title: 'brand', title_fa: 'برند' },
+    ]);
+
+    await expect(
+      LandingService.getProductList({
+        category: 'category-id',
+        subCategory: 'sub-category-id',
+        brand: 'brand-id',
+        priceFrom: 100000,
+        priceTo: 300000,
+        sort: 'less-valued',
+        page: 2,
+        limit: 2,
+      }),
+    ).resolves.toEqual({
+      result: [
+        expect.objectContaining({
+          id: product._id,
+          slug: 'food',
+          discountPrice: 160000,
+          minimumFinalPrice: 160000,
+          minimumQuantity: 0,
+        }),
+      ],
+      pagination: {
+        currentPage: 2,
+        totalPages: 2,
+        totalItems: 3,
+        itemsPerPage: 2,
+        hasNextPage: false,
+        hasPrevPage: true,
+        nextPage: null,
+        prevPage: 1,
+      },
+      filters: expect.arrayContaining([
+        expect.objectContaining({
+          key: 'brand',
+          options: [{ value: 'brand-id', label: 'برند', count: 3 }],
+        }),
+        expect.objectContaining({ key: 'price', min: 100000, max: 300000 }),
+        expect.objectContaining({
+          key: 'isEnable',
+          options: [
+            { value: true, label: 'فعال', count: 3 },
+            { value: false, label: 'غیرفعال', count: 0 },
+          ],
+        }),
+      ]),
+      sort: expect.objectContaining({ current: 'less-valued' }),
+    });
+    expect(LandingModel.findProductList).toHaveBeenCalledWith(
+      {
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
+      },
+      { minimumPayablePrice: 1, title: 1, _id: 1 },
+      2,
+      2,
+    );
+    expect(LandingModel.countProductList).toHaveBeenCalledWith({
+      category: { $in: ['category-id'] },
+      subCategory: { $in: ['sub-category-id'] },
+      brand: { $in: ['brand-id'] },
+      minimumPayablePrice: { $gte: 100000, $lte: 300000 },
+      isEnable: true,
+    });
+    expect(LandingModel.findProductFacetData).toHaveBeenCalledWith({
+      category: {
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
+      },
+      subCategory: {
+        category: { $in: ['category-id'] },
+        brand: { $in: ['brand-id'] },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
+      },
+      brand: {
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
+        isEnable: true,
+      },
+      price: {
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        isEnable: true,
+      },
+      isEnable: {
+        category: { $in: ['category-id'] },
+        subCategory: { $in: ['sub-category-id'] },
+        brand: { $in: ['brand-id'] },
+        minimumPayablePrice: { $gte: 100000, $lte: 300000 },
+      },
+    });
+  });
+
+  test('formats enabled brands by their enabled-product count', async () => {
+    const brand = {
+      _id: 'brand-id',
+      title: 'brand',
+      title_fa: 'برند',
+      logo: 'https://cdn.example.com/brand.webp',
+      thumbnailLogo: 'data:image/webp;base64,AAAA',
+      slug: 'brand',
+    };
+    LandingModel.findMostPopularBrands.mockResolvedValue([
+      { brand, productCount: 3 },
+    ]);
+
+    await expect(LandingService.getMostPopularBrands()).resolves.toEqual([
+      {
+        id: brand._id,
+        title: brand.title,
+        title_fa: brand.title_fa,
+        logo: brand.logo,
+        thumbnailLogo: brand.thumbnailLogo,
+        slug: brand.slug,
+        productCount: 3,
+      },
+    ]);
+  });
+
+  test('returns distinct featured products in selection-priority order', async () => {
+    const purchased = { ...product, _id: 'purchased-id', title: 'پرفروش' };
+    const discounted = {
+      ...product,
+      _id: 'discounted-id',
+      title: 'تخفیف‌دار',
+    };
+    const cheapest = { ...product, _id: 'cheapest-id', title: 'ارزان' };
+    const wishlisted = { ...product, _id: 'wishlisted-id', title: 'دلخواه' };
+    LandingModel.findMostPurchasedProduct.mockResolvedValue([purchased]);
+    LandingModel.findMostDiscountedProduct.mockResolvedValue(discounted);
+    LandingModel.findCheapestProduct.mockResolvedValue(cheapest);
+    LandingModel.findMostWishlistedProduct.mockResolvedValue([wishlisted]);
+
+    await expect(LandingService.getFeaturedProducts()).resolves.toEqual([
+      expect.objectContaining({
+        tag: 'mostPurchased',
+        product: expect.objectContaining({ id: purchased._id }),
+      }),
+      expect.objectContaining({
+        tag: 'mostDiscounted',
+        product: expect.objectContaining({ id: discounted._id }),
+      }),
+      expect.objectContaining({
+        tag: 'cheapest',
+        product: expect.objectContaining({ id: cheapest._id }),
+      }),
+      expect.objectContaining({
+        tag: 'mostWishlisted',
+        product: expect.objectContaining({ id: wishlisted._id }),
+      }),
+    ]);
+    expect(LandingModel.findMostDiscountedProduct).toHaveBeenCalledWith([
+      purchased._id,
+    ]);
+    expect(LandingModel.findCheapestProduct).toHaveBeenCalledWith([
+      purchased._id,
+      discounted._id,
+    ]);
+    expect(LandingModel.findMostWishlistedProduct).toHaveBeenCalledWith([
+      purchased._id,
+      discounted._id,
+      cheapest._id,
+    ]);
+  });
+
+  test('propagates source-query failures', async () => {
+    LandingModel.findMostPopularProducts.mockRejectedValue(
+      new Error('db failed'),
+    );
+
+    await expect(LandingService.getMostPopularProducts()).rejects.toThrow(
+      'db failed',
+    );
+  });
+});

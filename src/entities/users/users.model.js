@@ -1,0 +1,229 @@
+import mongoose from 'mongoose';
+
+import {
+  CART_PAYMENT_TYPES,
+  USER_ADDRESS_LIMITS,
+  USER_ITEM_TYPES,
+} from '#configs/constants.js';
+
+import {
+  deliveryQuoteSchema,
+  deliveryWindowSchema,
+} from '../../integrations/shipping/shipping.schemas.js';
+import { userZodSchema } from './users.schema.js';
+
+const addressSchema = new mongoose.Schema({
+  province: { type: String, required: true, trim: true },
+  city: { type: String, required: true, trim: true },
+  detailAddress: { type: String, required: true, trim: true },
+  latLng: {
+    type: [Number],
+    required: true,
+    validate: {
+      validator: (value) =>
+        Array.isArray(value) &&
+        value.length === 2 &&
+        Number.isFinite(value[0]) &&
+        Number.isFinite(value[1]) &&
+        value[0] >= -90 &&
+        value[0] <= 90 &&
+        value[1] >= -180 &&
+        value[1] <= 180,
+      message: 'مختصات نشانی باید شامل دو عدد باشد',
+    },
+  },
+  plate: { type: String, required: true, trim: true },
+  unit: { type: String, default: null, trim: true },
+  postalCode: {
+    type: String,
+    required: true,
+    match: /^\d{10}$/,
+  },
+  receiverIsMe: { type: Boolean, default: false },
+  firstName: { type: String, required: true, trim: true },
+  lastName: { type: String, required: true, trim: true },
+  nationalCode: {
+    type: String,
+    required: true,
+    match: /^\d{10}$/,
+  },
+  phoneNumber: {
+    type: String,
+    required: true,
+    match: /^09\d{9}$/,
+  },
+});
+
+const itemReference = {
+  type: mongoose.Schema.Types.ObjectId,
+  required: true,
+  ref() {
+    return this.itemType === USER_ITEM_TYPES.PRODUCT ? 'Products' : 'Pets';
+  },
+};
+
+const cartItemSchema = new mongoose.Schema(
+  {
+    item: itemReference,
+    itemType: {
+      type: String,
+      required: true,
+      enum: Object.values(USER_ITEM_TYPES),
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+      validate: Number.isInteger,
+    },
+    weight: {
+      type: mongoose.Schema.Types.ObjectId,
+      required() {
+        return this.itemType === USER_ITEM_TYPES.PRODUCT;
+      },
+      default: null,
+    },
+  },
+  { timestamps: true },
+);
+
+const shippingInfoSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: '', trim: true },
+    trackingCode: { type: String, default: '', trim: true },
+    estimateDeliveryDate: { type: Date, default: null },
+  },
+  { _id: false },
+);
+
+const cartSchema = new mongoose.Schema(
+  {
+    totalPrice: { type: Number, default: 0, min: 0 },
+    items: { type: [cartItemSchema], default: [] },
+    discountPrice: { type: Number, default: 0, min: 0 },
+    userAddress: { type: mongoose.Schema.Types.ObjectId, default: null },
+    deliveryQuote: { type: deliveryQuoteSchema, default: null },
+    deliveryWindow: { type: deliveryWindowSchema, default: null },
+    deliveringDateToShipping: { type: Date, default: null },
+    shippingPrice: { type: Number, default: 0, min: 0 },
+    shippingInfo: { type: shippingInfoSchema, default: () => ({}) },
+    paymentType: {
+      type: Number,
+      enum: Object.values(CART_PAYMENT_TYPES),
+      default: CART_PAYMENT_TYPES.DIRECT,
+    },
+    instalmentCompany: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+    },
+  },
+  { _id: false },
+);
+
+const cartIdempotencyRecordSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true, trim: true },
+    operation: { type: String, required: true, trim: true },
+    statusCode: { type: Number, required: true },
+    data: { type: mongoose.Schema.Types.Mixed, required: true },
+  },
+  { _id: false, timestamps: true },
+);
+
+cartSchema.pre('validate', function () {
+  if (this.paymentType === CART_PAYMENT_TYPES.DIRECT) {
+    this.instalmentCompany = null;
+  }
+});
+
+const wishlistItemSchema = new mongoose.Schema({
+  item: itemReference,
+  itemType: {
+    type: String,
+    required: true,
+    enum: Object.values(USER_ITEM_TYPES),
+  },
+});
+
+const userSchema = new mongoose.Schema(
+  {
+    firstName: { type: String, default: '' },
+    lastName: { type: String, default: '' },
+    phoneNumber: { type: String, required: true, unique: true },
+    email: { type: String, default: '' },
+    password: { type: String, required: true },
+    isEnable: { type: Boolean, default: true },
+    avatar: { type: String, default: '' },
+    nationalCode: { type: String, default: '' },
+    addresses: {
+      type: [addressSchema],
+      default: [],
+      validate: {
+        validator: (addresses) =>
+          addresses.length <= USER_ADDRESS_LIMITS.MAX_ADDRESSES,
+        message: 'حداکثر پنج نشانی قابل ثبت است',
+      },
+    },
+    age: { type: Number, default: null },
+    birthDate: { type: Date, default: null },
+    role: { type: String, default: 'customer' },
+    orders: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    cart: { type: cartSchema, default: () => ({}) },
+    cartIdempotencyRecords: {
+      type: [cartIdempotencyRecordSchema],
+      default: [],
+    },
+    wishlist: { type: [wishlistItemSchema], default: [] },
+  },
+  {
+    timestamps: true, // Apply to when using res.json() (calls .toJSON())
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    // Apply to when using .toObject() manually
+    toObject: {
+      transform: (doc, ret) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
+);
+
+userSchema.pre('save', function () {
+  const userData = this.toObject({ transform: false }); // ← include password
+  if (userData.birthDate instanceof Date) {
+    userData.birthDate = userData.birthDate.toISOString().slice(0, 10);
+  }
+  const result = userZodSchema.safeParse(userData);
+  if (!result.success) {
+    const errorMessages = result.error.issues
+      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ');
+    throw new Error(`اعتبارسنجی ناموفق بود: ${errorMessages}`);
+  }
+});
+
+userSchema.pre('findOneAndUpdate', function () {
+  const update = this.getUpdate();
+
+  if (update.$set) {
+    if (update.$set.birthDate instanceof Date) {
+      update.$set.birthDate = update.$set.birthDate.toISOString().slice(0, 10);
+    }
+    // Use .partial() so only the provided fields are validated
+    const result = userZodSchema.partial().safeParse(update.$set);
+    if (!result.success) {
+      const errorMessages = result.error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join(', ');
+      throw new Error(`اعتبارسنجی به‌روزرسانی ناموفق بود: ${errorMessages}`);
+    }
+  }
+});
+export const UserModel = mongoose.model('Users', userSchema);

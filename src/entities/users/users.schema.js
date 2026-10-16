@@ -1,0 +1,204 @@
+import { z } from 'zod';
+
+import { ROLES, USER_ITEM_TYPES } from '#configs/constants.js';
+import '#configs/zod.config.js';
+
+const {
+  any,
+  string,
+  number,
+  array,
+  tuple,
+  object,
+  boolean,
+  enum: zEnum,
+  email,
+  coerce,
+  literal,
+  url,
+} = z;
+
+const iranianPhoneNumberSchema = string().regex(/^09\d{9}$/);
+const nationalCodeSchema = string().regex(/^\d{10}$/);
+const postalCodeSchema = string().regex(/^\d{10}$/);
+const mongoObjectIdSchema = string().regex(/^[0-9a-fA-F]{24}$/);
+const latitudeSchema = number().min(-90).max(90);
+const longitudeSchema = number().min(-180).max(180);
+const birthDateSchema = string()
+  .date()
+  .refine((birthDate) => new Date(`${birthDate}T00:00:00.000Z`) <= new Date(), {
+    message: 'تاریخ تولد نمی‌تواند در آینده باشد',
+  });
+
+export const userRegisterSchema = object({
+  phoneNumber: iranianPhoneNumberSchema,
+  password: string().min(8),
+}).strict();
+
+export const userSendOtpSchema = object({
+  phoneNumber: iranianPhoneNumberSchema,
+}).strict();
+
+export const userVerifyOtpSchema = object({
+  phoneNumber: iranianPhoneNumberSchema,
+  'otp-code': string().regex(/^\d{6}$/),
+  'reset-password': boolean().optional().default(false),
+}).strict();
+
+export const userResetPasswordSchema = object({
+  newPassword: string().min(8),
+  confirmPassword: string().min(8),
+})
+  .strict()
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'کلمه عبور جدید و تکرار آن یکسان نیستند',
+    path: ['confirmPassword'],
+  });
+
+const addressFields = {
+  province: string().trim().min(2),
+  city: string().trim().min(2),
+  detailAddress: string().trim().min(5),
+  latLng: tuple([latitudeSchema, longitudeSchema]),
+  plate: string().trim().min(1),
+  unit: string().trim().nullable().optional(),
+  postalCode: postalCodeSchema,
+  receiverIsMe: boolean().optional().default(false),
+  firstName: string().trim().min(2).optional(),
+  lastName: string().trim().min(2).optional(),
+  nationalCode: nationalCodeSchema.optional(),
+  phoneNumber: iranianPhoneNumberSchema.optional(),
+};
+
+const requireOtherReceiver = (data, context) => {
+  if (data.receiverIsMe) return;
+
+  ['firstName', 'lastName', 'nationalCode', 'phoneNumber'].forEach((field) => {
+    if (!data[field]) {
+      context.addIssue({
+        code: 'custom',
+        path: [field],
+        message: 'اطلاعات گیرنده الزامی است',
+      });
+    }
+  });
+};
+
+export const userAddressSchema =
+  object(addressFields).superRefine(requireOtherReceiver);
+
+export const addUserAddressSchema = userAddressSchema;
+
+export const editUserAddressSchema = object({
+  ...addressFields,
+  receiverIsMe: boolean().optional(),
+}).partial();
+
+export const userAddressIdSchema = object({
+  addressId: mongoObjectIdSchema,
+});
+
+const cartItemFields = {
+  itemId: mongoObjectIdSchema,
+  itemType: zEnum([...Object.values(USER_ITEM_TYPES)]),
+  quantity: number().int().min(1),
+  weightId: mongoObjectIdSchema.optional(),
+};
+
+const idempotencyKeySchema = string().trim().min(1).max(128);
+
+export const addCartItemSchema = object({
+  ...cartItemFields,
+  idempotencyKey: idempotencyKeySchema,
+}).superRefine((value, context) => {
+  if (value.itemType === USER_ITEM_TYPES.PRODUCT && !value.weightId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['weightId'],
+      message: 'وزن محصول الزامی است',
+    });
+  }
+  if (value.itemType !== USER_ITEM_TYPES.PRODUCT && value.weightId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['weightId'],
+      message: 'وزن فقط برای محصول قابل انتخاب است',
+    });
+  }
+});
+
+export const addWishlistItemSchema = object(cartItemFields).omit({
+  quantity: true,
+  weightId: true,
+});
+
+export const cartEntryIdSchema = object({ id: mongoObjectIdSchema });
+
+export const cartIdempotencyKeySchema = object({
+  idempotencyKey: idempotencyKeySchema,
+}).strict();
+
+export const createDeliveryQuoteSchema = object({
+  addressId: mongoObjectIdSchema,
+  idempotencyKey: idempotencyKeySchema,
+}).strict();
+
+export const cartCheckoutQuerySchema = object({
+  addressId: mongoObjectIdSchema,
+  deliveryServiceId: mongoObjectIdSchema,
+}).strict();
+
+export const selectDeliveryWindowSchema = object({
+  quoteId: string().trim().min(1).max(100),
+  deliveryWindowId: string().trim().min(1).max(100),
+  idempotencyKey: idempotencyKeySchema,
+}).strict();
+
+export const wishlistEntryIdSchema = cartEntryIdSchema;
+
+export const userIdSchema = cartEntryIdSchema;
+
+export const userZodSchema = object({
+  firstName: string().optional(),
+  lastName: string().optional(),
+  phoneNumber: iranianPhoneNumberSchema,
+  password: string().min(8),
+  email: email().optional().or(literal('')),
+  avatar: url().optional().or(literal('')),
+  isEnable: boolean().optional(),
+  nationalCode: nationalCodeSchema.optional().or(literal('')),
+  role: zEnum([...Object.values(ROLES)])
+    .optional()
+    .default(ROLES.CUSTOMER),
+  age: number().nullable().optional(), // new field – number
+  birthDate: birthDateSchema.nullable().optional(),
+  orders: array(any()).optional(), // defaults handled by Mongoose
+  wishlist: array(any()).optional(),
+});
+
+export const userChangePasswordFormBodyValidation = object({
+  password: string().min(8),
+  oldPassword: string().min(8),
+  repeatPassword: string().min(8),
+}).refine((data) => data.password === data.repeatPassword, {
+  message: 'کلمه عبور و تکرار کلمه عبور مشابه نیستند.',
+  path: ['repeatPassword'],
+});
+
+export const userRefreshTokenSchema = object({
+  refreshToken: string().min(1),
+});
+
+export const userUpdatePersonalInfoSchema = object({
+  userId: string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .optional(),
+  firstName: string().trim().min(2).optional(),
+  lastName: string().trim().min(2).optional(),
+  email: email().optional(),
+  nationalCode: string()
+    .regex(/^\d{10}$/)
+    .optional(),
+  age: coerce.number().int().min(4).optional(),
+  birthDate: birthDateSchema.nullable().optional(),
+}).strict();

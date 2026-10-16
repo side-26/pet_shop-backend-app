@@ -1,0 +1,210 @@
+jest.mock('express', () => ({
+  __esModule: true,
+  default: {
+    Router: jest.fn(() => ({
+      delete: jest.fn(),
+      get: jest.fn(),
+      patch: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+    })),
+  },
+}));
+
+jest.mock('#middlewares/auth.middleware.js', () => ({
+  authenticated: jest.fn(),
+}));
+
+jest.mock('#middlewares/role.middleware.js', () => ({
+  roleMiddleware: jest.fn(() => jest.fn()),
+}));
+
+jest.mock('#middlewares/upload.middleware.js', () => ({
+  uploadAvatar: jest.fn(),
+}));
+
+jest.mock('../../infrastructure/redis/rateLimit/rateLimit.core.js', () => ({
+  RateLimiter: jest.fn().mockImplementation(() => ({
+    limit: jest.fn(() => jest.fn()),
+  })),
+}));
+
+jest.mock('./users.controller.js', () => ({
+  addCartItemController: jest.fn(),
+  addUserAddressController: jest.fn(),
+  addWishlistItemController: jest.fn(),
+  changeUserPasswordController: jest.fn(),
+  createDeliveryQuoteController: jest.fn(),
+  createUserController: jest.fn(),
+  deleteCartItemController: jest.fn(),
+  deleteUserByIdController: jest.fn(),
+  deleteWishlistItemController: jest.fn(),
+  disableUserController: jest.fn(),
+  editUserAddressController: jest.fn(),
+  emptyCartController: jest.fn(),
+  enableUserController: jest.fn(),
+  getAllUsersListController: jest.fn(),
+  getAllUsersListPaginateController: jest.fn(),
+  getCurrentUserController: jest.fn(),
+  getCartItemDetailsController: jest.fn(),
+  getCartCheckoutController: jest.fn(),
+  getCartItemsController: jest.fn(),
+  getUserAddressListController: jest.fn(),
+  getUserByIdController: jest.fn(),
+  getWishlistItemsController: jest.fn(),
+  loginUserController: jest.fn(),
+  logoutUserController: jest.fn(),
+  refreshTokenController: jest.fn(),
+  registerUserController: jest.fn(),
+  resetUserPasswordController: jest.fn(),
+  sendUserOtpController: jest.fn(),
+  selectDeliveryWindowController: jest.fn(),
+  updateUserPersonalInfoController: jest.fn(),
+  verifyUserOtpController: jest.fn(),
+}));
+
+import express from 'express';
+
+import { RATE_LIMIT, ROUTES } from '#configs/constants.js';
+import { authenticated } from '#middlewares/auth.middleware.js';
+
+import { RateLimiter } from '../../infrastructure/redis/rateLimit/rateLimit.core.js';
+import { USER_ROUTES } from './route.path.js';
+import {
+  createDeliveryQuoteController,
+  getCartItemDetailsController,
+  getCartCheckoutController,
+  loginUserController,
+  logoutUserController,
+  selectDeliveryWindowController,
+} from './users.controller.js';
+import usersRouter from './users.route.js';
+
+describe('users route policies', () => {
+  test('applies the configured Redis limiter before every users-router endpoint', () => {
+    const mockRouter = express.Router.mock.results[0].value;
+    const rateLimiter = RateLimiter.mock.results[0].value;
+    const standardRateLimitMiddleware = rateLimiter.limit.mock.results[0].value;
+    const paginatedRateLimitMiddleware =
+      rateLimiter.limit.mock.results[1].value;
+    const loginRateLimitMiddleware = rateLimiter.limit.mock.results[2].value;
+    const cartRateLimitMiddleware = rateLimiter.limit.mock.results[3].value;
+    const cartAllRateLimitMiddleware = rateLimiter.limit.mock.results[4].value;
+    const cartCheckoutRateLimitMiddleware =
+      rateLimiter.limit.mock.results[5].value;
+    const registeredRoutes = [
+      ...mockRouter.delete.mock.calls,
+      ...mockRouter.get.mock.calls,
+      ...mockRouter.patch.mock.calls,
+      ...mockRouter.post.mock.calls,
+      ...mockRouter.put.mock.calls,
+    ];
+    const loginRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.users.login,
+    );
+    const paginatedRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.users.getAllPaginate,
+    );
+    const logoutRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.users.logout,
+    );
+    const deliveryQuoteRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.cart.deliveryWindows,
+    );
+    const deliverySelectionRoute = registeredRoutes.find(
+      ([path]) => path === ROUTES.cart.deliveryWindow,
+    );
+    const cartItemsRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.cartItems,
+    );
+    const cartAllRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.cartAll,
+    );
+    const cartCheckoutRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.cartCheckout,
+    );
+    const currentUserRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.usersCurrent,
+    );
+    const cartRoutePaths = Object.values(USER_ROUTES).filter((path) =>
+      path.startsWith('/cart/'),
+    );
+    const standardRoutes = registeredRoutes.filter(
+      ([path]) =>
+        path !== ROUTES.users.login &&
+        path !== ROUTES.users.getAllPaginate &&
+        path !== USER_ROUTES.usersCurrent &&
+        !cartRoutePaths.includes(path),
+    );
+
+    expect(usersRouter).toBe(mockRouter);
+    expect(RateLimiter).toHaveBeenCalledWith('users');
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(1, {
+      limit: RATE_LIMIT.USER_MAX_REQUESTS,
+      window: RATE_LIMIT.USER_WINDOW_SECONDS,
+    });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(2, {
+      limit: RATE_LIMIT.USER_PAGINATE_MAX_REQUESTS,
+      window: RATE_LIMIT.USER_PAGINATE_WINDOW_SECONDS,
+    });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(3, {
+      limit: RATE_LIMIT.LOGIN_MAX_REQUESTS,
+      window: RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+    });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(4, {
+      limit: RATE_LIMIT.CART_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(5, {
+      limit: RATE_LIMIT.CART_ALL_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    });
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(6, {
+      limit: RATE_LIMIT.CART_CHECKOUT_MAX_REQUESTS,
+      window: RATE_LIMIT.CART_WINDOW_SECONDS,
+    });
+    expect(registeredRoutes).toHaveLength(31);
+    expect(standardRoutes).toHaveLength(20);
+    standardRoutes.forEach((route) => {
+      expect(route[1]).toBe(standardRateLimitMiddleware);
+    });
+    expect(paginatedRoute[1]).toBe(paginatedRateLimitMiddleware);
+    expect(loginRoute).toEqual([
+      ROUTES.users.login,
+      loginRateLimitMiddleware,
+      loginUserController,
+    ]);
+    expect(logoutRoute).toEqual([
+      ROUTES.users.logout,
+      standardRateLimitMiddleware,
+      authenticated,
+      logoutUserController,
+    ]);
+    expect(deliveryQuoteRoute).toEqual([
+      ROUTES.cart.deliveryWindows,
+      cartRateLimitMiddleware,
+      authenticated,
+      createDeliveryQuoteController,
+    ]);
+    expect(deliverySelectionRoute).toEqual([
+      ROUTES.cart.deliveryWindow,
+      cartRateLimitMiddleware,
+      authenticated,
+      selectDeliveryWindowController,
+    ]);
+    expect(cartItemsRoute).toEqual([
+      USER_ROUTES.cartItems,
+      cartRateLimitMiddleware,
+      authenticated,
+      getCartItemDetailsController,
+    ]);
+    expect(cartAllRoute[1]).toBe(cartAllRateLimitMiddleware);
+    expect(cartCheckoutRoute).toEqual([
+      USER_ROUTES.cartCheckout,
+      cartCheckoutRateLimitMiddleware,
+      authenticated,
+      getCartCheckoutController,
+    ]);
+    expect(currentUserRoute[1]).toBe(cartRateLimitMiddleware);
+  });
+});

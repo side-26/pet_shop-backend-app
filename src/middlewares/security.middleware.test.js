@@ -1,0 +1,79 @@
+import express from 'express';
+import request from 'supertest';
+
+import { ENVIRONMENTS, STATUES } from '#configs/constants.js';
+import {
+  createRateLimiter,
+  securityHeadersMiddleware,
+} from '#middlewares/security.middleware.js';
+
+const createApp = (limit = 2, rateLimitOptions = {}) => {
+  const app = express();
+  app.use(securityHeadersMiddleware);
+  app.use(
+    '/api',
+    createRateLimiter({ windowMs: 60_000, limit, ...rateLimitOptions }),
+  );
+  app.get('/api/health', (_req, res) => res.status(STATUES.SUCCESS).json({}));
+  return app;
+};
+
+describe('security middleware', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
+  it('adds Helmet security headers', async () => {
+    const response = await request(createApp()).get('/api/health');
+
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.headers).toHaveProperty(
+      'x-content-type-options',
+      'nosniff',
+    );
+    expect(response.headers).toHaveProperty('x-frame-options', 'SAMEORIGIN');
+  });
+
+  it('returns the application error shape and standard rate-limit headers', async () => {
+    const app = createApp(1);
+
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
+    const response = await request(app).get('/api/health');
+
+    expect(response.status).toBe(STATUES.TOO_MANY_REQUESTS);
+    expect(response.body).toEqual({
+      isSuccess: false,
+      message:
+        'تعداد درخواست های زیاد، لطفا بعد از چند دقیقه مجددا تلاش فرمایید',
+      data: { messages: null, detail: null },
+    });
+    expect(response.headers).toHaveProperty('ratelimit');
+    expect(response.headers).toHaveProperty('retry-after');
+    expect(response.headers['content-type']).toMatch(
+      /application\/json; charset=utf-8/i,
+    );
+    expect(response.headers).not.toHaveProperty('x-ratelimit-limit');
+  });
+
+  it('uses the shared 429 status when a limiter option has another status', async () => {
+    const app = createApp(1, { statusCode: STATUES.UN_AUTHORIZED });
+
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
+
+    await request(app).get('/api/health').expect(STATUES.TOO_MANY_REQUESTS);
+  });
+
+  it('bypasses the global rate limiter in development', async () => {
+    process.env.NODE_ENV = ENVIRONMENTS.DEVELOPMENT;
+    const app = createApp(1);
+
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
+  });
+});

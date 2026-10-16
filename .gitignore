@@ -53,6 +53,12 @@ web_modules/
 # Optional eslint cache
 .eslintcache
 
+# husky pre-committer
+.husky
+
+# prettierrc pre-committer
+.prettierrc
+
 # Optional stylelint cache
 .stylelintcache
 
@@ -69,6 +75,7 @@ web_modules/
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -141,3 +148,5 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+.vscode
+.early.coverage

@@ -1,0 +1,127 @@
+import express from 'express';
+
+import { MANAGEMENT_ROLES } from '#configs/constants.js';
+import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
+import { authenticated } from '#middlewares/auth.middleware.js';
+import { roleMiddleware } from '#middlewares/role.middleware.js';
+
+import {
+  createOrderController,
+  prepareOrderController,
+  getOrdersController,
+  getUserOrderController,
+  getUserOrdersController,
+  updateOrderDeliveryStateController,
+  updateOrderShippingInfoController,
+} from './orders.controller.js';
+
+import { ORDER_ROUTES } from './route.path.js';
+
+const router = express.Router();
+new RateLimiter('orders').applyTo(router);
+
+router.post(
+  ORDER_ROUTES.orders,
+  authenticated,
+  /*
+    #swagger.path = '/orders'
+    #swagger.tags = ['Orders']
+    #swagger.summary = 'Create an immutable order from the authenticated user cart'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/CreateOrderBody' } } } }
+    #swagger.responses[201] = { description: 'Order created and cart cleared' }
+    #swagger.responses[422] = { description: 'Invalid cart or payment tracking ID' }
+  */
+  createOrderController,
+);
+
+router.post(
+  ORDER_ROUTES.ordersPrepare,
+  authenticated,
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = 'Create an immutable prepared order and reserve inventory'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/PrepareOrderBody' } } } }
+    #swagger.responses[201] = { description: 'Prepared order created' }
+    #swagger.responses[422] = { description: 'Invalid cart, address, delivery service, or time slot' }
+  */
+  prepareOrderController,
+);
+
+router.get(
+  ORDER_ROUTES.orders,
+  authenticated,
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = "List the authenticated user's orders"
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['page'] = { in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } }
+    #swagger.parameters['limit'] = { in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 } }
+    #swagger.responses[200] = { description: 'Paginated user orders', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } }
+  */
+  getUserOrdersController,
+);
+router.get(
+  ORDER_ROUTES.ordersAll,
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = 'List all orders for Admin or Seller'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['page'] = { in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } }
+    #swagger.parameters['limit'] = { in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 } }
+    #swagger.parameters['deliveryState'] = { in: 'query', schema: { type: 'integer', enum: [0, 1, 2, 3] } }
+    #swagger.responses[200] = { description: 'Paginated orders', content: { "application/json": { schema: { $ref: '#/components/schemas/PaginatedResponse' } } } }
+    #swagger.responses[403] = { description: 'Admin or Seller role required' }
+  */
+  getOrdersController,
+);
+router.patch(
+  ORDER_ROUTES.ordersByIdDeliveryState,
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = 'Update order delivery state'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string' } }
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/UpdateOrderDeliveryStateBody' } } } }
+    #swagger.responses[200] = { description: 'Delivery state updated' }
+    #swagger.responses[403] = { description: 'Admin or Seller role required' }
+    #swagger.responses[404] = { description: 'Order not found' }
+  */
+  updateOrderDeliveryStateController,
+);
+router.patch(
+  ORDER_ROUTES.ordersByIdShippingInfo,
+  authenticated,
+  roleMiddleware(MANAGEMENT_ROLES),
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = 'Update order shipping information'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string' } }
+    #swagger.requestBody = { required: true, content: { "application/json": { schema: { $ref: '#/components/schemas/UpdateOrderShippingInfoBody' } } } }
+    #swagger.responses[200] = { description: 'Shipping information updated' }
+    #swagger.responses[403] = { description: 'Admin or Seller role required' }
+    #swagger.responses[404] = { description: 'Order not found' }
+  */
+  updateOrderShippingInfoController,
+);
+router.get(
+  ORDER_ROUTES.ordersById,
+  authenticated,
+  /*
+    #swagger.tags = ['Orders']
+    #swagger.summary = "Get one of the authenticated user's orders"
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['id'] = { in: 'path', required: true, schema: { type: 'string' } }
+    #swagger.responses[200] = { description: 'Owned order', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { $ref: '#/components/schemas/Order' } } } } } }
+    #swagger.responses[404] = { description: 'Order not found' }
+  */
+  getUserOrderController,
+);
+
+export default router;

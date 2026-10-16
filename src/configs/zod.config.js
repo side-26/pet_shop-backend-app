@@ -1,0 +1,313 @@
+// utils/zod.persian.js
+import { z } from 'zod';
+
+// ============================================
+// PERSIAN FIELD NAMES
+// ============================================
+const persianFieldNames = {
+  // User
+  firstName: 'نام',
+  lastName: 'نام خانوادگی',
+  email: 'ایمیل',
+  phoneNumber: 'شماره تلفن',
+  'otp-code': 'کد تأیید',
+  'reset-password': 'بازنشانی کلمه عبور',
+  to: 'شماره تلفن مقصد',
+  password: 'کلمه عبور',
+  newPassword: 'کلمه عبور جدید',
+  confirmPassword: 'تکرار کلمه عبور',
+  role: 'نقش کاربر',
+  nationalCode: 'کد ملی',
+  birthDate: 'تاریخ تولد',
+  address: 'آدرس',
+  addresses: 'نشانی‌ها',
+  city: 'شهر',
+  province: 'استان',
+  detailAddress: 'نشانی دقیق',
+  latLng: 'مختصات نشانی',
+  plate: 'پلاک',
+  unit: 'واحد',
+  postalCode: 'کد پستی',
+  receiverIsMe: 'گیرنده خودم هستم',
+  addressId: 'شناسه نشانی',
+  deliveryServiceId: 'شناسه سرویس ارسال',
+  deliveryDateId: 'شناسه تاریخ ارسال',
+  deliveryTimeSlotId: 'شناسه بازه زمانی ارسال',
+  quoteId: 'شناسه پیشنهاد ارسال',
+  deliveryWindowId: 'شناسه بازه زمانی ارسال',
+  deliveryQuote: 'پیشنهاد زمان ارسال',
+  deliveryWindow: 'بازه زمانی ارسال',
+  startsAt: 'زمان شروع ارسال',
+  endsAt: 'زمان پایان ارسال',
+  timezone: 'منطقه زمانی',
+  expiresAt: 'زمان انقضای پیشنهاد',
+  provider: 'ارائه‌دهنده ارسال',
+  countryCode: 'کد کشور',
+  originCoordinates: 'مختصات مبدا سرویس ارسال',
+  basePrice: 'هزینه پایه ارسال',
+  packingPrice: 'هزینه بسته‌بندی',
+  cityLeadDays: 'حداقل روز آماده‌سازی درون‌شهری',
+  outsideCityLeadDays: 'حداقل روز آماده‌سازی برون‌شهری',
+  pricePerKilometerInCity: 'هزینه هر کیلومتر ارسال درون‌شهری',
+  pricePerKilometer: 'هزینه هر کیلومتر ارسال',
+
+  itemId: 'شناسه آیتم',
+  itemType: 'نوع آیتم',
+  idempotencyKey: 'کلید تکرارناپذیری',
+  totalPrice: 'قیمت کل سبد خرید',
+  discountPrice: 'مبلغ تخفیف سبد خرید',
+  userAddress: 'نشانی سبد خرید',
+  deliveringDateToShipping: 'تاریخ تحویل به ارسال‌کننده',
+  shippingPrice: 'هزینه ارسال',
+  shippingInfo: 'اطلاعات ارسال',
+  trackingCode: 'کد رهگیری',
+  estimateDeliveryDate: 'تاریخ تخمینی تحویل',
+  paymentType: 'نوع پرداخت',
+  instalmentCompany: 'شرکت پرداخت اقساطی',
+  orderNumber: 'شماره سفارش',
+  deliveryState: 'وضعیت تحویل',
+  paymentTrackingId: 'شناسه رهگیری پرداخت',
+  order: 'سفارش',
+  orderId: 'شناسه سفارش',
+  amount: 'مبلغ پرداخت',
+  authority: 'شناسه مجوز پرداخت',
+  status: 'وضعیت پرداخت',
+  gatewayReferenceId: 'شناسه مرجع درگاه',
+  paidAt: 'زمان پرداخت',
+  items: 'اقلام سفارش',
+  sourceId: 'شناسه منبع',
+  user: 'کاربر',
+  item: 'آیتم',
+
+  // Pet / Pet Type / Category
+  title: 'عنوان',
+  title_fa: 'عنوان فارسی',
+  description: 'توضیحات',
+  petType: 'نوع حیوان',
+  petTypeId: 'شناسه نوع حیوان',
+  categoryId: 'شناسه دسته‌بندی',
+  category: 'دسته‌بندی',
+  subCategory: 'زیر دسته‌بندی',
+
+  breed: 'نژاد',
+  activityLevel: 'سطح فعالیت',
+  age: 'سن',
+  gender: 'جنسیت',
+  size: 'اندازه',
+  color: 'رنگ',
+  weight: 'وزن',
+  weightId: 'شناسه وزن',
+  metric: 'واحد وزن',
+  userRate: 'امتیاز کاربران',
+  userRateCount: 'تعداد امتیاز کاربران',
+  healthStatus: 'وضعیت سلامت',
+  availability: 'در دسترس بودن',
+  price: 'قیمت',
+  priceFrom: 'حداقل قیمت',
+  priceTo: 'حداکثر قیمت',
+  priceRange: 'بازه قیمت',
+
+  quantity: 'تعداد',
+  salesVolume: 'حجم فروش',
+  discountPercentage: 'درصد تخفیف',
+  slug: 'عنوان',
+  summary: 'خلاصه',
+  mainImage: 'تصویر اصلی',
+  logo: 'لوگو',
+  thumbnailLogo: 'لوگوی بندانگشتی',
+  propertyDefinitions: 'ویژگی‌های نوع حیوان',
+  key: 'کلید ویژگی',
+  label: 'عنوان ویژگی',
+  value: 'مقدار ویژگی',
+  valueType: 'نوع مقدار ویژگی',
+  required: 'اجباری بودن ویژگی',
+  options: 'گزینه‌های ویژگی',
+  min: 'حداقل مقدار ویژگی',
+  max: 'حداکثر مقدار ویژگی',
+  defaultValue: 'مقدار پیش‌فرض ویژگی',
+  mimetype: 'فرمت تصویر اصلی',
+  imageFileSize: 'حجم تصویر اصلی',
+  mainImageThumbnail: 'تصویر بندانگشتی اصلی',
+  mainThumbnailImage: 'تصویر بندانگشتی اصلی',
+  subtitle: 'زیرعنوان',
+  tags: 'برچسب‌ها',
+  mainText: 'متن اصلی',
+  thumbnailImage: 'تصویر بندانگشتی',
+  thumbnail: 'تصویر بندانگشتی',
+  images: 'تصاویر',
+  imageUrl: 'نشانی تصویر',
+
+  // Status
+  isEnabled: 'وضعیت فعال',
+  isEnable: 'وضعیت فعال',
+  inEnable: 'وضعیت فعال',
+  enable: 'وضعیت فعال',
+
+  // Common
+  id: 'شناسه',
+  page: 'صفحه',
+  limit: 'تعداد در صفحه',
+  sort: 'مرتب‌سازی',
+  sortBy: 'فیلد مرتب‌سازی',
+  sortOrder: 'ترتیب مرتب‌سازی',
+  search: 'جستجو',
+  includeDisabled: 'نمایش موارد غیرفعال',
+  fromDate: 'تاریخ شروع',
+  toDate: 'تاریخ پایان',
+  groupBy: 'بازه گروه‌بندی',
+  lowStockThreshold: 'حد موجودی کم',
+  lowStockLimit: 'تعداد اقلام کم‌موجودی',
+  topLimit: 'تعداد پرفروش‌ها',
+  recentLimit: 'تعداد سفارش‌های اخیر',
+  token: 'توکن',
+  userId: 'شناسه کاربر',
+  provinceId: 'استان',
+  lat: 'عرض جغرافیایی',
+  lng: 'طول جغرافیایی',
+};
+
+// ============================================
+// ERROR MESSAGES
+// ============================================
+const persianMessages = {
+  // Required
+  required: (field) => `${field} الزامی است`,
+
+  // String length
+  minLength: (field, min) => `${field} باید حداقل ${min} کاراکتر باشد`,
+  maxLength: (field, max) => `${field} باید حداکثر ${max} کاراکتر باشد`,
+
+  // Number range
+  minNumber: (field, min) => `${field} باید حداقل ${min} باشد`,
+  maxNumber: (field, max) => `${field} باید حداکثر ${max} باشد`,
+
+  // Type
+  invalidType: (field) => `${field} باید یک مقدار معتبر باشد`,
+  invalidEmail: (field) => `${field} باید یک ایمیل معتبر باشد`,
+  invalidUrl: (field) => `${field} باید یک آدرس معتبر باشد`,
+
+  // Enum
+  invalidEnum: (field, values) =>
+    `${field} باید یکی از مقادیر (${values}) باشد`,
+  unrecognizedKeys: 'ارسال فیلدهای اضافی مجاز نیست',
+
+  // Custom
+  invalid: (field) => `${field} معتبر نیست`,
+};
+
+// ============================================
+// CUSTOM ERROR MAP
+// ============================================
+const persianErrorMap = (issue) => {
+  const issuePath = Array.isArray(issue.path) ? issue.path : [];
+  const fieldPath = issuePath.join('.');
+
+  const fieldName =
+    persianFieldNames[fieldPath] ||
+    persianFieldNames[issuePath[0]] ||
+    'این فیلد';
+
+  switch (issue.code) {
+    case 'invalid_type':
+      if (issue.received === 'undefined') {
+        return {
+          message: persianMessages.required(fieldName),
+        };
+      }
+
+      return {
+        message: persianMessages.invalidType(fieldName),
+      };
+
+    case 'too_small':
+      if (issue.type === 'string') {
+        return {
+          message: persianMessages.minLength(fieldName, issue.minimum),
+        };
+      }
+
+      if (issue.type === 'number') {
+        return {
+          message: persianMessages.minNumber(fieldName, issue.minimum),
+        };
+      }
+
+      break;
+
+    case 'too_big':
+      if (issue.type === 'string') {
+        return {
+          message: persianMessages.maxLength(fieldName, issue.maximum),
+        };
+      }
+
+      if (issue.type === 'number') {
+        return {
+          message: persianMessages.maxNumber(fieldName, issue.maximum),
+        };
+      }
+
+      break;
+
+    case 'invalid_string':
+      if (issue.validation === 'email') {
+        return {
+          message: persianMessages.invalidEmail(fieldName),
+        };
+      }
+
+      if (issue.validation === 'url') {
+        return {
+          message: persianMessages.invalidUrl(fieldName),
+        };
+      }
+
+      break;
+
+    case 'invalid_format':
+      if (issue.format === 'url') {
+        return {
+          message: persianMessages.invalidUrl(fieldName),
+        };
+      }
+
+      break;
+
+    case 'invalid_value': {
+      const allowedValues = issue.options?.length
+        ? issue.options
+        : issue?.values || [];
+      const validValues = allowedValues.join(', ');
+
+      return {
+        message: persianMessages.invalidEnum(fieldName, validValues),
+      };
+    }
+
+    case 'unrecognized_keys':
+      return {
+        message: persianMessages.unrecognizedKeys,
+      };
+
+    case 'custom':
+      return {
+        message: issue.message || persianMessages.invalid(fieldName),
+      };
+
+    default:
+      return {
+        message: persianMessages.invalid(fieldName),
+      };
+  }
+
+  return {
+    message: persianMessages.invalid(fieldName),
+  };
+};
+
+// ============================================
+// SET PERSIAN ERROR MAP
+// ============================================
+z.setErrorMap(persianErrorMap);
+
+export default persianErrorMap;

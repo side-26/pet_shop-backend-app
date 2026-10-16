@@ -1,0 +1,350 @@
+import { ERROR_CODES, STATUES } from '#configs/constants.js';
+import {
+  formatCustomerPetDetail,
+  formatCustomerPetListItem,
+} from '#entities/pets/pets.helpers.js';
+import {
+  formatCustomerProductDetail,
+  getMinimumFinalPrice,
+  getMinimumQuantity,
+  getProductDisplayPricing,
+} from '#entities/products/products.helpers.js';
+import { ProductRatingModel } from '#entities/products/productRatings.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
+import { setErrorResponse } from '#utils/helpers.js';
+import { createPaginationResponse } from '#utils/pagination.helpers.js';
+import { calculateDiscountedPrice } from '#utils/price.helpers.js';
+
+import {
+  buildLandingProductFilter,
+  buildLandingPetFilter,
+  formatLandingProductFilters,
+  formatLandingPetFilters,
+  parseLandingPetFilters,
+  parseLandingProductFilters,
+} from './landing.helpers.js';
+import { LandingModel } from './landing.model.js';
+import {
+  FEATURED_PRODUCT_TAGS,
+  LANDING_LIMITS,
+  LANDING_PRODUCT_FILTER_DEFINITIONS,
+  LANDING_PRODUCT_LIST_SORT_ORDERS,
+  LANDING_PRODUCT_LIST_SORT_OPTIONS,
+} from './landing.constants.js';
+
+const formatPetType = (petType) => ({
+  id: petType._id,
+  title: petType.title,
+  mainImage: petType.mainImage,
+  thumbnail: petType.thumbnail,
+  summary: petType.description,
+});
+
+const formatProduct = (product) => {
+  const pricing = getProductDisplayPricing(product);
+  return {
+    id: product._id,
+    title: product.title,
+    mainImage: product.mainImage,
+    mainImageThumbnail: product.mainImageThumbnail,
+    summary: product.summary,
+    price: pricing.price,
+    discountPercentage: pricing.discountPercentage,
+    discountPrice: pricing.price * (pricing.discountPercentage / 100),
+    minimumFinalPrice: getMinimumFinalPrice(product),
+    minimumQuantity: getMinimumQuantity(product),
+  };
+};
+
+const formatLandingProductCard = (product) => {
+  const pricing = getProductDisplayPricing(product);
+  return {
+    ...formatProduct(product),
+    slug: product.slug,
+    discountPrice: calculateDiscountedPrice(
+      pricing.price,
+      pricing.discountPercentage,
+    ),
+  };
+};
+
+const formatLandingProductPetType = (petType) => {
+  if (!petType) return null;
+
+  return {
+    id: petType._id,
+    title: petType.title,
+    displayName: petType.displayName || petType.title,
+    propertyDefinitions: petType.propertyDefinitions || [],
+  };
+};
+
+const formatPopularBrand = ({ brand, productCount }) => ({
+  id: brand._id,
+  title: brand.title,
+  title_fa: brand.title_fa,
+  logo: brand.logo,
+  thumbnailLogo: brand.thumbnailLogo,
+  slug: brand.slug,
+  productCount,
+});
+
+const orderPetsById = (pets, ids) => {
+  const petsById = new Map(pets.map((pet) => [String(pet._id), pet]));
+  return ids.map((id) => petsById.get(String(id))).filter(Boolean);
+};
+
+export class LandingService {
+  static async getSearchCatalogItems(search, itemCount) {
+    const [products, pets] = await Promise.all([
+      LandingModel.findSearchProducts(search, itemCount),
+      LandingModel.findSearchPets(search, itemCount),
+    ]);
+    return [...products, ...pets]
+      .sort((first, second) => first.title.localeCompare(second.title, 'fa'))
+      .slice(0, itemCount);
+  }
+
+  static async searchCatalog(search, { page, limit }) {
+    const [items, productCount, petCount] = await Promise.all([
+      this.getSearchCatalogItems(search, page * limit),
+      LandingModel.countSearchProducts(search),
+      LandingModel.countSearchPets(search),
+    ]);
+
+    return createPaginationResponse({
+      result: items.slice((page - 1) * limit, page * limit),
+      totalItems: productCount + petCount,
+      page,
+      pageSize: limit,
+    });
+  }
+
+  static async getPetList(query) {
+    const filters = parseLandingPetFilters(query);
+    const filter = buildLandingPetFilter({ filters });
+    const facetFilters = Object.fromEntries(
+      ['petType', 'breed', 'price', 'isEnable'].map((key) => [
+        key,
+        buildLandingPetFilter({ filters, excludeFilter: key }),
+      ]),
+    );
+    const skip = (query.page - 1) * query.limit;
+    const [pets, totalItems, facetData] = await Promise.all([
+      LandingModel.findPetList(
+        filter,
+        LANDING_PRODUCT_LIST_SORT_ORDERS[query.sort],
+        skip,
+        query.limit,
+      ),
+      LandingModel.countPetList(filter),
+      LandingModel.findPetFacetData(facetFilters),
+    ]);
+    const ids = (key) => (facetData?.[key] || []).map(({ _id }) => _id);
+    const [petTypes, breeds] = await Promise.all([
+      LandingModel.findFacetPetTypes(ids('petType')),
+      LandingModel.findFacetBreeds(ids('breed')),
+    ]);
+    return createPaginationResponse({
+      result: pets.map(formatCustomerPetListItem),
+      totalItems,
+      page: query.page,
+      pageSize: query.limit,
+      filters: formatLandingPetFilters(facetData || {}, {
+        petTypes: petTypes || [],
+        breeds: breeds || [],
+      }),
+      sort: { current: query.sort, options: LANDING_PRODUCT_LIST_SORT_OPTIONS },
+    });
+  }
+  static async getProductList(query) {
+    const { page, limit, sort } = query;
+    const filters = parseLandingProductFilters(query);
+    const filter = buildLandingProductFilter({ filters });
+    const skip = (page - 1) * limit;
+    const facetFilters = Object.fromEntries(
+      LANDING_PRODUCT_FILTER_DEFINITIONS.map(({ key }) => [
+        key,
+        buildLandingProductFilter({ filters, excludeFilter: key }),
+      ]),
+    );
+    const [products, totalItems, facetData] = await Promise.all([
+      LandingModel.findProductList(
+        filter,
+        LANDING_PRODUCT_LIST_SORT_ORDERS[sort],
+        skip,
+        limit,
+      ),
+      LandingModel.countProductList(filter),
+      LandingModel.findProductFacetData(facetFilters),
+    ]);
+    const facetIds = (key) => (facetData?.[key] || []).map(({ _id }) => _id);
+    const [categories, subCategories, brands] = await Promise.all([
+      LandingModel.findFacetCategories(facetIds('category')),
+      LandingModel.findFacetSubCategories(facetIds('subCategory')),
+      LandingModel.findFacetBrands(facetIds('brand')),
+    ]);
+
+    return createPaginationResponse({
+      result: products.map(formatLandingProductCard),
+      totalItems,
+      page,
+      pageSize: limit,
+      filters: formatLandingProductFilters(facetData || {}, {
+        categories: categories || [],
+        subCategories: subCategories || [],
+        brands: brands || [],
+      }),
+      sort: { current: sort, options: LANDING_PRODUCT_LIST_SORT_OPTIONS },
+    });
+  }
+
+  static async getPetBySlug(slug) {
+    const pet = await LandingModel.findPetBySlug(slug);
+    if (!pet) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'حیوان یافت نشد',
+        code: ERROR_CODES.PET_NOT_FOUND,
+      });
+    }
+    return formatCustomerPetDetail(pet);
+  }
+
+  static async getFeaturedPetTypes() {
+    const petTypes = await LandingModel.findFeaturedPetTypes();
+    return petTypes.map(formatPetType);
+  }
+
+  static async getAllPetTypes() {
+    const petTypes = await LandingModel.findAllPetTypes();
+    return petTypes.map(formatPetType);
+  }
+
+  static async getMostPopularPets() {
+    const wishlistedPetIds = (
+      await LandingModel.findMostWishlistedPetIds(LANDING_LIMITS.POPULAR_PETS)
+    ).map(({ petId }) => petId);
+    let pets = [];
+
+    if (wishlistedPetIds.length) {
+      pets = orderPetsById(
+        await LandingModel.findPetsByIds(wishlistedPetIds),
+        wishlistedPetIds,
+      );
+    }
+
+    if (!pets.length) {
+      pets = await LandingModel.findMostPopularPets(
+        LANDING_LIMITS.POPULAR_PETS,
+      );
+    }
+
+    if (pets.length < LANDING_LIMITS.MINIMUM_PREFERRED_PETS) {
+      const highestPricedPets = await LandingModel.findHighestPricedPets(
+        pets.map((pet) => pet._id),
+        LANDING_LIMITS.POPULAR_PETS - pets.length,
+      );
+      pets = [...pets, ...highestPricedPets];
+    }
+
+    return pets.map(formatCustomerPetListItem);
+  }
+
+  static async getRecentlyUpdatedPets() {
+    let pets = await LandingModel.findRecentlyUpdatedPets();
+    if (pets.length < LANDING_LIMITS.RECENT_PETS) {
+      const highestPricedPets =
+        await LandingModel.findHighestPricedAvailablePets(
+          pets.map((pet) => pet._id),
+          LANDING_LIMITS.RECENT_PETS - pets.length,
+        );
+      pets = [...pets, ...highestPricedPets];
+    }
+    return pets.map(formatCustomerPetListItem);
+  }
+
+  static async getMostDiscountedProducts(limit) {
+    const products = await LandingModel.findMostDiscountedProducts(limit);
+    return products.map(formatProduct);
+  }
+
+  static async getMostPopularProducts() {
+    const products = await LandingModel.findMostPopularProducts();
+    return products.map(formatLandingProductCard);
+  }
+
+  static async getMostPopularBrands() {
+    const brands = await LandingModel.findMostPopularBrands();
+    return brands.map(formatPopularBrand);
+  }
+
+  static async getFeaturedProducts() {
+    const featuredProducts = [];
+    const excludedIds = [];
+    const selections = [
+      [
+        FEATURED_PRODUCT_TAGS.MOST_PURCHASED,
+        async () => {
+          const [product] = await LandingModel.findMostPurchasedProduct([
+            ...excludedIds,
+          ]);
+          return product;
+        },
+      ],
+      [
+        FEATURED_PRODUCT_TAGS.MOST_DISCOUNTED,
+        () => LandingModel.findMostDiscountedProduct([...excludedIds]),
+      ],
+      [
+        FEATURED_PRODUCT_TAGS.CHEAPEST,
+        () => LandingModel.findCheapestProduct([...excludedIds]),
+      ],
+      [
+        FEATURED_PRODUCT_TAGS.MOST_WISHLISTED,
+        async () => {
+          const [product] = await LandingModel.findMostWishlistedProduct([
+            ...excludedIds,
+          ]);
+          return product;
+        },
+      ],
+    ];
+
+    for (const [tag, findProduct] of selections) {
+      const product = await findProduct();
+      if (!product) continue;
+
+      excludedIds.push(product._id);
+      featuredProducts.push({ tag, product: formatProduct(product) });
+    }
+
+    return featuredProducts;
+  }
+
+  static async getProductBySlug(slug, userId) {
+    const product = await LandingModel.findProductBySlug(slug);
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    const data = formatCustomerProductDetail(product);
+    data.category.petType = formatLandingProductPetType(
+      product.category?.petType,
+    );
+    if (!userId) return { ...data, canVote: false, hasRated: false };
+    const [hasPurchased, hasRated] = await Promise.all([
+      OrderModel.exists({
+        user: userId,
+        items: { $elemMatch: { item: product._id, itemType: 'product' } },
+      }),
+      ProductRatingModel.exists({ product: product._id, user: userId }),
+    ]);
+    return {
+      ...data,
+      hasRated: Boolean(hasRated),
+      canVote: Boolean(hasPurchased) && !hasRated,
+    };
+  }
+}

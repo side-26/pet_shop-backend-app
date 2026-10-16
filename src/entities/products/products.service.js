@@ -1,0 +1,552 @@
+import { ERROR_CODES, STATUES } from '#configs/constants.js';
+import { CategoryModel } from '#entities/categories/categories.model.js';
+import { OrderModel } from '#entities/orders/orders.model.js';
+import { BrandModel } from '#entities/brands/brands.model.js';
+import { PetTypeModel } from '#entities/petTypes/petTypes.model.js';
+import { SubCategoryModel } from '#entities/subCategories/subCategories.model.js';
+import { MainImageService } from '#services/mainImage.service.js';
+import { assertEntityIsNotReferenced } from '#services/referenceGuard.service.js';
+import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
+
+import {
+  buildProductFilter,
+  buildProductSlug,
+  escapeProductRegex,
+  formatCustomerProductDetail,
+  formatCustomerProductListItem,
+  formatManagementProduct,
+  formatManagementProductListItem,
+  formatProductImages,
+  formatProductMainInfo,
+  formatProductPropertyDefinitions,
+} from './products.helpers.js';
+import { ProductModel } from './products.model.js';
+import { ProductRatingModel } from './productRatings.model.js';
+
+const populateRelations = async (documents) =>
+  ProductModel.populate(documents, [
+    { path: 'category' },
+    { path: 'brand' },
+    { path: 'subCategory' },
+  ]);
+
+export class ProductService {
+  static escapeRegex(value = '') {
+    return escapeProductRegex(value);
+  }
+
+  static async findById(id, throwOnNotFound = true) {
+    const product = await ProductModel.findById(id);
+    if (!product && throwOnNotFound) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    return product;
+  }
+
+  static async validateRelations(categoryId, brandId, subCategoryId) {
+    const [category, brand, subCategory] = await Promise.all([
+      CategoryModel.findById(categoryId),
+      BrandModel.findById(brandId),
+      subCategoryId ? SubCategoryModel.findById(subCategoryId) : null,
+    ]);
+    if (!category) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'دسته‌بندی انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PRODUCT_CATEGORY_NOT_FOUND,
+      });
+    }
+    const petType = await PetTypeModel.findById(category.petType);
+    if (!petType) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'نوع حیوان دسته‌بندی انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PET_TYPE_NOT_FOUND,
+      });
+    }
+    if (!brand) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'برند انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PRODUCT_BRAND_NOT_FOUND,
+      });
+    }
+    if (subCategoryId && !subCategory) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'زیر دسته‌بندی انتخاب‌شده وجود ندارد',
+        code: ERROR_CODES.PRODUCT_SUB_CATEGORY_NOT_FOUND,
+      });
+    }
+    if (
+      subCategory &&
+      subCategory.category?.toString() !== category._id.toString()
+    ) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'زیر دسته‌بندی انتخاب‌شده متعلق به دسته‌بندی انتخاب‌شده نیست',
+        code: ERROR_CODES.PRODUCT_SUB_CATEGORY_MISMATCH,
+      });
+    }
+    return { category, brand, petType, subCategory };
+  }
+
+  static async getUniqueSlug(slug, productId) {
+    let uniqueSlug = slug;
+    let suffix = 2;
+    while (
+      await ProductModel.exists({
+        slug: uniqueSlug,
+        ...(productId ? { _id: { $ne: productId } } : {}),
+      })
+    ) {
+      const suffixValue = `-${suffix}`;
+      uniqueSlug = `${slug.slice(
+        0,
+        Math.max(1, slug.length - suffixValue.length),
+      )}${suffixValue}`;
+      suffix += 1;
+    }
+    return uniqueSlug;
+  }
+
+  static async getSlug(data, relations, productId) {
+    const slug = buildProductSlug({
+      title: data.title,
+      petTypeTitle: relations.petType.title,
+      categoryTitle: relations.category.title,
+      subCategoryTitle: relations.subCategory?.title,
+    });
+    return this.getUniqueSlug(slug, productId);
+  }
+
+  static async create(data, userId, imageFile, imageFiles = []) {
+    const relations = await this.validateRelations(
+      data.category,
+      data.brand,
+      data.subCategory,
+    );
+    const slug = await this.getSlug(data, relations);
+    const uploadResults = await Promise.allSettled([
+      MainImageService.upload(imageFile, 'products/main'),
+      MainImageService.uploadImages(imageFiles, 'products/images'),
+    ]);
+    const uploadedMainImage =
+      uploadResults[0].status === 'fulfilled' ? uploadResults[0].value : null;
+    const uploadedImages =
+      uploadResults[1].status === 'fulfilled' ? uploadResults[1].value : [];
+    const failedUpload = uploadResults.find(
+      (result) => result.status === 'rejected',
+    );
+
+    if (failedUpload) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage?.key, { userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { userId },
+        ),
+      ]);
+      throw failedUpload.reason;
+    }
+
+    try {
+      return await ProductModel.create({
+        ...data,
+        mainImage: uploadedMainImage.mainImage,
+        mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
+        images: uploadedImages.map(({ url }) => url),
+        slug,
+        createdBy: userId,
+      });
+    } catch (error) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { userId },
+        ),
+      ]);
+      throw error;
+    }
+  }
+
+  static async update(id, data, userId) {
+    const currentProduct = await this.findById(id);
+    const categoryId = data.category || currentProduct.category;
+    const brandId = data.brand || currentProduct.brand;
+    const hasSubCategory = Object.prototype.hasOwnProperty.call(
+      data,
+      'subCategory',
+    );
+    const subCategoryId = hasSubCategory
+      ? data.subCategory
+      : currentProduct.subCategory;
+    const relations = await this.validateRelations(
+      categoryId,
+      brandId,
+      subCategoryId || null,
+    );
+    const slug = await this.getSlug(
+      { ...currentProduct.toObject?.(), ...currentProduct, ...data },
+      relations,
+      id,
+    );
+
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      { $set: { ...data, slug, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    return product;
+  }
+
+  static edit(id, data, userId) {
+    return this.update(id, data, userId);
+  }
+
+  static async updateMainInfo(id, data, userId) {
+    const product = await this.update(id, data, userId);
+    return populateRelations(product);
+  }
+
+  static async updateImages(id, userId, imageFile, imageFiles = []) {
+    if (!imageFile) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'تصویر اصلی باید ارسال شود',
+      });
+    }
+    const currentProduct = await this.findById(id);
+    const uploadResults = await Promise.allSettled([
+      MainImageService.upload(imageFile, 'products/main'),
+      MainImageService.uploadImages(imageFiles, 'products/images'),
+    ]);
+    const uploadedMainImage =
+      uploadResults[0].status === 'fulfilled' ? uploadResults[0].value : null;
+    const uploadedImages =
+      uploadResults[1].status === 'fulfilled' ? uploadResults[1].value : [];
+    const failedUpload = uploadResults.find(
+      (result) => result.status === 'rejected',
+    );
+
+    if (failedUpload) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage?.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      throw failedUpload.reason;
+    }
+
+    const imageData = {
+      mainImage: uploadedMainImage.mainImage,
+      mainImageThumbnail: uploadedMainImage.mainImageThumbnail,
+      images: uploadedImages.map(({ url }) => url),
+    };
+    let product;
+    try {
+      product = await ProductModel.findByIdAndUpdate(
+        id,
+        { $set: { ...imageData, updatedBy: userId } },
+        { returnDocument: 'after', runValidators: true },
+      );
+    } catch (error) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      throw error;
+    }
+    if (!product) {
+      await Promise.all([
+        MainImageService.cleanup(uploadedMainImage.key, { id, userId }),
+        MainImageService.cleanupMany(
+          uploadedImages.map(({ key }) => key),
+          { id, userId },
+        ),
+      ]);
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    const previousKeys = [
+      MainImageService.getStoredKey(currentProduct.mainImage, { id, userId }),
+      ...(currentProduct.images || []).map((imageUrl) =>
+        MainImageService.getStoredKey(imageUrl, { id, userId }),
+      ),
+    ];
+    await MainImageService.cleanupMany(previousKeys, { id, userId });
+    return product;
+  }
+
+  static async replacePropertyDefinitions(id, propertyDefinitions, userId) {
+    const product = await this.findById(id);
+    product.propertyDefinitions = propertyDefinitions;
+    product.updatedBy = userId;
+    return product.save();
+  }
+
+  static async replaceWeights(id, weights, userId) {
+    const product = await this.findById(id);
+    product.weights = weights;
+    product.quantity = weights.reduce(
+      (total, weight) => total + weight.quantity,
+      0,
+    );
+    product.updatedBy = userId;
+    return product.save();
+  }
+
+  static async updateUserRate(id, userRate, userId) {
+    const session = await ProductModel.db.startSession();
+    let transactionError;
+    let product;
+    try {
+      await session.withTransaction(async () => {
+        product = await ProductModel.findOne({
+          _id: id,
+          isEnable: true,
+        }).session(session);
+        if (!product) {
+          setErrorResponse(STATUES.NOT_FOUND, {
+            message: 'محصول یافت نشد',
+            code: ERROR_CODES.PRODUCT_NOT_FOUND,
+          });
+        }
+        const previous = await ProductRatingModel.findOne({
+          product: id,
+          user: userId,
+        }).session(session);
+        if (previous) {
+          setErrorResponse(STATUES.CONFLICT, {
+            message: 'شما پیش‌تر به این محصول امتیاز داده‌اید',
+          });
+        }
+        const count = product.userRateCount || 0;
+        const hasPurchased = await OrderModel.exists({
+          user: userId,
+          items: { $elemMatch: { item: id, itemType: 'product' } },
+        }).session(session);
+        if (!hasPurchased) {
+          setErrorResponse(STATUES.NO_ACCESS, {
+            message: 'امتیازدهی فقط پس از خرید محصول امکان‌پذیر است',
+          });
+        }
+        const sum = product.userRate * count + userRate;
+        const nextCount = count + 1;
+        product.userRate = sum / nextCount;
+        product.userRateCount = nextCount;
+        await ProductRatingModel.create(
+          [{ product: id, user: userId, value: userRate }],
+          { session },
+        );
+        await product.save({ session });
+      });
+    } catch (error) {
+      transactionError = error;
+    }
+    try {
+      await session.endSession();
+    } catch (error) {
+      if (!transactionError) throw error;
+    }
+    if (transactionError) throw transactionError;
+    return product;
+  }
+
+  static async decrementWeightStock(id, weightId, quantity, session) {
+    const product = await ProductModel.findOneAndUpdate(
+      {
+        _id: id,
+        isEnable: true,
+        weights: {
+          $elemMatch: { _id: weightId, quantity: { $gte: quantity } },
+        },
+      },
+      {
+        $inc: {
+          'weights.$.quantity': -quantity,
+          quantity: -quantity,
+          salesVolume: quantity,
+        },
+      },
+      { returnDocument: 'after', runValidators: true, session },
+    );
+    if (!product) {
+      setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
+        message: 'موجودی وزن انتخاب‌شده کافی نیست یا محصول در دسترس نیست',
+        code: ERROR_CODES.INSUFFICIENT_PRODUCT_STOCK,
+      });
+    }
+    return product;
+  }
+
+  static async restoreWeightStock(id, weightId, quantity, session) {
+    return ProductModel.findOneAndUpdate(
+      { _id: id, 'weights._id': weightId },
+      {
+        $inc: {
+          'weights.$.quantity': quantity,
+          quantity,
+          salesVolume: -quantity,
+        },
+      },
+      { returnDocument: 'after', runValidators: true, session },
+    );
+  }
+
+  static async setEnableStatus(id, isEnable, userId) {
+    await this.findById(id);
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      { $set: { isEnable, updatedBy: userId } },
+      { returnDocument: 'after', runValidators: true },
+    );
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    return product;
+  }
+
+  static enable(id, userId) {
+    return this.setEnableStatus(id, true, userId);
+  }
+
+  static disable(id, userId) {
+    return this.setEnableStatus(id, false, userId);
+  }
+
+  static async delete(id) {
+    await assertEntityIsNotReferenced('product', id);
+    const product = await ProductModel.findByIdAndDelete(id);
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    const imageKeys = [
+      MainImageService.getStoredKey(product.mainImage, { id }),
+      ...(product.images || []).map((imageUrl) =>
+        MainImageService.getStoredKey(imageUrl, { id }),
+      ),
+    ];
+    await MainImageService.cleanupMany(imageKeys, { id });
+    return product;
+  }
+
+  static async findManagementById(id) {
+    const product = await this.findById(id);
+    return populateRelations(product);
+  }
+
+  static findImagesById(id) {
+    return this.findById(id);
+  }
+
+  static async findMainInfoById(id) {
+    const product = await this.findById(id);
+    return populateRelations(product);
+  }
+
+  static async findManagementList(queryParams = {}) {
+    const filter = {
+      ...buildProductFilter(queryParams),
+      page: queryParams.page,
+      limit: queryParams.limit,
+      sort:
+        queryParams.sort === 'price' ? 'minimumPayablePrice' : queryParams.sort,
+    };
+    const result = await getPaginationData(ProductModel, filter, '', (error) =>
+      setErrorResponse(STATUES.OTHER_PROBLEM, {
+        message: 'دریافت فهرست محصولات ناموفق بود',
+        error: String(error),
+      }),
+    );
+    result.result = await populateRelations(result.result);
+    return result;
+  }
+
+  static async findCustomerList(queryParams = {}) {
+    const filter = {
+      ...buildProductFilter(queryParams, true),
+      page: queryParams.page,
+      limit: queryParams.limit,
+      sort:
+        queryParams.sort === 'price' ? 'minimumPayablePrice' : queryParams.sort,
+    };
+    const result = await getPaginationData(ProductModel, filter, '', (error) =>
+      setErrorResponse(STATUES.OTHER_PROBLEM, {
+        message: 'دریافت فهرست محصولات ناموفق بود',
+        error: String(error),
+      }),
+    );
+    result.result = await populateRelations(result.result);
+    return result;
+  }
+
+  static async findCustomerById(id) {
+    const product = await ProductModel.findOne({ _id: id, isEnable: true });
+    if (!product) {
+      setErrorResponse(STATUES.NOT_FOUND, {
+        message: 'محصول یافت نشد',
+        code: ERROR_CODES.PRODUCT_NOT_FOUND,
+      });
+    }
+    return populateRelations(product);
+  }
+
+  static formatManagement(product) {
+    return formatManagementProduct(product);
+  }
+
+  static formatManagementMany(products) {
+    return products.map(formatManagementProductListItem);
+  }
+
+  static formatCustomerList(products) {
+    return products.map(formatCustomerProductListItem);
+  }
+
+  static formatCustomerDetail(product) {
+    return formatCustomerProductDetail(product);
+  }
+
+  static formatImages(product) {
+    return formatProductImages(product);
+  }
+
+  static formatMainInfo(product) {
+    return formatProductMainInfo(product);
+  }
+
+  static formatPropertyDefinitions(product) {
+    return formatProductPropertyDefinitions(product);
+  }
+
+  static formatWeights(product) {
+    return (product.weights || []).map(
+      ({ _id, metric, quantity, value, price, discountPercentage }) => ({
+        id: _id,
+        metric,
+        quantity,
+        value,
+        price,
+        discountPercentage,
+      }),
+    );
+  }
+}
