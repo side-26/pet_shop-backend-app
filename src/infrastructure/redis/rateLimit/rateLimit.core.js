@@ -1,4 +1,4 @@
-import { STATUES } from '#configs/constants.js';
+import { ENVIRONMENTS, STATUES } from '#configs/constants.js';
 import { setErrorResponse } from '#utils/helpers.js';
 
 import { RedisRateLimitStore } from './redisRateLimit.store.js';
@@ -39,7 +39,10 @@ export class RateLimiter {
 
     return async (req, res, next) => {
       try {
-        if (this.#store.isReady === false) {
+        if (
+          process.env.NODE_ENV === ENVIRONMENTS.DEVELOPMENT ||
+          this.#store.isReady === false
+        ) {
           return next();
         }
 

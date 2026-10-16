@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 
-import { STATUES } from '#configs/constants.js';
+import { ENVIRONMENTS, STATUES } from '#configs/constants.js';
 import {
   createRateLimiter,
   securityHeadersMiddleware,
@@ -19,6 +19,16 @@ const createApp = (limit = 2, rateLimitOptions = {}) => {
 };
 
 describe('security middleware', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
   it('adds Helmet security headers', async () => {
     const response = await request(createApp()).get('/api/health');
 
@@ -57,5 +67,13 @@ describe('security middleware', () => {
     await request(app).get('/api/health').expect(STATUES.SUCCESS);
 
     await request(app).get('/api/health').expect(STATUES.TOO_MANY_REQUESTS);
+  });
+
+  it('bypasses the global rate limiter in development', async () => {
+    process.env.NODE_ENV = ENVIRONMENTS.DEVELOPMENT;
+    const app = createApp(1);
+
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
+    await request(app).get('/api/health').expect(STATUES.SUCCESS);
   });
 });

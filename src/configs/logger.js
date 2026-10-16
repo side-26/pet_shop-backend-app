@@ -1,6 +1,8 @@
 import pino from 'pino';
 
-const isProduction = process.env.NODE_ENV === 'production';
+import { ENVIRONMENTS } from './constants.js';
+
+const isProduction = process.env.NODE_ENV === ENVIRONMENTS.PRODUCTION;
 
 // Create logger instance
 const logger = pino({

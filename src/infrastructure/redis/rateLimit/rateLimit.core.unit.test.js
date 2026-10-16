@@ -10,7 +10,7 @@ jest.mock('./redisRateLimit.store.js', () => ({
   })),
 }));
 
-import { STATUES } from '#configs/constants.js';
+import { ENVIRONMENTS, STATUES } from '#configs/constants.js';
 
 import { RateLimiter } from './rateLimit.core.js';
 
@@ -27,9 +27,19 @@ const createResponse = () => ({
 });
 
 describe('Redis rate-limit middleware', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsReady.mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
   });
 
   test.each([undefined, null, '', '   ', 123])(
@@ -148,6 +158,20 @@ describe('Redis rate-limit middleware', () => {
 
   test('continues without rate limiting when Redis is unavailable', async () => {
     mockIsReady.mockReturnValue(false);
+    const next = jest.fn();
+
+    await new RateLimiter('products').limit()(
+      createRequest(),
+      createResponse(),
+      next,
+    );
+
+    expect(mockConsume).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith();
+  });
+
+  test('continues without rate limiting in development', async () => {
+    process.env.NODE_ENV = ENVIRONMENTS.DEVELOPMENT;
     const next = jest.fn();
 
     await new RateLimiter('products').limit()(

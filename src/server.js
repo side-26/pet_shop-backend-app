@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
 
-import { STATUES } from '#configs/constants.js';
+import { ENVIRONMENTS, STATUES } from '#configs/constants.js';
 import logger from '#configs/logger.js';
 
 import app from './app.js';
@@ -38,7 +38,7 @@ export const startServer = async () => {
   registerProcessHandlers(shutdown);
   logger.app.success('سرور با موفقیت راه‌اندازی شد', {
     port: PORT,
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || ENVIRONMENTS.DEVELOPMENT,
     url: `http://localhost:${PORT}`,
     nodeVersion: process.version,
     pid: process.pid,

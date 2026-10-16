@@ -85,6 +85,11 @@ export const METHODS = {
   head: 'HEAD',
 };
 
+export const ENVIRONMENTS = {
+  DEVELOPMENT: 'development',
+  PRODUCTION: 'production',
+};
+
 export const ROLES = {
   ADMIN: 'admin',
   CUSTOMER: 'customer',

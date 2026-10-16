@@ -1,13 +1,17 @@
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 
-import { RATE_LIMIT, STATUES } from '#configs/constants.js';
+import { ENVIRONMENTS, RATE_LIMIT, STATUES } from '#configs/constants.js';
 
 const RATE_LIMIT_MESSAGE =
   'تعداد درخواست های زیاد، لطفا بعد از چند دقیقه مجددا تلاش فرمایید';
 
-export const createRateLimiter = (overrides = {}) =>
-  rateLimit({
+export const createRateLimiter = (overrides = {}) => {
+  if (process.env.NODE_ENV === ENVIRONMENTS.DEVELOPMENT) {
+    return (_req, _res, next) => next();
+  }
+
+  return rateLimit({
     windowMs: RATE_LIMIT.API_WINDOW_MS,
     limit: RATE_LIMIT.API_MAX_REQUESTS,
     standardHeaders: RATE_LIMIT.STANDARD_HEADERS,
@@ -25,6 +29,7 @@ export const createRateLimiter = (overrides = {}) =>
     },
     ...overrides,
   });
+};
 
 export const rateLimiterMiddleware = createRateLimiter();
 
