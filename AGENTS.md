@@ -15,6 +15,7 @@ This is an ES-module Express 5 and Mongoose backend. The normal HTTP flow is:
 - [`src/configs/AGENTS.md`](./src/configs/AGENTS.md) — environment, infrastructure, constants, validation messages, and OpenAPI configuration.
 - [`src/services/AGENTS.md`](./src/services/AGENTS.md) — cross-domain application services.
 - [`src/utils/AGENTS.md`](./src/utils/AGENTS.md) — shared response, pagination, token, path, and image helpers.
+- [`docker-compose.yaml`](./docker-compose.yaml) — single-host production stack for the API, MongoDB, and Redis; it requires the untracked `.env.production` configuration file.
 
 ## Agent navigation
 

@@ -100,6 +100,9 @@ pet_shop-backend-app/
 │   ├── utils/                    Responses, pagination, JWT, paths, image processing
 │   ├── app.js                    Express composition root
 │   └── server.js                 MongoDB, Redis, and HTTP lifecycle
+├── docker-compose.yaml           Production API, MongoDB, and Redis stack
+├── docker-compose.dev.yaml       Local development stack
+├── .env.production.example       Production environment-variable template
 ├── package.json
 └── README.md
 ```
@@ -208,6 +211,26 @@ npm run dev
 ```
 
 The default server address is `http://localhost:3000`.
+
+### Production Docker Compose
+
+`docker-compose.yaml` runs the API, MongoDB, and Redis as a production-oriented
+single-host stack. MongoDB and Redis are private to the Docker network; only the
+API port is published.
+
+```bash
+cp .env.production.example .env.production
+# Set every placeholder in .env.production, including a matching MongoDB password in both Mongo variables.
+docker compose --env-file .env.production up --build -d
+```
+
+The API is available at `http://<host>:${APP_PORT:-3000}`. Set `APP_PORT` in the
+shell or in the Compose environment if port `3000` is unavailable. Use a TLS
+reverse proxy and restrict the host firewall before exposing the API publicly.
+
+Vercel does not use Docker Compose as a deployment target. For Vercel, deploy
+the Express app as one function or container and configure external MongoDB and
+Redis connection URLs through Vercel project environment variables.
 
 ## API documentation
 
