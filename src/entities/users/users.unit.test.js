@@ -548,6 +548,46 @@ describe('UserService - Unit Tests', () => {
     );
   });
 
+  test('createLoginData creates a short-lived but valid login session', async () => {
+    const accessExp = 1_800_000_000_000;
+    const sessionExp = 1_800_000_060_000;
+    jwt.sign
+      .mockReturnValueOnce('short-lived-access-token')
+      .mockReturnValueOnce('short-lived-refresh-token');
+    jwt.decode
+      .mockReturnValueOnce({ exp: accessExp / 1000 })
+      .mockReturnValueOnce({ exp: sessionExp / 1000 });
+
+    const result = await UserService.createLoginData(
+      mockUser,
+      USER_AUTH_SESSION.SHORT_LIVED,
+    );
+
+    expect(result).toMatchObject({
+      accessToken: 'short-lived-access-token',
+      refreshToken: 'short-lived-refresh-token',
+      accessExp,
+      sessionExp,
+    });
+    expect(mockRedisAuthSessionCreate).toHaveBeenCalledWith({
+      sessionId: 'request-id',
+      userId: mockUser._id,
+      ttlSeconds: USER_AUTH_SESSION.SHORT_LIVED.TTL_SECONDS,
+    });
+    expect(jwt.sign).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Object),
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: USER_AUTH_SESSION.SHORT_LIVED.ACCESS_TOKEN_TTL },
+    );
+    expect(jwt.sign).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Object),
+      process.env.JWT_REFRESH_SECRET_KEY,
+      { expiresIn: USER_AUTH_SESSION.SHORT_LIVED.REFRESH_TOKEN_TTL },
+    );
+  });
+
   // =========================================================
   // CREATE
   // =========================================================
@@ -1072,7 +1112,10 @@ describe('UserService - Unit Tests', () => {
       sessionId: 'request-id',
     });
 
-    const result = await UserService.refreshAccessToken('refresh-token');
+    const result = await UserService.refreshAccessToken(
+      'refresh-token',
+      USER_AUTH_SESSION.SHORT_LIVED,
+    );
 
     expect(result).toBe('new-access-token');
 
@@ -1081,6 +1124,11 @@ describe('UserService - Unit Tests', () => {
       userId: mockUser._id,
       sessionId: 'request-id',
     });
+    expect(jwt.sign).toHaveBeenCalledWith(
+      expect.any(Object),
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: USER_AUTH_SESSION.SHORT_LIVED.ACCESS_TOKEN_TTL },
+    );
   });
 
   test('refreshAccessToken throws if token is missing', async () => {

@@ -85,10 +85,15 @@ export const METHODS = {
   head: 'HEAD',
 };
 
+export const AUTH_REQUEST_HEADERS = {
+  SHORT_LIVED_SESSION: 'X-Auth-Mock-Mode',
+};
+
 export const CORS_ALLOWED_HEADERS = [
   'Content-Type',
   'Authorization',
   'X-Request-ID',
+  AUTH_REQUEST_HEADERS.SHORT_LIVED_SESSION,
 ];
 
 export const ENVIRONMENTS = {
@@ -370,6 +375,13 @@ export const USER_AUTH_SESSION = {
   ACCESS_TOKEN_TTL: '7h',
   REFRESH_TOKEN_TTL: '7d',
   TTL_SECONDS: 7 * 24 * 60 * 60,
+  SHORT_LIVED_HEADER: AUTH_REQUEST_HEADERS.SHORT_LIVED_SESSION,
+  SHORT_LIVED_HEADER_VALUE: 'short-lived',
+  SHORT_LIVED: {
+    ACCESS_TOKEN_TTL: 3,
+    REFRESH_TOKEN_TTL: 60,
+    TTL_SECONDS: 60,
+  },
 };
 
 export const SERVER_LIFECYCLE = {

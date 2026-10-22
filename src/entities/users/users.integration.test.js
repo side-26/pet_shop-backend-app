@@ -235,6 +235,7 @@ import {
   RATE_LIMIT,
   ROLES,
   STATUES,
+  USER_AUTH_SESSION,
   USER_OTP,
   USER_TEMPORARY_TOKEN,
 } from '#configs/constants.js';
@@ -1064,6 +1065,26 @@ describe('User API - Integration Tests', () => {
       expect(res.body.data.accessExp).toBeGreaterThan(Date.now());
 
       expect(res.body.data.sessionExp).toBeGreaterThan(res.body.data.accessExp);
+    });
+
+    test('issues a three-second access token and a one-minute session in mock mode', async () => {
+      const beforeLogin = Date.now();
+      const res = await request(app)
+        .post('/api/users/login')
+        .set(
+          USER_AUTH_SESSION.SHORT_LIVED_HEADER,
+          USER_AUTH_SESSION.SHORT_LIVED_HEADER_VALUE,
+        )
+        .send({
+          phoneNumber: testUser.phoneNumber,
+          password: DEFAULT_PASSWORD,
+        });
+
+      expect(res.status).toBe(STATUES.SUCCESS);
+      expect(res.body.data.accessExp - beforeLogin).toBeLessThanOrEqual(3000);
+      expect(res.body.data.accessExp - beforeLogin).toBeGreaterThan(1000);
+      expect(res.body.data.sessionExp - beforeLogin).toBeLessThanOrEqual(60000);
+      expect(res.body.data.sessionExp - beforeLogin).toBeGreaterThan(58000);
     });
 
     test('should return 404 if user does not exist', async () => {

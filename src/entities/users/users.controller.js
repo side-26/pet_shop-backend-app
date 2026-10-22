@@ -1,4 +1,4 @@
-import { STATUES } from '#configs/constants.js';
+import { STATUES, USER_AUTH_SESSION } from '#configs/constants.js';
 
 import {
   onCatchPromiseController,
@@ -30,6 +30,12 @@ import {
 } from './users.schema.js';
 
 import { UserService } from './users.service.js';
+
+const getAuthSessionConfig = (req) =>
+  req.get(USER_AUTH_SESSION.SHORT_LIVED_HEADER) ===
+  USER_AUTH_SESSION.SHORT_LIVED_HEADER_VALUE
+    ? USER_AUTH_SESSION.SHORT_LIVED
+    : USER_AUTH_SESSION;
 
 // =========================================================
 // CREATE USER
@@ -136,7 +142,7 @@ export const loginUserController = async (req, res, next) => {
       refreshToken,
       accessExp,
       sessionExp,
-    } = await UserService.login(body);
+    } = await UserService.login(body, getAuthSessionConfig(req));
 
     setSuccessResponse(res, STATUES.SUCCESS, {
       message: `کاربر با نام کاربری ${user.phoneNumber} با موفقیت وارد شد`,
@@ -165,7 +171,10 @@ export const refreshTokenController = async (req, res, next) => {
       userRefreshTokenSchema,
       req.body,
     );
-    const accessToken = await UserService.refreshAccessToken(refreshToken);
+    const accessToken = await UserService.refreshAccessToken(
+      refreshToken,
+      getAuthSessionConfig(req),
+    );
 
     setSuccessResponse(res, STATUES.CREATED, {
       message: null,

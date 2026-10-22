@@ -30,6 +30,7 @@ Uses `ObjectStorageService` and image helpers for profile images, the Melipayama
 - Limit `/users/paginate` to nine requests per requester IP in a fixed three-minute Redis window.
 - Preserve the existing `/users/login` policy of three requests per requester IP in a fixed two-minute Redis window; both successful and failed attempts consume the same route bucket.
 - The successful login response returns both tokens, the string `userId`, the user's `role`, and the access/session expiration timestamps as Unix milliseconds derived from the JWT `exp` claims. The session ID is internal and is never returned in the response.
+- Supplying `X-Auth-Mock-Mode: short-lived` to either login or token refresh preserves normal credential and Redis-session validation while issuing a three-second access token; login creates a matching one-minute refresh token and Redis session. This is for browser refresh-flow tests and does not bypass authentication.
 - `GET /users/current` returns the authenticated account summary: `userId`, name, phone number, role, avatar, `email`, `nationalCode`, `age`, and `birthDate`.
 - Preserve actor-versus-target authorization rules for profile and address operations.
 - Address `latLng` values are stored and accepted as `[latitude, longitude]`. Convert them to `[longitude, latitude]` before passing coordinates to delivery-service distance calculations.

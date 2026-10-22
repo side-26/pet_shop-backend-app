@@ -655,6 +655,18 @@
         "tags": ["/users"],
         "summary": "Login user",
         "description": "",
+        "parameters": [
+          {
+            "name": "X-Auth-Mock-Mode",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["short-lived"]
+            },
+            "description": "Use short-lived, fully valid tokens for browser refresh-flow tests"
+          }
+        ],
         "responses": {
           "200": {
             "description": "User logged in successfully",
@@ -853,6 +865,18 @@
     "/users/refresh-token": {
       "post": {
         "description": "",
+        "parameters": [
+          {
+            "name": "X-Auth-Mock-Mode",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["short-lived"]
+            },
+            "description": "Issue a three-second access token for browser refresh-flow tests"
+          }
+        ],
         "responses": {
           "405": {
             "description": "Method not allowed",

@@ -185,6 +185,12 @@ router.post(
       required: true,
       content: { "application/json": { schema: { $ref: '#/components/schemas/LoginUserBody' } } }
     }
+    #swagger.parameters['X-Auth-Mock-Mode'] = {
+      in: 'header',
+      required: false,
+      schema: { type: 'string', enum: ['short-lived'] },
+      description: 'Use short-lived, fully valid tokens for browser refresh-flow tests'
+    }
     #swagger.responses[200] = {
       description: 'User logged in successfully',
       content: { "application/json": { schema: { $ref: '#/components/schemas/LoginSuccessResponse' } } }
@@ -237,6 +243,16 @@ router.post(
 router.post(
   USER_ROUTES.usersRefreshToken,
   standardUserRateLimit,
+  /*
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Refresh an access token for an active login session'
+    #swagger.parameters['X-Auth-Mock-Mode'] = {
+      in: 'header',
+      required: false,
+      schema: { type: 'string', enum: ['short-lived'] },
+      description: 'Issue a three-second access token for browser refresh-flow tests'
+    }
+  */
   refreshTokenController,
 );
 

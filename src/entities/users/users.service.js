@@ -248,22 +248,27 @@ export class UserService {
     });
   }
 
-  static async createLoginData(user) {
+  static async createLoginData(user, sessionConfig = USER_AUTH_SESSION) {
     const sessionId = randomUUID();
     const accessToken = this.createAccessToken(
       user._id,
       user.phoneNumber,
       user.role,
       sessionId,
+      sessionConfig.ACCESS_TOKEN_TTL,
     );
-    const refreshToken = this.createRefreshToken(user._id, sessionId);
+    const refreshToken = this.createRefreshToken(
+      user._id,
+      sessionId,
+      sessionConfig.REFRESH_TOKEN_TTL,
+    );
     const accessExp = jwt.decode(accessToken).exp * 1000;
     const sessionExp = jwt.decode(refreshToken).exp * 1000;
 
     await redisAuthSessionStore.create({
       sessionId,
       userId: user._id,
-      ttlSeconds: USER_AUTH_SESSION.TTL_SECONDS,
+      ttlSeconds: sessionConfig.TTL_SECONDS,
     });
 
     return {
@@ -469,7 +474,7 @@ export class UserService {
   // LOGIN
   // =========================================================
 
-  static async login(credentials) {
+  static async login(credentials, sessionConfig = USER_AUTH_SESSION) {
     const user = await this.findOne({
       phoneNumber: credentials.phoneNumber,
     });
@@ -491,14 +496,17 @@ export class UserService {
       });
     }
 
-    return this.createLoginData(user);
+    return this.createLoginData(user, sessionConfig);
   }
 
   // =========================================================
   // REFRESH TOKEN
   // =========================================================
 
-  static async refreshAccessToken(refreshToken) {
+  static async refreshAccessToken(
+    refreshToken,
+    sessionConfig = USER_AUTH_SESSION,
+  ) {
     if (!refreshToken) {
       setErrorResponse(STATUES.BAD_FORM_VALIDATION, {
         message: 'توکن نامعتبر است',
@@ -531,6 +539,7 @@ export class UserService {
       user.phoneNumber,
       user.role,
       sessionId,
+      sessionConfig.ACCESS_TOKEN_TTL,
     );
   }
 
