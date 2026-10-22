@@ -15,6 +15,7 @@
     "dev": "cross-env NODE_ENV=development nodemon ./src/server.js",
     "prestart": "npm run format && npm run lint",
     "start": "cross-env NODE_ENV=production node ./src/server.js",
+    "deploy": "bash ./scripts/deploy.sh",
     "prepare": "husky",
     "openapi": "node ./src/configs/openapi.generate.js",
     "migrate:province-coordinates": "node ./scripts/migrate-province-coordinates.js",
