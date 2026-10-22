@@ -85,6 +85,12 @@ export const METHODS = {
   head: 'HEAD',
 };
 
+export const CORS_ALLOWED_HEADERS = [
+  'Content-Type',
+  'Authorization',
+  'X-Request-ID',
+];
+
 export const ENVIRONMENTS = {
   DEVELOPMENT: 'development',
   PRODUCTION: 'production',

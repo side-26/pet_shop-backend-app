@@ -82,7 +82,7 @@ export class RefreshAheadStrategy {
        * Never destroy the currently valid cached
        * value because refresh failed.
        */
-      logger.error(`Refresh-ahead failed:${JSON.stringify(error)}`);
+      logger.error({ err: error }, 'تازه‌سازی پیش‌دستانه کش ناموفق بود');
     } finally {
       if (lock) {
         await this.#lock.release(lock);

@@ -8,11 +8,11 @@ This folder centralizes runtime environment access, MongoDB and object-storage c
 
 - `constants.js` — shared environment names, routes, statuses, roles and role groups, limits, error codes, integration settings, image settings, and rate-limit values.
 - `routeMethods.config.js` — centralized allowed-method registry consumed before routers; it imports path values from the owning entity and integration `route.path.js` modules.
-- `env.config.js` — loads environment variables and exposes validated secret/API-key accessors.
+- `env.config.js` — loads `.env.dev` for local development (and `.env` otherwise) and exposes validated secret/API-key accessors.
 - `db.config.js` — opens and closes the Mongoose connection used by `src/server.js`.
 - `zod.config.js` — maps Zod issues and schema field names to Persian messages.
 - `arvanCloud.config.js` and `upload.config.js` — configure S3-compatible storage and in-memory image uploads.
-- `logger.js` — shared structured logger used by startup, middleware, and services.
+- `logger.js` — shared structured logger used by startup, middleware, and services; errors use Pino's `err` field so development output includes their message and stack.
 - `openapi.generate.js` and `openapi-schemas.js` — generate the OpenAPI 3.0 contract from colocated route annotations and Zod-backed schemas, then add collection tags, method-not-allowed responses, and users-router rate-limit responses.
 - `openapi.config.js` and `openapi.json` — load and store the single contract served to machines and Scalar.
 - `openapi.unit.test.js` — verifies generated users-router rate-limit coverage, including static, paginated, login, and dynamic paths.

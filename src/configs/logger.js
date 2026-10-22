@@ -18,6 +18,9 @@ const logger = pino({
       'req.body.password',
       'req.body.token',
       'req.body.refreshToken',
+      'body.password',
+      'body.token',
+      'body.refreshToken',
     ],
     censor: '***REDACTED***',
   },
@@ -50,7 +53,7 @@ const logger = pino({
           translateTime: 'SYS:standard',
           ignore: 'pid,hostname',
           singleLine: true,
-          hideObject: true,
+          hideObject: false,
           // ✅ Add UTF-8 support
           messageFormat: true,
           errorProps: '*',
@@ -104,42 +107,38 @@ logger.api = {
   },
 
   serverError: (err, req, res, duration, metadata = {}) => {
-    logger.error({
-      type: 'API_SERVER_ERROR',
-      statusCode: res.statusCode || 500,
-      method: req.method,
-      url: req.url,
-      duration: `${duration}ms`,
-      requestId: req.id,
-      userId: req.user?.id,
-      error: {
-        message: err.message,
-        stack: err.stack,
-        name: err.name,
-        code: err.code,
+    logger.error(
+      {
+        type: 'API_SERVER_ERROR',
+        statusCode: res.statusCode || 500,
+        method: req.method,
+        url: req.url,
+        duration: `${duration}ms`,
+        requestId: req.id,
+        userId: req.user?.id,
+        err,
+        metadata,
+        timestamp: new Date().toISOString(),
       },
-      metadata,
-      timestamp: new Date().toISOString(),
-    });
+      'خطای سرور API رخ داد',
+    );
   },
 
   error: (err, req, metadata = {}) => {
-    logger.error({
-      type: 'API_ERROR',
-      error: {
-        message: err.message,
-        stack: err.stack,
-        name: err.name,
-        code: err.code,
+    logger.error(
+      {
+        type: 'API_ERROR',
+        err,
+        method: req?.method,
+        url: req?.url,
+        body: req?.body,
+        requestId: req?.id,
+        userId: req?.user?.id,
+        metadata,
+        timestamp: new Date().toISOString(),
       },
-      method: req?.method,
-      url: req?.url,
-      body: req?.body,
-      requestId: req?.id,
-      userId: req?.user?.id,
-      metadata,
-      timestamp: new Date().toISOString(),
-    });
+      'خطای API رخ داد',
+    );
   },
 };
 
@@ -173,18 +172,15 @@ logger.app = {
   },
 
   error: (message, error, data = {}) => {
-    logger.error({
-      type: 'APP_ERROR',
-      message,
-      error: {
-        message: error?.message,
-        stack: error?.stack,
-        name: error?.name,
-        code: error?.code,
+    logger.error(
+      {
+        type: 'APP_ERROR',
+        err: error,
+        ...data,
+        timestamp: new Date().toISOString(),
       },
-      ...data,
-      timestamp: new Date().toISOString(),
-    });
+      message,
+    );
   },
 
   db: (operation, collection, data = {}) => {

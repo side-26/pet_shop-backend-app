@@ -1,6 +1,6 @@
 import cors from 'cors';
 
-import { METHODS } from '#configs/constants.js';
+import { CORS_ALLOWED_HEADERS, METHODS } from '#configs/constants.js';
 
 const DEFAULT_CORS_ORIGIN = 'https://your-frontend.com';
 
@@ -13,7 +13,7 @@ export const createHeaderMiddleware = ({
       callback(null, isAllowed);
     },
     methods: Object.values(METHODS),
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: CORS_ALLOWED_HEADERS,
   });
 
 const corsMiddleware = createHeaderMiddleware();

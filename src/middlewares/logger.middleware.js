@@ -124,24 +124,22 @@ export const logError = (err, req, res, next) => {
 
   const duration = req?._startTime ? Date.now() - req._startTime : 0;
 
-  logger.error({
-    type: 'SERVER_ERROR',
-    statusCode: err.statusCode || 500,
-    error: {
-      message: err.message,
-      stack: err.stack,
-      name: err.name,
-      code: err.code,
+  logger.error(
+    {
+      type: 'SERVER_ERROR',
+      statusCode: err.statusCode || 500,
+      err,
+      method: req?.method,
+      url: req?.url,
+      requestId: req?.id,
+      userId: req?.user?.id,
+      ip: req?.ip,
+      body: req?.body,
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
     },
-    method: req?.method,
-    url: req?.url,
-    requestId: req?.id,
-    userId: req?.user?.id,
-    ip: req?.ip,
-    body: req?.body,
-    duration: `${duration}ms`,
-    timestamp: new Date().toISOString(),
-  });
+    'خطای سرور هنگام پردازش درخواست رخ داد',
+  );
 
   next(err);
 };

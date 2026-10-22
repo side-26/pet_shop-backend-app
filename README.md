@@ -172,7 +172,7 @@ cd pet_shop-backend-app
 npm install
 ```
 
-Create a `.env` file in the repository root:
+Create a `.env.dev` file in the repository root:
 
 ```dotenv
 NODE_ENV=development

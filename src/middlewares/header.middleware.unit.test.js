@@ -36,12 +36,16 @@ describe('header middleware', () => {
     const response = await request(createApp('http://localhost:3000'))
       .options('/health')
       .set('Origin', 'http://localhost:3000')
-      .set('Access-Control-Request-Method', 'POST');
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'x-request-id');
 
     expect(response.status).toBe(204);
     expect(response.headers).toHaveProperty(
       'access-control-allow-origin',
       'http://localhost:3000',
+    );
+    expect(response.headers['access-control-allow-headers']).toContain(
+      'X-Request-ID',
     );
   });
 });

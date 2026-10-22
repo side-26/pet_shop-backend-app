@@ -1,8 +1,11 @@
 import dotenv from 'dotenv';
 
-import { ERROR_CODES, STATUES } from './constants.js';
+import { ENVIRONMENTS, ERROR_CODES, STATUES } from './constants.js';
 
-dotenv.config({ quiet: true });
+dotenv.config({
+  path: process.env.NODE_ENV === ENVIRONMENTS.DEVELOPMENT ? '.env.dev' : '.env',
+  quiet: true,
+});
 
 const getPositiveIntegerEnv = (name, fallback) => {
   const value = process.env[name]?.trim();
