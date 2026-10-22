@@ -36,6 +36,18 @@ export const getMostPopularPetsController = (_req, res, next) =>
 export const getRecentlyUpdatedPetsController = (_req, res, next) =>
   getLandingSection(res, next, 'getRecentlyUpdatedPets');
 
+export const getUserWishlistController = async (req, res, next) => {
+  try {
+    const data = await LandingService.getUserWishlist(req.user.userId);
+    setSuccessResponse(res, STATUES.SUCCESS, {
+      data,
+      totalRecords: data.length,
+    });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
 export const getMostDiscountedProductsController = async (req, res, next) => {
   try {
     const { limit } = returnFormValidation(landingLimitSchema, req.query);

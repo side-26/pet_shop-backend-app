@@ -7,6 +7,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 ## Endpoints
 
 - `GET /landing/pet-types` — up to four enabled pet types, ordered by creation date, each with its main image, thumbnail, and summary.
+- `GET /landing/wishlist` — authenticated user's saved, enabled products and pets as landing cards, in saved order; disabled or deleted catalog records are omitted.
 - `GET /landing/search?search=TEXT&page=NUMBER&limit=NUMBER` — paginated enabled Products and Pets matched by catalog or requested taxonomy title; every item is limited to `title`, `slug`, `mainImage`, `thumbnailImage`, and `itemType` (`product` or `pet`).
 - `GET /landing/products/discounted?limit=COUNT` — enabled products ordered by discount percentage, with the main image thumbnail, source price, discount percentage, response-only calculated discount amount, minimum final price, and minimum quantity across weights; `limit` defaults to four and is capped at 100.
 - `GET /landing/pet-types/all` — every enabled pet type, ordered by creation date, each with its main image, thumbnail, and summary.
@@ -22,7 +23,7 @@ Provides public, read-only homepage sections from the enabled pet-type and produ
 
 ## Rules
 
-- All endpoints are public and return only enabled catalog records.
+- All endpoints except `GET /landing/wishlist` are public. The wishlist endpoint requires authentication but no role restriction; every endpoint returns only enabled catalog records.
 - Product-detail responses include `canVote` and `hasRated` for the optionally authenticated caller. A customer can vote only once after buying that product; the rating API independently enforces both rules.
 - Search matches Product title, Category title, and SubCategory title; and Pet title, PetType title, and Breed title. Product results require `isEnable: true` and Pet results require `inEnable: true`.
 - Slug detail endpoints accept hyphen-separated Unicode letters and numbers (including Persian slugs) and reuse the catalog entities' full customer-detail formatters, including populated taxonomy and brand relations.

@@ -79,6 +79,21 @@ const buildPetSearchPipeline = (search) => [
 ];
 
 export class LandingModel {
+  static findUserWishlist(userId) {
+    return UserModel.findById(userId).select('wishlist').lean();
+  }
+
+  static findWishlistedProducts(ids) {
+    return ProductModel.find({ _id: { $in: ids }, isEnable: true });
+  }
+
+  static findWishlistedPets(ids) {
+    return PetModel.find({ _id: { $in: ids }, inEnable: true }).populate([
+      { path: 'petType' },
+      { path: 'breed' },
+    ]);
+  }
+
   static findProductList(filter, sort, skip, limit) {
     return ProductModel.find(filter).sort(sort).skip(skip).limit(limit);
   }

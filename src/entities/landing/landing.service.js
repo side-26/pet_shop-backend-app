@@ -1,4 +1,4 @@
-import { ERROR_CODES, STATUES } from '#configs/constants.js';
+import { ERROR_CODES, STATUES, USER_ITEM_TYPES } from '#configs/constants.js';
 import {
   formatCustomerPetDetail,
   formatCustomerPetListItem,
@@ -95,6 +95,42 @@ const orderPetsById = (pets, ids) => {
 };
 
 export class LandingService {
+  static async getUserWishlist(userId) {
+    const user = await LandingModel.findUserWishlist(userId);
+    const wishlist = user?.wishlist || [];
+    const idsByType = {
+      [USER_ITEM_TYPES.PRODUCT]: [],
+      [USER_ITEM_TYPES.PET]: [],
+    };
+
+    for (const { item, itemType } of wishlist) {
+      idsByType[itemType]?.push(item);
+    }
+
+    const [products, pets] = await Promise.all([
+      idsByType[USER_ITEM_TYPES.PRODUCT].length
+        ? LandingModel.findWishlistedProducts(
+            idsByType[USER_ITEM_TYPES.PRODUCT],
+          )
+        : [],
+      idsByType[USER_ITEM_TYPES.PET].length
+        ? LandingModel.findWishlistedPets(idsByType[USER_ITEM_TYPES.PET])
+        : [],
+    ]);
+    const itemsById = new Map([
+      ...products.map((product) => [
+        String(product._id),
+        formatLandingProductCard(product),
+      ]),
+      ...pets.map((pet) => [String(pet._id), formatCustomerPetListItem(pet)]),
+    ]);
+
+    return wishlist.flatMap(({ _id, item, itemType }) => {
+      const wishlistItem = itemsById.get(String(item));
+      return wishlistItem ? [{ id: _id, itemType, item: wishlistItem }] : [];
+    });
+  }
+
   static async getSearchCatalogItems(search, itemCount) {
     const [products, pets] = await Promise.all([
       LandingModel.findSearchProducts(search, itemCount),

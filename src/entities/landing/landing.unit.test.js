@@ -1,6 +1,9 @@
 jest.mock('./landing.model.js', () => ({
   LandingModel: {
     findPetBySlug: jest.fn(),
+    findUserWishlist: jest.fn(),
+    findWishlistedProducts: jest.fn(),
+    findWishlistedPets: jest.fn(),
     findFeaturedPetTypes: jest.fn(),
     findAllPetTypes: jest.fn(),
     findHighestPricedPets: jest.fn(),
@@ -142,6 +145,37 @@ const highestPricedPet = {
 
 describe('LandingService', () => {
   beforeEach(() => jest.clearAllMocks());
+
+  test('returns only enabled wishlist records in the authenticated user saved order', async () => {
+    LandingModel.findUserWishlist.mockResolvedValue({
+      wishlist: [
+        { _id: 'wishlist-pet', item: pet._id, itemType: 'pet' },
+        { _id: 'wishlist-product', item: product._id, itemType: 'product' },
+        { _id: 'wishlist-disabled', item: 'disabled-id', itemType: 'product' },
+      ],
+    });
+    LandingModel.findWishlistedProducts.mockResolvedValue([product]);
+    LandingModel.findWishlistedPets.mockResolvedValue([pet]);
+
+    await expect(LandingService.getUserWishlist('user-id')).resolves.toEqual([
+      expect.objectContaining({
+        id: 'wishlist-pet',
+        itemType: 'pet',
+        item: expect.objectContaining({ id: pet._id }),
+      }),
+      expect.objectContaining({
+        id: 'wishlist-product',
+        itemType: 'product',
+        item: expect.objectContaining({ id: product._id }),
+      }),
+    ]);
+    expect(LandingModel.findUserWishlist).toHaveBeenCalledWith('user-id');
+    expect(LandingModel.findWishlistedProducts).toHaveBeenCalledWith([
+      product._id,
+      'disabled-id',
+    ]);
+    expect(LandingModel.findWishlistedPets).toHaveBeenCalledWith([pet._id]);
+  });
 
   test('returns paginated compact product and pet search matches in title order', async () => {
     const search = /گربه/i;

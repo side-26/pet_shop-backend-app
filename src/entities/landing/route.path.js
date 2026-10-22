@@ -1,4 +1,5 @@
 export const LANDING_ROUTES = {
+  landingWishlist: '/landing/wishlist',
   landingSearch: '/landing/search',
   landingPetsPaginate: '/landing/pets-paginate',
   landingPetTypes: '/landing/pet-types',

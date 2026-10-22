@@ -1,6 +1,9 @@
 import express from 'express';
 
-import { optionallyAuthenticated } from '#middlewares/auth.middleware.js';
+import {
+  authenticated,
+  optionallyAuthenticated,
+} from '#middlewares/auth.middleware.js';
 import { RateLimiter } from '#infrastructure/redis/rateLimit/rateLimit.core.js';
 
 import {
@@ -16,6 +19,7 @@ import {
   getProductListController,
   getProductBySlugController,
   getRecentlyUpdatedPetsController,
+  getUserWishlistController,
   searchCatalogController,
 } from './landing.controller.js';
 
@@ -23,6 +27,17 @@ import { LANDING_ROUTES } from './route.path.js';
 
 const router = express.Router();
 new RateLimiter('landing').applyTo(router);
+
+router.get(
+  LANDING_ROUTES.landingWishlist,
+  authenticated,
+  /* #swagger.summary = "Get the authenticated user's enabled wishlist items"
+     #swagger.description = 'Returns enabled wishlist products and pets as landing cards, in the user\'s saved order. Disabled or deleted catalog records are omitted.'
+     #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.responses[200] = { description: 'Authenticated user wishlist landing cards' }
+     #swagger.responses[401] = { description: 'Authentication required' } */
+  getUserWishlistController,
+);
 
 router.get(
   LANDING_ROUTES.landingSearch,

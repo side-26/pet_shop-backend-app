@@ -8,6 +8,18 @@ jest.mock('#services/objectStorage.service.js', () => ({
   },
 }));
 
+jest.mock('#middlewares/auth.middleware.js', () => ({
+  authenticated: (req, res, next) => {
+    const userId = req.get('X-Test-User-Id');
+    if (!userId) {
+      return res.status(401).json({ isSuccess: false });
+    }
+    req.user = { userId };
+    return next();
+  },
+  optionallyAuthenticated: (_req, _res, next) => next(),
+}));
+
 import express from 'express';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -205,6 +217,44 @@ describe('Landing API', () => {
       }),
     );
     expect(invalidLimit.status).toBe(STATUES.BAD_FORM_VALIDATION);
+  });
+
+  test('returns only the authenticated user enabled wishlist items as landing cards', async () => {
+    const [product, disabledProduct] = await ProductModel.find()
+      .sort({ title: 1 })
+      .limit(2);
+    const [pet] = await PetModel.find().sort({ title: 1 }).limit(1);
+    const user = await UserModel.create({
+      phoneNumber: '09120000004',
+      password: 'password123',
+      wishlist: [
+        { item: pet._id, itemType: USER_ITEM_TYPES.PET },
+        { item: disabledProduct._id, itemType: USER_ITEM_TYPES.PRODUCT },
+        { item: product._id, itemType: USER_ITEM_TYPES.PRODUCT },
+      ],
+    });
+    await ProductModel.findByIdAndUpdate(disabledProduct._id, {
+      isEnable: false,
+    });
+
+    const unauthorized = await request(app).get('/api/landing/wishlist');
+    const response = await request(app)
+      .get('/api/landing/wishlist')
+      .set('X-Test-User-Id', String(user._id));
+
+    expect(unauthorized.status).toBe(STATUES.UN_AUTHORIZED);
+    expect(response.status).toBe(STATUES.SUCCESS);
+    expect(response.body.totalRecords).toBe(2);
+    expect(response.body.data).toEqual([
+      expect.objectContaining({
+        itemType: USER_ITEM_TYPES.PET,
+        item: expect.objectContaining({ id: String(pet._id) }),
+      }),
+      expect.objectContaining({
+        itemType: USER_ITEM_TYPES.PRODUCT,
+        item: expect.objectContaining({ id: String(product._id) }),
+      }),
+    ]);
   });
 
   test('searches enabled catalog and taxonomy titles with compact results', async () => {

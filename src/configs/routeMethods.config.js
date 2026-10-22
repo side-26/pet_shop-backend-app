@@ -41,6 +41,7 @@ export const API_ROUTE_METHODS = [
   { path: ARTICLE_ROUTES.articleById, methods: [get, put, deleteMethod] },
   { path: DELIVERY_SERVICE_ROUTES.deliveryServicesAvailable, methods: [get] },
   { path: LANDING_ROUTES.landingBrandsPopular, methods: [get] },
+  { path: LANDING_ROUTES.landingWishlist, methods: [get] },
   { path: LANDING_ROUTES.landingPetTypesAll, methods: [get] },
   { path: LANDING_ROUTES.landingPetsPopular, methods: [get] },
   { path: LANDING_ROUTES.landingPetsRecent, methods: [get] },

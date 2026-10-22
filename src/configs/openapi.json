@@ -6551,6 +6551,26 @@
         ]
       }
     },
+    "/landing/wishlist": {
+      "get": {
+        "summary": "Get the authenticated user's enabled wishlist items",
+        "description": "Returns enabled wishlist products and pets as landing cards, in the user's saved order. Disabled or deleted catalog records are omitted.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated user wishlist landing cards"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        },
+        "tags": ["/landing"]
+      }
+    },
     "/landing/search": {
       "get": {
         "summary": "Search enabled pets and products with pagination",
