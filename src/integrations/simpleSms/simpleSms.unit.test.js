@@ -65,6 +65,7 @@ describe('simple-SMS integration', () => {
       name: 'علی',
       petNames: ['پامرانین', 'گلدن رتریور'],
     });
+    expect(text.endsWith('\nلغو۱۱')).toBe(true);
     const body = JSON.stringify({ from: '5000xxx', to: '09123456789', text });
     expect(url.toString()).toBe(
       `${MELIPAYAMAK_API.BASE_URL}${MELIPAYAMAK_API.SIMPLE_SMS_PATH}/simple-sms-token`,
