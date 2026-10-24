@@ -99,9 +99,10 @@ export class PaymentService {
       status: PAYMENT_STATUSES.PENDING,
       expiresAt: order.paymentExpiresAt,
     });
-    const gatewayUrl = new URL(
+    const gatewayUrl = new URL(getPaymentGatewayUrl());
+    gatewayUrl.searchParams.set(
+      PAYMENT_GATEWAY.AUTHORITY_QUERY_PARAMETER,
       authority,
-      `${getPaymentGatewayUrl().replace(/\/+$/, '')}/`,
     );
 
     return {

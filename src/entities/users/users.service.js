@@ -1283,6 +1283,17 @@ export class UserService {
     return user.wishlist;
   }
 
+  static async isWishlistItemBySlug(actor, slug) {
+    const userId = this.getAuthenticatedUserId(actor);
+    const user = await UserModel.findById(userId).populate('wishlist.item');
+    if (!user) {
+      setErrorResponse(STATUES.NOT_FOUND, { message: 'کاربر یافت نشد' });
+    }
+    return user.wishlist.some(
+      ({ item }) => item?.slug?.toLowerCase() === slug.toLowerCase(),
+    );
+  }
+
   static format(user) {
     if (!user) return null;
 

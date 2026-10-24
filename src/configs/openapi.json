@@ -1845,13 +1845,13 @@
             }
           },
           "429": {
-            "description": "More than 3 requests were sent from the same IP within 360 seconds",
+            "description": "More than 6 requests were sent from the same IP within 120 seconds",
             "headers": {
               "RateLimit-Limit": {
                 "schema": {
                   "type": "integer"
                 },
-                "example": 3
+                "example": 6
               },
               "RateLimit-Remaining": {
                 "schema": {
@@ -1864,7 +1864,7 @@
                   "type": "integer"
                 },
                 "description": "Seconds until the current rate-limit window expires",
-                "example": 360
+                "example": 120
               }
             },
             "content": {
@@ -1880,6 +1880,67 @@
           }
         },
         "tags": ["/wishlist"]
+      }
+    },
+    "/wishlist/{slug}": {
+      "get": {
+        "tags": ["/wishlist"],
+        "summary": "Check whether the authenticated user has wishlisted a product or pet by slug",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "minLength": 1, "maxLength": 200 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlist status returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isSuccess": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "required": ["isWishlisted"],
+                      "properties": { "isWishlisted": { "type": "boolean" } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Authentication required" },
+          "422": { "description": "Validation error" },
+          "429": {
+            "description": "More than 6 requests were sent from the same IP within 120 seconds",
+            "headers": {
+              "RateLimit-Limit": {
+                "schema": { "type": "integer" },
+                "example": 6
+              },
+              "RateLimit-Remaining": {
+                "schema": { "type": "integer" },
+                "example": 0
+              },
+              "Retry-After": {
+                "schema": { "type": "integer" },
+                "description": "Seconds until the current rate-limit window expires",
+                "example": 120
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "405": { "description": "Method not allowed" }
+        }
       }
     },
     "/users/change-password": {

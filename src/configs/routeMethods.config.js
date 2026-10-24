@@ -147,6 +147,7 @@ export const API_ROUTE_METHODS = [
   { path: USER_ROUTES.usersVerify, methods: [post] },
   { path: USER_ROUTES.wishlistAdd, methods: [post] },
   { path: USER_ROUTES.wishlistAll, methods: [get] },
+  { path: USER_ROUTES.wishlistStatusBySlug, methods: [get] },
   { path: BRAND_ROUTES.brandsById, methods: [get, put, deleteMethod] },
   {
     path: DELIVERY_SERVICE_ROUTES.deliveryServicesById,

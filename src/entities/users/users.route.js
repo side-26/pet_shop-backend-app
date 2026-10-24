@@ -28,6 +28,7 @@ import {
   getUserByIdController,
   getUserAddressListController,
   getWishlistItemsController,
+  getWishlistStatusBySlugController,
   loginUserController,
   logoutUserController,
   refreshTokenController,
@@ -67,6 +68,10 @@ const cartAllRateLimit = userRateLimiter.limit({
 const cartCheckoutRateLimit = userRateLimiter.limit({
   limit: RATE_LIMIT.CART_CHECKOUT_MAX_REQUESTS,
   window: RATE_LIMIT.CART_WINDOW_SECONDS,
+});
+const wishlistReadRateLimit = userRateLimiter.limit({
+  limit: RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS,
+  window: RATE_LIMIT.WISHLIST_READ_WINDOW_SECONDS,
 });
 
 router.post(
@@ -440,9 +445,23 @@ router.delete(
 );
 router.get(
   USER_ROUTES.wishlistAll,
-  standardUserRateLimit,
+  wishlistReadRateLimit,
   authenticated,
   getWishlistItemsController,
+);
+router.get(
+  USER_ROUTES.wishlistStatusBySlug,
+  wishlistReadRateLimit,
+  authenticated,
+  /*
+    #swagger.tags = ['Wishlist']
+    #swagger.summary = 'Check whether the authenticated user has wishlisted a product or pet by slug'
+    #swagger.security = [{ "bearerAuth": [] }]
+    #swagger.parameters['slug'] = { in: 'path', required: true, schema: { type: 'string' } }
+    #swagger.responses[200] = { description: 'Wishlist status returned', content: { "application/json": { schema: { type: 'object', properties: { isSuccess: { type: 'boolean' }, data: { type: 'object', required: ['isWishlisted'], properties: { isWishlisted: { type: 'boolean' } } } } } } } }
+    #swagger.responses[422] = { description: 'Validation error' }
+  */
+  getWishlistStatusBySlugController,
 );
 
 router.put(

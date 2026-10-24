@@ -8,7 +8,7 @@ This folder owns cross-cutting Express request behavior: authentication, role ch
 
 - `auth.middleware.js` and `role.middleware.js` — verify JWT identity, require its Redis-backed login session to belong to the signed user, and enforce allowed roles.
 - `permission.js` and `permission.middleware.js` — own the future role/resource/action permission map and its route-middleware factory; no route uses this middleware until stakeholder policy is defined.
-- `security.middleware.js` and `header.middleware.js` — configure Helmet, CORS-related headers, and global rate limiting; rate limits are bypassed only when `NODE_ENV=development`.
+- `security.middleware.js` and `header.middleware.js` — configure Helmet, CORS-related headers, and global rate limiting; `CORS_ORIGIN` accepts a comma-separated origin allowlist, and rate limits are bypassed only when `NODE_ENV=development`.
 - `method.middleware.js` — checks the centralized API route registry before routers and rejects unsupported methods with HTTP 405 and an `Allow` header.
 - `logger.middleware.js` — records request completion and errors through the shared logger.
 - `upload.middleware.js` — applies configured Multer upload limits for avatars, Product/Pet/Pet Type/Breed main images, and Pet creation image galleries.

@@ -6,7 +6,7 @@ Owns gateway payment attempts for user-owned orders, including authority, expiry
 
 ## Rules
 
-- Customer payment requests accept an owned, unexpired prepared Order; authority, amount, expiry, and gateway URL are generated from that trusted Order snapshot.
+- Customer payment requests accept an owned, unexpired prepared Order; authority, amount, expiry, and gateway URL are generated from that trusted Order snapshot. The gateway URL supplies the authority as its `authority` query parameter.
 - Gateway completion updates the prepared Order after verification; it never creates a second Order or reserves stock.
 - Gateway payment lookup is public but authority-scoped and returns only status, final price, expiry time, company name, and frontend app URL while it remains pending and unexpired. Paid, failed, cancelled, and expired authorities return `410 Gone`; expiry fails a pending payment and releases its order reservation exactly once.
 - Payment completion redirects to `${FRONTEND_APP_URL}/payment/result/:authority`; do not configure a separate payment-result frontend URL.

@@ -156,6 +156,10 @@ export const selectDeliveryWindowSchema = object({
 
 export const wishlistEntryIdSchema = cartEntryIdSchema;
 
+export const wishlistSlugSchema = object({
+  slug: string().trim().min(1).max(200),
+}).strict();
+
 export const userIdSchema = cartEntryIdSchema;
 
 export const userZodSchema = object({

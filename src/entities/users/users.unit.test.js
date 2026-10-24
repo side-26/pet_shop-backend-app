@@ -2162,4 +2162,22 @@ describe('UserService - Unit Tests', () => {
     await expect(UserService.getWishlistItems(mockActor)).resolves.toEqual([]);
     expect(populate).toHaveBeenCalledWith('wishlist.item');
   });
+
+  test('isWishlistItemBySlug checks product and pet wishlist references by slug', async () => {
+    const populate = jest.fn().mockResolvedValue({
+      wishlist: [
+        { item: { slug: 'dog-food' }, itemType: 'product' },
+        { item: { slug: 'persian-cat' }, itemType: 'pet' },
+      ],
+    });
+    UserModel.findById.mockReturnValue({ populate });
+
+    await expect(
+      UserService.isWishlistItemBySlug(mockActor, 'PERSIAN-CAT'),
+    ).resolves.toBe(true);
+    await expect(
+      UserService.isWishlistItemBySlug(mockActor, 'unknown-slug'),
+    ).resolves.toBe(false);
+    expect(populate).toHaveBeenCalledWith('wishlist.item');
+  });
 });

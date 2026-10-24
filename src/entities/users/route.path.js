@@ -21,6 +21,7 @@ export const USER_ROUTES = {
   wishlistAdd: '/wishlist/add',
   wishlistDeleteById: '/wishlist/delete/:id',
   wishlistAll: '/wishlist/all',
+  wishlistStatusBySlug: '/wishlist/:slug',
   usersChangePassword: '/users/change-password',
   usersDisableById: '/users/disable/:id',
   usersEnableById: '/users/enable/:id',

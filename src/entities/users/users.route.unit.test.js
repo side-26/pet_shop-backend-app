@@ -52,6 +52,7 @@ jest.mock('./users.controller.js', () => ({
   getUserAddressListController: jest.fn(),
   getUserByIdController: jest.fn(),
   getWishlistItemsController: jest.fn(),
+  getWishlistStatusBySlugController: jest.fn(),
   loginUserController: jest.fn(),
   logoutUserController: jest.fn(),
   refreshTokenController: jest.fn(),
@@ -74,6 +75,7 @@ import {
   createDeliveryQuoteController,
   getCartItemDetailsController,
   getCartCheckoutController,
+  getWishlistStatusBySlugController,
   loginUserController,
   logoutUserController,
   selectDeliveryWindowController,
@@ -92,6 +94,8 @@ describe('users route policies', () => {
     const cartAllRateLimitMiddleware = rateLimiter.limit.mock.results[4].value;
     const cartCheckoutRateLimitMiddleware =
       rateLimiter.limit.mock.results[5].value;
+    const wishlistReadRateLimitMiddleware =
+      rateLimiter.limit.mock.results[6].value;
     const registeredRoutes = [
       ...mockRouter.delete.mock.calls,
       ...mockRouter.get.mock.calls,
@@ -123,6 +127,18 @@ describe('users route policies', () => {
     const cartCheckoutRoute = registeredRoutes.find(
       ([path]) => path === USER_ROUTES.cartCheckout,
     );
+    const wishlistAddRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.wishlistAdd,
+    );
+    const wishlistDeleteRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.wishlistDeleteById,
+    );
+    const wishlistAllRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.wishlistAll,
+    );
+    const wishlistStatusRoute = registeredRoutes.find(
+      ([path]) => path === USER_ROUTES.wishlistStatusBySlug,
+    );
     const currentUserRoute = registeredRoutes.find(
       ([path]) => path === USER_ROUTES.usersCurrent,
     );
@@ -134,7 +150,9 @@ describe('users route policies', () => {
         path !== ROUTES.users.login &&
         path !== ROUTES.users.getAllPaginate &&
         path !== USER_ROUTES.usersCurrent &&
-        !cartRoutePaths.includes(path),
+        !cartRoutePaths.includes(path) &&
+        path !== USER_ROUTES.wishlistAll &&
+        path !== USER_ROUTES.wishlistStatusBySlug,
     );
 
     expect(usersRouter).toBe(mockRouter);
@@ -163,8 +181,12 @@ describe('users route policies', () => {
       limit: RATE_LIMIT.CART_CHECKOUT_MAX_REQUESTS,
       window: RATE_LIMIT.CART_WINDOW_SECONDS,
     });
-    expect(registeredRoutes).toHaveLength(31);
-    expect(standardRoutes).toHaveLength(20);
+    expect(rateLimiter.limit).toHaveBeenNthCalledWith(7, {
+      limit: RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS,
+      window: RATE_LIMIT.WISHLIST_READ_WINDOW_SECONDS,
+    });
+    expect(registeredRoutes).toHaveLength(32);
+    expect(standardRoutes).toHaveLength(19);
     standardRoutes.forEach((route) => {
       expect(route[1]).toBe(standardRateLimitMiddleware);
     });
@@ -204,6 +226,15 @@ describe('users route policies', () => {
       cartCheckoutRateLimitMiddleware,
       authenticated,
       getCartCheckoutController,
+    ]);
+    expect(wishlistAddRoute[1]).toBe(standardRateLimitMiddleware);
+    expect(wishlistDeleteRoute[1]).toBe(standardRateLimitMiddleware);
+    expect(wishlistAllRoute[1]).toBe(wishlistReadRateLimitMiddleware);
+    expect(wishlistStatusRoute).toEqual([
+      USER_ROUTES.wishlistStatusBySlug,
+      wishlistReadRateLimitMiddleware,
+      authenticated,
+      getWishlistStatusBySlugController,
     ]);
     expect(currentUserRoute[1]).toBe(cartRateLimitMiddleware);
   });

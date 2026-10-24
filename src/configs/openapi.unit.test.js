@@ -41,7 +41,7 @@ describe('users-router OpenAPI rate-limit contracts', () => {
     });
   });
 
-  test('documents standard, paginated, login, and dynamic-route policies', () => {
+  test('documents standard, paginated, login, wishlist, and dynamic-route policies', () => {
     const standardResponse = getOperation('/users/{id}', 'get').responses[
       String(STATUES.TOO_MANY_REQUESTS)
     ];
@@ -51,6 +51,11 @@ describe('users-router OpenAPI rate-limit contracts', () => {
     const loginResponse = getOperation('/users/login', 'post').responses[
       String(STATUES.TOO_MANY_REQUESTS)
     ];
+    const wishlistReadResponse = getOperation('/wishlist/all', 'get').responses[
+      String(STATUES.TOO_MANY_REQUESTS)
+    ];
+    const wishlistStatusResponse = getOperation('/wishlist/{slug}', 'get')
+      .responses[String(STATUES.TOO_MANY_REQUESTS)];
 
     expect(standardResponse.headers['RateLimit-Limit'].example).toBe(
       RATE_LIMIT.USER_MAX_REQUESTS,
@@ -69,6 +74,18 @@ describe('users-router OpenAPI rate-limit contracts', () => {
     );
     expect(loginResponse.headers['Retry-After'].example).toBe(
       RATE_LIMIT.LOGIN_WINDOW_SECONDS,
+    );
+    expect(wishlistReadResponse.headers['RateLimit-Limit'].example).toBe(
+      RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS,
+    );
+    expect(wishlistReadResponse.headers['Retry-After'].example).toBe(
+      RATE_LIMIT.WISHLIST_READ_WINDOW_SECONDS,
+    );
+    expect(wishlistStatusResponse.headers['RateLimit-Limit'].example).toBe(
+      RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS,
+    );
+    expect(wishlistStatusResponse.headers['Retry-After'].example).toBe(
+      RATE_LIMIT.WISHLIST_READ_WINDOW_SECONDS,
     );
   });
 

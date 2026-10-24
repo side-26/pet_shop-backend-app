@@ -1,71 +1,57 @@
 
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-IMAGE="pet-shop-backend:latest"
-ARCHIVE="pet-shop-backend.tar.gz"
+SERVER="root@89.44.240.25"
+REPO_DIR="/opt/pet-shop-backend"
+COMPOSE_DIR="/opt/pet-shop-backend"
+BRANCH="develope"
+IMAGE="petshop-backend:production"
 
-SERVER="${SERVER:-root@89.44.240.25}"
-REMOTE_DIR="/opt/pet-shop/backend"
+echo "1. Connecting to VPS and deploying backend..."
 
-echo "1. Building production backend image..."
-
-docker buildx build \
-  --platform linux/amd64 \
-  --tag "$IMAGE" \
-  --load \
-  .
-
-echo "2. Exporting image..."
-
-docker save "$IMAGE" | gzip > "$ARCHIVE"
-
-echo "3. Uploading image..."
-
-scp "$ARCHIVE" "$SERVER:/opt/$ARCHIVE"
-
-echo "4. Deploying backend..."
-
-ssh "$SERVER" bash -se -- "$ARCHIVE" "$REMOTE_DIR" <<'REMOTE'
+ssh "$SERVER" bash -s -- \
+  "$REPO_DIR" "$COMPOSE_DIR" "$BRANCH" "$IMAGE" <<'REMOTE'
 set -euo pipefail
 
-ARCHIVE="$1"
-REMOTE_DIR="$2"
+REPO_DIR="$1"
+COMPOSE_DIR="$2"
+BRANCH="$3"
+IMAGE="$4"
 
-echo "Loading Docker image..."
-docker load -i "/opt/$ARCHIVE"
+echo "2. Pulling latest code..."
 
-echo "Changing to backend directory..."
-cd "$REMOTE_DIR"
+cd "$REPO_DIR"
+git switch "$BRANCH"
+git pull --ff-only origin "$BRANCH"
 
-echo "Validating Docker Compose..."
+echo "3. Building production image..."
+
+docker build -t "$IMAGE" -f Dockerfile .
+
+echo "4. Validating Docker Compose..."
+
+cd "$COMPOSE_DIR"
 docker compose config --quiet
 
-echo "Recreating backend container..."
-docker compose up -d --force-recreate --no-deps app
+if ! docker compose config --images | grep -Fxq "$IMAGE"; then
+  echo "ERROR: Compose does not reference $IMAGE"
+  exit 1
+fi
 
-echo "Checking containers..."
-docker compose ps
+echo "5. Deploying backend..."
 
-echo "Checking backend health..."
-docker exec pet-shop-frontend node -e "
-  fetch('http://app:3000/api/landing/pet-types')
-    .then(r => {
-      console.log('Backend HTTP status:', r.status);
-      if (!r.ok) process.exitCode = 1;
-    })
-    .catch(e => {
-      console.error(e);
-      process.exitCode = 1;
-    })
-"
+docker compose up \
+  -d \
+  --no-deps \
+  --no-build \
+  --force-recreate \
+  app
 
-echo "Removing uploaded archive..."
-rm -f "/opt/$ARCHIVE"
+echo "6. Checking deployment..."
+
+docker compose ps app
+docker compose logs --tail 50 app
+
+echo "Backend deployment completed!"
 REMOTE
-
-echo "5. Cleaning local archive..."
-rm -f "$ARCHIVE"
-
-echo "Backend deployment completed successfully!"

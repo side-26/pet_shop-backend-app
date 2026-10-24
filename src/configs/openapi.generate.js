@@ -151,6 +151,13 @@ const getUserRouteRateLimitPolicy = (apiPath) => {
     };
   }
 
+  if (apiPath === '/wishlist/all' || apiPath === '/wishlist/{slug}') {
+    return {
+      limit: RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS,
+      window: RATE_LIMIT.WISHLIST_READ_WINDOW_SECONDS,
+    };
+  }
+
   return {
     limit: RATE_LIMIT.USER_MAX_REQUESTS,
     window: RATE_LIMIT.USER_WINDOW_SECONDS,
@@ -180,6 +187,47 @@ const createRateLimitResponse = ({ limit, window }) => ({
     },
   },
 });
+
+const ensureWishlistStatusOpenApiPath = (openapiDocument) => {
+  openapiDocument.paths ??= {};
+  openapiDocument.paths['/wishlist/{slug}'] ??= {
+    get: {
+      tags: ['/wishlist'],
+      summary:
+        'Check whether the authenticated user has wishlisted a product or pet by slug',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'slug',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', minLength: 1, maxLength: 200 },
+        },
+      ],
+      responses: {
+        [STATUES.SUCCESS]: {
+          description: 'Wishlist status returned',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  isSuccess: { type: 'boolean' },
+                  data: {
+                    type: 'object',
+                    required: ['isWishlisted'],
+                    properties: { isWishlisted: { type: 'boolean' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+  return openapiDocument;
+};
 
 const addUserRouteRateLimitResponses = (openapiDocument) => {
   API_ROUTE_METHODS.forEach(({ path: configuredPath, methods }) => {
@@ -265,7 +313,9 @@ const openapiDocument = JSON.parse(readFileSync(outputFile, 'utf8'));
 const taggedOpenapiDocument = addCollectionTags(
   addReferenceConflictResponses(
     addMethodNotAllowedResponses(
-      addUserRouteRateLimitResponses(openapiDocument),
+      addUserRouteRateLimitResponses(
+        ensureWishlistStatusOpenApiPath(openapiDocument),
+      ),
     ),
   ),
 );

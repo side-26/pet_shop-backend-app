@@ -27,6 +27,7 @@ import {
   userZodSchema,
   selectDeliveryWindowSchema,
   wishlistEntryIdSchema,
+  wishlistSlugSchema,
 } from './users.schema.js';
 
 import { UserService } from './users.service.js';
@@ -371,6 +372,16 @@ export const getWishlistItemsController = async (req, res, next) => {
       data: items,
       totalRecords: items.length,
     });
+  } catch (error) {
+    onCatchPromiseController(error, next);
+  }
+};
+
+export const getWishlistStatusBySlugController = async (req, res, next) => {
+  try {
+    const { slug } = returnFormValidation(wishlistSlugSchema, req.params);
+    const isWishlisted = await UserService.isWishlistItemBySlug(req.user, slug);
+    setSuccessResponse(res, STATUES.SUCCESS, { data: { isWishlisted } });
   } catch (error) {
     onCatchPromiseController(error, next);
   }

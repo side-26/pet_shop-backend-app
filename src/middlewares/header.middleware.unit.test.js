@@ -32,6 +32,20 @@ describe('header middleware', () => {
     expect(response.headers).not.toHaveProperty('access-control-allow-origin');
   });
 
+  it('allows each origin in a comma-separated allowlist', async () => {
+    const app = createApp('http://localhost:3000, http://localhost:3001');
+
+    for (const origin of ['http://localhost:3000', 'http://localhost:3001']) {
+      const response = await request(app).get('/health').set('Origin', origin);
+
+      expect(response.status).toBe(204);
+      expect(response.headers).toHaveProperty(
+        'access-control-allow-origin',
+        origin,
+      );
+    }
+  });
+
   it('allows preflight requests from the configured frontend origin', async () => {
     const response = await request(createApp('http://localhost:3000'))
       .options('/health')

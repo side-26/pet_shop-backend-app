@@ -177,7 +177,7 @@ Create a `.env.dev` file in the repository root:
 ```dotenv
 NODE_ENV=development
 PORT=3000
-CORS_ORIGIN=http://localhost:3000
+CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 
 MONGODB_URI=mongodb://localhost:27017/pet_shop_db
 MONGODB_TEST_URI=mongodb://localhost:27017/pet_shop_test_db

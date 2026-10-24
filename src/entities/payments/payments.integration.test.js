@@ -145,7 +145,7 @@ describe('Payment API', () => {
       paymentId: expect.any(String),
       authority: expect.stringMatching(/^[a-f0-9]{64}$/),
       gatewayUrl: expect.stringMatching(
-        /^http:\/\/localhost:3001\/pet-shop-app\/[a-f0-9]{64}$/,
+        /^http:\/\/localhost:3001\/pet-shop-app\?authority=[a-f0-9]{64}$/,
       ),
     });
     const payment = await PaymentModel.findById(response.body.data.paymentId);

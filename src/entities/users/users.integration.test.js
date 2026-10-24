@@ -2095,6 +2095,34 @@ describe('User API - Integration Tests', () => {
       expect(response.body.data.updatedAt).toEqual(expect.any(String));
     });
 
+    test('applies the six-request two-minute policy to wishlist reads', async () => {
+      mockRedisRateLimitConsume.mockResolvedValueOnce({
+        allowed: true,
+        current: 1,
+        remaining: RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS - 1,
+        limit: RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS,
+        retryAfter: RATE_LIMIT.WISHLIST_READ_WINDOW_SECONDS,
+      });
+
+      const readResponse = await request(app)
+        .get('/api/wishlist/all')
+        .set('Authorization', 'Bearer token');
+
+      expect(readResponse.status).toBe(STATUES.SUCCESS);
+      expect(mockRedisRateLimitConsume).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: expect.stringContaining(
+            'rate-limit:users:GET:/api/wishlist/all:',
+          ),
+          limit: RATE_LIMIT.WISHLIST_ALL_MAX_REQUESTS,
+          window: RATE_LIMIT.WISHLIST_WINDOW_SECONDS,
+        }),
+      );
+      expect(readResponse.headers['ratelimit-limit']).toBe(
+        String(RATE_LIMIT.WISHLIST_READ_MAX_REQUESTS),
+      );
+    });
+
     test('creates the structured cart with safe checkout defaults', async () => {
       const user = await UserModel.findById(testUser._id);
       expect(user.cart.toObject()).toMatchObject({
@@ -2469,6 +2497,11 @@ describe('User API - Integration Tests', () => {
           .set('Authorization', 'Bearer token')
           .send(body);
         expect(created.status).toBe(STATUES.CREATED);
+        const status = await request(app)
+          .get(`/api/wishlist/${referenced.slug}`)
+          .set('Authorization', 'Bearer token');
+        expect(status.status).toBe(STATUES.SUCCESS);
+        expect(status.body.data).toEqual({ isWishlisted: true });
         const duplicate = await request(app)
           .post('/api/wishlist/add')
           .set('Authorization', 'Bearer token')

@@ -17,7 +17,12 @@ The `(item, itemType)` pair is unique within each collection. Adding an existing
 - `POST /api/wishlist/add`
 - `DELETE /api/wishlist/delete/:id`
 - `GET /api/wishlist/all`
+- `GET /api/wishlist/:slug`
 
 Add requests validate the referenced ID and type and confirm the Product or Pet exists. List requests populate `item` and expose `itemType`; all reads and mutations are scoped to the authenticated user's ID.
 
 Cart endpoints expose only the authenticated user's cart; the legacy user-ID-based cart route was removed because it did not enforce self-ownership.
+
+## Rate limits
+
+Wishlist reads (`GET /api/wishlist/all` and `GET /api/wishlist/:slug`) allow six requests per requester IP and route pattern per two-minute window. The slug-status endpoint returns `{ isWishlisted: boolean }` and checks both product and pet references.

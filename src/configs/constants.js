@@ -344,6 +344,8 @@ export const RATE_LIMIT = {
   CART_ALL_MAX_REQUESTS: 10,
   CART_CHECKOUT_MAX_REQUESTS: 10,
   CART_WINDOW_SECONDS: 60,
+  WISHLIST_READ_MAX_REQUESTS: 6,
+  WISHLIST_READ_WINDOW_SECONDS: 2 * 60,
 };
 
 export const USER_OTP = {
@@ -359,6 +361,7 @@ export const PAYMENT_REQUEST = {
 };
 
 export const PAYMENT_GATEWAY = {
+  AUTHORITY_QUERY_PARAMETER: 'authority',
   COMPANY_NAME: 'پت شاپ پرشین',
 };
 
