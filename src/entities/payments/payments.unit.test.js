@@ -42,9 +42,14 @@ jest.mock('./payments.model.js', () => ({
   },
 }));
 
+jest.mock('../../integrations/simpleSms/simpleSms.service.js', () => ({
+  PetPurchaseSmsService: { sendForPaidOrder: jest.fn() },
+}));
+
 import { ERROR_CODES, PAYMENT_STATUSES, STATUES } from '#configs/constants.js';
 import { OrderModel } from '#entities/orders/orders.model.js';
 import { OrderService } from '#entities/orders/orders.service.js';
+import { PetPurchaseSmsService } from '../../integrations/simpleSms/simpleSms.service.js';
 import { getPaginationData } from '#utils/helpers.js';
 
 import { PaymentModel } from './payments.model.js';
@@ -395,6 +400,35 @@ describe('PaymentService', () => {
       expect.any(Object),
     );
     expect(session.endSession).toHaveBeenCalled();
+    expect(PetPurchaseSmsService.sendForPaidOrder).toHaveBeenCalledWith(
+      'order-id',
+    );
+  });
+
+  test('keeps a completed payment successful when its pet-purchase SMS fails', async () => {
+    const session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn(),
+    };
+    PaymentModel.db.startSession.mockResolvedValue(session);
+    OrderModel.findOneAndUpdate.mockResolvedValue({ _id: orderId });
+    PaymentModel.findOne.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue({
+        _id: 'payment-id',
+        order: orderId,
+        status: PAYMENT_STATUSES.PENDING,
+        expiresAt: new Date(Date.now() + 60_000),
+      }),
+    });
+    PaymentModel.findOneAndUpdate.mockResolvedValue({ _id: 'payment-id' });
+    PetPurchaseSmsService.sendForPaidOrder.mockRejectedValue(
+      new Error('provider unavailable'),
+    );
+
+    await expect(
+      PaymentService.payGatewayPayment('a'.repeat(64)),
+    ).resolves.toEqual(expect.objectContaining({ success: true }));
   });
 
   test('rejects expired and already processed gateway payments', async () => {

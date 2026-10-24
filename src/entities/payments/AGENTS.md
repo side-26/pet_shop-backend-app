@@ -12,6 +12,7 @@ Owns gateway payment attempts for user-owned orders, including authority, expiry
 - Payment completion redirects to `${FRONTEND_APP_URL}/payment/result/:authority`; do not configure a separate payment-result frontend URL.
 - Only Admin and Seller roles can update a payment status.
 - Gateway completion rejects expired payment attempts, atomically marks the existing prepared Order and its pending payment as `paid`, and assigns its gateway reference ID. Repeated completion callbacks are idempotent.
+- After a new gateway payment has committed, the service sends one combined pet-purchase SMS when the immutable Order contains pet items. SMS delivery failures are logged and never roll back a paid payment.
 - Payment statuses are `pending`, `paid`, and `failed`; they are separate from order-delivery status.
 - Terminal payment failures (`failed` and `cancelled`) release a pending prepared order’s inventory reservation and mark its payment status as failed exactly once.
 - `payment-expiry.worker.js` sweeps expired pending payments every minute, fails them transactionally, and releases their prepared-order inventory exactly once. The server lifecycle starts it after infrastructure startup and waits for its in-flight sweep during shutdown.

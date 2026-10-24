@@ -100,6 +100,36 @@ export const getMelipayamakOtpToken = () => {
   return token;
 };
 
+export const getMelipayamakSimpleSmsToken = () => {
+  const token = process.env.MELIPAYAMAK_SIMPLE_SMS_TOKEN?.trim();
+
+  if (!token) {
+    const error = new Error(
+      'توکن سرویس پیامک ساده در تنظیمات محیطی تعریف نشده است',
+    );
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = ERROR_CODES.MELIPAYAMAK_SIMPLE_SMS_TOKEN_NOT_CONFIGURED;
+    throw error;
+  }
+
+  return token;
+};
+
+export const getMelipayamakSimpleSmsFrom = () => {
+  const sender = process.env.MELIPAYAMAK_SIMPLE_SMS_FROM?.trim();
+
+  if (!sender) {
+    const error = new Error(
+      'شماره ارسال‌کننده سرویس پیامک ساده در تنظیمات محیطی تعریف نشده است',
+    );
+    error.statusCode = STATUES.INTERNAL_SERVER;
+    error.code = ERROR_CODES.MELIPAYAMAK_SIMPLE_SMS_FROM_NOT_CONFIGURED;
+    throw error;
+  }
+
+  return sender;
+};
+
 export const getPaymentGatewayUrl = () => {
   const url = process.env.PAYMENT_GETWAY_URL?.trim();
   if (!url) {

@@ -39,6 +39,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: petshop-backend:production
+    command: ['node', './src/server.js']
     init: true
     restart: unless-stopped
     stop_grace_period: 15s

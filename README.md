@@ -197,6 +197,9 @@ ARVAN_PUBLIC_BASE_URL=https://your-public-cdn.example.com
 
 NESHAN_API_KEY=your-neshan-api-key
 MELIPAYAMAK_OTP_TOKEN=your-melipayamak-otp-token
+# A separate token for POST /api/send/simple; never reuse the OTP token.
+MELIPAYAMAK_SIMPLE_SMS_TOKEN=your-melipayamak-simple-sms-token
+MELIPAYAMAK_SIMPLE_SMS_FROM=5000xxx
 COUNTRIES_API_URL=https://www.apicountries.com/countries
 
 LOG_LEVEL=info

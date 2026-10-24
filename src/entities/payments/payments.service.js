@@ -9,6 +9,7 @@ import {
   ORDER_PAYMENT_STATUSES,
   STATUES,
 } from '#configs/constants.js';
+import logger from '#configs/logger.js';
 import {
   getFrontendAppUrl,
   getFrontendPaymentResultUrl,
@@ -18,9 +19,20 @@ import { OrderModel } from '#entities/orders/orders.model.js';
 import { OrderService } from '#entities/orders/orders.service.js';
 import { getPaginationData, setErrorResponse } from '#utils/helpers.js';
 
+import { PetPurchaseSmsService } from '../../integrations/simpleSms/simpleSms.service.js';
 import { PaymentModel } from './payments.model.js';
 
 export class PaymentService {
+  static async notifyPetPurchase(orderId) {
+    try {
+      await PetPurchaseSmsService.sendForPaidOrder(orderId);
+    } catch (error) {
+      logger.app.error('ارسال پیامک پیش‌خرید حیوان ناموفق بود', error, {
+        orderId: orderId.toString(),
+      });
+    }
+  }
+
   static getAuthenticatedUserId(actor) {
     const userId = actor?.userId || actor?.id;
     if (!userId) {
@@ -297,6 +309,7 @@ export class PaymentService {
     }
     const session = await PaymentModel.db.startSession();
     let transactionError;
+    let paidOrderId;
     try {
       await session.withTransaction(async () => {
         const referenceId = crypto.randomUUID();
@@ -320,6 +333,7 @@ export class PaymentService {
             code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
           });
         }
+        paidOrderId = order._id;
         const paidPayment = await this.markAsPaid(payment._id, {
           referenceId,
           paidAt: new Date(),
@@ -343,6 +357,9 @@ export class PaymentService {
       if (!transactionError.cause) transactionError.cause = sessionError;
     }
     if (transactionError) throw transactionError;
+
+    await this.notifyPetPurchase(paidOrderId);
+
     return {
       success: true,
       callbackUrl: getFrontendPaymentResultUrl().replace(

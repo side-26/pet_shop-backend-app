@@ -20,6 +20,10 @@ The payment-expiry worker checks pending payment attempts every minute, so this
 release happens even when neither the customer nor the gateway makes another
 request.
 
+After a new successful gateway payment commits, an Order containing pet items
+triggers one combined customer SMS using the pet titles preserved in its immutable
+snapshot. SMS transport errors are logged without changing the completed payment.
+
 For legacy failed, cancelled, or expired payments whose orders still show an
 active reservation, run `npm run repair:failed-order-reservations -- --apply`.
 The repair only restores product-weight inventory because pet inventory has
