@@ -16,6 +16,9 @@ marks that exact Order paid in one MongoDB transaction; it does not create a
 second Order or reserve stock again. Cancellation and expiry explicitly release
 the reservation exactly once, tracked on the Order. This requires a MongoDB
 deployment with transaction support (a replica set or sharded cluster).
+The payment-expiry worker checks pending payment attempts every minute, so this
+release happens even when neither the customer nor the gateway makes another
+request.
 
 For legacy failed, cancelled, or expired payments whose orders still show an
 active reservation, run `npm run repair:failed-order-reservations -- --apply`.
@@ -44,7 +47,7 @@ No meanings beyond the numeric `0–3` contract or transition state machine are 
 
 - `POST /api/orders/prepare` accepts only address and delivery-selection IDs and returns the prepared Order ID, expiry, and server-calculated payable amount.
 - `POST /api/orders` remains available for direct checkout. It accepts `{ paymentTrackingId }`, snapshots the finalized Cart, and clears the Cart within the same transaction.
-- `POST /api/payments/request` accepts `{ orderId }` and creates one active payment attempt from that Order snapshot.
+- `POST /api/payments/request` accepts `{ orderId }`, creates one active payment attempt from that Order snapshot, or returns its existing pending authority and gateway URL.
 - Gateway verification updates the prepared Order only. The frontend must not create an Order from its current Cart after redirect.
 - `GET /api/orders` returns the authenticated user's paginated Orders.
 - `GET /api/orders/:id` returns one owned Order.

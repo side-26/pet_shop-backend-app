@@ -55,6 +55,15 @@ export class PaymentService {
     return order.totalPrice - order.discountPrice + order.shippingPrice;
   }
 
+  static buildGatewayUrl(authority) {
+    const gatewayUrl = new URL(getPaymentGatewayUrl());
+    gatewayUrl.searchParams.set(
+      PAYMENT_GATEWAY.AUTHORITY_QUERY_PARAMETER,
+      authority,
+    );
+    return gatewayUrl.toString();
+  }
+
   static async requestPayment(actor, orderId) {
     const userId = this.getAuthenticatedUserId(actor);
     const order = await OrderModel.findOne({ _id: orderId, user: userId });
@@ -82,10 +91,11 @@ export class PaymentService {
       status: PAYMENT_STATUSES.PENDING,
     });
     if (activePayment) {
-      setErrorResponse(STATUES.CONFLICT, {
-        message: 'برای این سفارش درخواست پرداخت فعال وجود دارد',
-        code: ERROR_CODES.PAYMENT_ALREADY_PROCESSED,
-      });
+      return {
+        paymentId: activePayment.id || activePayment._id.toString(),
+        authority: activePayment.authority,
+        gatewayUrl: this.buildGatewayUrl(activePayment.authority),
+      };
     }
 
     const authority = crypto
@@ -99,17 +109,62 @@ export class PaymentService {
       status: PAYMENT_STATUSES.PENDING,
       expiresAt: order.paymentExpiresAt,
     });
-    const gatewayUrl = new URL(getPaymentGatewayUrl());
-    gatewayUrl.searchParams.set(
-      PAYMENT_GATEWAY.AUTHORITY_QUERY_PARAMETER,
-      authority,
-    );
-
     return {
       paymentId: payment.id || payment._id.toString(),
       authority,
-      gatewayUrl: gatewayUrl.toString(),
+      gatewayUrl: this.buildGatewayUrl(authority),
     };
+  }
+
+  static async expirePendingPayment(paymentId, now = new Date()) {
+    const session = await PaymentModel.db.startSession();
+    let transactionError;
+    let expired = false;
+    try {
+      await session.withTransaction(async () => {
+        const payment = await PaymentModel.findOneAndUpdate(
+          {
+            _id: paymentId,
+            status: PAYMENT_STATUSES.PENDING,
+            expiresAt: { $lte: now },
+          },
+          { $set: { status: PAYMENT_STATUSES.FAILED, paidAt: null } },
+          { returnDocument: 'after', runValidators: true, session },
+        );
+        if (!payment) return;
+
+        expired = true;
+        if (payment.order)
+          await OrderService.releasePreparedOrderReservation(
+            payment.order,
+            session,
+          );
+      });
+    } catch (error) {
+      transactionError = error;
+    }
+    try {
+      await session.endSession();
+    } catch (sessionError) {
+      if (!transactionError) throw sessionError;
+      if (!transactionError.cause) transactionError.cause = sessionError;
+    }
+    if (transactionError) throw transactionError;
+    return expired;
+  }
+
+  static async expirePendingPayments(now = new Date()) {
+    const payments = await PaymentModel.find({
+      status: PAYMENT_STATUSES.PENDING,
+      expiresAt: { $lte: now },
+    })
+      .select('_id')
+      .lean();
+    let expiredCount = 0;
+    for (const payment of payments) {
+      if (await this.expirePendingPayment(payment._id, now)) expiredCount += 1;
+    }
+    return expiredCount;
   }
 
   static async expirePreparedOrder(orderId) {

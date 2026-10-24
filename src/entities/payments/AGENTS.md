@@ -6,7 +6,7 @@ Owns gateway payment attempts for user-owned orders, including authority, expiry
 
 ## Rules
 
-- Customer payment requests accept an owned, unexpired prepared Order; authority, amount, expiry, and gateway URL are generated from that trusted Order snapshot. The gateway URL supplies the authority as its `authority` query parameter.
+- Customer payment requests accept an owned, unexpired prepared Order; authority, amount, expiry, and gateway URL are generated from that trusted Order snapshot. Repeated requests return the existing pending authority and gateway URL. The gateway URL supplies the authority as its `authority` query parameter.
 - Gateway completion updates the prepared Order after verification; it never creates a second Order or reserves stock.
 - Gateway payment lookup is public but authority-scoped and returns only status, final price, expiry time, company name, and frontend app URL while it remains pending and unexpired. Paid, failed, cancelled, and expired authorities return `410 Gone`; expiry fails a pending payment and releases its order reservation exactly once.
 - Payment completion redirects to `${FRONTEND_APP_URL}/payment/result/:authority`; do not configure a separate payment-result frontend URL.
@@ -14,11 +14,13 @@ Owns gateway payment attempts for user-owned orders, including authority, expiry
 - Gateway completion rejects expired payment attempts, atomically marks the existing prepared Order and its pending payment as `paid`, and assigns its gateway reference ID. Repeated completion callbacks are idempotent.
 - Payment statuses are `pending`, `paid`, and `failed`; they are separate from order-delivery status.
 - Terminal payment failures (`failed` and `cancelled`) release a pending prepared order’s inventory reservation and mark its payment status as failed exactly once.
+- `payment-expiry.worker.js` sweeps expired pending payments every minute, fails them transactionally, and releases their prepared-order inventory exactly once. The server lifecycle starts it after infrastructure startup and waits for its in-flight sweep during shutdown.
 
 ## Files
 
 - `payments.model.js` — Mongoose schema, references, unique authority, and query indexes.
 - `payments.service.js` — authorization-aware persistence operations.
+- `payment-expiry.worker.js` — lifecycle-managed sweep for expired pending payments.
 - `payments.schema.js` — request, query, and status validation.
 - `payments.controller.js` and `payments.route.js` — HTTP composition.
 - Unit and integration tests cover service behavior and API contracts.

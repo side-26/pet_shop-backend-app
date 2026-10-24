@@ -360,6 +360,10 @@ export const PAYMENT_REQUEST = {
   EXPIRATION_MS: 15 * 60 * 1000,
 };
 
+export const PAYMENT_EXPIRY_WORKER = {
+  INTERVAL_MS: 60 * 1000,
+};
+
 export const PAYMENT_GATEWAY = {
   AUTHORITY_QUERY_PARAMETER: 'authority',
   COMPANY_NAME: 'پت شاپ پرشین',

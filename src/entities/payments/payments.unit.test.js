@@ -35,6 +35,7 @@ jest.mock('./payments.model.js', () => ({
     create: jest.fn(),
     findOne: jest.fn(),
     findByIdAndUpdate: jest.fn(),
+    find: jest.fn(),
     findOneAndUpdate: jest.fn(),
     updateMany: jest.fn(),
     populate: jest.fn(),
@@ -151,6 +152,79 @@ describe('PaymentService', () => {
         expiresAt: expect.any(Date),
       }),
     );
+  });
+
+  test('returns an existing pending payment authority without creating another payment', async () => {
+    OrderModel.findOne.mockResolvedValue({
+      _id: orderId,
+      paymentStatus: 'pending_payment',
+      paymentExpiresAt: new Date(Date.now() + 60_000),
+    });
+    PaymentModel.findOne.mockResolvedValue({
+      id: 'existing-payment-id',
+      authority: 'existing-authority',
+    });
+
+    await expect(
+      PaymentService.requestPayment(actor, orderId),
+    ).resolves.toEqual({
+      paymentId: 'existing-payment-id',
+      authority: 'existing-authority',
+      gatewayUrl:
+        'http://localhost:3001/pet-shop-app?authority=existing-authority',
+    });
+    expect(PaymentModel.create).not.toHaveBeenCalled();
+  });
+
+  test('fails an expired pending payment and releases its prepared order once', async () => {
+    const session = {
+      withTransaction: jest.fn(async (callback) => callback()),
+      endSession: jest.fn(),
+    };
+    const now = new Date('2099-01-01T00:00:00.000Z');
+    PaymentModel.db.startSession.mockResolvedValue(session);
+    PaymentModel.findOneAndUpdate.mockResolvedValue({ order: orderId });
+    OrderService.releasePreparedOrderReservation.mockResolvedValue(null);
+
+    await expect(
+      PaymentService.expirePendingPayment('payment-id', now),
+    ).resolves.toBe(true);
+    expect(PaymentModel.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: 'payment-id',
+        status: PAYMENT_STATUSES.PENDING,
+        expiresAt: { $lte: now },
+      },
+      { $set: { status: PAYMENT_STATUSES.FAILED, paidAt: null } },
+      { returnDocument: 'after', runValidators: true, session },
+    );
+    expect(OrderService.releasePreparedOrderReservation).toHaveBeenCalledWith(
+      orderId,
+      session,
+    );
+    expect(session.endSession).toHaveBeenCalledTimes(1);
+  });
+
+  test('sweeps only expired pending payments', async () => {
+    const now = new Date('2099-01-01T00:00:00.000Z');
+    const expirePendingPayment = jest
+      .spyOn(PaymentService, 'expirePendingPayment')
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    PaymentModel.find.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([{ _id: 'first' }, { _id: 'second' }]),
+    });
+
+    await expect(PaymentService.expirePendingPayments(now)).resolves.toBe(1);
+
+    expect(PaymentModel.find).toHaveBeenCalledWith({
+      status: PAYMENT_STATUSES.PENDING,
+      expiresAt: { $lte: now },
+    });
+    expect(expirePendingPayment).toHaveBeenNthCalledWith(1, 'first', now);
+    expect(expirePendingPayment).toHaveBeenNthCalledWith(2, 'second', now);
+    expirePendingPayment.mockRestore();
   });
 
   test('does not create a gateway payment request for an expired prepared order', async () => {

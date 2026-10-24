@@ -16,7 +16,7 @@ Connects MongoDB and Redis before starting the HTTP server, drains HTTP connecti
 
 ### `server.lifecycle.js`
 
-Owns the testable startup/rollback sequence, single-flight HTTP draining, ordered resource cleanup, and process-signal lifecycle used by `server.js`.
+Owns the testable startup/rollback sequence, payment-expiry worker lifetime, single-flight HTTP draining, ordered resource cleanup, and process-signal lifecycle used by `server.js`.
 
 ### API documentation
 

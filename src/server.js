@@ -2,6 +2,7 @@ import { pathToFileURL } from 'node:url';
 
 import { ENVIRONMENTS, STATUES } from '#configs/constants.js';
 import logger from '#configs/logger.js';
+import { createPaymentExpiryWorker } from '#entities/payments/payment-expiry.worker.js';
 
 import app from './app.js';
 import {
@@ -11,6 +12,7 @@ import {
 } from './server.lifecycle.js';
 
 const PORT = process.env.PORT || 3000;
+const paymentExpiryWorker = createPaymentExpiryWorker();
 
 const listen = (application, port) =>
   new Promise((resolve, reject) => {
@@ -32,9 +34,14 @@ const listen = (application, port) =>
 export const startServer = async () => {
   const server = await startApplication({
     startHttpServer: () => listen(app, PORT),
+    startBackgroundWorker: () => paymentExpiryWorker.start(),
+    stopBackgroundWorker: () => paymentExpiryWorker.stop(),
   });
 
-  const shutdown = createShutdownHandler({ server });
+  const shutdown = createShutdownHandler({
+    server,
+    stopBackgroundWorker: () => paymentExpiryWorker.stop(),
+  });
   registerProcessHandlers(shutdown);
   logger.app.success('سرور با موفقیت راه‌اندازی شد', {
     port: PORT,

@@ -10,14 +10,33 @@ export const startApplication = async ({
   connectRedis = RedisClient.connect.bind(RedisClient),
   disconnectDatabase = disconnectDB,
   disconnectRedis = RedisClient.disconnect.bind(RedisClient),
+  startBackgroundWorker = async () => {},
+  stopBackgroundWorker = async () => {},
 }) => {
   await connectDatabase();
+  let server;
 
   try {
     await connectRedis();
-    return await startHttpServer();
+    server = await startHttpServer();
+    await startBackgroundWorker();
+    return server;
   } catch (error) {
     const cleanupErrors = [];
+
+    try {
+      await stopBackgroundWorker();
+    } catch (cleanupError) {
+      cleanupErrors.push(cleanupError);
+    }
+
+    if (server) {
+      try {
+        await closeHttpServer(server);
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
 
     try {
       await disconnectDatabase();
@@ -63,11 +82,22 @@ const closeHttpServer = (server) =>
     server.closeIdleConnections?.();
   });
 
-const closeResources = async (server, disconnectDatabase, disconnectRedis) => {
+const closeResources = async (
+  server,
+  stopBackgroundWorker,
+  disconnectDatabase,
+  disconnectRedis,
+) => {
   const errors = [];
 
   try {
     await closeHttpServer(server);
+  } catch (error) {
+    errors.push(error);
+  }
+
+  try {
+    await stopBackgroundWorker();
   } catch (error) {
     errors.push(error);
   }
@@ -93,6 +123,7 @@ export const createShutdownHandler = ({
   server,
   disconnectDatabase = disconnectDB,
   disconnectRedis = RedisClient.disconnect.bind(RedisClient),
+  stopBackgroundWorker = async () => {},
   timeoutMs = SERVER_LIFECYCLE.SHUTDOWN_TIMEOUT_MS,
   exit = process.exit.bind(process),
   setExitCode = (code) => {
@@ -127,7 +158,12 @@ export const createShutdownHandler = ({
 
       try {
         await Promise.race([
-          closeResources(server, disconnectDatabase, disconnectRedis),
+          closeResources(
+            server,
+            stopBackgroundWorker,
+            disconnectDatabase,
+            disconnectRedis,
+          ),
           timeout,
         ]);
         setExitCode(exitCode);

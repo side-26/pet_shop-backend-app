@@ -21,6 +21,9 @@ describe('server startup lifecycle', () => {
       operations.push('http:listen');
       return server;
     });
+    const startBackgroundWorker = jest.fn(async () => {
+      operations.push('payment-expiry-worker:start');
+    });
 
     await expect(
       startApplication({
@@ -29,6 +32,7 @@ describe('server startup lifecycle', () => {
         connectRedis,
         disconnectDatabase: jest.fn(),
         disconnectRedis: jest.fn(),
+        startBackgroundWorker,
       }),
     ).resolves.toBe(server);
 
@@ -36,6 +40,7 @@ describe('server startup lifecycle', () => {
       'mongodb:connect',
       'redis:connect',
       'http:listen',
+      'payment-expiry-worker:start',
     ]);
   });
 
@@ -114,6 +119,42 @@ describe('server startup lifecycle', () => {
       'redis:disconnect',
     ]);
   });
+
+  test('stops the worker and closes HTTP when worker startup fails', async () => {
+    const startupError = new Error('worker failed');
+    const operations = [];
+    const server = createServer((callback) => {
+      operations.push('http:close');
+      callback();
+    });
+
+    await expect(
+      startApplication({
+        startHttpServer: jest.fn(async () => server),
+        connectDatabase: jest.fn(),
+        connectRedis: jest.fn(),
+        startBackgroundWorker: jest.fn(async () => {
+          throw startupError;
+        }),
+        stopBackgroundWorker: jest.fn(async () => {
+          operations.push('worker:stop');
+        }),
+        disconnectDatabase: jest.fn(async () => {
+          operations.push('mongodb:disconnect');
+        }),
+        disconnectRedis: jest.fn(async () => {
+          operations.push('redis:disconnect');
+        }),
+      }),
+    ).rejects.toBe(startupError);
+
+    expect(operations).toEqual([
+      'worker:stop',
+      'http:close',
+      'mongodb:disconnect',
+      'redis:disconnect',
+    ]);
+  });
 });
 
 describe('server shutdown lifecycle', () => {
@@ -133,19 +174,28 @@ describe('server shutdown lifecycle', () => {
     const disconnectRedis = jest.fn(async () => {
       operations.push('redis');
     });
+    const stopBackgroundWorker = jest.fn(async () => {
+      operations.push('payment-expiry-worker');
+    });
     const exit = jest.fn();
     const setExitCode = jest.fn();
     const shutdown = createShutdownHandler({
       server,
       disconnectDatabase,
       disconnectRedis,
+      stopBackgroundWorker,
       exit,
       setExitCode,
     });
 
     await shutdown('SIGTERM');
 
-    expect(operations).toEqual(['http', 'mongodb', 'redis']);
+    expect(operations).toEqual([
+      'http',
+      'payment-expiry-worker',
+      'mongodb',
+      'redis',
+    ]);
     expect(server.closeIdleConnections).toHaveBeenCalledTimes(1);
     expect(setExitCode).toHaveBeenCalledWith(0);
     expect(exit).not.toHaveBeenCalled();

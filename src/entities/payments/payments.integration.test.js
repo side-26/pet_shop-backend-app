@@ -154,6 +154,15 @@ describe('Payment API', () => {
       amount: 1000,
       status: PAYMENT_STATUSES.PENDING,
     });
+
+    const repeatedResponse = await request(app)
+      .post('/api/payments/request')
+      .set('Authorization', 'Bearer token')
+      .send({ orderId: order._id.toString() });
+
+    expect(repeatedResponse.status).toBe(STATUES.CREATED);
+    expect(repeatedResponse.body.data).toEqual(response.body.data);
+    expect(await PaymentModel.countDocuments({ order: order._id })).toBe(1);
   });
 
   test('returns gateway-safe payment information without authentication', async () => {
